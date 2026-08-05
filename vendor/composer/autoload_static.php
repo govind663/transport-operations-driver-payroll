@@ -4109,6 +4109,8 @@ class ComposerStaticInit01d97aa79dec38ddfa7fcad78138d3bd
         'League\\CommonMark\\Extension\\Mention\\Mention' => __DIR__ . '/..' . '/league/commonmark/src/Extension/Mention/Mention.php',
         'League\\CommonMark\\Extension\\Mention\\MentionExtension' => __DIR__ . '/..' . '/league/commonmark/src/Extension/Mention/MentionExtension.php',
         'League\\CommonMark\\Extension\\Mention\\MentionParser' => __DIR__ . '/..' . '/league/commonmark/src/Extension/Mention/MentionParser.php',
+        'League\\CommonMark\\Extension\\NormalizeHeadings\\NormalizeHeadingsExtension' => __DIR__ . '/..' . '/league/commonmark/src/Extension/NormalizeHeadings/NormalizeHeadingsExtension.php',
+        'League\\CommonMark\\Extension\\NormalizeHeadings\\NormalizeHeadingsProcessor' => __DIR__ . '/..' . '/league/commonmark/src/Extension/NormalizeHeadings/NormalizeHeadingsProcessor.php',
         'League\\CommonMark\\Extension\\SmartPunct\\DashParser' => __DIR__ . '/..' . '/league/commonmark/src/Extension/SmartPunct/DashParser.php',
         'League\\CommonMark\\Extension\\SmartPunct\\EllipsesParser' => __DIR__ . '/..' . '/league/commonmark/src/Extension/SmartPunct/EllipsesParser.php',
         'League\\CommonMark\\Extension\\SmartPunct\\Quote' => __DIR__ . '/..' . '/league/commonmark/src/Extension/SmartPunct/Quote.php',
