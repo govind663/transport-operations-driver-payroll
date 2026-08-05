@@ -135,13 +135,24 @@
 
                                 {{-- Profile --}}
                                 <td>
+                                    @php
+                                        $profileImage = $user->profile_image;
+
+                                        if ($profileImage) {
+                                            if (str_starts_with($profileImage, 'users/')) {
+                                                $profileUrl = asset('storage/' . $profileImage);
+                                            } else {
+                                                $profileUrl = asset('backend/assets/uploads/profile/' . $profileImage);
+                                            }
+                                        } else {
+                                            $profileUrl = asset('backend/assets/img/logo/favicon.ico');
+                                        }
+                                    @endphp
+
                                     <img
-                                        src="{{ $user->profile_image
-                                            ? asset('backend/assets/uploads/profile/' . $user->profile_image)
-                                            : asset('backend/assets/img/logo/favicon.ico') }}"
+                                        src="{{ $profileUrl }}"
                                         alt="{{ $user->name }}"
-                                        class="img-fluid"
-                                        style="width: 150px !important; height: 45px !important; object-fit: cover;"
+                                        class="user-profile"
                                         loading="lazy"
                                         decoding="async"
                                         data-no-optimize="1"
@@ -249,7 +260,7 @@
                                 {{-- Created --}}
                                 <td>
 
-                                    {{ $user->created_at?->format('d M Y') }}
+                                    {{ $user->created_at?->format('d-m-Y') }}
 
                                 </td>
 
