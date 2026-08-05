@@ -98,7 +98,12 @@
 <div class="left-side-bar">
     <div class="brand-logo">
         <a href="{{ route('admin.dashboard') }}">
-            <img src="{{ asset('/backend/assets/img/logo/tradebo-logo.png') }}" alt="" class="white-logo" />
+            <img
+                src="{{ asset('backend/assets/img/logo/mastermind-logo.webp') }}"
+                alt="Mastermind"
+                class="white-logo"
+                data-no-optimize="1"
+            >
             {{-- <img src="{{ asset('/backend/assets/img/logo/tradebo-logo_black.png') }}" alt="" class="dark-logo" /> --}}
         </a>
         <div class="close-sidebar" data-toggle="left-sidebar-close">

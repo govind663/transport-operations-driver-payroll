@@ -21,7 +21,6 @@ return array(
     'App\\Http\\Middleware\\PreventBackHistoryMiddleware' => $baseDir . '/app/Http/Middleware/PreventBackHistoryMiddleware.php',
     'App\\Http\\Middleware\\PreventCitizenBackHistoryMiddleware' => $baseDir . '/app/Http/Middleware/PreventCitizenBackHistoryMiddleware.php',
     'App\\Http\\Middleware\\RedirectIfAuthenticatedCustom' => $baseDir . '/app/Http/Middleware/RedirectIfAuthenticatedCustom.php',
-    'App\\Http\\Middleware\\ResumeStepLockMiddleware' => $baseDir . '/app/Http/Middleware/ResumeStepLockMiddleware.php',
     'App\\Http\\Requests\\Backend\\Auth\\LoginRequest' => $baseDir . '/app/Http/Requests/Backend/Auth/LoginRequest.php',
     'App\\Http\\Requests\\Backend\\Auth\\RegisterRequest' => $baseDir . '/app/Http/Requests/Backend/Auth/RegisterRequest.php',
     'App\\Mail\\ClientWelcomeMail' => $baseDir . '/app/Mail/ClientWelcomeMail.php',

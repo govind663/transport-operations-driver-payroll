@@ -30,18 +30,18 @@ class LoginController extends Controller
     public function authenticate(LoginRequest $request)
     {
         $credentials = [
-            'username' => $request->username,
+            'email'    => $request->email,
             'password' => $request->password,
         ];
 
-        $remember = $request->boolean('remember_token');
+        $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
 
-            // Session Regenerate
+            // Regenerate Session
             $request->session()->regenerate();
 
-            // Login History
+            // Store Login History
             $this->historyService->store(Auth::id(), 'login');
 
             return redirect()
@@ -50,8 +50,8 @@ class LoginController extends Controller
         }
 
         return back()
-            ->withInput($request->only('username'))
-            ->with('error', 'Invalid username or password.');
+            ->withInput($request->only('email'))
+            ->with('error', 'Invalid email address or password.');
     }
 
     public function logout()

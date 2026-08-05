@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
             'profile_image'     => 'default-user.webp',
             'role'              => User::ROLE_ADMIN,
             'status'            => User::STATUS_ACTIVE,
-            'email'             => 'admin@driveflow.com',
+            'email'             => 'admin@gmail.com',
             'email_verified_at' => Carbon::now(),
             'password'          => Hash::make('DriveFlow@123'),
             'created_by'        => 1,

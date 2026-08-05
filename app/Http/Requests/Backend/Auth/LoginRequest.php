@@ -22,10 +22,10 @@ class LoginRequest extends FormRequest
     {
         return [
 
-            'username' => [
+            'email' => [
                 'required',
-                'string',
-                'exists:users,username',
+                'email',
+                'exists:users,email',
             ],
 
             'password' => [
@@ -44,9 +44,9 @@ class LoginRequest extends FormRequest
     {
         return [
 
-            'username.required' => __('Username is required'),
-            'username.exists' => __('Username does not exist'),
-            'username.string' => __('Username must be a string'),
+            'email.required' => __('Email is required'),
+            'email.email' => __('Email must be a valid email address'),
+            'email.exists' => __('Email does not exist'),
 
             'password.required' => __('Password is required'),
             'password.min' => __('Password must be at least 8 characters'),

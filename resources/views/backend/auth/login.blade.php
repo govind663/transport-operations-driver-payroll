@@ -43,7 +43,7 @@
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <div class="brand-logo">
                 <a href="{{ route('admin.login') }}">
-                    <img src="{{ asset('/backend/assets/img/logo/tradebo-logo.webp') }}" alt="tradebo-logo" />
+                    <img src="{{ asset('/backend/assets/img/logo/mastermind-logo.webp') }}" alt="mastermind-logo" />
                 </a>
             </div>
             <div class="login-menu">
@@ -57,13 +57,13 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 col-lg-7">
-                    <img src="{{ asset('/backend/assets/vendors/images/login-page-img.png') }}" alt="login-page" />
+                    <img src="{{ asset('/backend/assets/vendors/images/mastermind_login.webp') }}" alt="login-page" />
                 </div>
                 <div class="col-md-6 col-lg-5">
                     <div class="login-box bg-white box-shadow border-radius-10">
                         <div class="login-title d-flex flex-column align-items-center justify-content-center">
-                            <img src="{{ asset('/backend/assets/img/logo/tradebo-logo.webp') }}"
-                                alt="tradebo-logo"
+                            <img src="{{ asset('/backend/assets/img/logo/mastermind-logo.webp') }}"
+                                alt="mastermind-logo"
                                 style="width: 280px !important; height: 100px !important;" />
                             <h2 class="text-primary mt-3">Login</h2>
                         </div>
@@ -72,22 +72,22 @@
 
                             <div class="input-group custom">
                                 <input
-                                    id="username"
-                                    type="text"
-                                    class="form-control @error('username') is-invalid @enderror"
-                                    name="username"
-                                    value="{{ old('username') }}"
-                                    autocomplete="username"
+                                    id="email"
+                                    type="email"
+                                    class="form-control @error('email') is-invalid @enderror"
+                                    name="email"
+                                    value="{{ old('email') }}"
+                                    autocomplete="email"
                                     autofocus
-                                    placeholder="Enter Username">
+                                    placeholder="Enter Email Address">
 
                                 <div class="input-group-append custom">
                                     <span class="input-group-text">
-                                        <i class="icon-copy dw dw-user1"></i>
+                                        <i class="icon-copy dw dw-email"></i>
                                     </span>
                                 </div>
 
-                                @error('username')
+                                @error('email')
                                     <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>

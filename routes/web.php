@@ -15,6 +15,7 @@ use App\Http\Controllers\backend\Auth\ResetPasswordController;
 
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -24,11 +25,19 @@ use App\Http\Middleware\OptimizeImagesMiddleware;
 use App\Http\Middleware\PreventBackHistoryMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticatedCustom;
 
+
 /*
 |--------------------------------------------------------------------------
-| Frontend Routes
+| Frontend Home Redirect
 |--------------------------------------------------------------------------
+|
+| /
+|
+| Logged in → Admin Dashboard
+| Guest      → Admin Login
+|
 */
+
 Route::get('/', function () {
 
     if (Auth::guard('web')->check()) {
@@ -44,7 +53,14 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 | Login Redirect
 |--------------------------------------------------------------------------
+|
+| /login
+|
+| Logged in → Admin Dashboard
+| Guest      → Admin Login
+|
 */
+
 Route::get('/login', function () {
 
     return Auth::guard('web')->check()
@@ -58,63 +74,87 @@ Route::get('/login', function () {
 |--------------------------------------------------------------------------
 | Admin Guest Routes
 |--------------------------------------------------------------------------
+|
+| These routes are accessible only when the admin is NOT authenticated.
+|
+| OptimizeImagesMiddleware is explicitly called here.
+|
 */
+
 Route::prefix('admin')
     ->middleware([
-        RedirectIfAuthenticatedCustom::class,
         OptimizeImagesMiddleware::class,
+        RedirectIfAuthenticatedCustom::class,
     ])
     ->group(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Authentication
+        | Admin Login
         |--------------------------------------------------------------------------
         */
+
+        Route::get(
+            '/',
+            [LoginController::class, 'login']
+        )->name('admin.login');
+
+        Route::post(
+            '/login',
+            [LoginController::class, 'authenticate']
+        )->name('admin.login.store');
+
 
         /*
         |--------------------------------------------------------------------------
-        | Login
+        | Admin Register
         |--------------------------------------------------------------------------
         */
-        Route::get('/', [LoginController::class, 'login'])
-            ->name('admin.login');
 
-        Route::post('/login', [LoginController::class, 'authenticate'])
-            ->name('admin.login.store');
+        Route::get(
+            '/register',
+            [RegisterController::class, 'register']
+        )->name('admin.register');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Register
-        |--------------------------------------------------------------------------
-        */
-        Route::get('/register', [RegisterController::class, 'register'])
-            ->name('admin.register');
+        Route::post(
+            '/register',
+            [RegisterController::class, 'store']
+        )->name('admin.register.store');
 
-        Route::post('/register', [RegisterController::class, 'store'])
-            ->name('admin.register.store');
 
         /*
         |--------------------------------------------------------------------------
         | Forgot Password
         |--------------------------------------------------------------------------
         */
-        Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
-            ->name('admin.password.request');
 
-        Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
-            ->name('admin.password.email');
+        Route::get(
+            '/forgot-password',
+            [ForgotPasswordController::class, 'showLinkRequestForm']
+        )->name('admin.password.request');
+
+        Route::post(
+            '/forgot-password',
+            [ForgotPasswordController::class, 'sendResetLinkEmail']
+        )->name('admin.password.email');
+
 
         /*
         |--------------------------------------------------------------------------
         | Reset Password
         |--------------------------------------------------------------------------
         */
-        Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
-            ->name('admin.password.reset');
 
-        Route::post('/reset-password', [ResetPasswordController::class, 'updatePassword'])
-            ->name('admin.password.update');
+        Route::get(
+            '/reset-password/{token}',
+            [ResetPasswordController::class, 'showResetForm']
+        )->name('admin.password.reset');
+
+        Route::post(
+            '/reset-password',
+            [ResetPasswordController::class, 'updatePassword']
+        )->name('admin.password.update');
+
     });
 
 
@@ -122,12 +162,18 @@ Route::prefix('admin')
 |--------------------------------------------------------------------------
 | Admin Protected Routes
 |--------------------------------------------------------------------------
+|
+| These routes require authenticated admin user.
+|
+| OptimizeImagesMiddleware is explicitly called here as well.
+|
 */
+
 Route::prefix('admin')
     ->middleware([
+        OptimizeImagesMiddleware::class,
         'auth:web',
         PreventBackHistoryMiddleware::class,
-        OptimizeImagesMiddleware::class,
     ])
     ->group(function () {
 
@@ -136,36 +182,81 @@ Route::prefix('admin')
         | Dashboard
         |--------------------------------------------------------------------------
         */
-        Route::get('/dashboard', [BackendHomeController::class, 'adminHome'])
-            ->name('admin.dashboard');
+
+        Route::get(
+            '/dashboard',
+            [BackendHomeController::class, 'adminHome']
+        )->name('admin.dashboard');
+
 
         /*
         |--------------------------------------------------------------------------
-        | Profile
+        | Profile & Account
         |--------------------------------------------------------------------------
         */
+
         Route::controller(BackendHomeController::class)
             ->group(function () {
 
-                Route::get('/profile', 'adminProfile')
-                    ->name('admin.profile');
+                /*
+                |--------------------------------------------------------------------------
+                | Profile
+                |--------------------------------------------------------------------------
+                */
 
-                Route::post('/profile/update', 'updateAdminProfile')
-                    ->name('admin.profile.update');
+                Route::get(
+                    '/profile',
+                    'adminProfile'
+                )->name('admin.profile');
 
-                Route::get('/change-password', 'changePassword')
-                    ->name('admin.change-password');
 
-                Route::post('/change-password', 'updatePassword')
-                    ->name('admin.change-password.update');
+                /*
+                |--------------------------------------------------------------------------
+                | Update Profile
+                |--------------------------------------------------------------------------
+                */
+
+                Route::post(
+                    '/profile/update',
+                    'updateAdminProfile'
+                )->name('admin.profile.update');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Change Password
+                |--------------------------------------------------------------------------
+                */
+
+                Route::get(
+                    '/change-password',
+                    'changePassword'
+                )->name('admin.change-password');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update Password
+                |--------------------------------------------------------------------------
+                */
+
+                Route::post(
+                    '/change-password',
+                    'updatePassword'
+                )->name('admin.change-password.update');
+
             });
+
 
         /*
         |--------------------------------------------------------------------------
         | Logout
         |--------------------------------------------------------------------------
         */
-        Route::post('/logout', [LoginController::class, 'logout'])
-            ->name('admin.logout');
-        
+
+        Route::post(
+            '/logout',
+            [LoginController::class, 'logout']
+        )->name('admin.logout');
+
     });

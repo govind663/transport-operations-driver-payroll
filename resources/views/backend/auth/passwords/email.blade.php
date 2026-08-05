@@ -42,7 +42,7 @@
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <div class="brand-logo">
                 <a href="{{ route('admin.login') }}">
-                    <img src="{{ asset('/backend/assets/img/logo/tradebo-logo.webp') }}" alt="tradebo-logo" />
+                    <img src="{{ asset('/backend/assets/img/logo/mastermind-logo.webp') }}" alt="mastermind-logo" />
                 </a>
             </div>
             <div class="login-menu">
@@ -56,13 +56,13 @@
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 col-lg-7">
-                    <img src="{{ asset('backend/assets/vendors/images/forgot-password.png') }}" alt="forgot-password" />
+                    <img src="{{ asset('backend/assets/vendors/images/mastermind_reset_password.webp') }}" alt="forgot-password" />
                 </div>
                 <div class="col-md-6 col-lg-5">
                     <div class="login-box bg-white box-shadow border-radius-10">
                        <div class="login-title d-flex flex-column align-items-center justify-content-center">
-                            <img src="{{ asset('/backend/assets/img/logo/tradebo-logo.webp') }}"
-                                alt="logo"
+                            <img src="{{ asset('/backend/assets/img/logo/mastermind-logo.webp') }}"
+                                alt="mastermind-logo"
                                 style="width: 280px !important; height: 100px !important;" />
                             <h2 class="text-primary mt-3">Reset Password Link</h2>
                         </div>

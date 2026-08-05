@@ -5,6 +5,14 @@
 @endsection
 
 @push('styles')
+<style>
+    .profile-photo {
+        width: 464px !important;
+        height: 180px !important;
+        margin: 0 auto 15px;
+        position: relative;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -31,21 +39,122 @@
             <div class="row">
                 <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
                     <div class="pd-20 card-box height-100-p">
-                        <div class="profile-photo">
-                            <img src="{{ asset('/backend/assets/uploads/profile/' . Auth::user()->profile_image) }}" alt="" class="avatar-photo" style="width: 170px !important; height: 174px !important;"/>
-                            
+                        {{-- Profile Photo --}}
+                        <div class="profile-photo text-center mb-2">
+                            <img
+                                src="{{ Auth::user()->profile_image
+                                    ? asset('backend/assets/uploads/profile/' . Auth::user()->profile_image)
+                                    : asset('backend/assets/img/logo/favicon.ico') }}"
+                                alt="{{ Auth::user()->name }}"
+                                class="img-fluid"
+                                loading="lazy"
+                                decoding="async"
+                                style="
+                                    width: 650px !important;
+                                    height: 150px !important;
+                                    object-fit: cover;
+                                    display: block;
+                                    margin: 0 auto;
+                                "
+                                data-no-optimize="1"
+                                onerror="this.onerror=null; this.src='{{ asset('backend/assets/img/logo/favicon.ico') }}';"
+                            >
                         </div>
-                        <h5 class="text-center h5 mb-0">
+
+                        {{-- User Name --}}
+                        <h5 class="text-center h5 mb-1 text-capitalize">
                             {{ Auth::user()->name }}
                         </h5>
-                        <p class="text-center text-muted font-14">
-                            @if (Auth::user()->role == 'admin')
-                                <span class="badge badge-danger">Admin</span>
 
-                            @elseif (Auth::user()->role == 'user')
-                                <span class="badge badge-primary">User</span>
-                            @endif
-                        </p>
+                        {{-- Role --}}
+                        <div class="text-center mb-3">
+                            @php
+                                $role = strtolower(Auth::user()->role ?? 'user');
+
+                                $roleConfig = match ($role) {
+                                    'admin' => [
+                                        'bg' => '#fff1f2',
+                                        'color' => '#dc3545',
+                                        'border' => '#fecdd3',
+                                        'icon' => 'dw dw-user1',
+                                        'label' => 'Administrator',
+                                    ],
+
+                                    'operations' => [
+                                        'bg' => '#eff6ff',
+                                        'color' => '#2563eb',
+                                        'border' => '#bfdbfe',
+                                        'icon' => 'dw dw-settings',
+                                        'label' => 'Operations',
+                                    ],
+
+                                    'accountant' => [
+                                        'bg' => '#fffbeb',
+                                        'color' => '#d97706',
+                                        'border' => '#fde68a',
+                                        'icon' => 'dw dw-money',
+                                        'label' => 'Accountant',
+                                    ],
+
+                                    'driver' => [
+                                        'bg' => '#f0fdf4',
+                                        'color' => '#16a34a',
+                                        'border' => '#bbf7d0',
+                                        'icon' => 'dw dw-car',
+                                        'label' => 'Driver',
+                                    ],
+
+                                    'user' => [
+                                        'bg' => '#eff6ff',
+                                        'color' => '#0284c7',
+                                        'border' => '#bae6fd',
+                                        'icon' => 'dw dw-user1',
+                                        'label' => 'User',
+                                    ],
+
+                                    default => [
+                                        'bg' => '#f8fafc',
+                                        'color' => '#64748b',
+                                        'border' => '#e2e8f0',
+                                        'icon' => 'dw dw-user1',
+                                        'label' => ucwords(str_replace('_', ' ', $role)),
+                                    ],
+                                };
+                            @endphp
+
+                            <span
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    gap: 7px;
+                                    padding: 7px 14px;
+                                    background: {{ $roleConfig['bg'] }};
+                                    color: {{ $roleConfig['color'] }};
+                                    border: 1px solid {{ $roleConfig['border'] }};
+                                    border-radius: 50px;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    line-height: 1;
+                                    white-space: nowrap;
+                                    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+                                "
+                            >
+                                <i
+                                    class="{{ $roleConfig['icon'] }}"
+                                    style="
+                                        font-size: 14px;
+                                        color: {{ $roleConfig['color'] }};
+                                        display: inline-block;
+                                        line-height: 1;
+                                    "
+                                ></i>
+
+                                <span>{{ $roleConfig['label'] }}</span>
+                            </span>
+                        </div>
+
+                        {{-- Contact Information --}}
                         <div class="profile-info">
                             <h5 class="mb-20 h5 text-blue">Contact Information</h5>
                             <ul>

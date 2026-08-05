@@ -4,7 +4,6 @@ use App\Http\Middleware\OptimizeImagesMiddleware;
 use App\Http\Middleware\PreventBackHistoryMiddleware;
 use App\Http\Middleware\PreventCitizenBackHistoryMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticatedCustom;
-use App\Http\Middleware\ResumeStepLockMiddleware;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -18,64 +17,119 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-return Application::configure(basePath: dirname(__DIR__))
+return Application::configure(
+    basePath: dirname(__DIR__)
+)
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routing
+    |--------------------------------------------------------------------------
+    */
+
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
 
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware
+    |--------------------------------------------------------------------------
+    */
+
     ->withMiddleware(function (Middleware $middleware): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Web Middleware
+        |--------------------------------------------------------------------------
+        |
+        | These middleware are applied to all routes defined in
+        | routes/web.php.
+        |
+        */
 
         $middleware->web(append: [
 
             /*
             |--------------------------------------------------------------------------
-            | 🔥 Laravel Core
+            | Laravel Core Middleware
             |--------------------------------------------------------------------------
             */
+
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
+
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+
             \Illuminate\Session\Middleware\StartSession::class,
+
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
 
+
             /*
             |--------------------------------------------------------------------------
-            | 🖼️ PERFORMANCE (FIRST)
+            | Image Optimization
             |--------------------------------------------------------------------------
+            |
+            | Handles:
+            | - Frontend HTML images
+            | - Admin HTML images
+            | - Image metadata
+            | - Image optimization logs
+            |
+            | The middleware itself decides which requests to skip.
+            |
             */
+
             OptimizeImagesMiddleware::class,
 
+
             /*
             |--------------------------------------------------------------------------
-            | ⚡ CACHE CONTROL
+            | Browser / Cache Protection
             |--------------------------------------------------------------------------
             */
+
             PreventBackHistoryMiddleware::class,
+
             PreventCitizenBackHistoryMiddleware::class,
 
+
             /*
             |--------------------------------------------------------------------------
-            | 🔐 AUTH LOGIC
+            | Authentication Logic
             |--------------------------------------------------------------------------
             */
-            RedirectIfAuthenticatedCustom::class,
-        ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | ✅ ALIAS (NO CHANGE)
-        |--------------------------------------------------------------------------
-        */
-        $middleware->alias([
-            'resume.lock' => ResumeStepLockMiddleware::class,
+            RedirectIfAuthenticatedCustom::class,
         ]);
     })
 
+    /*
+    |--------------------------------------------------------------------------
+    | Exception Handling
+    |--------------------------------------------------------------------------
+    */
+
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->report(function (\Throwable $e) {
+        /*
+        |--------------------------------------------------------------------------
+        | Exception Reporting
+        |--------------------------------------------------------------------------
+        */
+
+        $exceptions->report(function (\Throwable $e): void {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Ignore Expected Exceptions
+            |--------------------------------------------------------------------------
+            */
 
             if (
                 $e instanceof ValidationException ||
@@ -84,50 +138,185 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof AccessDeniedHttpException ||
                 $e instanceof TokenMismatchException
             ) {
-                return false;
+                return;
             }
 
-            Log::error('Application Error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Log Unexpected Application Errors
+            |--------------------------------------------------------------------------
+            */
+
+            Log::error(
+                'Application Error: ' . $e->getMessage(),
+                [
+                    'exception' => get_class($e),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
         });
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Exception Rendering
+        |--------------------------------------------------------------------------
+        */
+
+        $exceptions->render(function (
+            \Throwable $e,
+            Request $request
+        ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validation Exception
+            |--------------------------------------------------------------------------
+            */
 
             if ($e instanceof ValidationException) {
+
                 return null;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Authentication Exception
+            |--------------------------------------------------------------------------
+            */
+
             if ($e instanceof AuthenticationException) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | JSON / AJAX Request
+                |--------------------------------------------------------------------------
+                */
+
+                if ($request->expectsJson()) {
+
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Unauthenticated.',
+                    ], 401);
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Normal Web Request
+                |--------------------------------------------------------------------------
+                */
+
                 return redirect()
                     ->route('admin.login')
-                    ->with('warning', 'Please login first to access this page.');
+                    ->with(
+                        'warning',
+                        'Please login first to access this page.'
+                    );
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 404 - Not Found
+            |--------------------------------------------------------------------------
+            */
 
             if ($e instanceof NotFoundHttpException) {
-                return response()->view('errors.404', [], 404);
+
+                if ($request->expectsJson()) {
+
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Resource not found.',
+                    ], 404);
+                }
+
+                return response()
+                    ->view('errors.404', [], 404);
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 403 - Access Denied
+            |--------------------------------------------------------------------------
+            */
 
             if ($e instanceof AccessDeniedHttpException) {
-                return response()->view('errors.403', [], 403);
+
+                if ($request->expectsJson()) {
+
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Access denied.',
+                    ], 403);
+                }
+
+                return response()
+                    ->view('errors.403', [], 403);
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 419 - CSRF / Session Expired
+            |--------------------------------------------------------------------------
+            */
 
             if ($e instanceof TokenMismatchException) {
+
+                if ($request->expectsJson()) {
+
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Session expired. Please login again.',
+                    ], 419);
+                }
+
                 return redirect()
                     ->route('admin.login')
-                    ->with('warning', 'Session expired. Please login again.');
+                    ->with(
+                        'warning',
+                        'Session expired. Please login again.'
+                    );
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | JSON / AJAX - Generic Error
+            |--------------------------------------------------------------------------
+            */
+
             if ($request->expectsJson()) {
+
                 return response()->json([
-                    'status' => false,
+                    'status'  => false,
                     'message' => 'Something went wrong.',
                 ], 500);
             }
 
-            return response()->view('errors.500', [], 500);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Normal Web - 500
+            |--------------------------------------------------------------------------
+            */
+
+            return response()
+                ->view('errors.500', [], 500);
         });
     })
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create Application
+    |--------------------------------------------------------------------------
+    */
 
     ->create();

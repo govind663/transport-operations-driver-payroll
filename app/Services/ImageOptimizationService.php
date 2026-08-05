@@ -2,20 +2,47 @@
 
 namespace App\Services;
 
+use App\Models\ImageMeta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
-use App\Models\ImageMeta;
 
 class ImageOptimizationService
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Configuration
+    |--------------------------------------------------------------------------
+    */
+
     protected float $startedAt = 0.0;
 
     protected int $maxImagesToAnalyze = 60;
+
     protected int $maxStringLength = 500;
-    protected float $maxExecutionSeconds = 0.1;
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMPORTANT
+    |--------------------------------------------------------------------------
+    |
+    | 0.1 second was too aggressive for database/meta operations.
+    | 0.5 sec gives the optimizer enough time without making the
+    | request unnecessarily expensive.
+    |
+    */
+
+    protected float $maxExecutionSeconds = 0.5;
 
     protected ?string $cdnBaseUrl = null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Constructor
+    |--------------------------------------------------------------------------
+    */
 
     public function __construct(
         protected ImageLearningService $learningService,
@@ -23,329 +50,1370 @@ class ImageOptimizationService
         protected ImageSizeDetector $sizeDetector
     ) {
         $this->cdnBaseUrl = config('app.image_cdn_url');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normalize CDN URL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->cdnBaseUrl) {
+            $this->cdnBaseUrl = rtrim(
+                $this->cdnBaseUrl,
+                '/'
+            );
+        }
     }
 
-    public function optimize(string $html, Request $request): string
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Optimize HTML
+    |--------------------------------------------------------------------------
+    */
+
+    public function optimize(
+        string $html,
+        Request $request
+    ): string {
+
         $this->startedAt = microtime(true);
 
         try {
-            $routePath = '/' . trim($request->path(), '/');
+
+            $routePath = '/' .
+                trim($request->path(), '/');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Root route
+            |--------------------------------------------------------------------------
+            */
+
+            if ($routePath === '/') {
+                $routePath = '/';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Request ID
+            |--------------------------------------------------------------------------
+            */
+
             $requestId = (string) Str::uuid();
+
             $position = 0;
 
-            $supportsWebp = str_contains($request->header('Accept', ''), 'image/webp');
 
-            return preg_replace_callback('/<img[^>]+>/i', function ($matches) use (
-                &$position,
-                $routePath,
-                $request,
-                $requestId,
-                $supportsWebp
-            ) {
+            /*
+            |--------------------------------------------------------------------------
+            | Browser WebP Support
+            |--------------------------------------------------------------------------
+            */
 
-                try {
+            $acceptHeader = strtolower(
+                (string) $request->header('Accept', '')
+            );
 
-                    if ($this->timeBudgetExceeded()) return $matches[0];
+            $supportsWebp = str_contains(
+                $acceptHeader,
+                'image/webp'
+            );
 
-                    $position++;
-                    if ($position > $this->maxImagesToAnalyze) return $matches[0];
 
-                    $imgTag = $matches[0];
+            /*
+            |--------------------------------------------------------------------------
+            | Process Images
+            |--------------------------------------------------------------------------
+            */
 
-                    // ===== SRC =====
-                    preg_match('/src=["\']([^"\']+)["\']/', $imgTag, $srcMatch);
-                    $src = $srcMatch[1] ?? '';
-                    if (!$src) return $imgTag;
+            $result = preg_replace_callback(
+                '/<img\b[^>]*>/i',
 
-                    $parsedPath = parse_url($src, PHP_URL_PATH);
-                    if ($parsedPath) $src = $parsedPath;
+                function ($matches) use (
+                    &$position,
+                    $routePath,
+                    $request,
+                    $requestId,
+                    $supportsWebp
+                ) {
 
-                    // ===== SKIP =====
-                    if (
-                        str_starts_with($src, 'http') ||
-                        str_starts_with($src, '//') ||
-                        str_starts_with($src, 'data:')
-                    ) return $imgTag;
+                    try {
 
-                    if (
-                        str_contains($imgTag, 'data-no-optimize') ||
-                        str_contains($imgTag, 'loading=') ||
-                        str_contains($imgTag, 'fetchpriority=')
-                    ) return $imgTag;
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Time Protection
+                        |--------------------------------------------------------------------------
+                        */
 
-                    // ===== ATTRIBUTES =====
-                    preg_match('/alt=["\']([^"\']*)["\']/', $imgTag, $altMatch);
-                    preg_match('/class=["\']([^"\']*)["\']/', $imgTag, $classMatch);
-                    preg_match('/id=["\']([^"\']*)["\']/', $imgTag, $idMatch);
-                    preg_match('/width=["\']([^"\']*)["\']/', $imgTag, $widthMatch);
-                    preg_match('/height=["\']([^"\']*)["\']/', $imgTag, $heightMatch);
-
-                    $imageAlt = $altMatch[1] ?? '';
-                    $imageClass = $classMatch[1] ?? '';
-                    $imageId = $idMatch[1] ?? '';
-                    $imageWidth = $widthMatch[1] ?? null;
-                    $imageHeight = $heightMatch[1] ?? null;
-
-                    $context = strtolower($imgTag);
-
-                    // ===== ROLE =====
-                    $imageRole = 'content';
-                    if (str_contains($context, 'hero')) $imageRole = 'hero';
-                    elseif (str_contains($context, 'logo')) $imageRole = 'logo';
-                    elseif (str_contains($context, 'product')) $imageRole = 'product';
-                    elseif (str_contains($context, 'icon')) $imageRole = 'icon';
-
-                    // ===== AI SCORE =====
-                    $score = 0;
-                    $confidence = 0;
-                    $reasons = [];
-
-                    if ($position === 1) {
-                        $score += 50;
-                        $confidence += 30;
-                        $reasons[] = 'LCP candidate';
-                    }
-
-                    if ($imageRole === 'hero') {
-                        $score += 40;
-                        $confidence += 25;
-                        $reasons[] = 'Hero image';
-                    }
-
-                    if ($imageRole === 'product') {
-                        $score += 25;
-                        $confidence += 15;
-                    }
-
-                    if ($imageRole === 'logo') {
-                        $score += 20;
-                        $confidence += 10;
-                    }
-
-                    if ($imageRole === 'icon') {
-                        $score -= 25;
-                    }
-
-                    if ($position <= 3) $score += 15;
-                    if ($position >= 10) $score -= 10;
-
-                    // ===== LEARNING =====
-                    $adaptive = $this->learningService->getAdaptiveBoost($routePath, $context, $position);
-                    $score += $adaptive['boost'];
-                    $confidence += $adaptive['confidence'];
-                    $reasons = array_merge($reasons, $adaptive['reasons']);
-
-                    // ===== PRIORITY =====
-                    $loading = 'lazy';
-                    $fetchpriority = '';
-                    $mode = 'deferred';
-
-                    if ($score >= 80) {
-                        $loading = 'eager';
-                        $fetchpriority = 'high';
-                        $mode = 'critical';
-                    } elseif ($score >= 40) {
-                        $loading = 'eager';
-                        $fetchpriority = 'auto';
-                        $mode = 'important';
-                    }
-
-                    // ===== ORIGINAL PATH =====
-                    $originalPath = $src;
-
-                    // ===== CLEAN PATH BEFORE ANY CDN / WEBP =====
-                    $cleanPath = parse_url($originalPath, PHP_URL_PATH);
-                    $cleanPath = ltrim($cleanPath, '/');
-
-                    // ===== META RESOLVE (🔥 FINAL FIX) =====
-                    $metaId = null;
-
-                    // ===== 1. SIZE DETECTOR =====
-                    $size = $this->sizeDetector->getSize($cleanPath);
-
-                    if ($size && !empty($size['meta'])) {
-                        $metaId = $size['meta']->id;
-                    }
-
-                    // ===== 2. EXACT MATCH =====
-                    if (!$metaId) {
-                        $meta = ImageMeta::where('path', $cleanPath)->first();
-                        if ($meta) {
-                            $metaId = $meta->id;
+                        if (
+                            $this->timeBudgetExceeded()
+                        ) {
+                            return $matches[0];
                         }
-                    }
 
-                    // ===== 3. EXTENSION-AGNOSTIC / FUZZY MATCH =====
-                    if (!$metaId) {
-                        $filename = pathinfo($cleanPath, PATHINFO_FILENAME);
 
-                        $meta = ImageMeta::where('path', 'LIKE', '%' . $filename . '%')
-                            ->orderByDesc('id')
-                            ->first();
+                        $position++;
 
-                        if ($meta) {
-                            $metaId = $meta->id;
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Maximum Images
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            $position >
+                            $this->maxImagesToAnalyze
+                        ) {
+                            return $matches[0];
                         }
-                    }
 
-                    // ===== 4. ULTRA FALLBACK =====
-                    if (!$metaId && $size && !empty($size['meta']->id)) {
-                        $metaId = $size['meta']->id;
-                    }
 
-                    // ===== APPLY WIDTH/HEIGHT IF NOT PRESENT =====
-                    if (!$imageWidth || !$imageHeight) {
-                        if ($size && $size['width'] && $size['height']) {
-                            $imgTag = str_replace(
-                                '<img',
-                                '<img width="'.$size['width'].'" height="'.$size['height'].'"',
+                        $imgTag = $matches[0];
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | SRC
+                        |--------------------------------------------------------------------------
+                        */
+
+                        preg_match(
+                            '/\bsrc\s*=\s*["\']([^"\']+)["\']/i',
+                            $imgTag,
+                            $srcMatch
+                        );
+
+                        $src = $srcMatch[1] ?? '';
+
+
+                        if ($src === '') {
+                            return $imgTag;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Parse URL
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $parsedPath = parse_url(
+                            $src,
+                            PHP_URL_PATH
+                        );
+
+                        if ($parsedPath) {
+                            $src = $parsedPath;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Skip External / Data Images
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            str_starts_with(
+                                strtolower($src),
+                                'http://'
+                            ) ||
+                            str_starts_with(
+                                strtolower($src),
+                                'https://'
+                            ) ||
+                            str_starts_with(
+                                $src,
+                                '//'
+                            ) ||
+                            str_starts_with(
+                                strtolower($src),
+                                'data:'
+                            ) ||
+                            str_starts_with(
+                                strtolower($src),
+                                'blob:'
+                            )
+                        ) {
+                            return $imgTag;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Explicit No Optimize
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            preg_match(
+                                '/\bdata-no-optimize\b/i',
                                 $imgTag
+                            )
+                        ) {
+                            return $imgTag;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Attributes
+                        |--------------------------------------------------------------------------
+                        */
+
+                        preg_match(
+                            '/\balt\s*=\s*["\']([^"\']*)["\']/i',
+                            $imgTag,
+                            $altMatch
+                        );
+
+                        preg_match(
+                            '/\bclass\s*=\s*["\']([^"\']*)["\']/i',
+                            $imgTag,
+                            $classMatch
+                        );
+
+                        preg_match(
+                            '/\bid\s*=\s*["\']([^"\']*)["\']/i',
+                            $imgTag,
+                            $idMatch
+                        );
+
+                        preg_match(
+                            '/\bwidth\s*=\s*["\']([^"\']*)["\']/i',
+                            $imgTag,
+                            $widthMatch
+                        );
+
+                        preg_match(
+                            '/\bheight\s*=\s*["\']([^"\']*)["\']/i',
+                            $imgTag,
+                            $heightMatch
+                        );
+
+
+                        $imageAlt =
+                            $altMatch[1] ?? '';
+
+                        $imageClass =
+                            $classMatch[1] ?? '';
+
+                        $imageId =
+                            $idMatch[1] ?? '';
+
+                        $imageWidth =
+                            $widthMatch[1] ?? null;
+
+                        $imageHeight =
+                            $heightMatch[1] ?? null;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Context
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $context = strtolower(
+                            $imgTag
+                        );
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Image Role
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $imageRole = 'content';
+
+                        if (
+                            str_contains(
+                                $context,
+                                'hero'
+                            )
+                        ) {
+
+                            $imageRole = 'hero';
+
+                        } elseif (
+                            str_contains(
+                                $context,
+                                'logo'
+                            )
+                        ) {
+
+                            $imageRole = 'logo';
+
+                        } elseif (
+                            str_contains(
+                                $context,
+                                'product'
+                            )
+                        ) {
+
+                            $imageRole = 'product';
+
+                        } elseif (
+                            str_contains(
+                                $context,
+                                'icon'
+                            )
+                        ) {
+
+                            $imageRole = 'icon';
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | AI Score
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $score = 0;
+
+                        $confidence = 0;
+
+                        $reasons = [];
+
+
+                        if ($position === 1) {
+
+                            $score += 50;
+
+                            $confidence += 30;
+
+                            $reasons[] =
+                                'LCP candidate';
+                        }
+
+
+                        if (
+                            $imageRole === 'hero'
+                        ) {
+
+                            $score += 40;
+
+                            $confidence += 25;
+
+                            $reasons[] =
+                                'Hero image';
+                        }
+
+
+                        if (
+                            $imageRole === 'product'
+                        ) {
+
+                            $score += 25;
+
+                            $confidence += 15;
+
+                            $reasons[] =
+                                'Product image';
+                        }
+
+
+                        if (
+                            $imageRole === 'logo'
+                        ) {
+
+                            $score += 20;
+
+                            $confidence += 10;
+
+                            $reasons[] =
+                                'Logo image';
+                        }
+
+
+                        if (
+                            $imageRole === 'icon'
+                        ) {
+
+                            $score -= 25;
+
+                            $reasons[] =
+                                'Icon image';
+                        }
+
+
+                        if ($position <= 3) {
+                            $score += 15;
+                        }
+
+
+                        if ($position >= 10) {
+                            $score -= 10;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Adaptive Learning
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $adaptive =
+                            $this->learningService
+                                ->getAdaptiveBoost(
+                                    $routePath,
+                                    $context,
+                                    $position
+                                );
+
+
+                        $score +=
+                            (int) (
+                                $adaptive['boost'] ?? 0
                             );
-                        } else {
-                            if (!str_contains($imgTag, 'style=')) {
-                                $imgTag = str_replace(
-                                    '<img',
-                                    '<img style="height:auto; max-width:100%;"',
-                                    $imgTag
+
+
+                        $confidence +=
+                            (int) (
+                                $adaptive['confidence'] ?? 0
+                            );
+
+
+                        $reasons = array_merge(
+                            $reasons,
+                            $adaptive['reasons'] ?? []
+                        );
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Priority
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $loading = 'lazy';
+
+                        $fetchpriority = '';
+
+                        $mode = 'deferred';
+
+
+                        if ($score >= 80) {
+
+                            $loading = 'eager';
+
+                            $fetchpriority = 'high';
+
+                            $mode = 'critical';
+
+                        } elseif ($score >= 40) {
+
+                            $loading = 'eager';
+
+                            $fetchpriority = 'auto';
+
+                            $mode = 'important';
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | CLEAN ORIGINAL PATH
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $originalPath = $src;
+
+
+                        $cleanPath = parse_url(
+                            $originalPath,
+                            PHP_URL_PATH
+                        );
+
+
+                        $cleanPath = ltrim(
+                            (string) $cleanPath,
+                            '/'
+                        );
+
+
+                        if ($cleanPath === '') {
+                            return $imgTag;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | IMAGE META
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $meta = null;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | 1. Size Detector
+                        |--------------------------------------------------------------------------
+                        */
+
+                        try {
+
+                            $size =
+                                $this->sizeDetector
+                                    ->getSize(
+                                        $cleanPath
+                                    );
+
+                        } catch (Throwable $e) {
+
+                            $size = null;
+
+                            Log::warning(
+                                'ImageSizeDetector failed.',
+                                [
+                                    'path' => $cleanPath,
+                                    'message' =>
+                                        $e->getMessage(),
+                                ]
+                            );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Resolve Meta From Detector
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            is_array($size) &&
+                            !empty($size['meta']) &&
+                            $size['meta'] instanceof ImageMeta
+                        ) {
+
+                            $meta =
+                                $size['meta'];
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | 2. Exact Match
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (!$meta) {
+
+                            $meta =
+                                ImageMeta::query()
+                                    ->where(
+                                        'path',
+                                        $cleanPath
+                                    )
+                                    ->whereNull(
+                                        'deleted_at'
+                                    )
+                                    ->first();
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | 3. Extension Agnostic Match
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (!$meta) {
+
+                            $filename =
+                                pathinfo(
+                                    $cleanPath,
+                                    PATHINFO_FILENAME
+                                );
+
+
+                            if ($filename !== '') {
+
+                                $meta =
+                                    ImageMeta::query()
+                                        ->whereNull(
+                                            'deleted_at'
+                                        )
+                                        ->where(
+                                            'path',
+                                            'LIKE',
+                                            '%' .
+                                            $filename .
+                                            '%'
+                                        )
+                                        ->latest('id')
+                                        ->first();
+                            }
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | 4. CREATE IMAGE META
+                        |--------------------------------------------------------------------------
+                        |
+                        | This is the important fix.
+                        |
+                        | If image_meta does not exist,
+                        | create it automatically.
+                        |
+                        */
+
+                        if (!$meta) {
+
+                            try {
+
+                                $detectedWidth =
+                                    $this->nullableInteger(
+                                        $size['width'] ?? null
+                                    );
+
+                                $detectedHeight =
+                                    $this->nullableInteger(
+                                        $size['height'] ?? null
+                                    );
+
+                                $detectedType =
+                                    $this->detectImageType(
+                                        $cleanPath
+                                    );
+
+                                $detectedFileSize =
+                                    $this->detectFileSize(
+                                        $cleanPath
+                                    );
+
+                                $detectedHash =
+                                    $this->generateImageHash(
+                                        $cleanPath
+                                    );
+
+
+                                $meta =
+                                    ImageMeta::query()
+                                        ->create([
+                                            'path' =>
+                                                $cleanPath,
+
+                                            'width' =>
+                                                $detectedWidth,
+
+                                            'height' =>
+                                                $detectedHeight,
+
+                                            'type' =>
+                                                $detectedType,
+
+                                            'file_size' =>
+                                                $detectedFileSize,
+
+                                            'hash' =>
+                                                $detectedHash,
+                                        ]);
+
+                            } catch (Throwable $e) {
+
+                                Log::warning(
+                                    'ImageMeta creation failed.',
+                                    [
+                                        'path' =>
+                                            $cleanPath,
+
+                                        'message' =>
+                                            $e->getMessage(),
+                                    ]
                                 );
                             }
                         }
-                    }
 
-                    // ===== CDN & WEBP AFTER META RESOLVE =====
-                    if ($this->cdnBaseUrl) {
-                        $src = rtrim($this->cdnBaseUrl, '/') . '/' . ltrim($cleanPath, '/');
-                    }
 
-                    // ===== WEBP =====
-                    if ($supportsWebp) {
-                        $src = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $src);
-                    }
+                        /*
+                        |--------------------------------------------------------------------------
+                        | META ID
+                        |--------------------------------------------------------------------------
+                        */
 
-                    // ===== UPDATE IMG TAG SRC =====
-                    $imgTag = preg_replace('/src=["\']([^"\']+)["\']/', 'src="'.$src.'"', $imgTag);
+                        $metaId =
+                            $meta?->id;
 
-                    // ===== SIZE APPLY =====
-                    if (!$imageWidth || !$imageHeight) {
 
-                        if ($size && $size['width'] && $size['height']) {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Actual Dimensions
+                        |--------------------------------------------------------------------------
+                        */
 
-                            $imgTag = str_replace(
-                                '<img',
-                                '<img width="'.$size['width'].'" height="'.$size['height'].'"',
+                        $detectedWidth =
+                            $size['width'] ?? null;
+
+                        $detectedHeight =
+                            $size['height'] ?? null;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Apply Detected Dimensions
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            !$imageWidth &&
+                            $detectedWidth
+                        ) {
+
+                            $imageWidth =
+                                (string) $detectedWidth;
+                        }
+
+
+                        if (
+                            !$imageHeight &&
+                            $detectedHeight
+                        ) {
+
+                            $imageHeight =
+                                (string) $detectedHeight;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Add Dimensions / Fallback Style
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            !$imageWidth ||
+                            !$imageHeight
+                        ) {
+
+                            if (
+                                $detectedWidth &&
+                                $detectedHeight
+                            ) {
+
+                                $imgTag =
+                                    str_replace(
+                                        '<img',
+                                        '<img width="' .
+                                        $detectedWidth .
+                                        '" height="' .
+                                        $detectedHeight .
+                                        '"',
+                                        $imgTag
+                                    );
+
+                            } elseif (
+                                !preg_match(
+                                    '/\bstyle\s*=/i',
+                                    $imgTag
+                                )
+                            ) {
+
+                                $imgTag =
+                                    str_replace(
+                                        '<img',
+                                        '<img style="height:auto; max-width:100%;"',
+                                        $imgTag
+                                    );
+                            }
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Build Optimized Source
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $optimizedSrc =
+                            $cleanPath;
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | WebP
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if ($supportsWebp) {
+
+                            $optimizedSrc =
+                                preg_replace(
+                                    '/\.(jpg|jpeg|png)$/i',
+                                    '.webp',
+                                    $optimizedSrc
+                                );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | CDN
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if ($this->cdnBaseUrl) {
+
+                            $optimizedSrc =
+                                $this->cdnBaseUrl .
+                                '/' .
+                                ltrim(
+                                    $optimizedSrc,
+                                    '/'
+                                );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Update SRC
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $imgTag =
+                            preg_replace(
+                                '/\bsrc\s*=\s*["\']([^"\']+)["\']/i',
+                                'src="' .
+                                e($optimizedSrc) .
+                                '"',
                                 $imgTag
                             );
 
-                        } else {
 
-                            if (!str_contains($imgTag, 'style=')) {
-                                $imgTag = str_replace(
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Decoding
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            !preg_match(
+                                '/\bdecoding\s*=/i',
+                                $imgTag
+                            )
+                        ) {
+
+                            $imgTag =
+                                str_replace(
                                     '<img',
-                                    '<img style="height:auto; max-width:100%;"',
+                                    '<img decoding="async"',
                                     $imgTag
                                 );
-                            }
                         }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Loading
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            !preg_match(
+                                '/\bloading\s*=/i',
+                                $imgTag
+                            )
+                        ) {
+
+                            $imgTag =
+                                str_replace(
+                                    '<img',
+                                    '<img loading="' .
+                                    $loading .
+                                    '"',
+                                    $imgTag
+                                );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Fetch Priority
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            $fetchpriority !== '' &&
+                            !preg_match(
+                                '/\bfetchpriority\s*=/i',
+                                $imgTag
+                            )
+                        ) {
+
+                            $imgTag =
+                                str_replace(
+                                    '<img',
+                                    '<img fetchpriority="' .
+                                    $fetchpriority .
+                                    '"',
+                                    $imgTag
+                                );
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | LOGGER
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $this->logger->push([
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Request
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'request_id' =>
+                                $requestId,
+
+                            'route_path' =>
+                                $routePath,
+
+                            'full_url' =>
+                                $request->fullUrl(),
+
+                            'http_method' =>
+                                $request->method(),
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Image
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'image_position' =>
+                                $position,
+
+                            'image_src' =>
+                                $meta?->path ??
+                                $cleanPath,
+
+                            'image_alt' =>
+                                $this->sanitizeString(
+                                    $imageAlt
+                                ),
+
+                            'image_class' =>
+                                $this->sanitizeString(
+                                    $imageClass
+                                ),
+
+                            'image_id' =>
+                                $this->sanitizeString(
+                                    $imageId
+                                ),
+
+                            'image_width' =>
+                                $this->nullableInteger(
+                                    $imageWidth
+                                ) ??
+                                $detectedWidth,
+
+                            'image_height' =>
+                                $this->nullableInteger(
+                                    $imageHeight
+                                ) ??
+                                $detectedHeight,
+
+                            'image_role' =>
+                                $imageRole,
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | IMPORTANT
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'image_meta_id' =>
+                                $metaId,
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Optimization
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'status' =>
+                                'optimized',
+
+                            'mode' =>
+                                $mode,
+
+                            'score' =>
+                                $score,
+
+                            'confidence' =>
+                                $confidence >= 60
+                                    ? 'high'
+                                    : (
+                                        $confidence >= 30
+                                            ? 'medium'
+                                            : 'low'
+                                    ),
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Browser
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'loading_value' =>
+                                $loading,
+
+                            'fetchpriority_value' =>
+                                $fetchpriority,
+
+                            'decoding_value' =>
+                                'async',
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Learning
+                            |--------------------------------------------------------------------------
+                            */
+
+                            'reasons' =>
+                                $this->sanitizeReasons(
+                                    $reasons
+                                ),
+
+                            'context_payload' => [
+
+                                'route_path' =>
+                                    $routePath,
+
+                                'position' =>
+                                    $position,
+
+                                'image_meta_id' =>
+                                    $metaId,
+
+                                'supports_webp' =>
+                                    $supportsWebp,
+
+                                'original_path' =>
+                                    $cleanPath,
+
+                                'optimized_path' =>
+                                    $optimizedSrc,
+                            ],
+                        ]);
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Return Optimized IMG
+                        |--------------------------------------------------------------------------
+                        */
+
+                        return $imgTag;
+
+                    } catch (Throwable $e) {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | NEVER BREAK PAGE
+                        |--------------------------------------------------------------------------
+                        */
+
+                        Log::warning(
+                            'Image optimization failed.',
+                            [
+                                'route' =>
+                                    $request->path(),
+
+                                'position' =>
+                                    $position,
+
+                                'message' =>
+                                    $e->getMessage(),
+
+                                'file' =>
+                                    $e->getFile(),
+
+                                'line' =>
+                                    $e->getLine(),
+                            ]
+                        );
+
+                        return $matches[0];
                     }
 
-                    // ===== CDN =====
-                    if ($this->cdnBaseUrl) {
-                        $src = rtrim($this->cdnBaseUrl, '/') . '/' . ltrim($src, '/');
-                    }
+                },
+                $html
+            );
 
-                    // ===== WEBP =====
-                    if ($supportsWebp) {
-                        $src = preg_replace('/\.(jpg|jpeg|png)$/i', '.webp', $src);
-                    }
 
-                    $imgTag = preg_replace('/src=["\']([^"\']+)["\']/', 'src="'.$src.'"', $imgTag);
+            /*
+            |--------------------------------------------------------------------------
+            | preg_replace_callback Failure
+            |--------------------------------------------------------------------------
+            */
 
-                    // ===== ATTRIBUTES =====
-                    if (!str_contains($imgTag, 'decoding=')) {
-                        $imgTag = str_replace('<img', '<img decoding="async"', $imgTag);
-                    }
+            return is_string($result)
+                ? $result
+                : $html;
 
-                    if (!str_contains($imgTag, 'loading=')) {
-                        $imgTag = str_replace('<img', '<img loading="'.$loading.'"', $imgTag);
-                    }
+        } catch (Throwable $e) {
 
-                    if ($fetchpriority && !str_contains($imgTag, 'fetchpriority=')) {
-                        $imgTag = str_replace('<img', '<img fetchpriority="'.$fetchpriority.'"', $imgTag);
-                    }
+            Log::warning(
+                'ImageOptimizationService failed.',
+                [
+                    'message' =>
+                        $e->getMessage(),
 
-                    // ===== LOGGER =====
-                    $this->logger->push([
-                        'request_id' => $requestId,
-                        'route_path' => $routePath,
-                        'full_url' => $request->fullUrl(),
-                        'http_method' => $request->method(),
+                    'file' =>
+                        $e->getFile(),
 
-                        'image_position' => $position,
+                    'line' =>
+                        $e->getLine(),
+                ]
+            );
 
-                        // store exact path as in ImageMeta
-                        'image_src' => $size['meta'] ? $size['meta']->path : $src, 
-
-                        'image_alt' => $this->sanitizeString($imageAlt),
-                        'image_class' => $this->sanitizeString($imageClass),
-                        'image_id' => $this->sanitizeString($imageId),
-                        'image_width' => $imageWidth,
-                        'image_height' => $imageHeight,
-                        'image_role' => $imageRole,
-                        'image_meta_id' => $metaId,
-                        'status' => 'optimized',
-                        'mode' => $mode,
-                        'score' => $score,
-                        'confidence' => $confidence >= 60 ? 'high' : ($confidence >= 30 ? 'medium' : 'low'),
-
-                        'loading_value' => $loading,
-                        'fetchpriority_value' => $fetchpriority,
-                        'decoding_value' => 'async',
-
-                        'reasons' => $this->sanitizeReasons($reasons),
-
-                        'context_payload' => [
-                            'route_path' => $routePath,
-                            'position' => $position,
-                        ],
-                    ]);
-
-                    return $imgTag;
-
-                } catch (\Throwable $e) {
-                    logger()->error($e->getMessage());
-                    return $matches[0];
-                }
-
-            }, $html);
-
-        } catch (Throwable) {
             return $html;
         }
     }
 
-    protected function sanitizeReasons(array $reasons): array
-    {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Detect Image Type
+    |--------------------------------------------------------------------------
+    */
+
+    protected function detectImageType(
+        string $path
+    ): ?string {
+
+        $extension =
+            strtolower(
+                pathinfo(
+                    $path,
+                    PATHINFO_EXTENSION
+                )
+            );
+
+
+        return match ($extension) {
+
+            'jpg',
+            'jpeg' => 'image/jpeg',
+
+            'png' => 'image/png',
+
+            'webp' => 'image/webp',
+
+            'gif' => 'image/gif',
+
+            'svg' => 'image/svg+xml',
+
+            'avif' => 'image/avif',
+
+            default => null,
+        };
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Detect File Size
+    |--------------------------------------------------------------------------
+    */
+
+    protected function detectFileSize(
+        string $path
+    ): ?int {
+
+        try {
+
+            $fullPath =
+                public_path(
+                    ltrim($path, '/')
+                );
+
+
+            if (
+                is_file($fullPath) &&
+                is_readable($fullPath)
+            ) {
+
+                $size =
+                    filesize($fullPath);
+
+                return $size !== false
+                    ? (int) $size
+                    : null;
+            }
+
+        } catch (Throwable) {
+
+            return null;
+        }
+
+
+        return null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Generate Image Hash
+    |--------------------------------------------------------------------------
+    */
+
+    protected function generateImageHash(
+        string $path
+    ): ?string {
+
+        try {
+
+            $fullPath =
+                public_path(
+                    ltrim($path, '/')
+                );
+
+
+            if (
+                is_file($fullPath) &&
+                is_readable($fullPath)
+            ) {
+
+                $hash =
+                    hash_file(
+                        'sha256',
+                        $fullPath
+                    );
+
+                return $hash ?: null;
+            }
+
+        } catch (Throwable) {
+
+            return null;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fallback Hash
+        |--------------------------------------------------------------------------
+        */
+
+        return hash(
+            'sha256',
+            $path
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sanitize Reasons
+    |--------------------------------------------------------------------------
+    */
+
+    protected function sanitizeReasons(
+        array $reasons
+    ): array {
+
         return collect($reasons)
-            ->map(fn ($r) => $this->sanitizeString($r, 180))
+            ->map(
+                fn ($reason) =>
+                    $this->sanitizeString(
+                        (string) $reason,
+                        180
+                    )
+            )
             ->filter()
             ->take(10)
             ->values()
             ->all();
     }
 
-    protected function sanitizeString(?string $value, ?int $limit = null): string
-    {
-        $value = $value ?? '';
-        $value = strip_tags($value);
-        $value = preg_replace('/\s+/', ' ', $value) ?? '';
-        $value = trim($value);
 
-        return Str::limit($value, $limit ?? $this->maxStringLength, '');
+    /*
+    |--------------------------------------------------------------------------
+    | Sanitize String
+    |--------------------------------------------------------------------------
+    */
+
+    protected function sanitizeString(
+        ?string $value,
+        ?int $limit = null
+    ): string {
+
+        $value =
+            $value ?? '';
+
+        $value =
+            strip_tags($value);
+
+        $value =
+            preg_replace(
+                '/\s+/',
+                ' ',
+                $value
+            ) ?? '';
+
+        $value =
+            trim($value);
+
+
+        return Str::limit(
+            $value,
+            $limit ??
+                $this->maxStringLength,
+            ''
+        );
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Nullable Integer
+    |--------------------------------------------------------------------------
+    */
+
+    protected function nullableInteger(
+        mixed $value
+    ): ?int {
+
+        if (
+            $value === null ||
+            $value === '' ||
+            !is_numeric($value)
+        ) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Time Budget
+    |--------------------------------------------------------------------------
+    */
 
     protected function timeBudgetExceeded(): bool
     {
-        return (microtime(true) - $this->startedAt) >= $this->maxExecutionSeconds;
+        return (
+            microtime(true) -
+            $this->startedAt
+        ) >= $this->maxExecutionSeconds;
     }
 }

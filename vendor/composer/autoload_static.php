@@ -710,7 +710,6 @@ class ComposerStaticInit01d97aa79dec38ddfa7fcad78138d3bd
         'App\\Http\\Middleware\\PreventBackHistoryMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/PreventBackHistoryMiddleware.php',
         'App\\Http\\Middleware\\PreventCitizenBackHistoryMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/PreventCitizenBackHistoryMiddleware.php',
         'App\\Http\\Middleware\\RedirectIfAuthenticatedCustom' => __DIR__ . '/../..' . '/app/Http/Middleware/RedirectIfAuthenticatedCustom.php',
-        'App\\Http\\Middleware\\ResumeStepLockMiddleware' => __DIR__ . '/../..' . '/app/Http/Middleware/ResumeStepLockMiddleware.php',
         'App\\Http\\Requests\\Backend\\Auth\\LoginRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Backend/Auth/LoginRequest.php',
         'App\\Http\\Requests\\Backend\\Auth\\RegisterRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Backend/Auth/RegisterRequest.php',
         'App\\Mail\\ClientWelcomeMail' => __DIR__ . '/../..' . '/app/Mail/ClientWelcomeMail.php',
