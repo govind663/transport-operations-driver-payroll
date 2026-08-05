@@ -14,8 +14,7 @@ use App\Http\Controllers\backend\Auth\ForgotPasswordController;
 use App\Http\Controllers\backend\Auth\ResetPasswordController;
 
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
-
-
+use App\Http\Controllers\backend\UserController;
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -37,7 +36,6 @@ use App\Http\Middleware\RedirectIfAuthenticatedCustom;
 | Guest      → Admin Login
 |
 */
-
 Route::get('/', function () {
 
     if (Auth::guard('web')->check()) {
@@ -60,7 +58,6 @@ Route::get('/', function () {
 | Guest      → Admin Login
 |
 */
-
 Route::get('/login', function () {
 
     return Auth::guard('web')->check()
@@ -80,7 +77,6 @@ Route::get('/login', function () {
 | OptimizeImagesMiddleware is explicitly called here.
 |
 */
-
 Route::prefix('admin')
     ->middleware([
         OptimizeImagesMiddleware::class,
@@ -93,7 +89,6 @@ Route::prefix('admin')
         | Admin Login
         |--------------------------------------------------------------------------
         */
-
         Route::get(
             '/',
             [LoginController::class, 'login']
@@ -110,7 +105,6 @@ Route::prefix('admin')
         | Admin Register
         |--------------------------------------------------------------------------
         */
-
         Route::get(
             '/register',
             [RegisterController::class, 'register']
@@ -127,7 +121,6 @@ Route::prefix('admin')
         | Forgot Password
         |--------------------------------------------------------------------------
         */
-
         Route::get(
             '/forgot-password',
             [ForgotPasswordController::class, 'showLinkRequestForm']
@@ -144,7 +137,6 @@ Route::prefix('admin')
         | Reset Password
         |--------------------------------------------------------------------------
         */
-
         Route::get(
             '/reset-password/{token}',
             [ResetPasswordController::class, 'showResetForm']
@@ -168,7 +160,6 @@ Route::prefix('admin')
 | OptimizeImagesMiddleware is explicitly called here as well.
 |
 */
-
 Route::prefix('admin')
     ->middleware([
         OptimizeImagesMiddleware::class,
@@ -182,11 +173,17 @@ Route::prefix('admin')
         | Dashboard
         |--------------------------------------------------------------------------
         */
-
         Route::get(
             '/dashboard',
             [BackendHomeController::class, 'adminHome']
         )->name('admin.dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | User Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource('users', UserController::class);
 
 
         /*
@@ -194,7 +191,6 @@ Route::prefix('admin')
         | Profile & Account
         |--------------------------------------------------------------------------
         */
-
         Route::controller(BackendHomeController::class)
             ->group(function () {
 
@@ -203,7 +199,6 @@ Route::prefix('admin')
                 | Profile
                 |--------------------------------------------------------------------------
                 */
-
                 Route::get(
                     '/profile',
                     'adminProfile'
@@ -215,7 +210,6 @@ Route::prefix('admin')
                 | Update Profile
                 |--------------------------------------------------------------------------
                 */
-
                 Route::post(
                     '/profile/update',
                     'updateAdminProfile'
@@ -227,7 +221,6 @@ Route::prefix('admin')
                 | Change Password
                 |--------------------------------------------------------------------------
                 */
-
                 Route::get(
                     '/change-password',
                     'changePassword'
@@ -239,7 +232,6 @@ Route::prefix('admin')
                 | Update Password
                 |--------------------------------------------------------------------------
                 */
-
                 Route::post(
                     '/change-password',
                     'updatePassword'
@@ -253,7 +245,6 @@ Route::prefix('admin')
         | Logout
         |--------------------------------------------------------------------------
         */
-
         Route::post(
             '/logout',
             [LoginController::class, 'logout']

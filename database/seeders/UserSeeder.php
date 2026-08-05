@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
             'status'            => User::STATUS_ACTIVE,
             'email'             => 'admin@gmail.com',
             'email_verified_at' => Carbon::now(),
-            'password'          => Hash::make('DriveFlow@123'),
+            'password'          => Hash::make('Admin@123'),
             'created_by'        => 1,
             'created_at'        => Carbon::now(),
             'updated_at'        => Carbon::now(),

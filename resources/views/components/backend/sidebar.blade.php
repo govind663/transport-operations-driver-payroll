@@ -113,13 +113,117 @@
     <div class="menu-block customscroll">
         <div class="sidebar-menu">
             <ul id="accordion-menu">
+
                 {{-- Dashboard --}}
                 <li>
-                    <a href="{{ route('admin.dashboard') }}" 
-                    class="dropdown-toggle no-arrow {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="dropdown-toggle no-arrow {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <span class="micon bi bi-house-door"></span>
                         <span class="mtext">Dashboard</span>
                     </a>
+                </li>
+
+                {{-- User Management --}}
+                <li class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle">
+                        <span class="micon bi bi-people"></span>
+                        <span class="mtext">User Management</span>
+                    </a>
+
+                    <ul class="submenu {{ request()->routeIs('users.*') ? 'show' : '' }}">
+
+                        <li>
+                            <a href="{{ route('users.index') }}"
+                                class="{{ request()->routeIs('users.*') ? 'active' : '' }}">
+                                Users
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                {{-- Masters --}}
+                <li class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle">
+                        <span class="micon bi bi-collection"></span>
+                        <span class="mtext">Masters</span>
+                    </a>
+
+                    <ul class="submenu">
+
+                        <li><a href="#">Client Management</a></li>
+
+                        <li><a href="#">Driver Management</a></li>
+
+                        <li><a href="#">Vehicle Categories</a></li>
+
+                        <li><a href="#">Vehicle Types</a></li>
+
+                        <li><a href="#">Vehicle Management</a></li>                       
+
+                    </ul>
+                </li>
+
+                {{-- Operations --}}
+                <li class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle">
+                        <span class="micon bi bi-truck"></span>
+                        <span class="mtext">Operations</span>
+                    </a>
+
+                    <ul class="submenu">
+
+                        <li><a href="#">Travel Requests</a></li>
+
+                        <li><a href="#">Duty Assignments</a></li>
+
+                        <li><a href="#">Duty Slips</a></li>
+
+                        <li><a href="#">Working Sheets</a></li>
+
+                    </ul>
+                </li>
+
+                {{-- Payroll --}}
+                <li class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle">
+                        <span class="micon bi bi-cash-stack"></span>
+                        <span class="mtext">Payroll</span>
+                    </a>
+
+                    <ul class="submenu">
+
+                        <li><a href="#">Salary Processing</a></li>
+
+                        <li><a href="#">Allowances</a></li>
+
+                        <li><a href="#">Expenses</a></li>
+
+                        <li><a href="#">Salary Slips</a></li>
+
+                    </ul>
+                </li>
+
+                {{-- Reports --}}
+                <li class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle">
+                        <span class="micon bi bi-bar-chart"></span>
+                        <span class="mtext">Reports</span>
+                    </a>
+
+                    <ul class="submenu">
+
+                        <li><a href="#">Driver Reports</a></li>
+
+                        <li><a href="#">Vehicle Reports</a></li>
+
+                        <li><a href="#">Duty Reports</a></li>
+
+                        <li><a href="#">Working Sheet Reports</a></li>
+
+                        <li><a href="#">Payroll Reports</a></li>
+
+                    </ul>
                 </li>
 
                 {{-- Settings --}}
@@ -130,22 +234,24 @@
                     </a>
 
                     <ul class="submenu {{ request()->routeIs('admin.change-password') || request()->routeIs('admin.profile') ? 'show' : '' }}">
-                        
+
                         <li>
-                            <a href="{{ route('admin.change-password') }}" 
-                            class="{{ request()->routeIs('admin.change-password') ? 'active' : '' }}">
-                                Change Password
-                            </a>
-                        </li>
-                        
-                        <li>
-                            <a href="{{ route('admin.profile') }}" 
-                            class="{{ request()->routeIs('admin.profile') ? 'active' : '' }}">
+                            <a href="{{ route('admin.profile') }}"
+                                class="{{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                                 Profile
                             </a>
                         </li>
+
+                        <li>
+                            <a href="{{ route('admin.change-password') }}"
+                                class="{{ request()->routeIs('admin.change-password') ? 'active' : '' }}">
+                                Change Password
+                            </a>
+                        </li>
+
                     </ul>
                 </li>
+
             </ul>
         </div>
     </div>
