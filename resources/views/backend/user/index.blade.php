@@ -193,27 +193,27 @@
 
                                             'admin' => [
                                                 'class' => 'badge-danger',
-                                                'icon'  => 'fa fa-user-shield'
+                                                'icon'  => 'bi bi-shield-lock-fill'
                                             ],
 
                                             'operations' => [
                                                 'class' => 'badge-primary',
-                                                'icon'  => 'fa fa-cogs'
+                                                'icon'  => 'bi bi-gear-fill'
                                             ],
 
                                             'accountant' => [
                                                 'class' => 'badge-warning',
-                                                'icon'  => 'fa fa-calculator'
+                                                'icon'  => 'bi bi-calculator-fill'
                                             ],
 
                                             'driver' => [
                                                 'class' => 'badge-success',
-                                                'icon'  => 'fa fa-truck'
+                                                'icon'  => 'bi bi-truck'
                                             ],
 
                                             default => [
                                                 'class' => 'badge-secondary',
-                                                'icon'  => 'fa fa-user'
+                                                'icon'  => 'bi bi-person-fill'
                                             ],
 
                                         };
