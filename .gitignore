@@ -1,0 +1,133 @@
+# =====================================================
+# SYSTEM / OS FILES
+# =====================================================
+
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Ignore log files
+*.log
+
+
+# =====================================================
+# ENVIRONMENT FILES
+# =====================================================
+
+# Main env file
+# Uncomment below if you don't want .env in git
+# .env
+
+.env.backup
+.env.production
+.env.local
+.env.testing
+
+
+# =====================================================
+# PHP / LARAVEL CACHE FILES
+# =====================================================
+
+.phpactor.json
+.phpunit.result.cache
+
+
+# =====================================================
+# IDE / EDITOR SETTINGS
+# =====================================================
+
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+
+
+# =====================================================
+# AUTH / SECRET FILES
+# =====================================================
+
+/auth.json
+
+
+# =====================================================
+# NODE / FRONTEND FILES
+# =====================================================
+
+/node_modules
+/public/build
+/public/hot
+
+
+# =====================================================
+# LARAVEL STORAGE
+# =====================================================
+
+# Ignore everything inside storage
+/storage/*
+
+# Ignore logs explicitly
+/storage/logs/*
+*.log
+
+# Ignore framework cache/session files
+/storage/framework/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+
+# Ignore Laravel generated key files
+/storage/*.key
+
+# Ignore temporary folders
+/storage/pail
+
+
+# =====================================================
+# ALLOW REQUIRED STORAGE FOLDERS
+# =====================================================
+
+# Allow storage/app
+!/storage/app/
+
+# Allow storage/app/public
+!/storage/app/public/
+
+# Allow everything inside public storage
+!/storage/app/public/**
+
+# Specific public image folders
+!/storage/app/public/about-section-images/
+!/storage/app/public/about-section-images/**
+
+# Allow public storage symlink/folder
+!/storage/public/
+!/storage/public/**
+
+
+# =====================================================
+# VENDOR FOLDER
+# =====================================================
+
+# Uncomment below if vendor should NOT be uploaded
+# /vendor
+
+
+# =====================================================
+# LARAVEL HOMESTEAD
+# =====================================================
+
+Homestead.json
+Homestead.yaml
+
+
+# =====================================================
+# OPTIONAL: TEST / DEBUG FILES
+# =====================================================
+
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
