@@ -144,24 +144,60 @@
 
                 {{-- Masters --}}
                 <li class="dropdown">
+
                     <a href="javascript:;" class="dropdown-toggle">
                         <span class="micon bi bi-collection"></span>
                         <span class="mtext">Masters</span>
                     </a>
 
-                    <ul class="submenu">
+                    @php
+                        $masterRoutes = [
+                            'client-management.*',
+                            // 'driver-management.*',
+                            // 'vehicle-categories.*',
+                            // 'vehicle-types.*',
+                            // 'vehicle-management.*',
+                        ];
 
-                        <li><a href="#">Client Management</a></li>
+                        $isMasterActive = collect($masterRoutes)
+                            ->contains(fn ($route) => request()->routeIs($route));
+                    @endphp
 
-                        <li><a href="#">Driver Management</a></li>
+                    <ul class="submenu {{ $isMasterActive ? 'show' : '' }}">
 
-                        <li><a href="#">Vehicle Categories</a></li>
+                        <li>
+                            <a href="{{ route('client-management.index') }}"
+                                class="{{ request()->routeIs('client-management.*') ? 'active' : '' }}">
+                                Client Management
+                            </a>
+                        </li>
 
-                        <li><a href="#">Vehicle Types</a></li>
+                        <li>
+                            <a href="#">
+                                Driver Management
+                            </a>
+                        </li>
 
-                        <li><a href="#">Vehicle Management</a></li>                       
+                        <li>
+                            <a href="#">
+                                Vehicle Categories
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="#">
+                                Vehicle Types
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="#">
+                                Vehicle Management
+                            </a>
+                        </li>
 
                     </ul>
+
                 </li>
 
                 {{-- Operations --}}

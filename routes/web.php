@@ -15,6 +15,7 @@ use App\Http\Controllers\backend\Auth\ResetPasswordController;
 
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
+use App\Http\Controllers\backend\ClientManagementController;
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -184,6 +185,13 @@ Route::prefix('admin')
         |--------------------------------------------------------------------------
         */
         Route::resource('users', UserController::class);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Client Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource('client-management', ClientManagementController::class);
 
 
         /*
