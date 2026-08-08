@@ -16,6 +16,8 @@ use App\Http\Controllers\backend\Auth\ResetPasswordController;
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\ClientManagementController;
+use App\Http\Controllers\backend\DriverManagementController;
+
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -192,6 +194,16 @@ Route::prefix('admin')
         |--------------------------------------------------------------------------
         */
         Route::resource('client-management', ClientManagementController::class);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'driver-management',
+            DriverManagementController::class
+        );
 
 
         /*

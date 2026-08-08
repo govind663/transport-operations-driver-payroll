@@ -153,7 +153,7 @@
                     @php
                         $masterRoutes = [
                             'client-management.*',
-                            // 'driver-management.*',
+                            'driver-management.*',
                             // 'vehicle-categories.*',
                             // 'vehicle-types.*',
                             // 'vehicle-management.*',
@@ -173,7 +173,8 @@
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="{{ route('driver-management.index') }}"
+                                class="{{ request()->routeIs('driver-management.*') ? 'active' : '' }}">
                                 Driver Management
                             </a>
                         </li>
