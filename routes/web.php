@@ -17,6 +17,9 @@ use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\ClientManagementController;
 use App\Http\Controllers\backend\DriverManagementController;
+use App\Http\Controllers\backend\VehicleCategoryController;
+use App\Http\Controllers\backend\VehicleManagementController;
+use App\Http\Controllers\backend\VehicleTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -205,6 +208,35 @@ Route::prefix('admin')
             DriverManagementController::class
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Categories
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'vehicle-categories',
+            VehicleCategoryController::class
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Types
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'vehicle-types',
+            VehicleTypeController::class
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'vehicle-management',
+            VehicleManagementController::class
+        );
 
         /*
         |--------------------------------------------------------------------------

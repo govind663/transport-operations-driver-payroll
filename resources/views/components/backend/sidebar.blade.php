@@ -154,9 +154,9 @@
                         $masterRoutes = [
                             'client-management.*',
                             'driver-management.*',
-                            // 'vehicle-categories.*',
-                            // 'vehicle-types.*',
-                            // 'vehicle-management.*',
+                            'vehicle-categories.*',
+                            'vehicle-types.*',
+                            'vehicle-management.*',
                         ];
 
                         $isMasterActive = collect($masterRoutes)
@@ -180,19 +180,22 @@
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="{{ route('vehicle-categories.index') }}"
+                                class="{{ request()->routeIs('vehicle-categories.*') ? 'active' : '' }}">
                                 Vehicle Categories
                             </a>
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="{{ route('vehicle-types.index') }}"
+                                class="{{ request()->routeIs('vehicle-types.*') ? 'active' : '' }}">
                                 Vehicle Types
                             </a>
                         </li>
 
                         <li>
-                            <a href="#">
+                            <a href="{{ route('vehicle-management.index') }}"
+                                class="{{ request()->routeIs('vehicle-management.*') ? 'active' : '' }}">
                                 Vehicle Management
                             </a>
                         </li>
