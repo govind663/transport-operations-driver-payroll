@@ -17,10 +17,13 @@ use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\ClientManagementController;
 use App\Http\Controllers\backend\DriverManagementController;
+use App\Http\Controllers\backend\DutyAssignmentController;
+use App\Http\Controllers\backend\DutySlipController;
+use App\Http\Controllers\backend\TravelRequestController;
 use App\Http\Controllers\backend\VehicleCategoryController;
 use App\Http\Controllers\backend\VehicleManagementController;
 use App\Http\Controllers\backend\VehicleTypeController;
-
+use App\Http\Controllers\backend\WorkingSheetController;
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -236,6 +239,49 @@ Route::prefix('admin')
         Route::resource(
             'vehicle-management',
             VehicleManagementController::class
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Travel Requests
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'travel-requests',
+            TravelRequestController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Assignments
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'duty-assignments',
+            DutyAssignmentController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Slips
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'duty-slips',
+            DutySlipController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Working Sheets
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'working-sheets',
+            WorkingSheetController::class
         );
 
         /*

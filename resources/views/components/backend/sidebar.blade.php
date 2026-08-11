@@ -206,22 +206,76 @@
 
                 {{-- Operations --}}
                 <li class="dropdown">
+
                     <a href="javascript:;" class="dropdown-toggle">
-                        <span class="micon bi bi-truck"></span>
+                        <span class="micon bi bi-gear"></span>
                         <span class="mtext">Operations</span>
                     </a>
 
-                    <ul class="submenu">
+                    @php
 
-                        <li><a href="#">Travel Requests</a></li>
+                        $operationRoutes = [
+                            'travel-requests.*',
+                            'duty-assignments.*',
+                            'duty-slips.*',
+                            'working-sheets.*',
+                        ];
 
-                        <li><a href="#">Duty Assignments</a></li>
+                        $isOperationActive = collect($operationRoutes)
+                            ->contains(
+                                fn ($route) => request()->routeIs($route)
+                            );
 
-                        <li><a href="#">Duty Slips</a></li>
+                    @endphp
 
-                        <li><a href="#">Working Sheets</a></li>
+
+                    <ul class="submenu {{ $isOperationActive ? 'show' : '' }}">
+
+                        {{-- Travel Requests --}}
+                        <li>
+                            <a
+                                href="{{ route('travel-requests.index') }}"
+                                class="{{ request()->routeIs('travel-requests.*') ? 'active' : '' }}"
+                            >
+                                Travel Requests
+                            </a>
+                        </li>
+
+
+                        {{-- Duty Assignments --}}
+                        <li>
+                            <a
+                                href="{{ route('duty-assignments.index') }}"
+                                class="{{ request()->routeIs('duty-assignments.*') ? 'active' : '' }}"
+                            >
+                                Duty Assignments
+                            </a>
+                        </li>
+
+
+                        {{-- Duty Slips --}}
+                        <li>
+                            <a
+                                href="{{ route('duty-slips.index') }}"
+                                class="{{ request()->routeIs('duty-slips.*') ? 'active' : '' }}"
+                            >
+                                Duty Slips
+                            </a>
+                        </li>
+
+
+                        {{-- Working Sheets --}}
+                        <li>
+                            <a
+                                href="{{ route('working-sheets.index') }}"
+                                class="{{ request()->routeIs('working-sheets.*') ? 'active' : '' }}"
+                            >
+                                Working Sheets
+                            </a>
+                        </li>
 
                     </ul>
+
                 </li>
 
                 {{-- Payroll --}}
