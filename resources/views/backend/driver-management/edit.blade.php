@@ -574,7 +574,189 @@
 
                     </div>
 
+                </div>
 
+                {{-- ========================================================= --}}
+                {{-- EMPLOYMENT INFORMATION --}}
+                {{-- ========================================================= --}}
+                <div class="mb-4">
+
+                    <h5
+                        class="text-primary"
+                        style="color:#023a85 !important;">
+
+                        <b>
+                            Employment Information
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+                <div class="row">
+                    {{-- Joining Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+
+                                    Joining Date
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="joining_date"
+                                id="joining_date"
+                                class="form-control @error('joining_date') is-invalid @enderror"
+                                value="{{ old('joining_date', $driver->joining_date ? \Carbon\Carbon::parse($driver->joining_date)->format('Y-m-d') : '') }}">
+
+                            @error('joining_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- Resignation Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Resignation Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="resignation_date"
+                                id="resignation_date"
+                                class="form-control @error('resignation_date') is-invalid @enderror"
+                                value="{{ old('resignation_date', $driver->resignation_date ? \Carbon\Carbon::parse($driver->resignation_date)->format('Y-m-d') : '') }}">
+
+                            <small class="text-muted">
+                                Required only when driver resigns.
+                            </small>
+
+                            @error('resignation_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- Last Working Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Last Working Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="last_working_date"
+                                id="last_working_date"
+                                class="form-control @error('last_working_date') is-invalid @enderror"
+                                value="{{ old('last_working_date', $driver->last_working_date ? \Carbon\Carbon::parse($driver->last_working_date)->format('Y-m-d') : '') }}">
+
+                            <small class="text-muted">
+                                Driver's final working date.
+                            </small>
+
+                            @error('last_working_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- Termination Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Termination Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="termination_date"
+                                id="termination_date"
+                                class="form-control @error('termination_date') is-invalid @enderror"
+                                value="{{ old('termination_date', $driver->termination_date ? \Carbon\Carbon::parse($driver->termination_date)->format('Y-m-d') : '') }}">
+
+                            <small class="text-muted">
+                                Required only when terminated.
+                            </small>
+
+                            @error('termination_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
                 </div>
 
                 {{-- ========================================================= --}}
@@ -2474,16 +2656,16 @@
                 </div>
 
                 {{-- ========================================================= --}}
-                {{-- STATUS --}}
+                {{-- EMPLOYMENT STATUS --}}
                 {{-- ========================================================= --}}
-                <div class="col-12 mt-4">
+                <div class="col-12 mt-3">
 
                     <h5
                         class="text-primary"
                         style="color:#023a85 !important;">
 
                         <b>
-                            Status
+                            Employment Status
                         </b>
 
                     </h5>
@@ -2492,69 +2674,84 @@
 
                 </div>
 
+                {{-- ========================================================= --}}
+                {{-- EMPLOYMENT STATUS --}}
+                {{-- ========================================================= --}}
                 <div class="col-md-4">
 
                     <div class="form-group">
 
                         <label for="status">
-
                             <b>
-
-                                Status
-
-                                <span class="text-danger">
-                                    *
-                                </span>
-
+                                Employment Status
+                                <span class="text-danger">*</span>
                             </b>
-
                         </label>
 
                         <select
                             name="status"
                             id="status"
-                            class="form-control custom-select2 @error('status') is-invalid @enderror">
+                            class="form-control custom-select2 @error('status') is-invalid @enderror"
+                            required
+                        >
 
-                            <option
-                                value="1"
-                                {{ old(
-                                    'status',
-                                    $driver->status ? 1 : 0
-                                ) == 1 ? 'selected' : '' }}>
-
-                                Active
-
+                            <option value="">
+                                Select Employment Status
                             </option>
 
                             <option
-                                value="0"
-                                {{ old(
-                                    'status',
-                                    $driver->status ? 1 : 0
-                                ) == 0 ? 'selected' : '' }}>
+                                value="active"
+                                @selected(old('status', 'active') === 'active')
+                            >
+                                Active
+                            </option>
 
+                            <option
+                                value="on_leave"
+                                @selected(old('status') === 'on_leave')
+                            >
+                                On Leave
+                            </option>
+
+                            <option
+                                value="notice_period"
+                                @selected(old('status') === 'notice_period')
+                            >
+                                Notice Period
+                            </option>
+
+                            <option
+                                value="resigned"
+                                @selected(old('status') === 'resigned')
+                            >
+                                Resigned
+                            </option>
+
+                            <option
+                                value="terminated"
+                                @selected(old('status') === 'terminated')
+                            >
+                                Terminated
+                            </option>
+
+                            <option
+                                value="inactive"
+                                @selected(old('status') === 'inactive')
+                            >
                                 Inactive
-
                             </option>
 
                         </select>
 
                         @error('status')
-
                             <span class="invalid-feedback d-block">
-
-                                <strong>
-                                    {{ $message }}
-                                </strong>
-
+                                <strong>{{ $message }}</strong>
                             </span>
-
                         @enderror
 
                     </div>
 
                 </div>
-
 
                 {{-- ========================================================= --}}
                 {{-- ACTION BUTTONS --}}
@@ -2606,6 +2803,7 @@
 
     'use strict';
 
+
     /*
     |--------------------------------------------------------------------------
     | CONFIGURATION
@@ -2639,7 +2837,8 @@
     ];
 
 
-    const PDF_MIME_TYPE = 'application/pdf';
+    const PDF_MIME_TYPE =
+        'application/pdf';
 
 
     /*
@@ -2668,11 +2867,15 @@
             return '';
         }
 
-        const parts = file.name.split('.');
+
+        const parts =
+            file.name.split('.');
+
 
         if (parts.length < 2) {
             return '';
         }
+
 
         return parts
             .pop()
@@ -2692,8 +2895,10 @@
             return false;
         }
 
+
         const extension =
             getFileExtension(file);
+
 
         return (
             IMAGE_MIME_TYPES.includes(file.type) ||
@@ -2714,8 +2919,10 @@
             return false;
         }
 
+
         const extension =
             getFileExtension(file);
+
 
         return (
             file.type === PDF_MIME_TYPE ||
@@ -2730,7 +2937,10 @@
     |--------------------------------------------------------------------------
     */
 
-    function validateImage(file, fieldName)
+    function validateImage(
+        file,
+        fieldName
+    )
     {
         if (!file) {
             return false;
@@ -2750,7 +2960,8 @@
         if (file.size > MAX_FILE_SIZE) {
 
             alert(
-                fieldName + ' image size must not exceed 2 MB.'
+                fieldName +
+                ' image size must not exceed 2 MB.'
             );
 
             return false;
@@ -2779,20 +2990,17 @@
 
 
         const validExtension =
-            DOCUMENT_EXTENSIONS.includes(extension);
+            DOCUMENT_EXTENSIONS.includes(
+                extension
+            );
 
 
         const validMime =
-            IMAGE_MIME_TYPES.includes(file.type) ||
+            IMAGE_MIME_TYPES.includes(
+                file.type
+            ) ||
             file.type === PDF_MIME_TYPE;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Browser file.type empty ho sakta hai.
-        | Isliye extension OR MIME dono allow hain.
-        |--------------------------------------------------------------------------
-        */
 
         if (
             !validExtension &&
@@ -2807,7 +3015,10 @@
         }
 
 
-        if (file.size > MAX_FILE_SIZE) {
+        if (
+            file.size >
+            MAX_FILE_SIZE
+        ) {
 
             alert(
                 'File size must not exceed 2 MB.'
@@ -2834,6 +3045,7 @@
     {
         const input =
             document.getElementById(inputId);
+
 
         const preview =
             document.getElementById(previewId);
@@ -2876,97 +3088,98 @@
             new FileReader();
 
 
-        reader.onload = function (event)
-        {
-            const imageUrl =
-                event.target.result;
+        reader.onload =
+            function (event)
+            {
+                const imageUrl =
+                    event.target.result;
 
 
-            preview.innerHTML = `
+                preview.innerHTML = `
 
-                <div
-                    class="new-document-preview"
-                    style="margin-top:10px;"
-                >
-
-                    <p class="mb-2">
-
-                        <b>
-                            New ${escapeHtml(title)} Preview:
-                        </b>
-
-                    </p>
-
-
-                    <img
-                        src="${imageUrl}"
-                        alt="${escapeHtml(title)} Preview"
-                        class="img-thumbnail"
-                        style="
-                            width:180px;
-                            height:130px;
-                            object-fit:cover;
-                            border-radius:10px;
-                            border:2px solid #28a745;
-                            box-shadow:0 2px 8px rgba(0,0,0,.15);
-                            cursor:pointer;
-                            display:block;
-                        "
-                        onclick="window.open(this.src, '_blank')"
+                    <div
+                        class="new-document-preview"
+                        style="margin-top:10px;"
                     >
 
+                        <p class="mb-2">
+                            <b>
+                                New ${escapeHtml(title)} Preview:
+                            </b>
+                        </p>
 
-                    <div class="mt-2">
 
-                        <small
-                            style="color:#28a745;"
+                        <img
+                            src="${imageUrl}"
+                            alt="${escapeHtml(title)} Preview"
+                            class="img-thumbnail"
+                            style="
+                                width:180px;
+                                height:130px;
+                                object-fit:cover;
+                                border-radius:10px;
+                                border:2px solid #28a745;
+                                box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                cursor:pointer;
+                                display:block;
+                            "
+                            onclick="window.open(this.src, '_blank')"
                         >
 
-                            <i class="fa fa-check-circle"></i>
 
-                            ${escapeHtml(file.name)}
+                        <div class="mt-2">
 
-                        </small>
+                            <small
+                                style="color:#28a745;"
+                            >
+
+                                <i class="fa fa-check-circle"></i>
+
+                                ${escapeHtml(file.name)}
+
+                            </small>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="clearSelectedFile(
+                                    '${inputId}',
+                                    '${previewId}'
+                                )"
+                            >
+
+                                <i class="fa fa-times"></i>
+
+                                Remove New File
+
+                            </button>
+
+                        </div>
 
                     </div>
 
-
-                    <div class="mt-2">
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            onclick="clearSelectedFile(
-                                '${inputId}',
-                                '${previewId}'
-                            )"
-                        >
-
-                            <i class="fa fa-times"></i>
-
-                            Remove New File
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            `;
-        };
+                `;
+            };
 
 
-        reader.onerror = function ()
-        {
-            alert(
-                'Unable to preview the selected image.'
-            );
+        reader.onerror =
+            function ()
+            {
+                alert(
+                    'Unable to preview the selected image.'
+                );
 
-            resetFile(
-                inputId,
-                previewId
-            );
-        };
+
+                resetFile(
+                    inputId,
+                    previewId
+                );
+            };
 
 
         reader.readAsDataURL(file);
@@ -3111,14 +3324,6 @@
     |--------------------------------------------------------------------------
     | GENERIC DOCUMENT PREVIEW
     |--------------------------------------------------------------------------
-    |
-    | Used for:
-    |
-    | driving_license_document
-    | aadhar_document
-    | pan_document
-    |
-    |--------------------------------------------------------------------------
     */
 
     function previewDocument(
@@ -3130,6 +3335,7 @@
         const fileInput =
             document.getElementById(inputId);
 
+
         const preview =
             document.getElementById(previewId);
 
@@ -3138,6 +3344,7 @@
             !fileInput ||
             !preview
         ) {
+
             console.warn(
                 'Preview element not found:',
                 inputId,
@@ -3149,18 +3356,14 @@
 
 
         /*
-        |--------------------------------------------------------------------------
         | Clear only NEW preview
-        |--------------------------------------------------------------------------
         */
 
         preview.innerHTML = '';
 
 
         /*
-        |--------------------------------------------------------------------------
         | No selected file
-        |--------------------------------------------------------------------------
         */
 
         if (
@@ -3176,9 +3379,7 @@
 
 
         /*
-        |--------------------------------------------------------------------------
         | Validate
-        |--------------------------------------------------------------------------
         */
 
         if (!validateDocument(file)) {
@@ -3193,9 +3394,7 @@
 
 
         /*
-        |--------------------------------------------------------------------------
         | IMAGE
-        |--------------------------------------------------------------------------
         */
 
         if (isImageFile(file)) {
@@ -3212,9 +3411,7 @@
 
 
         /*
-        |--------------------------------------------------------------------------
         | PDF
-        |--------------------------------------------------------------------------
         */
 
         if (isPdfFile(file)) {
@@ -3229,12 +3426,6 @@
             return;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UNKNOWN FILE
-        |--------------------------------------------------------------------------
-        */
 
         resetFile(
             inputId,
@@ -3254,12 +3445,14 @@
         const inputId =
             'driver_photo';
 
+
         const previewId =
             'driver-photo-preview';
 
 
         const fileInput =
             document.getElementById(inputId);
+
 
         const preview =
             document.getElementById(previewId);
@@ -3288,12 +3481,6 @@
             fileInput.files[0];
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Validate
-        |--------------------------------------------------------------------------
-        */
-
         if (
             !validateImage(
                 file,
@@ -3310,107 +3497,104 @@
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Read image
-        |--------------------------------------------------------------------------
-        */
-
         const reader =
             new FileReader();
 
 
-        reader.onload = function (event)
-        {
-            const imageUrl =
-                event.target.result;
+        reader.onload =
+            function (event)
+            {
+                const imageUrl =
+                    event.target.result;
 
 
-            preview.innerHTML = `
+                preview.innerHTML = `
 
-                <div
-                    class="new-driver-photo-preview"
-                    style="margin-top:10px;"
-                >
-
-                    <p class="mb-2">
-
-                        <b>
-                            New Driver Photo Preview:
-                        </b>
-
-                    </p>
-
-
-                    <img
-                        src="${imageUrl}"
-                        alt="New Driver Photo"
-                        class="img-thumbnail"
-                        style="
-                            width:150px;
-                            height:150px;
-                            object-fit:cover;
-                            border-radius:10px;
-                            border:2px solid #28a745;
-                            box-shadow:0 2px 8px rgba(0,0,0,.15);
-                            cursor:pointer;
-                            display:block;
-                        "
-                        onclick="window.open(this.src, '_blank')"
+                    <div
+                        class="new-driver-photo-preview"
+                        style="margin-top:10px;"
                     >
 
+                        <p class="mb-2">
 
-                    <div class="mt-2">
+                            <b>
+                                New Driver Photo Preview:
+                            </b>
 
-                        <small
-                            style="color:#28a745;"
+                        </p>
+
+
+                        <img
+                            src="${imageUrl}"
+                            alt="New Driver Photo"
+                            class="img-thumbnail"
+                            style="
+                                width:150px;
+                                height:150px;
+                                object-fit:cover;
+                                border-radius:10px;
+                                border:2px solid #28a745;
+                                box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                cursor:pointer;
+                                display:block;
+                            "
+                            onclick="window.open(this.src, '_blank')"
                         >
 
-                            <i class="fa fa-check-circle"></i>
 
-                            ${escapeHtml(file.name)}
+                        <div class="mt-2">
 
-                        </small>
+                            <small
+                                style="color:#28a745;"
+                            >
+
+                                <i class="fa fa-check-circle"></i>
+
+                                ${escapeHtml(file.name)}
+
+                            </small>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline-danger"
+                                onclick="clearSelectedFile(
+                                    'driver_photo',
+                                    'driver-photo-preview'
+                                )"
+                            >
+
+                                <i class="fa fa-times"></i>
+
+                                Remove New Photo
+
+                            </button>
+
+                        </div>
 
                     </div>
 
-
-                    <div class="mt-2">
-
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-outline-danger"
-                            onclick="clearSelectedFile(
-                                'driver_photo',
-                                'driver-photo-preview'
-                            )"
-                        >
-
-                            <i class="fa fa-times"></i>
-
-                            Remove New Photo
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            `;
-        };
+                `;
+            };
 
 
-        reader.onerror = function ()
-        {
-            alert(
-                'Unable to preview the selected driver photo.'
-            );
+        reader.onerror =
+            function ()
+            {
+                alert(
+                    'Unable to preview the selected driver photo.'
+                );
 
-            resetFile(
-                inputId,
-                previewId
-            );
-        };
+
+                resetFile(
+                    inputId,
+                    previewId
+                );
+            };
 
 
         reader.readAsDataURL(file);
@@ -3419,7 +3603,7 @@
 
     /*
     |--------------------------------------------------------------------------
-    | GLOBAL CLEAR FUNCTION
+    | GLOBAL CLEAR FILE FUNCTION
     |--------------------------------------------------------------------------
     */
 
@@ -3431,6 +3615,7 @@
         {
             const input =
                 document.getElementById(inputId);
+
 
             const preview =
                 document.getElementById(previewId);
@@ -3466,16 +3651,6 @@
     /*
     |--------------------------------------------------------------------------
     | DRIVING LICENCE DOCUMENT CHANGE
-    |--------------------------------------------------------------------------
-    |
-    | IMPORTANT:
-    |
-    | Input:
-    | driving_license_document
-    |
-    | Preview:
-    | driving-license-document-preview
-    |
     |--------------------------------------------------------------------------
     */
 
@@ -3743,7 +3918,9 @@
 
 
             const selectedDate =
-                new Date(this.value);
+                new Date(
+                    this.value + 'T00:00:00'
+                );
 
 
             const today =
@@ -3758,7 +3935,10 @@
             );
 
 
-            if (selectedDate > today) {
+            if (
+                selectedDate >
+                today
+            ) {
 
                 alert(
                     'Date of Birth cannot be a future date.'
@@ -3781,67 +3961,7 @@
         '#license_issue_date',
         function ()
         {
-            const issueDate =
-                this.value;
-
-            const expiryDate =
-                $('#license_expiry_date').val();
-
-
-            if (!issueDate) {
-                return;
-            }
-
-
-            const selectedIssueDate =
-                new Date(issueDate);
-
-
-            const today =
-                new Date();
-
-
-            today.setHours(
-                0,
-                0,
-                0,
-                0
-            );
-
-
-            if (
-                selectedIssueDate >
-                today
-            ) {
-
-                alert(
-                    'Licence Issue Date cannot be a future date.'
-                );
-
-                this.value = '';
-
-                return;
-            }
-
-
-            if (expiryDate) {
-
-                const selectedExpiryDate =
-                    new Date(expiryDate);
-
-
-                if (
-                    selectedIssueDate >
-                    selectedExpiryDate
-                ) {
-
-                    alert(
-                        'Licence Issue Date cannot be after Licence Expiry Date.'
-                    );
-
-                    this.value = '';
-                }
-            }
+            validateLicenseDates();
         }
     );
 
@@ -3857,40 +3977,502 @@
         '#license_expiry_date',
         function ()
         {
-            const expiryDate =
-                this.value;
-
-            const issueDate =
-                $('#license_issue_date').val();
+            validateLicenseDates();
+        }
+    );
 
 
-            if (!expiryDate) {
-                return;
+    /*
+    |--------------------------------------------------------------------------
+    | LICENSE DATE VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    function validateLicenseDates()
+    {
+        const issueDate =
+            $('#license_issue_date').val();
+
+
+        const expiryDate =
+            $('#license_expiry_date').val();
+
+
+        const today =
+            new Date();
+
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        if (issueDate) {
+
+            const selectedIssueDate =
+                new Date(
+                    issueDate + 'T00:00:00'
+                );
+
+
+            if (
+                selectedIssueDate >
+                today
+            ) {
+
+                alert(
+                    'Licence Issue Date cannot be a future date.'
+                );
+
+
+                $('#license_issue_date')
+                    .val('');
+
+
+                return false;
             }
+        }
+
+
+        if (
+            issueDate &&
+            expiryDate
+        ) {
+
+            const selectedIssueDate =
+                new Date(
+                    issueDate + 'T00:00:00'
+                );
 
 
             const selectedExpiryDate =
-                new Date(expiryDate);
+                new Date(
+                    expiryDate + 'T00:00:00'
+                );
 
 
-            if (issueDate) {
+            if (
+                selectedExpiryDate <
+                selectedIssueDate
+            ) {
 
-                const selectedIssueDate =
-                    new Date(issueDate);
+                alert(
+                    'Licence Expiry Date cannot be before Licence Issue Date.'
+                );
 
 
-                if (
-                    selectedExpiryDate <
-                    selectedIssueDate
-                ) {
+                $('#license_expiry_date')
+                    .val('');
+
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMPLOYMENT DATE HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function parseDateValue(value)
+    {
+        if (!value) {
+            return null;
+        }
+
+
+        return new Date(
+            value + 'T00:00:00'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMPLOYMENT DATE VALIDATION
+    |--------------------------------------------------------------------------
+    |
+    | Rules:
+    |
+    | Joining Date:
+    | - Required
+    | - Cannot be future date
+    |
+    | Resignation Date:
+    | - Optional
+    | - Cannot be before Joining Date
+    |
+    | Last Working Date:
+    | - Optional
+    | - Cannot be before Joining Date
+    | - If resignation exists, cannot be before resignation
+    |
+    | Termination Date:
+    | - Optional
+    | - Cannot be before Joining Date
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    function validateEmploymentDates(
+        showAlert = true
+    )
+    {
+        const joiningDate =
+            $('#joining_date').val();
+
+
+        const resignationDate =
+            $('#resignation_date').val();
+
+
+        const lastWorkingDate =
+            $('#last_working_date').val();
+
+
+        const terminationDate =
+            $('#termination_date').val();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Joining Date
+        |--------------------------------------------------------------------------
+        */
+
+        if (!joiningDate) {
+
+            if (showAlert) {
+
+                alert(
+                    'Joining Date is required.'
+                );
+
+                $('#joining_date')
+                    .focus();
+            }
+
+            return false;
+        }
+
+
+        const joining =
+            parseDateValue(
+                joiningDate
+            );
+
+
+        const resignation =
+            parseDateValue(
+                resignationDate
+            );
+
+
+        const lastWorking =
+            parseDateValue(
+                lastWorkingDate
+            );
+
+
+        const termination =
+            parseDateValue(
+                terminationDate
+            );
+
+
+        const today =
+            new Date();
+
+
+        today.setHours(
+            0,
+            0,
+            0,
+            0
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Joining Date cannot be future
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            joining >
+            today
+        ) {
+
+            if (showAlert) {
+
+                alert(
+                    'Joining Date cannot be a future date.'
+                );
+
+                $('#joining_date')
+                    .val('')
+                    .focus();
+            }
+
+            return false;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resignation Date
+        |--------------------------------------------------------------------------
+        */
+
+        if (resignation) {
+
+            if (
+                resignation <
+                joining
+            ) {
+
+                if (showAlert) {
 
                     alert(
-                        'Licence Expiry Date cannot be before Licence Issue Date.'
+                        'Resignation Date cannot be before Joining Date.'
                     );
 
-                    this.value = '';
+                    $('#resignation_date')
+                        .val('')
+                        .focus();
                 }
+
+                return false;
             }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Last Working Date
+        |--------------------------------------------------------------------------
+        */
+
+        if (lastWorking) {
+
+            if (
+                lastWorking <
+                joining
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Last Working Date cannot be before Joining Date.'
+                    );
+
+                    $('#last_working_date')
+                        .val('')
+                        .focus();
+                }
+
+                return false;
+            }
+
+
+            if (
+                resignation &&
+                lastWorking <
+                resignation
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Last Working Date cannot be before Resignation Date.'
+                    );
+
+                    $('#last_working_date')
+                        .val('')
+                        .focus();
+                }
+
+                return false;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Termination Date
+        |--------------------------------------------------------------------------
+        */
+
+        if (termination) {
+
+            if (
+                termination <
+                joining
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Termination Date cannot be before Joining Date.'
+                    );
+
+                    $('#termination_date')
+                        .val('')
+                        .focus();
+                }
+
+                return false;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resignation + Termination
+        |--------------------------------------------------------------------------
+        |
+        | A driver should normally have only one exit event.
+        |
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            resignation &&
+            termination
+        ) {
+
+            if (showAlert) {
+
+                alert(
+                    'A driver cannot have both Resignation Date and Termination Date.'
+                );
+
+                $('#termination_date')
+                    .val('')
+                    .focus();
+            }
+
+            return false;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Last Working Date required for exit
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            resignation &&
+            !lastWorkingDate
+        ) {
+
+            if (showAlert) {
+
+                alert(
+                    'Last Working Date is required when Resignation Date is provided.'
+                );
+
+                $('#last_working_date')
+                    .focus();
+            }
+
+            return false;
+        }
+
+
+        if (
+            termination &&
+            !lastWorkingDate
+        ) {
+
+            if (showAlert) {
+
+                alert(
+                    'Last Working Date is required when Termination Date is provided.'
+                );
+
+                $('#last_working_date')
+                    .focus();
+            }
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | JOINING DATE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '#joining_date',
+        function ()
+        {
+            validateEmploymentDates();
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESIGNATION DATE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '#resignation_date',
+        function ()
+        {
+            validateEmploymentDates();
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LAST WORKING DATE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '#last_working_date',
+        function ()
+        {
+            validateEmploymentDates();
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TERMINATION DATE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '#termination_date',
+        function ()
+        {
+            validateEmploymentDates();
         }
     );
 
@@ -3904,7 +4486,7 @@
     $(document).on(
         'submit',
         'form',
-        function ()
+        function (event)
         {
             const form =
                 this;
@@ -3917,7 +4499,8 @@
             */
 
             $('#driver_code').val(
-                $('#driver_code').val()
+                $('#driver_code')
+                    .val()
                     .trim()
                     .toUpperCase()
                     .replace(/\s+/g, '')
@@ -3936,7 +4519,8 @@
                 function ()
                 {
                     $(this).val(
-                        $(this).val()
+                        $(this)
+                            .val()
                             .replace(/\s+/g, ' ')
                             .trim()
                     );
@@ -3954,7 +4538,8 @@
                 function ()
                 {
                     $(this).val(
-                        $(this).val()
+                        $(this)
+                            .val()
                             .replace(/[^0-9]/g, '')
                             .slice(0, 10)
                     );
@@ -3969,7 +4554,8 @@
             */
 
             $('#email').val(
-                $('#email').val()
+                $('#email')
+                    .val()
                     .trim()
                     .toLowerCase()
             );
@@ -3987,7 +4573,8 @@
                 function ()
                 {
                     $(this).val(
-                        $(this).val()
+                        $(this)
+                            .val()
                             .replace(/\s+/g, ' ')
                             .trim()
                     );
@@ -4002,7 +4589,8 @@
             */
 
             $('#pincode').val(
-                $('#pincode').val()
+                $('#pincode')
+                    .val()
                     .replace(/[^0-9]/g, '')
                     .slice(0, 6)
             );
@@ -4015,7 +4603,8 @@
             */
 
             $('#license_number').val(
-                $('#license_number').val()
+                $('#license_number')
+                    .val()
                     .trim()
                     .toUpperCase()
                     .replace(/\s+/g, ' ')
@@ -4029,7 +4618,8 @@
             */
 
             $('#license_issuing_authority').val(
-                $('#license_issuing_authority').val()
+                $('#license_issuing_authority')
+                    .val()
                     .replace(/\s+/g, ' ')
                     .trim()
             );
@@ -4042,7 +4632,8 @@
             */
 
             $('#aadhar_number').val(
-                $('#aadhar_number').val()
+                $('#aadhar_number')
+                    .val()
                     .replace(/[^0-9]/g, '')
                     .slice(0, 12)
             );
@@ -4055,11 +4646,44 @@
             */
 
             $('#pan_number').val(
-                $('#pan_number').val()
+                $('#pan_number')
+                    .val()
                     .toUpperCase()
                     .replace(/[^A-Z0-9]/g, '')
                     .slice(0, 10)
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employment Dates
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !validateEmploymentDates(true)
+            ) {
+
+                event.preventDefault();
+
+                return false;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | License Dates
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !validateLicenseDates()
+            ) {
+
+                event.preventDefault();
+
+                return false;
+            }
 
 
             /*
@@ -4128,17 +4752,37 @@
 
             /*
             |--------------------------------------------------------------------------
-            | DEBUG CHECK
+            | Set min dates dynamically
             |--------------------------------------------------------------------------
             |
-            | Agar preview nahi aaye to browser console me ye IDs
-            | check hongi.
-            |
+            | This is UX protection only.
+            | Laravel FormRequest validation should still be used.
+            |--------------------------------------------------------------------------
+            */
+
+            const joiningDate =
+                $('#joining_date');
+
+
+            if (joiningDate.length) {
+
+                joiningDate.attr(
+                    'max',
+                    new Date()
+                        .toISOString()
+                        .split('T')[0]
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DEBUG
             |--------------------------------------------------------------------------
             */
 
             console.log(
-                'Driver Edit File Preview JS Loaded'
+                'Driver Edit File + Employment Validation JS Loaded'
             );
 
 
@@ -4187,6 +4831,30 @@
             console.log(
                 'Driver Photo Preview:',
                 $('#driver-photo-preview').length
+            );
+
+
+            console.log(
+                'Joining Date:',
+                $('#joining_date').length
+            );
+
+
+            console.log(
+                'Resignation Date:',
+                $('#resignation_date').length
+            );
+
+
+            console.log(
+                'Last Working Date:',
+                $('#last_working_date').length
+            );
+
+
+            console.log(
+                'Termination Date:',
+                $('#termination_date').length
             );
         }
     );

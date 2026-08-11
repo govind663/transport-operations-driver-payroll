@@ -46,9 +46,6 @@ class Driver extends Model
     |--------------------------------------------------------------------------
     | License Types
     |--------------------------------------------------------------------------
-    |
-    | Database ENUM values ke saath ye values same honi chahiye.
-    |
     */
 
     public const LICENSE_TYPES = [
@@ -74,6 +71,74 @@ class Driver extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Driver Type Constants
+    |--------------------------------------------------------------------------
+    */
+
+    public const DRIVER_FIXED_DUTY = 'fixed_duty';
+
+    public const DRIVER_GENERAL_DUTY = 'general_duty';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Driver Types
+    |--------------------------------------------------------------------------
+    */
+
+    public const DRIVER_TYPES = [
+
+        self::DRIVER_FIXED_DUTY,
+
+        self::DRIVER_GENERAL_DUTY,
+
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Employment Status Constants
+    |--------------------------------------------------------------------------
+    */
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_ON_LEAVE = 'on_leave';
+
+    public const STATUS_NOTICE_PERIOD = 'notice_period';
+
+    public const STATUS_RESIGNED = 'resigned';
+
+    public const STATUS_TERMINATED = 'terminated';
+
+    public const STATUS_INACTIVE = 'inactive';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Employment Statuses
+    |--------------------------------------------------------------------------
+    */
+
+    public const EMPLOYMENT_STATUSES = [
+
+        self::STATUS_ACTIVE,
+
+        self::STATUS_ON_LEAVE,
+
+        self::STATUS_NOTICE_PERIOD,
+
+        self::STATUS_RESIGNED,
+
+        self::STATUS_TERMINATED,
+
+        self::STATUS_INACTIVE,
+
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Fillable
     |--------------------------------------------------------------------------
     */
@@ -87,16 +152,37 @@ class Driver extends Model
         */
 
         'driver_code',
+
         'driver_type',
 
         'first_name',
+
         'last_name',
+
         'father_name',
 
         'date_of_birth',
 
         'gender',
+
         'marital_status',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employment Information
+        |--------------------------------------------------------------------------
+        */
+
+        'joining_date',
+
+        'resignation_date',
+
+        'last_working_date',
+
+        'termination_date',
+
+        'status',
 
 
         /*
@@ -106,7 +192,9 @@ class Driver extends Model
         */
 
         'mobile',
+
         'alternate_mobile',
+
         'email',
 
 
@@ -117,9 +205,13 @@ class Driver extends Model
         */
 
         'address',
+
         'city',
+
         'state',
+
         'country',
+
         'pincode',
 
 
@@ -151,19 +243,12 @@ class Driver extends Model
         'driving_license_document',
 
         'aadhar_number',
+
         'aadhar_document',
 
         'pan_number',
+
         'pan_document',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Status
-        |--------------------------------------------------------------------------
-        */
-
-        'status',
 
 
         /*
@@ -180,8 +265,7 @@ class Driver extends Model
 
     ];
 
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Casts
     |--------------------------------------------------------------------------
@@ -191,13 +275,46 @@ class Driver extends Model
 
         'id' => 'integer',
 
+        /*
+        |--------------------------------------------------------------------------
+        | Personal Dates
+        |--------------------------------------------------------------------------
+        */
+
         'date_of_birth' => 'date:Y-m-d',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employment Dates
+        |--------------------------------------------------------------------------
+        */
+
+        'joining_date' => 'date:Y-m-d',
+
+        'resignation_date' => 'date:Y-m-d',
+
+        'last_working_date' => 'date:Y-m-d',
+
+        'termination_date' => 'date:Y-m-d',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | License Dates
+        |--------------------------------------------------------------------------
+        */
 
         'license_issue_date' => 'date:Y-m-d',
 
         'license_expiry_date' => 'date:Y-m-d',
 
-        'status' => 'boolean',
+
+        /*
+        |--------------------------------------------------------------------------
+        | Audit
+        |--------------------------------------------------------------------------
+        */
 
         'created_by' => 'integer',
 
@@ -205,21 +322,6 @@ class Driver extends Model
 
         'deleted_by' => 'integer',
 
-    ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | Driver Types
-    |--------------------------------------------------------------------------
-    */
-
-    public const DRIVER_FIXED_DUTY = 'fixed_duty';
-
-    public const DRIVER_GENERAL_DUTY = 'general_duty';
-
-    public const DRIVER_TYPES = [
-        self::DRIVER_FIXED_DUTY,
-        self::DRIVER_GENERAL_DUTY,
     ];
 
 
@@ -286,20 +388,52 @@ class Driver extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Employment Status Label
+    |--------------------------------------------------------------------------
+    */
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+
+            self::STATUS_ACTIVE =>
+                'Active',
+
+            self::STATUS_ON_LEAVE =>
+                'On Leave',
+
+            self::STATUS_NOTICE_PERIOD =>
+                'Notice Period',
+
+            self::STATUS_RESIGNED =>
+                'Resigned',
+
+            self::STATUS_TERMINATED =>
+                'Terminated',
+
+            self::STATUS_INACTIVE =>
+                'Inactive',
+
+            default =>
+                ucfirst(
+                    str_replace(
+                        '_',
+                        ' ',
+                        $this->status ?? ''
+                    )
+                ),
+
+        };
+    }
+
+        /*
+    |--------------------------------------------------------------------------
     | Driver Photo URL
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Driver Photo URL
-     */
     public function getDriverPhotoUrlAttribute(): string
     {
-        /*
-        |--------------------------------------------------------------------------
-        | No Driver Photo
-        |--------------------------------------------------------------------------
-        */
         if (empty($this->driver_photo)) {
 
             return asset(
@@ -312,12 +446,8 @@ class Driver extends Model
         |--------------------------------------------------------------------------
         | New Storage Path
         |--------------------------------------------------------------------------
-        |
-        | Example:
-        | driver/1786103680_xxxxx.webp
-        |
-        |--------------------------------------------------------------------------
         */
+
         if (
             str_starts_with(
                 $this->driver_photo,
@@ -336,6 +466,7 @@ class Driver extends Model
         | Legacy Driver Upload Path
         |--------------------------------------------------------------------------
         */
+
         return asset(
             'backend/assets/uploads/driver/' .
             $this->driver_photo
@@ -343,12 +474,16 @@ class Driver extends Model
     }
 
 
-    /**
-     * Driving Licence Document URL
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Driving Licence Document URL
+    |--------------------------------------------------------------------------
+    */
+
     public function getDrivingLicenseDocumentUrlAttribute(): ?string
     {
         if (empty($this->driving_license_document)) {
+
             return null;
         }
 
@@ -356,11 +491,6 @@ class Driver extends Model
         /*
         |--------------------------------------------------------------------------
         | New Storage Path
-        |--------------------------------------------------------------------------
-        |
-        | Example:
-        | driver/license/filename.webp
-        |
         |--------------------------------------------------------------------------
         */
 
@@ -372,7 +502,8 @@ class Driver extends Model
         ) {
 
             return asset(
-                'storage/' . $this->driving_license_document
+                'storage/' .
+                $this->driving_license_document
             );
         }
 
@@ -389,11 +520,13 @@ class Driver extends Model
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | Aadhar Document URL
     |--------------------------------------------------------------------------
     */
+
     public function getAadharDocumentUrlAttribute(): ?string
     {
         if (empty($this->aadhar_document)) {
@@ -406,12 +539,8 @@ class Driver extends Model
         |--------------------------------------------------------------------------
         | New Storage Path
         |--------------------------------------------------------------------------
-        |
-        | Example:
-        | driver/aadhar/filename.webp
-        |
-        |--------------------------------------------------------------------------
         */
+
         if (
             str_starts_with(
                 $this->aadhar_document,
@@ -420,7 +549,8 @@ class Driver extends Model
         ) {
 
             return asset(
-                'storage/' . $this->aadhar_document
+                'storage/' .
+                $this->aadhar_document
             );
         }
 
@@ -430,17 +560,20 @@ class Driver extends Model
         | Legacy Driver Upload Path
         |--------------------------------------------------------------------------
         */
+
         return asset(
             'backend/assets/uploads/driver/' .
             $this->aadhar_document
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | PAN Document URL
     |--------------------------------------------------------------------------
     */
+
     public function getPanDocumentUrlAttribute(): ?string
     {
         if (empty($this->pan_document)) {
@@ -453,12 +586,8 @@ class Driver extends Model
         |--------------------------------------------------------------------------
         | New Storage Path
         |--------------------------------------------------------------------------
-        |
-        | Example:
-        | driver/pan/filename.webp
-        |
-        |--------------------------------------------------------------------------
         */
+
         if (
             str_starts_with(
                 $this->pan_document,
@@ -467,7 +596,8 @@ class Driver extends Model
         ) {
 
             return asset(
-                'storage/' . $this->pan_document
+                'storage/' .
+                $this->pan_document
             );
         }
 
@@ -477,30 +607,30 @@ class Driver extends Model
         | Legacy Driver Upload Path
         |--------------------------------------------------------------------------
         */
+
         return asset(
             'backend/assets/uploads/driver/' .
             $this->pan_document
         );
     }
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | License Status Accessor
     |--------------------------------------------------------------------------
     */
+
     public function getLicenseStatusAttribute(): string
     {
         if (!$this->license_expiry_date) {
 
             return 'Not Available';
-
         }
 
 
         if ($this->license_expiry_date->isPast()) {
 
             return 'Expired';
-
         }
 
 
@@ -510,24 +640,23 @@ class Driver extends Model
         ) {
 
             return 'Expiring Soon';
-
         }
 
 
         return 'Valid';
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | License Type Label Accessor
     |--------------------------------------------------------------------------
-    |
-    | Example:
-    | LMV_TRANSPORT -> LMV Transport
-    |
     */
-    public static function getLicenseTypeLabel(string $licenseType): string
-    {
+
+    public static function getLicenseTypeLabel(
+        string $licenseType
+    ): string {
+
         return match ($licenseType) {
 
             self::LICENSE_LMV =>
@@ -562,8 +691,30 @@ class Driver extends Model
                         strtolower($licenseType)
                     )
                 ),
+
         };
     }
+
+    /**
+     * Get Driver Type Label
+     */
+    public static function getDriverTypeLabel(
+        string $driverType
+    ): string {
+
+        return match ($driverType) {
+
+            self::DRIVER_FIXED_DUTY =>
+                'Fixed Duty Driver',
+
+            self::DRIVER_GENERAL_DUTY =>
+                'General Duty Driver',
+
+            default =>
+                ucwords(str_replace('_', ' ', $driverType)),
+        };
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -606,10 +757,9 @@ class Driver extends Model
         );
     }
 
-
-    /*
+        /*
     |--------------------------------------------------------------------------
-    | Scopes
+    | Employment Status Scopes
     |--------------------------------------------------------------------------
     */
 
@@ -619,7 +769,10 @@ class Driver extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 1);
+        return $query->where(
+            'status',
+            self::STATUS_ACTIVE
+        );
     }
 
 
@@ -628,8 +781,66 @@ class Driver extends Model
      */
     public function scopeInactive($query)
     {
-        return $query->where('status', 0);
+        return $query->where(
+            'status',
+            self::STATUS_INACTIVE
+        );
     }
+
+
+    /**
+     * Drivers On Leave
+     */
+    public function scopeOnLeave($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_ON_LEAVE
+        );
+    }
+
+
+    /**
+     * Drivers In Notice Period
+     */
+    public function scopeNoticePeriod($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_NOTICE_PERIOD
+        );
+    }
+
+
+    /**
+     * Resigned Drivers
+     */
+    public function scopeResigned($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_RESIGNED
+        );
+    }
+
+
+    /**
+     * Terminated Drivers
+     */
+    public function scopeTerminated($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_TERMINATED
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | License Scopes
+    |--------------------------------------------------------------------------
+    */
 
 
     /**

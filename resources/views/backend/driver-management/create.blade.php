@@ -503,6 +503,190 @@
                     </div>
 
                     {{-- ========================================================= --}}
+                    {{-- EMPLOYMENT INFORMATION --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-3">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;">
+
+                            <b>
+                                Employment Information
+                            </b>
+
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+                    {{-- Joining Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+
+                                    Joining Date
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="joining_date"
+                                id="joining_date"
+                                class="form-control @error('joining_date') is-invalid @enderror"
+                                value="{{ old('joining_date') }}">
+
+                            @error('joining_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Resignation Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Resignation Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="resignation_date"
+                                id="resignation_date"
+                                class="form-control @error('resignation_date') is-invalid @enderror"
+                                value="{{ old('resignation_date') }}">
+
+                            <small class="text-muted">
+                                Required only when driver resigns.
+                            </small>
+
+                            @error('resignation_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Last Working Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Last Working Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="last_working_date"
+                                id="last_working_date"
+                                class="form-control @error('last_working_date') is-invalid @enderror"
+                                value="{{ old('last_working_date') }}">
+
+                            <small class="text-muted">
+                                Driver's final working date.
+                            </small>
+
+                            @error('last_working_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Termination Date --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Termination Date
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="date"
+                                name="termination_date"
+                                id="termination_date"
+                                class="form-control @error('termination_date') is-invalid @enderror"
+                                value="{{ old('termination_date') }}">
+
+                            <small class="text-muted">
+                                Required only when terminated.
+                            </small>
+
+                            @error('termination_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
                     {{-- CONTACT INFORMATION --}}
                     {{-- ========================================================= --}}
                     <div class="col-12 mt-3">
@@ -1284,58 +1468,134 @@
 
 
                     {{-- ========================================================= --}}
-                    {{-- STATUS --}}
+                    {{-- EMPLOYMENT STATUS --}}
                     {{-- ========================================================= --}}
                     <div class="col-12 mt-3">
 
-                        <h5 class="text-primary" style="color:#023a85 !important;">
-                            <b>Status</b>
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;">
+
+                            <b>
+                                Employment Status
+                            </b>
+
                         </h5>
 
                         <hr>
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- EMPLOYMENT STATUS --}}
+                    {{-- ========================================================= --}}
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="status">
+
                                 <b>
-                                    Status
-                                    <span class="text-danger">*</span>
+                                    Employment Status
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
                                 </b>
+
                             </label>
+
 
                             <select
                                 name="status"
+                                id="status"
                                 class="form-control custom-select2 @error('status') is-invalid @enderror">
 
-                                <option
-                                    value="1"
-                                    {{ old('status', 1) == 1 ? 'selected' : '' }}>
-                                    Active
+                                {{-- Placeholder --}}
+                                <option value="">
+                                    Select Employment Status
                                 </option>
 
+
+                                {{-- Active --}}
                                 <option
-                                    value="0"
-                                    {{ old('status') === '0' ? 'selected' : '' }}>
+                                    value="active"
+                                    {{ old('status') === 'active' ? 'selected' : '' }}>
+
+                                    Active
+
+                                </option>
+
+
+                                {{-- On Leave --}}
+                                <option
+                                    value="on_leave"
+                                    {{ old('status') === 'on_leave' ? 'selected' : '' }}>
+
+                                    On Leave
+
+                                </option>
+
+
+                                {{-- Notice Period --}}
+                                <option
+                                    value="notice_period"
+                                    {{ old('status') === 'notice_period' ? 'selected' : '' }}>
+
+                                    Notice Period
+
+                                </option>
+
+
+                                {{-- Resigned --}}
+                                <option
+                                    value="resigned"
+                                    {{ old('status') === 'resigned' ? 'selected' : '' }}>
+
+                                    Resigned
+
+                                </option>
+
+
+                                {{-- Terminated --}}
+                                <option
+                                    value="terminated"
+                                    {{ old('status') === 'terminated' ? 'selected' : '' }}>
+
+                                    Terminated
+
+                                </option>
+
+
+                                {{-- Inactive --}}
+                                <option
+                                    value="inactive"
+                                    {{ old('status') === 'inactive' ? 'selected' : '' }}>
+
                                     Inactive
+
                                 </option>
 
                             </select>
 
+
+                            {{-- Validation Error --}}
                             @error('status')
+
                                 <span class="invalid-feedback d-block">
-                                    <strong>{{ $message }}</strong>
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
                                 </span>
+
                             @enderror
 
                         </div>
 
                     </div>
-
-
+                    
                     {{-- ========================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ========================================================= --}}
@@ -1581,7 +1841,6 @@ function previewFile(inputId, previewId)
 
             </div>
         `;
-
     }
 }
 
@@ -1589,9 +1848,6 @@ function previewFile(inputId, previewId)
 /*
 |--------------------------------------------------------------------------
 | Escape HTML
-|--------------------------------------------------------------------------
-|
-| File name ko directly HTML mein insert karne se bachata hai.
 |--------------------------------------------------------------------------
 */
 function escapeHtml(value)
@@ -1936,6 +2192,42 @@ $('#email').on('blur', function(){
 
 /*
 |--------------------------------------------------------------------------
+| Date Helper
+|--------------------------------------------------------------------------
+*/
+function parseDate(dateValue)
+{
+    if (!dateValue) {
+        return null;
+    }
+
+    const date = new Date(dateValue + 'T00:00:00');
+
+    if (isNaN(date.getTime())) {
+        return null;
+    }
+
+    return date;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Get Today
+|--------------------------------------------------------------------------
+*/
+function getToday()
+{
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    return today;
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Date of Birth Validation
 |--------------------------------------------------------------------------
 */
@@ -1947,18 +2239,582 @@ $('#date_of_birth').on('change', function(){
         return;
     }
 
-    const selectedDate = new Date(dob);
-    const today        = new Date();
+    const selectedDob = parseDate(dob);
+    const today       = getToday();
 
-    today.setHours(0, 0, 0, 0);
+    if (!selectedDob) {
+        this.value = '';
 
-    if (selectedDate > today) {
+        alert(
+            'Please select a valid Date of Birth.'
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOB Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (selectedDob > today) {
 
         alert(
             'Date of Birth cannot be a future date.'
         );
 
         this.value = '';
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Existing Joining Date
+    |--------------------------------------------------------------------------
+    */
+    const joiningDate = $('#joining_date').val();
+
+    if (joiningDate) {
+
+        const selectedJoiningDate = parseDate(joiningDate);
+
+        if (selectedJoiningDate && selectedJoiningDate < selectedDob) {
+
+            alert(
+                'Date of Birth cannot be after Joining Date.'
+            );
+
+            this.value = '';
+
+        }
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Joining Date Validation
+|--------------------------------------------------------------------------
+*/
+$('#joining_date').on('change', function(){
+
+    const joiningDate = this.value;
+
+    if (!joiningDate) {
+        return;
+    }
+
+    const selectedJoiningDate = parseDate(joiningDate);
+    const today               = getToday();
+
+    if (!selectedJoiningDate) {
+
+        this.value = '';
+
+        alert(
+            'Please select a valid Joining Date.'
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (selectedJoiningDate > today) {
+
+        alert(
+            'Joining Date cannot be a future date.'
+        );
+
+        this.value = '';
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Cannot Be Before DOB
+    |--------------------------------------------------------------------------
+    */
+    const dob = $('#date_of_birth').val();
+
+    if (dob) {
+
+        const selectedDob = parseDate(dob);
+
+        if (selectedDob && selectedJoiningDate < selectedDob) {
+
+            alert(
+                'Joining Date cannot be before Date of Birth.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Existing Resignation Date
+    |--------------------------------------------------------------------------
+    */
+    const resignationDate = $('#resignation_date').val();
+
+    if (resignationDate) {
+
+        const selectedResignationDate = parseDate(resignationDate);
+
+        if (
+            selectedResignationDate &&
+            selectedResignationDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Joining Date cannot be after Resignation Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Existing Last Working Date
+    |--------------------------------------------------------------------------
+    */
+    const lastWorkingDate = $('#last_working_date').val();
+
+    if (lastWorkingDate) {
+
+        const selectedLastWorkingDate = parseDate(lastWorkingDate);
+
+        if (
+            selectedLastWorkingDate &&
+            selectedLastWorkingDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Joining Date cannot be after Last Working Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validate Existing Termination Date
+    |--------------------------------------------------------------------------
+    */
+    const terminationDate = $('#termination_date').val();
+
+    if (terminationDate) {
+
+        const selectedTerminationDate = parseDate(terminationDate);
+
+        if (
+            selectedTerminationDate &&
+            selectedTerminationDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Joining Date cannot be after Termination Date.'
+            );
+
+            this.value = '';
+
+        }
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Resignation Date Validation
+|--------------------------------------------------------------------------
+*/
+$('#resignation_date').on('change', function(){
+
+    const resignationDate = this.value;
+
+    if (!resignationDate) {
+        return;
+    }
+
+    const selectedResignationDate = parseDate(resignationDate);
+    const today                  = getToday();
+
+    if (!selectedResignationDate) {
+
+        this.value = '';
+
+        alert(
+            'Please select a valid Resignation Date.'
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resignation Date Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (selectedResignationDate > today) {
+
+        alert(
+            'Resignation Date cannot be a future date.'
+        );
+
+        this.value = '';
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Check
+    |--------------------------------------------------------------------------
+    */
+    const joiningDate = $('#joining_date').val();
+
+    if (joiningDate) {
+
+        const selectedJoiningDate = parseDate(joiningDate);
+
+        if (
+            selectedJoiningDate &&
+            selectedResignationDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Resignation Date cannot be before Joining Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Last Working Date Check
+    |--------------------------------------------------------------------------
+    */
+    const lastWorkingDate = $('#last_working_date').val();
+
+    if (lastWorkingDate) {
+
+        const selectedLastWorkingDate = parseDate(lastWorkingDate);
+
+        if (
+            selectedLastWorkingDate &&
+            selectedResignationDate > selectedLastWorkingDate
+        ) {
+
+            alert(
+                'Resignation Date cannot be after Last Working Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Termination Date Check
+    |--------------------------------------------------------------------------
+    */
+    const terminationDate = $('#termination_date').val();
+
+    if (terminationDate) {
+
+        const selectedTerminationDate = parseDate(terminationDate);
+
+        if (
+            selectedTerminationDate &&
+            selectedResignationDate > selectedTerminationDate
+        ) {
+
+            alert(
+                'Resignation Date cannot be after Termination Date.'
+            );
+
+            this.value = '';
+
+        }
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Last Working Date Validation
+|--------------------------------------------------------------------------
+*/
+$('#last_working_date').on('change', function(){
+
+    const lastWorkingDate = this.value;
+
+    if (!lastWorkingDate) {
+        return;
+    }
+
+    const selectedLastWorkingDate = parseDate(lastWorkingDate);
+    const today                  = getToday();
+
+    if (!selectedLastWorkingDate) {
+
+        this.value = '';
+
+        alert(
+            'Please select a valid Last Working Date.'
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Last Working Date Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (selectedLastWorkingDate > today) {
+
+        alert(
+            'Last Working Date cannot be a future date.'
+        );
+
+        this.value = '';
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Check
+    |--------------------------------------------------------------------------
+    */
+    const joiningDate = $('#joining_date').val();
+
+    if (joiningDate) {
+
+        const selectedJoiningDate = parseDate(joiningDate);
+
+        if (
+            selectedJoiningDate &&
+            selectedLastWorkingDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Last Working Date cannot be before Joining Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resignation Date Check
+    |--------------------------------------------------------------------------
+    */
+    const resignationDate = $('#resignation_date').val();
+
+    if (resignationDate) {
+
+        const selectedResignationDate = parseDate(resignationDate);
+
+        if (
+            selectedResignationDate &&
+            selectedLastWorkingDate < selectedResignationDate
+        ) {
+
+            alert(
+                'Last Working Date cannot be before Resignation Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Termination Date Check
+    |--------------------------------------------------------------------------
+    */
+    const terminationDate = $('#termination_date').val();
+
+    if (terminationDate) {
+
+        const selectedTerminationDate = parseDate(terminationDate);
+
+        if (
+            selectedTerminationDate &&
+            selectedLastWorkingDate > selectedTerminationDate
+        ) {
+
+            alert(
+                'Last Working Date cannot be after Termination Date.'
+            );
+
+            this.value = '';
+
+        }
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Termination Date Validation
+|--------------------------------------------------------------------------
+*/
+$('#termination_date').on('change', function(){
+
+    const terminationDate = this.value;
+
+    if (!terminationDate) {
+        return;
+    }
+
+    const selectedTerminationDate = parseDate(terminationDate);
+    const today                   = getToday();
+
+    if (!selectedTerminationDate) {
+
+        this.value = '';
+
+        alert(
+            'Please select a valid Termination Date.'
+        );
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Termination Date Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (selectedTerminationDate > today) {
+
+        alert(
+            'Termination Date cannot be a future date.'
+        );
+
+        this.value = '';
+
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Check
+    |--------------------------------------------------------------------------
+    */
+    const joiningDate = $('#joining_date').val();
+
+    if (joiningDate) {
+
+        const selectedJoiningDate = parseDate(joiningDate);
+
+        if (
+            selectedJoiningDate &&
+            selectedTerminationDate < selectedJoiningDate
+        ) {
+
+            alert(
+                'Termination Date cannot be before Joining Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resignation Date Check
+    |--------------------------------------------------------------------------
+    */
+    const resignationDate = $('#resignation_date').val();
+
+    if (resignationDate) {
+
+        const selectedResignationDate = parseDate(resignationDate);
+
+        if (
+            selectedResignationDate &&
+            selectedTerminationDate < selectedResignationDate
+        ) {
+
+            alert(
+                'Termination Date cannot be before Resignation Date.'
+            );
+
+            this.value = '';
+
+            return;
+        }
+
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Last Working Date Check
+    |--------------------------------------------------------------------------
+    */
+    const lastWorkingDate = $('#last_working_date').val();
+
+    if (lastWorkingDate) {
+
+        const selectedLastWorkingDate = parseDate(lastWorkingDate);
+
+        if (
+            selectedTerminationDate < selectedLastWorkingDate
+        ) {
+
+            alert(
+                'Termination Date cannot be before Last Working Date.'
+            );
+
+            this.value = '';
+
+        }
 
     }
 
@@ -1979,11 +2835,19 @@ $('#license_issue_date').on('change', function(){
         return;
     }
 
-    const today = new Date();
+    const selectedIssueDate = parseDate(issueDate);
+    const today             = getToday();
 
-    today.setHours(0, 0, 0, 0);
+    if (!selectedIssueDate) {
 
-    const selectedIssueDate = new Date(issueDate);
+        this.value = '';
+
+        alert(
+            'Please select a valid Licence Issue Date.'
+        );
+
+        return;
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -2008,9 +2872,12 @@ $('#license_issue_date').on('change', function(){
     */
     if (expiryDate) {
 
-        const selectedExpiryDate = new Date(expiryDate);
+        const selectedExpiryDate = parseDate(expiryDate);
 
-        if (selectedIssueDate > selectedExpiryDate) {
+        if (
+            selectedExpiryDate &&
+            selectedIssueDate > selectedExpiryDate
+        ) {
 
             alert(
                 'Licence Issue Date cannot be after Licence Expiry Date.'
@@ -2039,7 +2906,18 @@ $('#license_expiry_date').on('change', function(){
         return;
     }
 
-    const selectedExpiryDate = new Date(expiryDate);
+    const selectedExpiryDate = parseDate(expiryDate);
+
+    if (!selectedExpiryDate) {
+
+        this.value = '';
+
+        alert(
+            'Please select a valid Licence Expiry Date.'
+        );
+
+        return;
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -2048,9 +2926,12 @@ $('#license_expiry_date').on('change', function(){
     */
     if (issueDate) {
 
-        const selectedIssueDate = new Date(issueDate);
+        const selectedIssueDate = parseDate(issueDate);
 
-        if (selectedExpiryDate < selectedIssueDate) {
+        if (
+            selectedIssueDate &&
+            selectedExpiryDate < selectedIssueDate
+        ) {
 
             alert(
                 'Licence Expiry Date cannot be before Licence Issue Date.'
@@ -2083,7 +2964,7 @@ $('#driver_photo').on('change', function(){
 
 /*
 |--------------------------------------------------------------------------
-| Licence Document - Preview
+| Driving Licence Document - Preview
 |--------------------------------------------------------------------------
 */
 $('#driving_license_document').on('change', function(){
@@ -2128,10 +3009,236 @@ $('#pan_document').on('change', function(){
 
 /*
 |--------------------------------------------------------------------------
+| Validate Employment Dates Before Submit
+|--------------------------------------------------------------------------
+*/
+function validateEmploymentDates()
+{
+    const dob            = $('#date_of_birth').val();
+    const joiningDate    = $('#joining_date').val();
+    const resignationDate = $('#resignation_date').val();
+    const lastWorkingDate = $('#last_working_date').val();
+    const terminationDate = $('#termination_date').val();
+
+    const today = getToday();
+
+    const dobDate = parseDate(dob);
+    const joiningDateObj = parseDate(joiningDate);
+    const resignationDateObj = parseDate(resignationDate);
+    const lastWorkingDateObj = parseDate(lastWorkingDate);
+    const terminationDateObj = parseDate(terminationDate);
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOB -> Joining Date
+    |--------------------------------------------------------------------------
+    */
+    if (
+        dobDate &&
+        joiningDateObj &&
+        joiningDateObj < dobDate
+    ) {
+
+        alert(
+            'Joining Date cannot be before Date of Birth.'
+        );
+
+        $('#joining_date').focus();
+
+        return false;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Joining Date Cannot Be Future
+    |--------------------------------------------------------------------------
+    */
+    if (
+        joiningDateObj &&
+        joiningDateObj > today
+    ) {
+
+        alert(
+            'Joining Date cannot be a future date.'
+        );
+
+        $('#joining_date').focus();
+
+        return false;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resignation Date
+    |--------------------------------------------------------------------------
+    */
+    if (resignationDateObj) {
+
+        if (resignationDateObj > today) {
+
+            alert(
+                'Resignation Date cannot be a future date.'
+            );
+
+            $('#resignation_date').focus();
+
+            return false;
+        }
+
+        if (
+            joiningDateObj &&
+            resignationDateObj < joiningDateObj
+        ) {
+
+            alert(
+                'Resignation Date cannot be before Joining Date.'
+            );
+
+            $('#resignation_date').focus();
+
+            return false;
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Last Working Date
+    |--------------------------------------------------------------------------
+    */
+    if (lastWorkingDateObj) {
+
+        if (lastWorkingDateObj > today) {
+
+            alert(
+                'Last Working Date cannot be a future date.'
+            );
+
+            $('#last_working_date').focus();
+
+            return false;
+        }
+
+        if (
+            joiningDateObj &&
+            lastWorkingDateObj < joiningDateObj
+        ) {
+
+            alert(
+                'Last Working Date cannot be before Joining Date.'
+            );
+
+            $('#last_working_date').focus();
+
+            return false;
+        }
+
+        if (
+            resignationDateObj &&
+            lastWorkingDateObj < resignationDateObj
+        ) {
+
+            alert(
+                'Last Working Date cannot be before Resignation Date.'
+            );
+
+            $('#last_working_date').focus();
+
+            return false;
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Termination Date
+    |--------------------------------------------------------------------------
+    */
+    if (terminationDateObj) {
+
+        if (terminationDateObj > today) {
+
+            alert(
+                'Termination Date cannot be a future date.'
+            );
+
+            $('#termination_date').focus();
+
+            return false;
+        }
+
+        if (
+            joiningDateObj &&
+            terminationDateObj < joiningDateObj
+        ) {
+
+            alert(
+                'Termination Date cannot be before Joining Date.'
+            );
+
+            $('#termination_date').focus();
+
+            return false;
+        }
+
+        if (
+            resignationDateObj &&
+            terminationDateObj < resignationDateObj
+        ) {
+
+            alert(
+                'Termination Date cannot be before Resignation Date.'
+            );
+
+            $('#termination_date').focus();
+
+            return false;
+        }
+
+        if (
+            lastWorkingDateObj &&
+            terminationDateObj < lastWorkingDateObj
+        ) {
+
+            alert(
+                'Termination Date cannot be before Last Working Date.'
+            );
+
+            $('#termination_date').focus();
+
+            return false;
+        }
+
+    }
+
+
+    return true;
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | Trim Text Inputs Before Submit
 |--------------------------------------------------------------------------
 */
-$('form').on('submit', function(){
+$('form').on('submit', function(e){
+
+    /*
+    |--------------------------------------------------------------------------
+    | Employment Date Validation
+    |--------------------------------------------------------------------------
+    */
+    if (!validateEmploymentDates()) {
+
+        e.preventDefault();
+
+        return false;
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -2236,15 +3343,6 @@ $('form').on('submit', function(){
             .replace(/\s+/g, ' ')
     );
 
-    /*
-    |--------------------------------------------------------------------------
-    | IMPORTANT
-    |--------------------------------------------------------------------------
-    | license_type is SELECT.
-    | No formatting required.
-    |--------------------------------------------------------------------------
-    */
-
     $('#license_issuing_authority').val(
         $('#license_issuing_authority').val()
             .replace(/\s+/g, ' ')
@@ -2278,7 +3376,16 @@ $('form').on('submit', function(){
 | Prevent Double Form Submission
 |--------------------------------------------------------------------------
 */
-$('form').on('submit', function(){
+$('form').on('submit', function(e){
+
+    /*
+    |--------------------------------------------------------------------------
+    | Do Not Disable Button If Validation Failed
+    |--------------------------------------------------------------------------
+    */
+    if (e.isDefaultPrevented()) {
+        return;
+    }
 
     const form = this;
 
@@ -2315,6 +3422,7 @@ $(document).ready(function(){
         $('#country').val('India');
 
     }
+    
 
 });
 

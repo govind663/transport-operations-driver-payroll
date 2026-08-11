@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Backend\DriverManagement;
 
+use App\Models\Driver;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Driver;
 
 class StoreDriverRequest extends FormRequest
 {
@@ -15,6 +15,7 @@ class StoreDriverRequest extends FormRequest
     {
         return true;
     }
+
 
     /**
      * Validation Rules
@@ -28,6 +29,7 @@ class StoreDriverRequest extends FormRequest
             | Basic Information
             |--------------------------------------------------------------------------
             */
+
             'driver_code' => [
                 'required',
                 'string',
@@ -62,6 +64,7 @@ class StoreDriverRequest extends FormRequest
             'date_of_birth' => [
                 'nullable',
                 'date',
+                'before:today',
             ],
 
             'gender' => [
@@ -70,11 +73,58 @@ class StoreDriverRequest extends FormRequest
                 'max:20',
             ],
 
+            'marital_status' => [
+                'nullable',
+                'string',
+                'max:30',
+            ],
+
+
             /*
+            |--------------------------------------------------------------------------
+            | Employment Information
+            |--------------------------------------------------------------------------
+            */
+
+            'joining_date' => [
+                'required',
+                'date',
+                'before_or_equal:today',
+            ],
+
+            'status' => [
+                'required',
+                'string',
+                Rule::in(Driver::EMPLOYMENT_STATUSES),
+            ],
+
+            'resignation_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:joining_date',
+                'required_if:status,notice_period,resigned',
+            ],
+
+            'last_working_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:joining_date',
+                'required_if:status,resigned,terminated',
+            ],
+
+            'termination_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:joining_date',
+                'required_if:status,terminated',
+            ],
+
+                        /*
             |--------------------------------------------------------------------------
             | Contact Information
             |--------------------------------------------------------------------------
             */
+
             'mobile' => [
                 'required',
                 'digits:10',
@@ -83,6 +133,7 @@ class StoreDriverRequest extends FormRequest
             'alternate_mobile' => [
                 'nullable',
                 'digits:10',
+                'different:mobile',
             ],
 
             'email' => [
@@ -92,11 +143,13 @@ class StoreDriverRequest extends FormRequest
                 'unique:drivers,email',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Address
             |--------------------------------------------------------------------------
             */
+
             'address' => [
                 'nullable',
                 'string',
@@ -126,11 +179,13 @@ class StoreDriverRequest extends FormRequest
                 'max:10',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Driving Licence
             |--------------------------------------------------------------------------
             */
+
             'license_number' => [
                 'required',
                 'string',
@@ -141,12 +196,13 @@ class StoreDriverRequest extends FormRequest
             'license_type' => [
                 'nullable',
                 'string',
-                'max:50',
+                Rule::in(Driver::LICENSE_TYPES),
             ],
 
             'license_issue_date' => [
                 'nullable',
                 'date',
+                'before_or_equal:today',
             ],
 
             'license_expiry_date' => [
@@ -161,11 +217,12 @@ class StoreDriverRequest extends FormRequest
                 'max:150',
             ],
 
-            /*
+                        /*
             |--------------------------------------------------------------------------
             | Documents
             |--------------------------------------------------------------------------
             */
+
             'driver_photo' => [
                 'nullable',
                 'image',
@@ -205,17 +262,9 @@ class StoreDriverRequest extends FormRequest
                 'max:5120',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Status
-            |--------------------------------------------------------------------------
-            */
-            'status' => [
-                'required',
-                'boolean',
-            ],
         ];
     }
+
 
     /**
      * Custom Messages
@@ -223,20 +272,97 @@ class StoreDriverRequest extends FormRequest
     public function messages(): array
     {
         return [
+                        /*
+            |--------------------------------------------------------------------------
+            | Basic Information
+            |--------------------------------------------------------------------------
+            */
 
-            'driver_code.required' => 'Driver code is required.',
-            'driver_code.unique' => 'This driver code already exists.',
+            'driver_code.required' =>
+                'Driver code is required.',
 
-            'driver_type.required' => 'Driver type is required.',
-            'driver_type.in' => 'Invalid driver type.',
+            'driver_code.unique' =>
+                'This driver code already exists.',
 
-            'first_name.required' => 'First name is required.',
+            'driver_type.required' =>
+                'Driver type is required.',
 
-            'mobile.required' => 'Mobile number is required.',
-            'mobile.digits' => 'Mobile number must be exactly 10 digits.',
+            'driver_type.in' =>
+                'Invalid driver type.',
+
+            'first_name.required' =>
+                'First name is required.',
+
+            'date_of_birth.before' =>
+                'Date of birth must be a valid past date.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employment Information
+            |--------------------------------------------------------------------------
+            */
+
+            'joining_date.required' =>
+                'Joining date is required.',
+
+            'joining_date.date' =>
+                'Please enter a valid joining date.',
+
+            'joining_date.before_or_equal' =>
+                'Joining date cannot be a future date.',
+
+            'status.required' =>
+                'Please select driver status.',
+
+            'status.in' =>
+                'Invalid driver status selected.',
+
+            'resignation_date.required_if' =>
+                'Resignation date is required for notice period or resigned status.',
+
+            'resignation_date.date' =>
+                'Please enter a valid resignation date.',
+
+            'resignation_date.after_or_equal' =>
+                'Resignation date cannot be before joining date.',
+
+            'last_working_date.required_if' =>
+                'Last working date is required for resigned or terminated status.',
+
+            'last_working_date.date' =>
+                'Please enter a valid last working date.',
+
+            'last_working_date.after_or_equal' =>
+                'Last working date cannot be before joining date.',
+
+            'termination_date.required_if' =>
+                'Termination date is required for terminated status.',
+
+            'termination_date.date' =>
+                'Please enter a valid termination date.',
+
+            'termination_date.after_or_equal' =>
+                'Termination date cannot be before joining date.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Contact Information
+            |--------------------------------------------------------------------------
+            */
+
+            'mobile.required' =>
+                'Mobile number is required.',
+
+            'mobile.digits' =>
+                'Mobile number must be exactly 10 digits.',
 
             'alternate_mobile.digits' =>
                 'Alternate mobile number must be exactly 10 digits.',
+
+            'alternate_mobile.different' =>
+                'Alternate mobile number must be different from mobile number.',
 
             'email.email' =>
                 'Please enter a valid email address.',
@@ -244,17 +370,40 @@ class StoreDriverRequest extends FormRequest
             'email.unique' =>
                 'This email address is already registered.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driving Licence
+            |--------------------------------------------------------------------------
+            */
+
             'license_number.required' =>
                 'Driving licence number is required.',
 
             'license_number.unique' =>
                 'This driving licence number already exists.',
 
+            'license_type.in' =>
+                'Invalid driving licence type selected.',
+
+            'license_issue_date.date' =>
+                'Please enter a valid licence issue date.',
+
+            'license_issue_date.before_or_equal' =>
+                'Licence issue date cannot be a future date.',
+
             'license_expiry_date.required' =>
                 'Driving licence expiry date is required.',
 
             'license_expiry_date.after_or_equal' =>
                 'Licence expiry date must be after or equal to the issue date.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Photo
+            |--------------------------------------------------------------------------
+            */
 
             'driver_photo.image' =>
                 'Please upload a valid driver photo.',
@@ -265,26 +414,56 @@ class StoreDriverRequest extends FormRequest
             'driver_photo.max' =>
                 'Driver photo size must not exceed 2 MB.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driving Licence Document
+            |--------------------------------------------------------------------------
+            */
+
+            'driving_license_document.file' =>
+                'Please upload a valid driving licence document.',
+
             'driving_license_document.mimes' =>
                 'Driving licence document must be JPG, JPEG, PNG or PDF.',
 
             'driving_license_document.max' =>
                 'Driving licence document size must not exceed 5 MB.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Aadhaar
+            |--------------------------------------------------------------------------
+            */
+
             'aadhar_number.digits' =>
-                'Aadhar number must be exactly 12 digits.',
+                'Aadhaar number must be exactly 12 digits.',
+
+            'aadhar_document.file' =>
+                'Please upload a valid Aadhaar document.',
 
             'aadhar_document.mimes' =>
-                'Aadhar document must be JPG, JPEG, PNG or PDF.',
+                'Aadhaar document must be JPG, JPEG, PNG or PDF.',
+
+            'aadhar_document.max' =>
+                'Aadhaar document size must not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAN
+            |--------------------------------------------------------------------------
+            */
+
+            'pan_document.file' =>
+                'Please upload a valid PAN document.',
 
             'pan_document.mimes' =>
                 'PAN document must be JPG, JPEG, PNG or PDF.',
 
-            'status.required' =>
-                'Please select driver status.',
-
-            'status.boolean' =>
-                'Invalid driver status selected.',
+            'pan_document.max' =>
+                'PAN document size must not exceed 5 MB.',
         ];
     }
 }

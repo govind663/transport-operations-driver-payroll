@@ -476,14 +476,53 @@
                                 </td>
 
                                 {{-- ========================================= --}}
-                                {{-- Status --}}
+                                {{-- Employment Status --}}
                                 {{-- ========================================= --}}
                                 <td>
 
-                                    @if($driver->status)
+                                    {{-- ========================================= --}}
+                                    {{-- Terminated --}}
+                                    {{-- ========================================= --}}
+                                    @if($driver->termination_date)
 
                                         <span
-                                            class="badge badge-success badge-pill px-3 py-2">
+                                            class="badge badge-danger badge-pill px-3 py-2"
+                                            title="Terminated on {{ \Carbon\Carbon::parse($driver->termination_date)->format('d M Y') }}"
+                                        >
+
+                                            <i class="fa fa-ban"></i>
+
+                                            Terminated
+
+                                        </span>
+
+
+                                    {{-- ========================================= --}}
+                                    {{-- Resigned --}}
+                                    {{-- ========================================= --}}
+                                    @elseif($driver->resignation_date)
+
+                                        <span
+                                            class="badge badge-warning badge-pill px-3 py-2"
+                                            title="Resigned on {{ \Carbon\Carbon::parse($driver->resignation_date)->format('d M Y') }}"
+                                        >
+
+                                            <i class="fa fa-sign-out"></i>
+
+                                            Resigned
+
+                                        </span>
+
+
+                                    {{-- ========================================= --}}
+                                    {{-- Active --}}
+                                    {{-- ========================================= --}}
+                                    @elseif($driver->status)
+
+                                        <span
+                                            class="badge badge-success badge-pill px-3 py-2"
+                                            title="Currently Active"
+                                        >
 
                                             <i class="fa fa-check-circle"></i>
 
@@ -491,12 +530,18 @@
 
                                         </span>
 
+
+                                    {{-- ========================================= --}}
+                                    {{-- Inactive --}}
+                                    {{-- ========================================= --}}
                                     @else
 
                                         <span
-                                            class="badge badge-danger badge-pill px-3 py-2">
+                                            class="badge badge-secondary badge-pill px-3 py-2"
+                                            title="Currently Inactive"
+                                        >
 
-                                            <i class="fa fa-times-circle"></i>
+                                            <i class="fa fa-pause-circle"></i>
 
                                             Inactive
 
