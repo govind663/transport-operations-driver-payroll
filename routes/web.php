@@ -356,21 +356,29 @@ Route::prefix('admin')
 | Temporary Server Utility Routes
 |--------------------------------------------------------------------------
 | IMPORTANT:
-| Ye routes temporary server setup / deployment ke liye hain.
-| Production setup complete hone ke baad REMOVE kar dena.
+| Ye routes cPanel / shared hosting par temporary deployment
+| aur maintenance ke liye hain.
+|
+| Production setup complete hone ke baad inhe
+| authentication/secret key se protect ya remove kar dena.
 |--------------------------------------------------------------------------
 */
 
+
 /*
 |--------------------------------------------------------------------------
-| Server Check
+| 01. SERVER CHECK
 |--------------------------------------------------------------------------
 */
+
 Route::get('/server-check', function () {
 
     return response()->json([
         'success' => true,
         'message' => 'Laravel server is working fine.',
+        'environment' => app()->environment(),
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version(),
     ]);
 
 });
@@ -378,9 +386,94 @@ Route::get('/server-check', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Laravel Optimize Clear
+| 02. COMPOSER DUMP AUTOLOAD
 |--------------------------------------------------------------------------
 */
+
+Route::get('/composer-dump-autoload', function () {
+
+    try {
+
+        $composer = '/opt/cpanel/composer/bin/composer';
+
+        if (!file_exists($composer)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Composer executable not found.',
+                'path' => $composer,
+            ], 500);
+        }
+
+        $command = 'cd '
+            . escapeshellarg(base_path())
+            . ' && '
+            . escapeshellarg($composer)
+            . ' dump-autoload --optimize 2>&1';
+
+        $output = shell_exec($command);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Composer autoload generated successfully.',
+            'output' => $output,
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Composer dump-autoload failed.',
+            'error' => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| 03. DATABASE MIGRATION
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/migrate', function () {
+
+    try {
+
+        Artisan::call('migrate', [
+            '--force' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Database migrations completed successfully.',
+            'output' => trim(Artisan::output()),
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Database migration failed.',
+            'error' => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| 04. CLEAR ALL LARAVEL CACHE
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/optimize-clear', function () {
 
     try {
@@ -390,15 +483,15 @@ Route::get('/optimize-clear', function () {
         return response()->json([
             'success' => true,
             'message' => 'All Laravel caches cleared successfully.',
-            'output'  => trim(Artisan::output()),
+            'output' => trim(Artisan::output()),
         ]);
 
     } catch (\Throwable $e) {
 
         return response()->json([
             'success' => false,
-            'message' => 'Cache clear failed.',
-            'error'   => config('app.debug')
+            'message' => 'Laravel cache clear failed.',
+            'error' => config('app.debug')
                 ? $e->getMessage()
                 : 'Server error.',
         ], 500);
@@ -410,29 +503,28 @@ Route::get('/optimize-clear', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Generate APP_KEY
+| 05. OPTIMIZE LARAVEL
 |--------------------------------------------------------------------------
 */
-Route::get('/key-generate', function () {
+
+Route::get('/optimize', function () {
 
     try {
 
-        Artisan::call('key:generate', [
-            '--force' => true,
-        ]);
+        Artisan::call('optimize');
 
         return response()->json([
             'success' => true,
-            'message' => 'APP_KEY generated successfully.',
-            'output'  => trim(Artisan::output()),
+            'message' => 'Laravel optimized successfully.',
+            'output' => trim(Artisan::output()),
         ]);
 
     } catch (\Throwable $e) {
 
         return response()->json([
             'success' => false,
-            'message' => 'APP_KEY generation failed.',
-            'error'   => config('app.debug')
+            'message' => 'Laravel optimization failed.',
+            'error' => config('app.debug')
                 ? $e->getMessage()
                 : 'Server error.',
         ], 500);
@@ -444,49 +536,32 @@ Route::get('/key-generate', function () {
 
 /*
 |--------------------------------------------------------------------------
-| Composer Dump Autoload
+| 06. MIGRATION STATUS
 |--------------------------------------------------------------------------
 */
-Route::get('/composer-dump-autoload', function () {
 
-    $composer = '/opt/cpanel/composer/bin/composer';
+Route::get('/migrate-status', function () {
 
-    $command = 'cd ' . escapeshellarg(base_path())
-        . ' && '
-        . escapeshellarg($composer)
-        . ' dump-autoload 2>&1';
+    try {
 
-    $output = shell_exec($command);
+        Artisan::call('migrate:status');
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Composer autoload dumped successfully.',
-        'output'  => $output,
-    ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Migration status fetched successfully.',
+            'output' => trim(Artisan::output()),
+        ]);
 
-});
+    } catch (\Throwable $e) {
 
+        return response()->json([
+            'success' => false,
+            'message' => 'Unable to fetch migration status.',
+            'error' => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
 
-/*
-|--------------------------------------------------------------------------
-| Composer Clear Cache
-|--------------------------------------------------------------------------
-*/
-Route::get('/composer-clear-cache', function () {
-
-    $composer = '/opt/cpanel/composer/bin/composer';
-
-    $command = 'cd ' . escapeshellarg(base_path())
-        . ' && '
-        . escapeshellarg($composer)
-        . ' clear-cache 2>&1';
-
-    $output = shell_exec($command);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Composer cache cleared successfully.',
-        'output'  => $output,
-    ]);
+    }
 
 });
