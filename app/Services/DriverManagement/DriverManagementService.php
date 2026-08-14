@@ -89,6 +89,15 @@ class DriverManagementService
 
             /*
             |--------------------------------------------------------------------------
+            | Normalize Basic Values
+            |--------------------------------------------------------------------------
+            */
+
+            $this->normalizeDriverData($data);
+
+
+            /*
+            |--------------------------------------------------------------------------
             | DRIVER PHOTO
             |--------------------------------------------------------------------------
             */
@@ -109,14 +118,6 @@ class DriverManagementService
             /*
             |--------------------------------------------------------------------------
             | DRIVING LICENCE DOCUMENT
-            |--------------------------------------------------------------------------
-            |
-            | Database field:
-            | driving_license_document
-            |
-            | Upload folder:
-            | driver/license
-            |
             |--------------------------------------------------------------------------
             */
 
@@ -173,6 +174,71 @@ class DriverManagementService
 
             /*
             |--------------------------------------------------------------------------
+            | QUALIFICATIONS
+            |--------------------------------------------------------------------------
+            */
+
+            $qualificationDocuments =
+                $data['qualification_documents'] ?? [];
+
+            $qualifications =
+                $data['qualifications'] ?? [];
+
+            $data['driver_qualifications'] =
+                $this->processQualifications(
+                    $qualifications,
+                    $qualificationDocuments
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOMINEES
+            |--------------------------------------------------------------------------
+            */
+
+            $nominees =
+                $data['nominees'] ?? [];
+
+            $nomineeProfileImages =
+                $data['nominee_profile_images'] ?? [];
+
+            $data['driver_nominees'] =
+                $this->processNominees(
+                    $nominees,
+                    $nomineeProfileImages
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | BANK DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $data['driver_bank_details'] =
+                $this->processBankDetails(
+                    $data['bank_details'] ?? []
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE FORM-ONLY FIELDS
+            |--------------------------------------------------------------------------
+            */
+
+            unset(
+                $data['qualifications'],
+                $data['qualification_documents'],
+                $data['nominees'],
+                $data['nominee_profile_images'],
+                $data['bank_details']
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
             | CREATE DRIVER
             |--------------------------------------------------------------------------
             */
@@ -205,6 +271,15 @@ class DriverManagementService
             */
 
             $data['updated_by'] = Auth::id();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Normalize Basic Values
+            |--------------------------------------------------------------------------
+            */
+
+            $this->normalizeDriverData($data);
 
 
             /*
@@ -256,25 +331,12 @@ class DriverManagementService
             |--------------------------------------------------------------------------
             | DRIVING LICENCE DOCUMENT
             |--------------------------------------------------------------------------
-            |
-            | IMPORTANT:
-            |
-            | Field name MUST be:
-            | driving_license_document
-            |
-            |--------------------------------------------------------------------------
             */
 
             if (
                 isset($data['driving_license_document']) &&
                 $data['driving_license_document']
             ) {
-
-                /*
-                |--------------------------------------------------------------------------
-                | Upload New Licence
-                |--------------------------------------------------------------------------
-                */
 
                 $newDocument =
                     $this->fileUploadService->upload(
@@ -321,12 +383,6 @@ class DriverManagementService
                 $data['aadhar_document']
             ) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Upload New Aadhaar
-                |--------------------------------------------------------------------------
-                */
-
                 $newDocument =
                     $this->fileUploadService->upload(
                         $data['aadhar_document'],
@@ -372,12 +428,6 @@ class DriverManagementService
                 $data['pan_document']
             ) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Upload New PAN
-                |--------------------------------------------------------------------------
-                */
-
                 $newDocument =
                     $this->fileUploadService->upload(
                         $data['pan_document'],
@@ -410,6 +460,85 @@ class DriverManagementService
                 $data['pan_document'] =
                     $newDocument;
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | QUALIFICATIONS
+            |--------------------------------------------------------------------------
+            */
+
+            $oldQualifications =
+                is_array($driver->driver_qualifications)
+                    ? $driver->driver_qualifications
+                    : [];
+
+            $newQualifications =
+                $data['qualifications'] ?? [];
+
+            $qualificationDocuments =
+                $data['qualification_documents'] ?? [];
+
+
+            $data['driver_qualifications'] =
+                $this->processQualifications(
+                    $newQualifications,
+                    $qualificationDocuments,
+                    $oldQualifications
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOMINEES
+            |--------------------------------------------------------------------------
+            */
+
+            $oldNominees =
+                is_array($driver->driver_nominees)
+                    ? $driver->driver_nominees
+                    : [];
+
+            $newNominees =
+                $data['nominees'] ?? [];
+
+            $nomineeProfileImages =
+                $data['nominee_profile_images'] ?? [];
+
+
+            $data['driver_nominees'] =
+                $this->processNominees(
+                    $newNominees,
+                    $nomineeProfileImages,
+                    $oldNominees
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | BANK DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $data['driver_bank_details'] =
+                $this->processBankDetails(
+                    $data['bank_details'] ?? []
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE FORM-ONLY FIELDS
+            |--------------------------------------------------------------------------
+            */
+
+            unset(
+                $data['qualifications'],
+                $data['qualification_documents'],
+                $data['nominees'],
+                $data['nominee_profile_images'],
+                $data['bank_details']
+            );
 
 
             /*
@@ -464,5 +593,902 @@ class DriverManagementService
 
             return $driver->delete();
         });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROCESS QUALIFICATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function processQualifications(
+        array $qualifications = [],
+        array $qualificationDocuments = [],
+        array $oldQualifications = []
+    ): array {
+
+        $processedQualifications = [];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normalize Existing Qualification Keys
+        |--------------------------------------------------------------------------
+        */
+
+        $oldQualifications =
+            array_values($oldQualifications);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Process Submitted Qualifications
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $qualifications as $index => $qualification
+        ) {
+
+            if (
+                !is_array($qualification)
+            ) {
+                continue;
+            }
+
+
+            $qualificationName =
+                trim(
+                    $qualification['qualification'] ?? ''
+                );
+
+            $institute =
+                trim(
+                    $qualification['institute'] ?? ''
+                );
+
+            $passingYear =
+                $qualification['passing_year'] ?? null;
+
+            $grade =
+                trim(
+                    $qualification['grade'] ?? ''
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Skip Completely Empty Row
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $qualificationName === '' &&
+                $institute === '' &&
+                empty($passingYear) &&
+                $grade === '' &&
+                empty($qualificationDocuments[$index])
+            ) {
+
+                continue;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Document
+            |--------------------------------------------------------------------------
+            */
+
+            $existingDocument = null;
+
+
+            if (
+                array_key_exists(
+                    $index,
+                    $oldQualifications
+                )
+            ) {
+
+                $existingDocument =
+                    $oldQualifications[$index]['document']
+                    ?? null;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | New Qualification Document
+            |--------------------------------------------------------------------------
+            */
+
+            $newDocument = null;
+
+
+            if (
+                isset($qualificationDocuments[$index]) &&
+                $qualificationDocuments[$index]
+            ) {
+
+                $newDocument =
+                    $this->fileUploadService->upload(
+                        $qualificationDocuments[$index],
+                        'driver/qualification'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Delete Existing Qualification Document
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty($existingDocument)
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $existingDocument
+                    );
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Preserve Existing Document
+            |--------------------------------------------------------------------------
+            */
+
+            $document =
+                $newDocument
+                ?? $existingDocument;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Build Qualification Record
+            |--------------------------------------------------------------------------
+            */
+
+            $processedQualifications[] = [
+
+                'qualification' =>
+                    $qualificationName !== ''
+                        ? $qualificationName
+                        : null,
+
+                'institute' =>
+                    $institute !== ''
+                        ? $institute
+                        : null,
+
+                'passing_year' =>
+                    !empty($passingYear)
+                        ? (int) $passingYear
+                        : null,
+
+                'grade' =>
+                    $grade !== ''
+                        ? $grade
+                        : null,
+
+                'document' =>
+                    $document,
+
+            ];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Documents of Removed Qualifications
+        |--------------------------------------------------------------------------
+        */
+
+        $submittedQualificationIndexes =
+            array_keys($qualifications);
+
+
+        foreach (
+            $oldQualifications as $oldIndex => $oldQualification
+        ) {
+
+            if (
+                !in_array(
+                    $oldIndex,
+                    $submittedQualificationIndexes,
+                    true
+                )
+            ) {
+
+                $oldDocument =
+                    $oldQualification['document']
+                    ?? null;
+
+                if (
+                    !empty($oldDocument)
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $oldDocument
+                    );
+                }
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Sequential Array
+        |--------------------------------------------------------------------------
+        */
+
+        return array_values(
+            $processedQualifications
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROCESS NOMINEES
+    |--------------------------------------------------------------------------
+    |
+    | Handles:
+    |
+    | - Multiple nominees
+    | - Nominee profile images
+    | - Existing profile image preservation
+    | - Profile image replacement
+    | - Removal of old nominee images
+    |
+    |--------------------------------------------------------------------------
+    */
+
+    protected function processNominees(
+        array $nominees = [],
+        array $nomineeProfileImages = [],
+        array $oldNominees = []
+    ): array {
+
+        $processedNominees = [];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normalize Existing Nominees
+        |--------------------------------------------------------------------------
+        */
+
+        $oldNominees =
+            array_values($oldNominees);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Process Submitted Nominees
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $nominees as $index => $nominee
+        ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Skip Invalid Row
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !is_array($nominee)
+            ) {
+                continue;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Normalize Values
+            |--------------------------------------------------------------------------
+            */
+
+            $name =
+                trim(
+                    $nominee['name'] ?? ''
+                );
+
+            $relationship =
+                trim(
+                    $nominee['relationship'] ?? ''
+                );
+
+            $dateOfBirth =
+                $nominee['date_of_birth'] ?? null;
+
+            $mobile =
+                preg_replace(
+                    '/[^0-9]/',
+                    '',
+                    $nominee['mobile'] ?? ''
+                );
+
+            $address =
+                trim(
+                    $nominee['address'] ?? ''
+                );
+
+            $percentage =
+                $nominee['percentage'] ?? null;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Skip Completely Empty Row
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $name === '' &&
+                $relationship === '' &&
+                empty($dateOfBirth) &&
+                $mobile === '' &&
+                $address === '' &&
+                empty($percentage) &&
+                empty($nomineeProfileImages[$index])
+            ) {
+
+                continue;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Profile Image
+            |--------------------------------------------------------------------------
+            */
+
+            $existingProfileImage = null;
+
+
+            if (
+                array_key_exists(
+                    $index,
+                    $oldNominees
+                )
+            ) {
+
+                $existingProfileImage =
+                    $oldNominees[$index]['profile_image']
+                    ?? null;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | New Profile Image
+            |--------------------------------------------------------------------------
+            */
+
+            $newProfileImage = null;
+
+
+            if (
+                isset($nomineeProfileImages[$index]) &&
+                $nomineeProfileImages[$index]
+            ) {
+
+                $newProfileImage =
+                    $this->fileUploadService->upload(
+                        $nomineeProfileImages[$index],
+                        'driver/nominee'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Delete Existing Profile Image
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty($existingProfileImage)
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $existingProfileImage
+                    );
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Preserve Existing Profile Image
+            |--------------------------------------------------------------------------
+            */
+
+            $profileImage =
+                $newProfileImage
+                ?? $existingProfileImage;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Build Nominee Record
+            |--------------------------------------------------------------------------
+            */
+
+            $processedNominees[] = [
+
+                'name' =>
+                    $name !== ''
+                        ? $name
+                        : null,
+
+                'relationship' =>
+                    $relationship !== ''
+                        ? $relationship
+                        : null,
+
+                'date_of_birth' =>
+                    !empty($dateOfBirth)
+                        ? $dateOfBirth
+                        : null,
+
+                'mobile' =>
+                    $mobile !== ''
+                        ? $mobile
+                        : null,
+
+                'percentage' =>
+                    $percentage !== null &&
+                    $percentage !== ''
+                        ? (float) $percentage
+                        : null,
+
+                'address' =>
+                    $address !== ''
+                        ? $address
+                        : null,
+
+                'profile_image' =>
+                    $profileImage,
+
+            ];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Profile Images of Removed Nominees
+        |--------------------------------------------------------------------------
+        */
+
+        $submittedNomineeIndexes =
+            array_keys($nominees);
+
+
+        foreach (
+            $oldNominees as $oldIndex => $oldNominee
+        ) {
+
+            if (
+                !in_array(
+                    $oldIndex,
+                    $submittedNomineeIndexes,
+                    true
+                )
+            ) {
+
+                $oldProfileImage =
+                    $oldNominee['profile_image']
+                    ?? null;
+
+
+                if (
+                    !empty($oldProfileImage)
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $oldProfileImage
+                    );
+                }
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Sequential Array
+        |--------------------------------------------------------------------------
+        */
+
+        return array_values(
+            $processedNominees
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROCESS BANK DETAILS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function processBankDetails(
+        array $bankDetails = []
+    ): array {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normalize Values
+        |--------------------------------------------------------------------------
+        */
+
+        $accountHolderName =
+            trim(
+                $bankDetails['account_holder_name']
+                ?? ''
+            );
+
+        $bankName =
+            trim(
+                $bankDetails['bank_name']
+                ?? ''
+            );
+
+        $accountNumber =
+            trim(
+                $bankDetails['account_number']
+                ?? ''
+            );
+
+        $ifscCode =
+            strtoupper(
+                trim(
+                    $bankDetails['ifsc_code']
+                    ?? ''
+                )
+            );
+
+        $branchName =
+            trim(
+                $bankDetails['branch_name']
+                ?? ''
+            );
+
+        $accountType =
+            strtolower(
+                trim(
+                    $bankDetails['account_type']
+                    ?? ''
+                )
+            );
+
+        $upiId =
+            trim(
+                $bankDetails['upi_id']
+                ?? ''
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | No Bank Details
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $accountHolderName === '' &&
+            $bankName === '' &&
+            $accountNumber === '' &&
+            $ifscCode === '' &&
+            $branchName === '' &&
+            $accountType === '' &&
+            $upiId === ''
+        ) {
+
+            return [];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Bank Details
+        |--------------------------------------------------------------------------
+        */
+
+        return [
+
+            'account_holder_name' =>
+                $accountHolderName !== ''
+                    ? $accountHolderName
+                    : null,
+
+            'bank_name' =>
+                $bankName !== ''
+                    ? $bankName
+                    : null,
+
+            'account_number' =>
+                $accountNumber !== ''
+                    ? $accountNumber
+                    : null,
+
+            'ifsc_code' =>
+                $ifscCode !== ''
+                    ? $ifscCode
+                    : null,
+
+            'branch_name' =>
+                $branchName !== ''
+                    ? $branchName
+                    : null,
+
+            'account_type' =>
+                in_array(
+                    $accountType,
+                    [
+                        'savings',
+                        'current',
+                    ],
+                    true
+                )
+                    ? $accountType
+                    : null,
+
+            'upi_id' =>
+                $upiId !== ''
+                    ? $upiId
+                    : null,
+
+        ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE DRIVER DATA
+    |--------------------------------------------------------------------------
+    */
+
+    protected function normalizeDriverData(
+        array &$data
+    ): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Code
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['driver_code'])
+        ) {
+
+            $data['driver_code'] =
+                strtoupper(
+                    preg_replace(
+                        '/\s+/',
+                        '',
+                        trim(
+                            $data['driver_code']
+                        )
+                    )
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Names
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            [
+                'first_name',
+                'last_name',
+                'father_name',
+            ] as $field
+        ) {
+
+            if (
+                isset($data[$field])
+            ) {
+
+                $data[$field] =
+                    preg_replace(
+                        '/\s+/',
+                        ' ',
+                        trim(
+                            $data[$field]
+                        )
+                    );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Mobile
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            [
+                'mobile',
+                'alternate_mobile',
+            ] as $field
+        ) {
+
+            if (
+                isset($data[$field])
+            ) {
+
+                $data[$field] =
+                    preg_replace(
+                        '/[^0-9]/',
+                        '',
+                        $data[$field]
+                    );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Email
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['email'])
+        ) {
+
+            $data['email'] =
+                strtolower(
+                    trim(
+                        $data['email']
+                    )
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | License Number
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['license_number'])
+        ) {
+
+            $data['license_number'] =
+                strtoupper(
+                    preg_replace(
+                        '/\s+/',
+                        ' ',
+                        trim(
+                            $data['license_number']
+                        )
+                    )
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | License Authority
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['license_issuing_authority'])
+        ) {
+
+            $data['license_issuing_authority'] =
+                preg_replace(
+                    '/\s+/',
+                    ' ',
+                    trim(
+                        $data['license_issuing_authority']
+                    )
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Aadhaar
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['aadhar_number'])
+        ) {
+
+            $data['aadhar_number'] =
+                preg_replace(
+                    '/[^0-9]/',
+                    '',
+                    $data['aadhar_number']
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAN
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['pan_number'])
+        ) {
+
+            $data['pan_number'] =
+                strtoupper(
+                    preg_replace(
+                        '/[^A-Z0-9]/i',
+                        '',
+                        $data['pan_number']
+                    )
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Address Fields
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            [
+                'country',
+                'state',
+                'city',
+                'address',
+            ] as $field
+        ) {
+
+            if (
+                isset($data[$field])
+            ) {
+
+                $data[$field] =
+                    preg_replace(
+                        '/\s+/',
+                        ' ',
+                        trim(
+                            $data[$field]
+                        )
+                    );
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pincode
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isset($data['pincode'])
+        ) {
+
+            $data['pincode'] =
+                preg_replace(
+                    '/[^0-9]/',
+                    '',
+                    $data['pincode']
+                );
+        }
     }
 }

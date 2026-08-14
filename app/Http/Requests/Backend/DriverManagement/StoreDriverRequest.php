@@ -119,7 +119,8 @@ class StoreDriverRequest extends FormRequest
                 'required_if:status,terminated',
             ],
 
-                        /*
+
+            /*
             |--------------------------------------------------------------------------
             | Contact Information
             |--------------------------------------------------------------------------
@@ -217,9 +218,187 @@ class StoreDriverRequest extends FormRequest
                 'max:150',
             ],
 
-                        /*
+
+            /*
             |--------------------------------------------------------------------------
-            | Documents
+            | Qualification
+            |--------------------------------------------------------------------------
+            |
+            | Add More Qualification Records
+            |
+            */
+
+            'qualifications' => [
+                'nullable',
+                'array',
+            ],
+
+            'qualifications.*' => [
+                'nullable',
+                'array',
+            ],
+
+            'qualifications.*.qualification' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'qualifications.*.institute' => [
+                'nullable',
+                'string',
+                'max:200',
+            ],
+
+            'qualifications.*.passing_year' => [
+                'nullable',
+                'integer',
+                'min:1900',
+                'max:' . now()->year,
+            ],
+
+            'qualifications.*.grade' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Qualification Documents
+            |--------------------------------------------------------------------------
+            */
+
+            'qualification_documents' => [
+                'nullable',
+                'array',
+            ],
+
+            'qualification_documents.*' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,webp,pdf',
+                'max:5120',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Nominee
+            |--------------------------------------------------------------------------
+            |
+            | Add More Nominee Records
+            |
+            */
+
+            'nominees' => [
+                'nullable',
+                'array',
+            ],
+
+            'nominees.*' => [
+                'nullable',
+                'array',
+            ],
+
+            'nominees.*.name' => [
+                'required',
+                'string',
+                'max:150',
+            ],
+
+            'nominees.*.relationship' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'nominees.*.date_of_birth' => [
+                'nullable',
+                'date',
+                'before:today',
+            ],
+
+            'nominees.*.mobile' => [
+                'nullable',
+                'digits:10',
+            ],
+
+            'nominees.*.percentage' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100',
+            ],
+
+            'nominees.*.address' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Bank Details
+            |--------------------------------------------------------------------------
+            */
+
+            'bank_details' => [
+                'nullable',
+                'array',
+            ],
+
+            'bank_details.account_holder_name' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'bank_details.bank_name' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'bank_details.account_number' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'bank_details.ifsc_code' => [
+                'nullable',
+                'string',
+                'max:11',
+                'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/',
+            ],
+
+            'bank_details.branch_name' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'bank_details.account_type' => [
+                'nullable',
+                'string',
+                Rule::in([
+                    'savings',
+                    'current',
+                ]),
+            ],
+
+            'bank_details.upi_id' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver / Identity Documents
             |--------------------------------------------------------------------------
             */
 
@@ -272,7 +451,8 @@ class StoreDriverRequest extends FormRequest
     public function messages(): array
     {
         return [
-                        /*
+
+            /*
             |--------------------------------------------------------------------------
             | Basic Information
             |--------------------------------------------------------------------------
@@ -281,11 +461,20 @@ class StoreDriverRequest extends FormRequest
             'driver_code.required' =>
                 'Driver code is required.',
 
+            'driver_code.string' =>
+                'Driver code must be a valid text value.',
+
+            'driver_code.max' =>
+                'Driver code must not exceed 30 characters.',
+
             'driver_code.unique' =>
                 'This driver code already exists.',
 
             'driver_type.required' =>
                 'Driver type is required.',
+
+            'driver_type.string' =>
+                'Driver type must be a valid text value.',
 
             'driver_type.in' =>
                 'Invalid driver type.',
@@ -293,8 +482,41 @@ class StoreDriverRequest extends FormRequest
             'first_name.required' =>
                 'First name is required.',
 
+            'first_name.string' =>
+                'First name must be a valid text value.',
+
+            'first_name.max' =>
+                'First name must not exceed 100 characters.',
+
+            'last_name.string' =>
+                'Last name must be a valid text value.',
+
+            'last_name.max' =>
+                'Last name must not exceed 100 characters.',
+
+            'father_name.string' =>
+                'Father name must be a valid text value.',
+
+            'father_name.max' =>
+                'Father name must not exceed 150 characters.',
+
+            'date_of_birth.date' =>
+                'Please enter a valid date of birth.',
+
             'date_of_birth.before' =>
                 'Date of birth must be a valid past date.',
+
+            'gender.string' =>
+                'Gender must be a valid value.',
+
+            'gender.max' =>
+                'Gender must not exceed 20 characters.',
+
+            'marital_status.string' =>
+                'Marital status must be a valid value.',
+
+            'marital_status.max' =>
+                'Marital status must not exceed 30 characters.',
 
 
             /*
@@ -313,13 +535,13 @@ class StoreDriverRequest extends FormRequest
                 'Joining date cannot be a future date.',
 
             'status.required' =>
-                'Please select driver status.',
+                'Please select driver employment status.',
+
+            'status.string' =>
+                'Driver employment status must be a valid value.',
 
             'status.in' =>
-                'Invalid driver status selected.',
-
-            'resignation_date.required_if' =>
-                'Resignation date is required for notice period or resigned status.',
+                'Invalid driver employment status selected.',
 
             'resignation_date.date' =>
                 'Please enter a valid resignation date.',
@@ -327,8 +549,8 @@ class StoreDriverRequest extends FormRequest
             'resignation_date.after_or_equal' =>
                 'Resignation date cannot be before joining date.',
 
-            'last_working_date.required_if' =>
-                'Last working date is required for resigned or terminated status.',
+            'resignation_date.required_if' =>
+                'Resignation date is required for notice period or resigned status.',
 
             'last_working_date.date' =>
                 'Please enter a valid last working date.',
@@ -336,14 +558,17 @@ class StoreDriverRequest extends FormRequest
             'last_working_date.after_or_equal' =>
                 'Last working date cannot be before joining date.',
 
-            'termination_date.required_if' =>
-                'Termination date is required for terminated status.',
+            'last_working_date.required_if' =>
+                'Last working date is required for resigned or terminated status.',
 
             'termination_date.date' =>
                 'Please enter a valid termination date.',
 
             'termination_date.after_or_equal' =>
                 'Termination date cannot be before joining date.',
+
+            'termination_date.required_if' =>
+                'Termination date is required for terminated status.',
 
 
             /*
@@ -367,8 +592,45 @@ class StoreDriverRequest extends FormRequest
             'email.email' =>
                 'Please enter a valid email address.',
 
+            'email.max' =>
+                'Email address must not exceed 255 characters.',
+
             'email.unique' =>
                 'This email address is already registered.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Address Information
+            |--------------------------------------------------------------------------
+            */
+
+            'address.string' =>
+                'Address must be a valid text value.',
+
+            'city.string' =>
+                'City must be a valid text value.',
+
+            'city.max' =>
+                'City must not exceed 100 characters.',
+
+            'state.string' =>
+                'State must be a valid text value.',
+
+            'state.max' =>
+                'State must not exceed 100 characters.',
+
+            'country.string' =>
+                'Country must be a valid text value.',
+
+            'country.max' =>
+                'Country must not exceed 100 characters.',
+
+            'pincode.string' =>
+                'Pincode must be a valid text value.',
+
+            'pincode.max' =>
+                'Pincode must not exceed 10 characters.',
 
 
             /*
@@ -380,8 +642,17 @@ class StoreDriverRequest extends FormRequest
             'license_number.required' =>
                 'Driving licence number is required.',
 
+            'license_number.string' =>
+                'Driving licence number must be a valid text value.',
+
+            'license_number.max' =>
+                'Driving licence number must not exceed 50 characters.',
+
             'license_number.unique' =>
                 'This driving licence number already exists.',
+
+            'license_type.string' =>
+                'Driving licence type must be a valid value.',
 
             'license_type.in' =>
                 'Invalid driving licence type selected.',
@@ -395,8 +666,186 @@ class StoreDriverRequest extends FormRequest
             'license_expiry_date.required' =>
                 'Driving licence expiry date is required.',
 
+            'license_expiry_date.date' =>
+                'Please enter a valid licence expiry date.',
+
             'license_expiry_date.after_or_equal' =>
                 'Licence expiry date must be after or equal to the issue date.',
+
+            'license_issuing_authority.string' =>
+                'Licence issuing authority must be a valid text value.',
+
+            'license_issuing_authority.max' =>
+                'Licence issuing authority must not exceed 150 characters.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Qualifications
+            |--------------------------------------------------------------------------
+            */
+
+            'qualifications.array' =>
+                'Qualifications must be provided in a valid format.',
+
+            'qualifications.*.array' =>
+                'Each qualification record must be provided in a valid format.',
+
+            'qualifications.*.qualification.string' =>
+                'Qualification must be a valid text value.',
+
+            'qualifications.*.qualification.max' =>
+                'Qualification must not exceed 150 characters.',
+
+            'qualifications.*.institute.string' =>
+                'Institute / Board must be a valid text value.',
+
+            'qualifications.*.institute.max' =>
+                'Institute / Board must not exceed 200 characters.',
+
+            'qualifications.*.passing_year.integer' =>
+                'Passing year must be a valid year.',
+
+            'qualifications.*.passing_year.min' =>
+                'Passing year must be 1900 or later.',
+
+            'qualifications.*.passing_year.max' =>
+                'Passing year cannot be greater than the current year.',
+
+            'qualifications.*.grade.string' =>
+                'Percentage / Grade must be a valid text value.',
+
+            'qualifications.*.grade.max' =>
+                'Percentage / Grade must not exceed 50 characters.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Qualification Documents
+            |--------------------------------------------------------------------------
+            */
+
+            'qualification_documents.array' =>
+                'Qualification documents must be provided in a valid format.',
+
+            'qualification_documents.*.file' =>
+                'Please upload a valid qualification document.',
+
+            'qualification_documents.*.mimes' =>
+                'Qualification document must be JPG, JPEG, PNG, WEBP or PDF.',
+
+            'qualification_documents.*.max' =>
+                'Each qualification document size must not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Nominee
+            |--------------------------------------------------------------------------
+            */
+
+            'nominees.array' =>
+                'Nominees must be provided in a valid format.',
+
+            'nominees.*.array' =>
+                'Each nominee record must be provided in a valid format.',
+
+            'nominees.*.name.required' =>
+                'Nominee name is required.',
+
+            'nominees.*.name.string' =>
+                'Nominee name must be a valid text value.',
+
+            'nominees.*.name.max' =>
+                'Nominee name must not exceed 150 characters.',
+
+            'nominees.*.relationship.required' =>
+                'Nominee relationship is required.',
+
+            'nominees.*.relationship.string' =>
+                'Nominee relationship must be a valid text value.',
+
+            'nominees.*.relationship.max' =>
+                'Nominee relationship must not exceed 100 characters.',
+
+            'nominees.*.date_of_birth.date' =>
+                'Please enter a valid nominee date of birth.',
+
+            'nominees.*.date_of_birth.before' =>
+                'Nominee date of birth must be a valid past date.',
+
+            'nominees.*.mobile.digits' =>
+                'Nominee mobile number must be exactly 10 digits.',
+
+            'nominees.*.percentage.numeric' =>
+                'Nominee percentage must be a valid number.',
+
+            'nominees.*.percentage.min' =>
+                'Nominee percentage cannot be less than 0.',
+
+            'nominees.*.percentage.max' =>
+                'Nominee percentage cannot be greater than 100.',
+
+            'nominees.*.address.string' =>
+                'Nominee address must be a valid text value.',
+
+            'nominees.*.address.max' =>
+                'Nominee address must not exceed 500 characters.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Bank Details
+            |--------------------------------------------------------------------------
+            */
+
+            'bank_details.array' =>
+                'Bank details must be provided in a valid format.',
+
+            'bank_details.account_holder_name.string' =>
+                'Account holder name must be a valid text value.',
+
+            'bank_details.account_holder_name.max' =>
+                'Account holder name must not exceed 150 characters.',
+
+            'bank_details.bank_name.string' =>
+                'Bank name must be a valid text value.',
+
+            'bank_details.bank_name.max' =>
+                'Bank name must not exceed 150 characters.',
+
+            'bank_details.account_number.string' =>
+                'Account number must be a valid text value.',
+
+            'bank_details.account_number.max' =>
+                'Account number must not exceed 50 characters.',
+
+            'bank_details.ifsc_code.string' =>
+                'IFSC code must be a valid text value.',
+
+            'bank_details.ifsc_code.max' =>
+                'IFSC code must not exceed 11 characters.',
+
+            'bank_details.ifsc_code.regex' =>
+                'Please enter a valid IFSC code.',
+
+            'bank_details.branch_name.string' =>
+                'Branch name must be a valid text value.',
+
+            'bank_details.branch_name.max' =>
+                'Branch name must not exceed 150 characters.',
+
+            'bank_details.account_type.string' =>
+                'Account type must be a valid value.',
+
+            'bank_details.account_type.in' =>
+                'Invalid bank account type selected.',
+
+            'bank_details.upi_id.string' =>
+                'UPI ID must be a valid text value.',
+
+            'bank_details.upi_id.max' =>
+                'UPI ID must not exceed 150 characters.',
 
 
             /*
@@ -455,6 +904,12 @@ class StoreDriverRequest extends FormRequest
             | PAN
             |--------------------------------------------------------------------------
             */
+
+            'pan_number.string' =>
+                'PAN number must be a valid text value.',
+
+            'pan_number.max' =>
+                'PAN number must not exceed 20 characters.',
 
             'pan_document.file' =>
                 'Please upload a valid PAN document.',

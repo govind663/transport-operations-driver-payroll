@@ -4,8 +4,25 @@
     Edit Driver
 @endsection
 
-@section('content')
+@push('styles')
+<style>
+    .table-bordered, .table-bordered td, .table-bordered th {
+        border: 2px solid #023a85;
+    }
 
+    .table td,
+    .table th {
+        vertical-align: middle;
+    }
+
+    .vehicle-type-code {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+@endpush
+
+@section('content')
 <div class="pd-ltr-20 xs-pd-20-10">
 
     <div class="min-height-200px">
@@ -60,7 +77,6 @@
             </div>
 
         </div>
-
 
         {{-- ================= FORM ================= --}}
         <form
@@ -2656,6 +2672,1459 @@
                 </div>
 
                 {{-- ========================================================= --}}
+                {{-- DRIVER QUALIFICATION --}}
+                {{-- ========================================================= --}}
+                @php
+
+                    $driverQualifications =
+                        is_array($driver->driver_qualifications)
+                            ? $driver->driver_qualifications
+                            : [];
+
+                @endphp
+
+                <div class="col-12 mt-4">
+
+                    <h5
+                        class="text-primary"
+                        style="color:#023a85 !important;">
+
+                        <b>
+                            Driver Qualification
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+                <div class="col-12">
+
+                    <div class="table-responsive">
+
+                        <table
+                            class="table table-bordered table-striped"
+                            id="qualification-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th style="width:18%;">
+                                        Qualification
+                                    </th>
+
+                                    <th style="width:20%;">
+                                        Institute / Board
+                                    </th>
+
+                                    <th style="width:12%;">
+                                        Passing Year
+                                    </th>
+
+                                    <th style="width:14%;">
+                                        Percentage / Grade
+                                    </th>
+
+                                    <th style="width:25%;">
+                                        Document
+                                    </th>
+
+                                    <th style="width:8%;">
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="qualification-wrapper">
+
+                                @forelse(
+                                    $driverQualifications
+                                    as $index => $qualification
+                                )
+
+                                    @php
+
+                                        $qualificationDocument =
+                                            $qualification['document']
+                                            ?? null;
+
+                                        $qualificationDocumentUrl =
+                                            null;
+
+                                        $qualificationExtension =
+                                            null;
+
+                                        $isQualificationImage =
+                                            false;
+
+                                        $isQualificationPdf =
+                                            false;
+
+
+                                        if (
+                                            !empty(
+                                                $qualificationDocument
+                                            )
+                                        ) {
+
+                                            if (
+                                                str_starts_with(
+                                                    $qualificationDocument,
+                                                    'driver/'
+                                                )
+                                            ) {
+
+                                                $qualificationDocumentUrl =
+                                                    asset(
+                                                        'storage/' .
+                                                        $qualificationDocument
+                                                    );
+
+                                            } else {
+
+                                                $qualificationDocumentUrl =
+                                                    asset(
+                                                        'backend/assets/uploads/driver/' .
+                                                        $qualificationDocument
+                                                    );
+                                            }
+
+
+                                            $qualificationExtension =
+                                                strtolower(
+                                                    pathinfo(
+                                                        $qualificationDocument,
+                                                        PATHINFO_EXTENSION
+                                                    )
+                                                );
+
+
+                                            $isQualificationImage =
+                                                in_array(
+                                                    $qualificationExtension,
+                                                    [
+                                                        'jpg',
+                                                        'jpeg',
+                                                        'png',
+                                                        'webp'
+                                                    ],
+                                                    true
+                                                );
+
+
+                                            $isQualificationPdf =
+                                                $qualificationExtension ===
+                                                'pdf';
+                                        }
+
+                                    @endphp
+
+
+                                    <tr
+                                        class="qualification-row"
+                                        data-index="{{ $index }}">
+
+                                        {{-- Qualification --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[{{ $index }}][qualification]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "qualifications.$index.qualification",
+                                                    $qualification['qualification'] ?? ''
+                                                ) }}"
+                                                placeholder="e.g. HSC, Diploma, B.Com">
+
+
+                                            @error(
+                                                "qualifications.$index.qualification"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Institute --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[{{ $index }}][institute]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "qualifications.$index.institute",
+                                                    $qualification['institute'] ?? ''
+                                                ) }}"
+                                                placeholder="Institute / Board">
+
+
+                                            @error(
+                                                "qualifications.$index.institute"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Passing Year --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="qualifications[{{ $index }}][passing_year]"
+                                                class="form-control"
+                                                min="1900"
+                                                max="{{ date('Y') }}"
+                                                value="{{ old(
+                                                    "qualifications.$index.passing_year",
+                                                    $qualification['passing_year'] ?? ''
+                                                ) }}"
+                                                placeholder="YYYY">
+
+
+                                            @error(
+                                                "qualifications.$index.passing_year"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Grade --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[{{ $index }}][grade]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "qualifications.$index.grade",
+                                                    $qualification['grade'] ?? ''
+                                                ) }}"
+                                                placeholder="72% / A">
+
+
+                                            @error(
+                                                "qualifications.$index.grade"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Document --}}
+                                        <td>
+
+                                            {{-- New file --}}
+                                            <input
+                                                type="file"
+                                                name="qualification_documents[{{ $index }}]"
+                                                class="form-control qualification-document"
+                                                accept=".jpg,.jpeg,.png,.webp,.pdf">
+
+
+                                            <small class="text-muted d-block mt-1">
+
+                                                JPG, JPEG, PNG, WEBP or PDF.
+                                                Maximum 5 MB.
+
+                                            </small>
+
+
+                                            @error(
+                                                "qualification_documents.$index"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+
+                                            {{-- Existing Document --}}
+                                            @if(
+                                                !empty(
+                                                    $qualificationDocument
+                                                )
+                                            )
+
+                                                <div
+                                                    class="existing-qualification-document mt-3">
+
+                                                    <small class="d-block mb-2">
+
+                                                        <b>
+                                                            Current Document:
+                                                        </b>
+
+                                                    </small>
+
+
+                                                    @if(
+                                                        $isQualificationImage
+                                                    )
+
+                                                        <img
+                                                            src="{{ $qualificationDocumentUrl }}"
+                                                            alt="Qualification Document"
+                                                            class="img-thumbnail"
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            data-no-optimize="1"
+                                                            style="
+                                                                width:120px;
+                                                                height:90px;
+                                                                object-fit:cover;
+                                                                border-radius:8px;
+                                                                cursor:pointer;
+                                                                border:2px solid #dee2e6;
+                                                            "
+                                                            onclick="
+                                                                window.open(
+                                                                    '{{ $qualificationDocumentUrl }}',
+                                                                    '_blank'
+                                                                );
+                                                            ">
+
+
+                                                        <div class="mt-2">
+
+                                                            <a
+                                                                href="{{ $qualificationDocumentUrl }}"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                class="btn btn-info btn-sm">
+
+                                                                <i class="fa fa-eye"></i>
+
+                                                                View
+
+                                                            </a>
+
+                                                        </div>
+
+                                                    @elseif(
+                                                        $isQualificationPdf
+                                                    )
+
+                                                        <div
+                                                            style="
+                                                                width:120px;
+                                                                height:90px;
+                                                                border:2px solid #dc3545;
+                                                                border-radius:8px;
+                                                                display:flex;
+                                                                align-items:center;
+                                                                justify-content:center;
+                                                                background:#f8f9fa;
+                                                            ">
+
+                                                            <div class="text-center">
+
+                                                                <i
+                                                                    class="fa fa-file-pdf-o"
+                                                                    style="
+                                                                        font-size:32px;
+                                                                        color:#dc3545;
+                                                                    ">
+                                                                </i>
+
+                                                                <br>
+
+                                                                <small>
+                                                                    PDF
+                                                                </small>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="mt-2">
+
+                                                            <a
+                                                                href="{{ $qualificationDocumentUrl }}"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                class="btn btn-danger btn-sm">
+
+                                                                <i class="fa fa-file-pdf-o"></i>
+
+                                                                View PDF
+
+                                                            </a>
+
+                                                        </div>
+
+                                                    @else
+
+                                                        <a
+                                                            href="{{ $qualificationDocumentUrl }}"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            class="btn btn-info btn-sm">
+
+                                                            <i class="fa fa-file"></i>
+
+                                                            View Document
+
+                                                        </a>
+
+                                                    @endif
+
+                                                </div>
+
+                                            @endif
+
+
+                                            {{-- New file preview --}}
+                                            <div
+                                                class="qualification-document-preview mt-3">
+                                            </div>
+
+                                        </td>
+
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-qualification"
+                                                title="Remove Qualification">
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                @empty
+
+                                    {{-- Empty initial row --}}
+                                    <tr
+                                        class="qualification-row"
+                                        data-index="0">
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][qualification]"
+                                                class="form-control"
+                                                placeholder="e.g. HSC, Diploma, B.Com">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][institute]"
+                                                class="form-control"
+                                                placeholder="Institute / Board">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="qualifications[0][passing_year]"
+                                                class="form-control"
+                                                min="1900"
+                                                max="{{ date('Y') }}"
+                                                placeholder="YYYY">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][grade]"
+                                                class="form-control"
+                                                placeholder="72% / A">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="file"
+                                                name="qualification_documents[0]"
+                                                class="form-control qualification-document"
+                                                accept=".jpg,.jpeg,.png,.webp,.pdf">
+
+                                            <small class="text-muted d-block mt-1">
+
+                                                JPG, JPEG, PNG, WEBP or PDF.
+                                                Maximum 5 MB.
+
+                                            </small>
+
+                                            <div
+                                                class="qualification-document-preview mt-2">
+                                            </div>
+
+                                        </td>
+
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-qualification"
+                                                disabled>
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                @endforelse
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div class="mt-2">
+
+                        <button
+                            type="button"
+                            id="add-qualification"
+                            class="btn btn-primary btn-sm">
+
+                            <i class="fa fa-plus"></i>
+
+                            Add More Qualification
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {{-- ========================================================= --}}
+                {{-- DRIVER NOMINEE --}}
+                {{-- ========================================================= --}}
+                @php
+
+                    $driverNominees =
+                        is_array($driver->driver_nominees)
+                            ? $driver->driver_nominees
+                            : [];
+
+                @endphp
+
+                <div class="col-12 mt-4">
+
+                    <h5
+                        class="text-primary"
+                        style="color:#023a85 !important;">
+
+                        <b>
+                            Driver Nominee
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+                <div class="col-12">
+
+                    <div class="table-responsive">
+
+                        <table
+                            class="table table-bordered table-striped"
+                            id="nominee-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th style="width:15%;">
+                                        Profile Image
+                                    </th>
+
+                                    <th style="width:15%;">
+                                        Nominee Name
+                                    </th>
+
+                                    <th style="width:14%;">
+                                        Relationship
+                                    </th>
+
+                                    <th style="width:13%;">
+                                        Date of Birth
+                                    </th>
+
+                                    <th style="width:13%;">
+                                        Mobile
+                                    </th>
+
+                                    <th style="width:10%;">
+                                        Percentage
+                                    </th>
+
+                                    <th style="width:17%;">
+                                        Address
+                                    </th>
+
+                                    <th style="width:8%;">
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="nominee-wrapper">
+
+                                @forelse(
+                                    $driverNominees
+                                    as $index => $nominee
+                                )
+
+                                    @php
+
+                                        $nomineeProfileImage =
+                                            $nominee['profile_image']
+                                            ?? null;
+
+                                        $nomineeProfileImageUrl =
+                                            null;
+
+
+                                        if (
+                                            !empty(
+                                                $nomineeProfileImage
+                                            )
+                                        ) {
+
+                                            if (
+                                                str_starts_with(
+                                                    $nomineeProfileImage,
+                                                    'driver/'
+                                                )
+                                            ) {
+
+                                                $nomineeProfileImageUrl =
+                                                    asset(
+                                                        'storage/' .
+                                                        $nomineeProfileImage
+                                                    );
+
+                                            } else {
+
+                                                $nomineeProfileImageUrl =
+                                                    asset(
+                                                        'backend/assets/uploads/driver/' .
+                                                        $nomineeProfileImage
+                                                    );
+                                            }
+                                        }
+
+                                    @endphp
+
+
+                                    <tr
+                                        class="nominee-row"
+                                        data-index="{{ $index }}">
+
+                                        {{-- Profile Image --}}
+                                        <td>
+
+                                            <input
+                                                type="file"
+                                                name="nominee_profile_images[{{ $index }}]"
+                                                class="form-control nominee-profile-image"
+                                                accept=".jpg,.jpeg,.png,.webp">
+
+
+                                            <small class="text-muted d-block mt-1">
+
+                                                JPG, JPEG, PNG or WEBP.
+                                                Maximum 2 MB.
+
+                                            </small>
+
+
+                                            @error(
+                                                "nominee_profile_images.$index"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+
+                                            {{-- Existing Image --}}
+                                            @if(
+                                                !empty(
+                                                    $nomineeProfileImage
+                                                )
+                                            )
+
+                                                <div
+                                                    class="existing-nominee-profile mt-3">
+
+                                                    <small class="d-block mb-2">
+
+                                                        <b>
+                                                            Current Profile:
+                                                        </b>
+
+                                                    </small>
+
+
+                                                    <img
+                                                        src="{{ $nomineeProfileImageUrl }}"
+                                                        alt="Nominee Profile"
+                                                        class="img-thumbnail"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        data-no-optimize="1"
+                                                        style="
+                                                            width:80px;
+                                                            height:80px;
+                                                            object-fit:cover;
+                                                            border-radius:50%;
+                                                            border:2px solid #dee2e6;
+                                                            cursor:pointer;
+                                                        "
+                                                        onclick="
+                                                            window.open(
+                                                                '{{ $nomineeProfileImageUrl }}',
+                                                                '_blank'
+                                                            );
+                                                        ">
+
+
+                                                    <div class="mt-2">
+
+                                                        <a
+                                                            href="{{ $nomineeProfileImageUrl }}"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            class="btn btn-info btn-sm">
+
+                                                            <i class="fa fa-eye"></i>
+
+                                                            View
+
+                                                        </a>
+
+                                                    </div>
+
+                                                </div>
+
+                                            @endif
+
+
+                                            {{-- New Preview --}}
+                                            <div
+                                                class="nominee-profile-preview mt-3">
+                                            </div>
+
+                                        </td>
+
+
+                                        {{-- Name --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[{{ $index }}][name]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "nominees.$index.name",
+                                                    $nominee['name'] ?? ''
+                                                ) }}"
+                                                placeholder="Nominee Name">
+
+
+                                            @error(
+                                                "nominees.$index.name"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Relationship --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[{{ $index }}][relationship]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "nominees.$index.relationship",
+                                                    $nominee['relationship'] ?? ''
+                                                ) }}"
+                                                placeholder="Relationship">
+
+
+                                            @error(
+                                                "nominees.$index.relationship"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- DOB --}}
+                                        <td>
+
+                                            <input
+                                                type="date"
+                                                name="nominees[{{ $index }}][date_of_birth]"
+                                                class="form-control"
+                                                value="{{ old(
+                                                    "nominees.$index.date_of_birth",
+                                                    $nominee['date_of_birth'] ?? ''
+                                                ) }}">
+
+
+                                            @error(
+                                                "nominees.$index.date_of_birth"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Mobile --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[{{ $index }}][mobile]"
+                                                maxlength="10"
+                                                inputmode="numeric"
+                                                class="form-control nominee-mobile"
+                                                value="{{ old(
+                                                    "nominees.$index.mobile",
+                                                    $nominee['mobile'] ?? ''
+                                                ) }}"
+                                                placeholder="10 Digit">
+
+
+                                            @error(
+                                                "nominees.$index.mobile"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Percentage --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="nominees[{{ $index }}][percentage]"
+                                                class="form-control nominee-percentage"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                value="{{ old(
+                                                    "nominees.$index.percentage",
+                                                    $nominee['percentage'] ?? ''
+                                                ) }}"
+                                                placeholder="100">
+
+
+                                            @error(
+                                                "nominees.$index.percentage"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Address --}}
+                                        <td>
+
+                                            <textarea
+                                                name="nominees[{{ $index }}][address]"
+                                                class="form-control"
+                                                rows="2"
+                                                placeholder="Nominee Address">{{ old(
+                                                    "nominees.$index.address",
+                                                    $nominee['address'] ?? ''
+                                                ) }}</textarea>
+
+
+                                            @error(
+                                                "nominees.$index.address"
+                                            )
+
+                                                <small class="text-danger d-block">
+
+                                                    {{ $message }}
+
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-nominee"
+                                                title="Remove Nominee">
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                @empty
+
+                                    <tr
+                                        class="nominee-row"
+                                        data-index="0">
+
+                                        <td>
+
+                                            <input
+                                                type="file"
+                                                name="nominee_profile_images[0]"
+                                                class="form-control nominee-profile-image"
+                                                accept=".jpg,.jpeg,.png,.webp">
+
+                                            <small class="text-muted d-block mt-1">
+
+                                                JPG, JPEG, PNG or WEBP.
+                                                Maximum 2 MB.
+
+                                            </small>
+
+                                            <div
+                                                class="nominee-profile-preview mt-2">
+                                            </div>
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][name]"
+                                                class="form-control"
+                                                placeholder="Nominee Name">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][relationship]"
+                                                class="form-control"
+                                                placeholder="Relationship">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="date"
+                                                name="nominees[0][date_of_birth]"
+                                                class="form-control">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][mobile]"
+                                                maxlength="10"
+                                                class="form-control nominee-mobile"
+                                                placeholder="10 Digit">
+
+                                        </td>
+
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="nominees[0][percentage]"
+                                                class="form-control nominee-percentage"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                placeholder="100">
+
+                                        </td>
+
+                                        <td>
+
+                                            <textarea
+                                                name="nominees[0][address]"
+                                                class="form-control"
+                                                rows="2"
+                                                placeholder="Nominee Address"></textarea>
+
+                                        </td>
+
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-nominee"
+                                                disabled>
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                @endforelse
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div class="mt-2">
+
+                        <button
+                            type="button"
+                            id="add-nominee"
+                            class="btn btn-primary btn-sm">
+
+                            <i class="fa fa-plus"></i>
+
+                            Add More Nominee
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {{-- ========================================================= --}}
+                {{-- DRIVER BANK DETAILS --}}
+                {{-- ========================================================= --}}
+                @php
+
+                    $driverBankDetails =
+                        is_array($driver->driver_bank_details)
+                            ? $driver->driver_bank_details
+                            : [];
+
+                @endphp
+
+                <div class="col-12 mt-4">
+
+                    <h5
+                        class="text-primary"
+                        style="color:#023a85 !important;">
+
+                        <b>
+                            Driver Bank Details
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+                <div class="col-12">
+
+                    <div class="table-responsive">
+
+                        <table
+                            class="table table-bordered table-striped">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Account Holder Name
+                                    </th>
+
+                                    <th>
+                                        Bank Name
+                                    </th>
+
+                                    <th>
+                                        Account Number
+                                    </th>
+
+                                    <th>
+                                        IFSC Code
+                                    </th>
+
+                                    <th>
+                                        Branch Name
+                                    </th>
+
+                                    <th>
+                                        Account Type
+                                    </th>
+
+                                    <th>
+                                        UPI ID
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                <tr>
+
+                                    {{-- Account Holder --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[account_holder_name]"
+                                            id="bank_account_holder_name"
+                                            class="form-control"
+                                            value="{{ old(
+                                                'bank_details.account_holder_name',
+                                                $driverBankDetails['account_holder_name'] ?? ''
+                                            ) }}"
+                                            placeholder="Account Holder Name">
+
+                                        @error(
+                                            'bank_details.account_holder_name'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- Bank --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[bank_name]"
+                                            id="bank_name"
+                                            class="form-control"
+                                            value="{{ old(
+                                                'bank_details.bank_name',
+                                                $driverBankDetails['bank_name'] ?? ''
+                                            ) }}"
+                                            placeholder="Bank Name">
+
+                                        @error(
+                                            'bank_details.bank_name'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- Account Number --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[account_number]"
+                                            id="bank_account_number"
+                                            class="form-control"
+                                            value="{{ old(
+                                                'bank_details.account_number',
+                                                $driverBankDetails['account_number'] ?? ''
+                                            ) }}"
+                                            placeholder="Account Number"
+                                            autocomplete="off">
+
+                                        @error(
+                                            'bank_details.account_number'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- IFSC --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[ifsc_code]"
+                                            id="bank_ifsc_code"
+                                            maxlength="11"
+                                            class="form-control text-uppercase"
+                                            value="{{ old(
+                                                'bank_details.ifsc_code',
+                                                $driverBankDetails['ifsc_code'] ?? ''
+                                            ) }}"
+                                            placeholder="HDFC0001234"
+                                            autocomplete="off">
+
+                                        @error(
+                                            'bank_details.ifsc_code'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- Branch --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[branch_name]"
+                                            id="bank_branch_name"
+                                            class="form-control"
+                                            value="{{ old(
+                                                'bank_details.branch_name',
+                                                $driverBankDetails['branch_name'] ?? ''
+                                            ) }}"
+                                            placeholder="Branch Name">
+
+                                        @error(
+                                            'bank_details.branch_name'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- Account Type --}}
+                                    <td>
+
+                                        <select
+                                            name="bank_details[account_type]"
+                                            id="bank_account_type"
+                                            class="form-control">
+
+                                            <option value="">
+                                                Select
+                                            </option>
+
+                                            <option
+                                                value="savings"
+                                                @selected(
+                                                    old(
+                                                        'bank_details.account_type',
+                                                        $driverBankDetails['account_type'] ?? ''
+                                                    ) === 'savings'
+                                                )>
+
+                                                Savings
+
+                                            </option>
+
+                                            <option
+                                                value="current"
+                                                @selected(
+                                                    old(
+                                                        'bank_details.account_type',
+                                                        $driverBankDetails['account_type'] ?? ''
+                                                    ) === 'current'
+                                                )>
+
+                                                Current
+
+                                            </option>
+
+                                        </select>
+
+                                        @error(
+                                            'bank_details.account_type'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+
+                                    {{-- UPI --}}
+                                    <td>
+
+                                        <input
+                                            type="text"
+                                            name="bank_details[upi_id]"
+                                            id="bank_upi_id"
+                                            class="form-control"
+                                            value="{{ old(
+                                                'bank_details.upi_id',
+                                                $driverBankDetails['upi_id'] ?? ''
+                                            ) }}"
+                                            placeholder="example@upi"
+                                            autocomplete="off">
+
+                                        @error(
+                                            'bank_details.upi_id'
+                                        )
+
+                                            <small class="text-danger d-block">
+
+                                                {{ $message }}
+
+                                            </small>
+
+                                        @enderror
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+                {{-- ========================================================= --}}
                 {{-- EMPLOYMENT STATUS --}}
                 {{-- ========================================================= --}}
                 <div class="col-12 mt-3">
@@ -2797,818 +4266,146 @@
 @endsection
 
 @push('scripts')
-
 <script>
-(function ($) {
+    (function ($) {
 
-    'use strict';
+        'use strict';
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | CONFIGURATION
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | CONFIGURATION
+        |--------------------------------------------------------------------------
+        */
 
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+        const DRIVER_PHOTO_MAX_SIZE =
+            2 * 1024 * 1024; // 2 MB
 
+        const NOMINEE_PHOTO_MAX_SIZE =
+            2 * 1024 * 1024; // 2 MB
 
-    const IMAGE_EXTENSIONS = [
-        'jpg',
-        'jpeg',
-        'png',
-        'webp'
-    ];
+        const DOCUMENT_MAX_SIZE =
+            5 * 1024 * 1024; // 5 MB
 
 
-    const DOCUMENT_EXTENSIONS = [
-        'jpg',
-        'jpeg',
-        'png',
-        'webp',
-        'pdf'
-    ];
+        const IMAGE_EXTENSIONS = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp'
+        ];
 
 
-    const IMAGE_MIME_TYPES = [
-        'image/jpeg',
-        'image/png',
-        'image/webp'
-    ];
+        const DOCUMENT_EXTENSIONS = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp',
+            'pdf'
+        ];
 
 
-    const PDF_MIME_TYPE =
-        'application/pdf';
+        const IMAGE_MIME_TYPES = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | HTML ESCAPE
-    |--------------------------------------------------------------------------
-    */
+        const PDF_MIME_TYPE =
+            'application/pdf';
 
-    function escapeHtml(value)
-    {
-        return $('<div>')
-            .text(value || '')
-            .html();
-    }
 
+        /*
+        |--------------------------------------------------------------------------
+        | HTML ESCAPE
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | GET FILE EXTENSION
-    |--------------------------------------------------------------------------
-    */
-
-    function getFileExtension(file)
-    {
-        if (!file || !file.name) {
-            return '';
-        }
-
-
-        const parts =
-            file.name.split('.');
-
-
-        if (parts.length < 2) {
-            return '';
-        }
-
-
-        return parts
-            .pop()
-            .toLowerCase();
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CHECK IMAGE
-    |--------------------------------------------------------------------------
-    */
-
-    function isImageFile(file)
-    {
-        if (!file) {
-            return false;
-        }
-
-
-        const extension =
-            getFileExtension(file);
-
-
-        return (
-            IMAGE_MIME_TYPES.includes(file.type) ||
-            IMAGE_EXTENSIONS.includes(extension)
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CHECK PDF
-    |--------------------------------------------------------------------------
-    */
-
-    function isPdfFile(file)
-    {
-        if (!file) {
-            return false;
-        }
-
-
-        const extension =
-            getFileExtension(file);
-
-
-        return (
-            file.type === PDF_MIME_TYPE ||
-            extension === 'pdf'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDATE IMAGE
-    |--------------------------------------------------------------------------
-    */
-
-    function validateImage(
-        file,
-        fieldName
-    )
-    {
-        if (!file) {
-            return false;
-        }
-
-
-        if (!isImageFile(file)) {
-
-            alert(
-                'Please select a valid JPG, JPEG, PNG or WEBP image.'
-            );
-
-            return false;
-        }
-
-
-        if (file.size > MAX_FILE_SIZE) {
-
-            alert(
-                fieldName +
-                ' image size must not exceed 2 MB.'
-            );
-
-            return false;
-        }
-
-
-        return true;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | VALIDATE DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-
-    function validateDocument(file)
-    {
-        if (!file) {
-            return false;
-        }
-
-
-        const extension =
-            getFileExtension(file);
-
-
-        const validExtension =
-            DOCUMENT_EXTENSIONS.includes(
-                extension
-            );
-
-
-        const validMime =
-            IMAGE_MIME_TYPES.includes(
-                file.type
-            ) ||
-            file.type === PDF_MIME_TYPE;
-
-
-        if (
-            !validExtension &&
-            !validMime
-        ) {
-
-            alert(
-                'Please select a valid JPG, JPEG, PNG, WEBP or PDF file.'
-            );
-
-            return false;
-        }
-
-
-        if (
-            file.size >
-            MAX_FILE_SIZE
-        ) {
-
-            alert(
-                'File size must not exceed 2 MB.'
-            );
-
-            return false;
-        }
-
-
-        return true;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESET FILE
-    |--------------------------------------------------------------------------
-    */
-
-    function resetFile(
-        inputId,
-        previewId
-    )
-    {
-        const input =
-            document.getElementById(inputId);
-
-
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (input) {
-            input.value = '';
-        }
-
-
-        if (preview) {
-            preview.innerHTML = '';
-        }
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREVIEW IMAGE DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-
-    function previewImageDocument(
-        file,
-        inputId,
-        previewId,
-        title
-    )
-    {
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (!preview) {
-            return;
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function (event)
-            {
-                const imageUrl =
-                    event.target.result;
-
-
-                preview.innerHTML = `
-
-                    <div
-                        class="new-document-preview"
-                        style="margin-top:10px;"
-                    >
-
-                        <p class="mb-2">
-                            <b>
-                                New ${escapeHtml(title)} Preview:
-                            </b>
-                        </p>
-
-
-                        <img
-                            src="${imageUrl}"
-                            alt="${escapeHtml(title)} Preview"
-                            class="img-thumbnail"
-                            style="
-                                width:180px;
-                                height:130px;
-                                object-fit:cover;
-                                border-radius:10px;
-                                border:2px solid #28a745;
-                                box-shadow:0 2px 8px rgba(0,0,0,.15);
-                                cursor:pointer;
-                                display:block;
-                            "
-                            onclick="window.open(this.src, '_blank')"
-                        >
-
-
-                        <div class="mt-2">
-
-                            <small
-                                style="color:#28a745;"
-                            >
-
-                                <i class="fa fa-check-circle"></i>
-
-                                ${escapeHtml(file.name)}
-
-                            </small>
-
-                        </div>
-
-
-                        <div class="mt-2">
-
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-danger"
-                                onclick="clearSelectedFile(
-                                    '${inputId}',
-                                    '${previewId}'
-                                )"
-                            >
-
-                                <i class="fa fa-times"></i>
-
-                                Remove New File
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                `;
-            };
-
-
-        reader.onerror =
-            function ()
-            {
-                alert(
-                    'Unable to preview the selected image.'
-                );
-
-
-                resetFile(
-                    inputId,
-                    previewId
-                );
-            };
-
-
-        reader.readAsDataURL(file);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREVIEW PDF DOCUMENT
-    |--------------------------------------------------------------------------
-    */
-
-    function previewPdfDocument(
-        file,
-        inputId,
-        previewId,
-        title
-    )
-    {
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (!preview) {
-            return;
-        }
-
-
-        const pdfUrl =
-            URL.createObjectURL(file);
-
-
-        preview.innerHTML = `
-
-            <div
-                class="new-document-preview"
-                style="margin-top:10px;"
-            >
-
-                <p class="mb-2">
-
-                    <b>
-                        New ${escapeHtml(title)} Preview:
-                    </b>
-
-                </p>
-
-
-                <div
-                    style="
-                        width:180px;
-                        height:130px;
-                        border:2px solid #dc3545;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        background:#f8f9fa;
-                    "
-                >
-
-                    <div class="text-center">
-
-                        <i
-                            class="fa fa-file-pdf-o"
-                            style="
-                                font-size:50px;
-                                color:#dc3545;
-                            "
-                        ></i>
-
-                        <br>
-
-                        <small>
-                            PDF Document
-                        </small>
-
-                    </div>
-
-                </div>
-
-
-                <div class="mt-2">
-
-                    <a
-                        href="${pdfUrl}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn btn-danger btn-sm"
-                    >
-
-                        <i class="fa fa-file-pdf-o"></i>
-
-                        View New PDF
-
-                    </a>
-
-                </div>
-
-
-                <div class="mt-2">
-
-                    <small
-                        style="color:#28a745;"
-                    >
-
-                        <i class="fa fa-check-circle"></i>
-
-                        ${escapeHtml(file.name)}
-
-                    </small>
-
-                </div>
-
-
-                <div class="mt-2">
-
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        onclick="clearSelectedFile(
-                            '${inputId}',
-                            '${previewId}'
-                        )"
-                    >
-
-                        <i class="fa fa-times"></i>
-
-                        Remove New File
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        `;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | GENERIC DOCUMENT PREVIEW
-    |--------------------------------------------------------------------------
-    */
-
-    function previewDocument(
-        inputId,
-        previewId,
-        title
-    )
-    {
-        const fileInput =
-            document.getElementById(inputId);
-
-
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (
-            !fileInput ||
-            !preview
-        ) {
-
-            console.warn(
-                'Preview element not found:',
-                inputId,
-                previewId
-            );
-
-            return;
+        function escapeHtml(value)
+        {
+            return $('<div>')
+                .text(value || '')
+                .html();
         }
 
 
         /*
-        | Clear only NEW preview
+        |--------------------------------------------------------------------------
+        | GET FILE EXTENSION
+        |--------------------------------------------------------------------------
         */
 
-        preview.innerHTML = '';
+        function getFileExtension(file)
+        {
+            if (!file || !file.name) {
+                return '';
+            }
 
+            const parts =
+                file.name.split('.');
 
-        /*
-        | No selected file
-        */
+            if (parts.length < 2) {
+                return '';
+            }
 
-        if (
-            !fileInput.files ||
-            fileInput.files.length === 0
-        ) {
-            return;
-        }
-
-
-        const file =
-            fileInput.files[0];
-
-
-        /*
-        | Validate
-        */
-
-        if (!validateDocument(file)) {
-
-            resetFile(
-                inputId,
-                previewId
-            );
-
-            return;
+            return parts
+                .pop()
+                .toLowerCase();
         }
 
 
         /*
-        | IMAGE
+        |--------------------------------------------------------------------------
+        | CHECK IMAGE
+        |--------------------------------------------------------------------------
         */
 
-        if (isImageFile(file)) {
+        function isImageFile(file)
+        {
+            if (!file) {
+                return false;
+            }
 
-            previewImageDocument(
-                file,
-                inputId,
-                previewId,
-                title
+            const extension =
+                getFileExtension(file);
+
+            return (
+                IMAGE_MIME_TYPES.includes(file.type) ||
+                IMAGE_EXTENSIONS.includes(extension)
             );
-
-            return;
         }
 
 
         /*
-        | PDF
+        |--------------------------------------------------------------------------
+        | CHECK PDF
+        |--------------------------------------------------------------------------
         */
 
-        if (isPdfFile(file)) {
+        function isPdfFile(file)
+        {
+            if (!file) {
+                return false;
+            }
 
-            previewPdfDocument(
-                file,
-                inputId,
-                previewId,
-                title
+            const extension =
+                getFileExtension(file);
+
+            return (
+                file.type === PDF_MIME_TYPE ||
+                extension === 'pdf'
             );
-
-            return;
         }
 
 
-        resetFile(
-            inputId,
-            previewId
-        );
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | RESET FILE
+        |--------------------------------------------------------------------------
+        */
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | DRIVER PHOTO PREVIEW
-    |--------------------------------------------------------------------------
-    */
-
-    function previewDriverPhoto()
-    {
-        const inputId =
-            'driver_photo';
-
-
-        const previewId =
-            'driver-photo-preview';
-
-
-        const fileInput =
-            document.getElementById(inputId);
-
-
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (
-            !fileInput ||
-            !preview
-        ) {
-            return;
-        }
-
-
-        preview.innerHTML = '';
-
-
-        if (
-            !fileInput.files ||
-            fileInput.files.length === 0
-        ) {
-            return;
-        }
-
-
-        const file =
-            fileInput.files[0];
-
-
-        if (
-            !validateImage(
-                file,
-                'Driver Photo'
-            )
-        ) {
-
-            resetFile(
-                inputId,
-                previewId
-            );
-
-            return;
-        }
-
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload =
-            function (event)
-            {
-                const imageUrl =
-                    event.target.result;
-
-
-                preview.innerHTML = `
-
-                    <div
-                        class="new-driver-photo-preview"
-                        style="margin-top:10px;"
-                    >
-
-                        <p class="mb-2">
-
-                            <b>
-                                New Driver Photo Preview:
-                            </b>
-
-                        </p>
-
-
-                        <img
-                            src="${imageUrl}"
-                            alt="New Driver Photo"
-                            class="img-thumbnail"
-                            style="
-                                width:150px;
-                                height:150px;
-                                object-fit:cover;
-                                border-radius:10px;
-                                border:2px solid #28a745;
-                                box-shadow:0 2px 8px rgba(0,0,0,.15);
-                                cursor:pointer;
-                                display:block;
-                            "
-                            onclick="window.open(this.src, '_blank')"
-                        >
-
-
-                        <div class="mt-2">
-
-                            <small
-                                style="color:#28a745;"
-                            >
-
-                                <i class="fa fa-check-circle"></i>
-
-                                ${escapeHtml(file.name)}
-
-                            </small>
-
-                        </div>
-
-
-                        <div class="mt-2">
-
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-outline-danger"
-                                onclick="clearSelectedFile(
-                                    'driver_photo',
-                                    'driver-photo-preview'
-                                )"
-                            >
-
-                                <i class="fa fa-times"></i>
-
-                                Remove New Photo
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                `;
-            };
-
-
-        reader.onerror =
-            function ()
-            {
-                alert(
-                    'Unable to preview the selected driver photo.'
-                );
-
-
-                resetFile(
-                    inputId,
-                    previewId
-                );
-            };
-
-
-        reader.readAsDataURL(file);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | GLOBAL CLEAR FILE FUNCTION
-    |--------------------------------------------------------------------------
-    */
-
-    window.clearSelectedFile =
-        function (
+        function resetFile(
             inputId,
             previewId
         )
@@ -3616,316 +4413,1891 @@
             const input =
                 document.getElementById(inputId);
 
-
             const preview =
                 document.getElementById(previewId);
-
 
             if (input) {
                 input.value = '';
             }
 
-
             if (preview) {
                 preview.innerHTML = '';
             }
-        };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DRIVER PHOTO CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#driver_photo',
-        function ()
-        {
-            previewDriverPhoto();
         }
-    );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | DRIVING LICENCE DOCUMENT CHANGE
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATE IMAGE
+        |--------------------------------------------------------------------------
+        */
 
-    $(document).on(
-        'change',
-        '#driving_license_document',
-        function ()
+        function validateImage(
+            file,
+            fieldName,
+            maxSize = DRIVER_PHOTO_MAX_SIZE
+        )
         {
-            previewDocument(
-                'driving_license_document',
-                'driving-license-document-preview',
-                'Driving Licence Document'
+            if (!file) {
+                return false;
+            }
+
+            if (!isImageFile(file)) {
+
+                alert(
+                    fieldName +
+                    ' must be JPG, JPEG, PNG or WEBP.'
+                );
+
+                return false;
+            }
+
+            if (file.size > maxSize) {
+
+                alert(
+                    fieldName +
+                    ' size must not exceed ' +
+                    (maxSize / 1024 / 1024) +
+                    ' MB.'
+                );
+
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATE DOCUMENT
+        |--------------------------------------------------------------------------
+        */
+
+        function validateDocument(
+            file,
+            fieldName = 'Document',
+            maxSize = DOCUMENT_MAX_SIZE
+        )
+        {
+            if (!file) {
+                return false;
+            }
+
+            const extension =
+                getFileExtension(file);
+
+            const validExtension =
+                DOCUMENT_EXTENSIONS.includes(
+                    extension
+                );
+
+            const validMime =
+                IMAGE_MIME_TYPES.includes(
+                    file.type
+                ) ||
+                file.type === PDF_MIME_TYPE;
+
+            if (
+                !validExtension &&
+                !validMime
+            ) {
+
+                alert(
+                    fieldName +
+                    ' must be JPG, JPEG, PNG, WEBP or PDF.'
+                );
+
+                return false;
+            }
+
+            if (
+                file.size >
+                maxSize
+            ) {
+
+                alert(
+                    fieldName +
+                    ' size must not exceed ' +
+                    (maxSize / 1024 / 1024) +
+                    ' MB.'
+                );
+
+                return false;
+            }
+
+            return true;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERIC IMAGE DOCUMENT PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewImageDocument(
+            file,
+            inputId,
+            previewId,
+            title
+        )
+        {
+            const preview =
+                document.getElementById(
+                    previewId
+                );
+
+            if (!preview) {
+                return;
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function (event) {
+
+                    const imageUrl =
+                        event.target.result;
+
+                    preview.innerHTML = `
+
+                        <div
+                            class="new-document-preview"
+                            style="margin-top:10px;"
+                        >
+
+                            <p class="mb-2">
+
+                                <b>
+                                    New ${escapeHtml(title)} Preview:
+                                </b>
+
+                            </p>
+
+                            <img
+                                src="${imageUrl}"
+                                alt="${escapeHtml(title)} Preview"
+                                class="img-thumbnail"
+                                style="
+                                    width:180px;
+                                    height:130px;
+                                    object-fit:cover;
+                                    border-radius:10px;
+                                    border:2px solid #28a745;
+                                    box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                    cursor:pointer;
+                                    display:block;
+                                "
+                                onclick="
+                                    window.open(
+                                        this.src,
+                                        '_blank'
+                                    );
+                                "
+                            >
+
+                            <div class="mt-2">
+
+                                <small
+                                    class="text-success"
+                                >
+
+                                    <i class="fa fa-check-circle"></i>
+
+                                    ${escapeHtml(file.name)}
+
+                                </small>
+
+                            </div>
+
+                            <div class="mt-2">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="
+                                        clearSelectedFile(
+                                            '${inputId}',
+                                            '${previewId}'
+                                        );
+                                    "
+                                >
+
+                                    <i class="fa fa-times"></i>
+
+                                    Remove New File
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    `;
+                };
+
+            reader.onerror =
+                function () {
+
+                    alert(
+                        'Unable to preview the selected image.'
+                    );
+
+                    resetFile(
+                        inputId,
+                        previewId
+                    );
+                };
+
+            reader.readAsDataURL(file);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERIC PDF PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewPdfDocument(
+            file,
+            inputId,
+            previewId,
+            title
+        )
+        {
+            const preview =
+                document.getElementById(
+                    previewId
+                );
+
+            if (!preview) {
+                return;
+            }
+
+            const pdfUrl =
+                URL.createObjectURL(file);
+
+            preview.innerHTML = `
+
+                <div
+                    class="new-document-preview"
+                    style="margin-top:10px;"
+                >
+
+                    <p class="mb-2">
+
+                        <b>
+                            New ${escapeHtml(title)} Preview:
+                        </b>
+
+                    </p>
+
+                    <div
+                        style="
+                            width:180px;
+                            height:130px;
+                            border:2px solid #dc3545;
+                            border-radius:10px;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            background:#f8f9fa;
+                            cursor:pointer;
+                        "
+                        onclick="
+                            window.open(
+                                '${pdfUrl}',
+                                '_blank'
+                            );
+                        "
+                    >
+
+                        <div class="text-center">
+
+                            <i
+                                class="fa fa-file-pdf-o"
+                                style="
+                                    font-size:50px;
+                                    color:#dc3545;
+                                "
+                            ></i>
+
+                            <br>
+
+                            <small>
+                                PDF Document
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        <a
+                            href="${pdfUrl}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn btn-danger btn-sm"
+                        >
+
+                            <i class="fa fa-file-pdf-o"></i>
+
+                            View New PDF
+
+                        </a>
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        <small
+                            class="text-success"
+                        >
+
+                            <i class="fa fa-check-circle"></i>
+
+                            ${escapeHtml(file.name)}
+
+                        </small>
+
+                    </div>
+
+                    <div class="mt-2">
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="
+                                clearSelectedFile(
+                                    '${inputId}',
+                                    '${previewId}'
+                                );
+                            "
+                        >
+
+                            <i class="fa fa-times"></i>
+
+                            Remove New File
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERIC DOCUMENT PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewDocument(
+            inputId,
+            previewId,
+            title,
+            maxSize = DOCUMENT_MAX_SIZE
+        )
+        {
+            const fileInput =
+                document.getElementById(
+                    inputId
+                );
+
+            const preview =
+                document.getElementById(
+                    previewId
+                );
+
+            if (
+                !fileInput ||
+                !preview
+            ) {
+
+                console.warn(
+                    'Preview element not found:',
+                    inputId,
+                    previewId
+                );
+
+                return;
+            }
+
+            preview.innerHTML = '';
+
+            if (
+                !fileInput.files ||
+                fileInput.files.length === 0
+            ) {
+                return;
+            }
+
+            const file =
+                fileInput.files[0];
+
+            if (
+                !validateDocument(
+                    file,
+                    title,
+                    maxSize
+                )
+            ) {
+
+                resetFile(
+                    inputId,
+                    previewId
+                );
+
+                return;
+            }
+
+            if (
+                isImageFile(file)
+            ) {
+
+                previewImageDocument(
+                    file,
+                    inputId,
+                    previewId,
+                    title
+                );
+
+                return;
+            }
+
+            if (
+                isPdfFile(file)
+            ) {
+
+                previewPdfDocument(
+                    file,
+                    inputId,
+                    previewId,
+                    title
+                );
+
+                return;
+            }
+
+            resetFile(
+                inputId,
+                previewId
             );
         }
-    );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | AADHAR DOCUMENT CHANGE
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER PHOTO PREVIEW
+        |--------------------------------------------------------------------------
+        */
 
-    $(document).on(
-        'change',
-        '#aadhar_document',
-        function ()
+        function previewDriverPhoto()
         {
-            previewDocument(
-                'aadhar_document',
-                'aadhar-document-preview',
-                'Aadhar Document'
-            );
+            const inputId =
+                'driver_photo';
+
+            const previewId =
+                'driver-photo-preview';
+
+            const fileInput =
+                document.getElementById(
+                    inputId
+                );
+
+            const preview =
+                document.getElementById(
+                    previewId
+                );
+
+            if (
+                !fileInput ||
+                !preview
+            ) {
+                return;
+            }
+
+            preview.innerHTML = '';
+
+            if (
+                !fileInput.files ||
+                fileInput.files.length === 0
+            ) {
+                return;
+            }
+
+            const file =
+                fileInput.files[0];
+
+            if (
+                !validateImage(
+                    file,
+                    'Driver Photo',
+                    DRIVER_PHOTO_MAX_SIZE
+                )
+            ) {
+
+                resetFile(
+                    inputId,
+                    previewId
+                );
+
+                return;
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function (event) {
+
+                    const imageUrl =
+                        event.target.result;
+
+                    preview.innerHTML = `
+
+                        <div
+                            class="new-driver-photo-preview"
+                            style="margin-top:10px;"
+                        >
+
+                            <p class="mb-2">
+
+                                <b>
+                                    New Driver Photo Preview:
+                                </b>
+
+                            </p>
+
+                            <img
+                                src="${imageUrl}"
+                                alt="New Driver Photo"
+                                class="img-thumbnail"
+                                style="
+                                    width:150px;
+                                    height:150px;
+                                    object-fit:cover;
+                                    border-radius:10px;
+                                    border:2px solid #28a745;
+                                    box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                    cursor:pointer;
+                                    display:block;
+                                "
+                                onclick="
+                                    window.open(
+                                        this.src,
+                                        '_blank'
+                                    );
+                                "
+                            >
+
+                            <div class="mt-2">
+
+                                <small
+                                    class="text-success"
+                                >
+
+                                    <i class="fa fa-check-circle"></i>
+
+                                    ${escapeHtml(file.name)}
+
+                                </small>
+
+                            </div>
+
+                            <div class="mt-2">
+
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="
+                                        clearSelectedFile(
+                                            'driver_photo',
+                                            'driver-photo-preview'
+                                        );
+                                    "
+                                >
+
+                                    <i class="fa fa-times"></i>
+
+                                    Remove New Photo
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    `;
+                };
+
+            reader.onerror =
+                function () {
+
+                    alert(
+                        'Unable to preview the selected driver photo.'
+                    );
+
+                    resetFile(
+                        inputId,
+                        previewId
+                    );
+                };
+
+            reader.readAsDataURL(file);
         }
-    );
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAN DOCUMENT CHANGE
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | CLEAR SELECTED FILE
+        |--------------------------------------------------------------------------
+        */
 
-    $(document).on(
-        'change',
-        '#pan_document',
-        function ()
+        window.clearSelectedFile =
+            function (
+                inputId,
+                previewId
+            )
+            {
+                const input =
+                    document.getElementById(
+                        inputId
+                    );
+
+                const preview =
+                    document.getElementById(
+                        previewId
+                    );
+
+                if (input) {
+                    input.value = '';
+                }
+
+                if (preview) {
+                    preview.innerHTML = '';
+                }
+            };
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER PHOTO CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#driver_photo',
+            function ()
+            {
+                previewDriverPhoto();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVING LICENCE DOCUMENT CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#driving_license_document',
+            function ()
+            {
+                previewDocument(
+                    'driving_license_document',
+                    'driving-license-document-preview',
+                    'Driving Licence Document',
+                    DOCUMENT_MAX_SIZE
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AADHAAR DOCUMENT CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#aadhar_document',
+            function ()
+            {
+                previewDocument(
+                    'aadhar_document',
+                    'aadhar-document-preview',
+                    'Aadhar Document',
+                    DOCUMENT_MAX_SIZE
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAN DOCUMENT CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#pan_document',
+            function ()
+            {
+                previewDocument(
+                    'pan_document',
+                    'pan-document-preview',
+                    'PAN Document',
+                    DOCUMENT_MAX_SIZE
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION INDEX
+        |--------------------------------------------------------------------------
+        */
+
+        let qualificationIndex =
+            $('#qualification-wrapper')
+                .find('.qualification-row')
+                .length;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION DOCUMENT PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewQualificationDocument(
+            input
+        )
         {
-            previewDocument(
-                'pan_document',
-                'pan-document-preview',
-                'PAN Document'
-            );
-        }
-    );
+            const row =
+                $(input).closest(
+                    '.qualification-row'
+                );
 
+            const preview =
+                row.find(
+                    '.qualification-document-preview'
+                );
 
-    /*
-    |--------------------------------------------------------------------------
-    | MOBILE NUMBER
-    |--------------------------------------------------------------------------
-    */
+            if (
+                !preview.length
+            ) {
+                return;
+            }
 
-    $(document).on(
-        'input',
-        '#mobile, #alternate_mobile',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/[^0-9]/g, '')
-                    .slice(0, 10);
-        }
-    );
+            preview.html('');
 
+            if (
+                !input.files ||
+                input.files.length === 0
+            ) {
+                return;
+            }
 
-    /*
-    |--------------------------------------------------------------------------
-    | AADHAR NUMBER
-    |--------------------------------------------------------------------------
-    */
+            const file =
+                input.files[0];
 
-    $(document).on(
-        'input',
-        '#aadhar_number',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/[^0-9]/g, '')
-                    .slice(0, 12);
-        }
-    );
+            if (
+                !validateDocument(
+                    file,
+                    'Qualification Document',
+                    DOCUMENT_MAX_SIZE
+                )
+            ) {
 
+                input.value = '';
 
-    /*
-    |--------------------------------------------------------------------------
-    | PINCODE
-    |--------------------------------------------------------------------------
-    */
+                return;
+            }
 
-    $(document).on(
-        'input',
-        '#pincode',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/[^0-9]/g, '')
-                    .slice(0, 6);
-        }
-    );
+            /*
+            |--------------------------------------------------------------------------
+            | IMAGE
+            |--------------------------------------------------------------------------
+            */
 
+            if (
+                isImageFile(file)
+            ) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAN NUMBER
-    |--------------------------------------------------------------------------
-    */
+                const reader =
+                    new FileReader();
 
-    $(document).on(
-        'input',
-        '#pan_number',
-        function ()
-        {
-            this.value =
-                this.value
-                    .toUpperCase()
-                    .replace(/[^A-Z0-9]/g, '')
-                    .slice(0, 10);
-        }
-    );
+                reader.onload =
+                    function (event) {
 
+                        preview.html(`
 
-    /*
-    |--------------------------------------------------------------------------
-    | LICENSE NUMBER
-    |--------------------------------------------------------------------------
-    */
+                            <div>
 
-    $(document).on(
-        'input',
-        '#license_number',
-        function ()
-        {
-            this.value =
-                this.value
-                    .toUpperCase()
-                    .replace(/\s+/g, ' ')
-                    .trim();
-        }
-    );
+                                <p class="mb-2">
 
+                                    <b>
+                                        New Qualification Document:
+                                    </b>
 
-    /*
-    |--------------------------------------------------------------------------
-    | DRIVER CODE
-    |--------------------------------------------------------------------------
-    */
+                                </p>
 
-    $(document).on(
-        'blur',
-        '#driver_code',
-        function ()
-        {
-            this.value =
-                this.value
-                    .trim()
-                    .toUpperCase()
-                    .replace(/\s+/g, '');
-        }
-    );
+                                <img
+                                    src="${event.target.result}"
+                                    alt="Qualification Document"
+                                    class="img-thumbnail"
+                                    style="
+                                        width:120px;
+                                        height:90px;
+                                        object-fit:cover;
+                                        border-radius:8px;
+                                        border:2px solid #28a745;
+                                        cursor:pointer;
+                                    "
+                                    onclick="
+                                        window.open(
+                                            this.src,
+                                            '_blank'
+                                        );
+                                    "
+                                >
 
+                                <div class="mt-1">
 
-    /*
-    |--------------------------------------------------------------------------
-    | NAME FIELDS
-    |--------------------------------------------------------------------------
-    */
+                                    <small
+                                        class="text-success">
 
-    $(document).on(
-        'blur',
-        '#first_name, #last_name, #father_name',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/\s+/g, ' ')
-                    .trim();
-        }
-    );
+                                        <i class="fa fa-check-circle"></i>
 
+                                        ${escapeHtml(file.name)}
 
-    /*
-    |--------------------------------------------------------------------------
-    | LICENSE ISSUING AUTHORITY
-    |--------------------------------------------------------------------------
-    */
+                                    </small>
 
-    $(document).on(
-        'blur',
-        '#license_issuing_authority',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/\s+/g, ' ')
-                    .trim();
-        }
-    );
+                                </div>
 
+                            </div>
+                        `);
+                    };
 
-    /*
-    |--------------------------------------------------------------------------
-    | COUNTRY / STATE / CITY / ADDRESS
-    |--------------------------------------------------------------------------
-    */
+                reader.readAsDataURL(file);
 
-    $(document).on(
-        'blur',
-        '#country, #state, #city, #address',
-        function ()
-        {
-            this.value =
-                this.value
-                    .replace(/\s+/g, ' ')
-                    .trim();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EMAIL
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'blur',
-        '#email',
-        function ()
-        {
-            this.value =
-                this.value
-                    .trim()
-                    .toLowerCase();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DATE OF BIRTH
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#date_of_birth',
-        function ()
-        {
-            if (!this.value) {
                 return;
             }
 
 
-            const selectedDate =
-                new Date(
-                    this.value + 'T00:00:00'
+            /*
+            |--------------------------------------------------------------------------
+            | PDF
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isPdfFile(file)
+            ) {
+
+                const pdfUrl =
+                    URL.createObjectURL(file);
+
+                preview.html(`
+
+                    <div>
+
+                        <p class="mb-2">
+
+                            <b>
+                                New Qualification Document:
+                            </b>
+
+                        </p>
+
+                        <div
+                            style="
+                                width:120px;
+                                height:90px;
+                                border:2px solid #dc3545;
+                                border-radius:8px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                background:#f8f9fa;
+                                cursor:pointer;
+                            "
+                            onclick="
+                                window.open(
+                                    '${pdfUrl}',
+                                    '_blank'
+                                );
+                            "
+                        >
+
+                            <div class="text-center">
+
+                                <i
+                                    class="fa fa-file-pdf-o"
+                                    style="
+                                        font-size:32px;
+                                        color:#dc3545;
+                                    ">
+                                </i>
+
+                                <br>
+
+                                <small>
+                                    PDF
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-1">
+
+                            <small
+                                class="text-success">
+
+                                <i class="fa fa-check-circle"></i>
+
+                                ${escapeHtml(file.name)}
+
+                            </small>
+
+                        </div>
+
+                        <div class="mt-1">
+
+                            <a
+                                href="${pdfUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-outline-danger btn-xs">
+
+                                <i class="fa fa-eye"></i>
+
+                                View
+
+                            </a>
+
+                        </div>
+
+                    </div>
+                `);
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION DOCUMENT CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '.qualification-document',
+            function ()
+            {
+                previewQualificationDocument(
+                    this
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADD QUALIFICATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#add-qualification').on(
+            'click',
+            function ()
+            {
+                const index =
+                    qualificationIndex;
+
+                const currentYear =
+                    new Date()
+                        .getFullYear();
+
+                const row = `
+
+                    <tr
+                        class="qualification-row"
+                        data-index="${index}">
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][qualification]"
+                                class="form-control"
+                                placeholder="e.g. HSC, Diploma, B.Com">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][institute]"
+                                class="form-control"
+                                placeholder="Institute / Board">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="number"
+                                name="qualifications[${index}][passing_year]"
+                                class="form-control"
+                                min="1900"
+                                max="${currentYear}"
+                                placeholder="YYYY">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][grade]"
+                                class="form-control"
+                                placeholder="72% / A">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="file"
+                                name="qualification_documents[${index}]"
+                                class="form-control qualification-document"
+                                accept=".jpg,.jpeg,.png,.webp,.pdf">
+
+                            <small
+                                class="text-muted d-block mt-1">
+
+                                JPG, JPEG, PNG, WEBP or PDF.
+                                Maximum 5 MB.
+
+                            </small>
+
+                            <div
+                                class="qualification-document-preview mt-2">
+                            </div>
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm remove-qualification"
+                                title="Remove Qualification">
+
+                                <i class="fa fa-trash"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+                $('#qualification-wrapper')
+                    .append(row);
+
+                qualificationIndex++;
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | REMOVE QUALIFICATION
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'click',
+            '.remove-qualification',
+            function ()
+            {
+                $(this)
+                    .closest(
+                        '.qualification-row'
+                    )
+                    .remove();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE INDEX
+        |--------------------------------------------------------------------------
+        */
+
+        let nomineeIndex =
+            $('#nominee-wrapper')
+                .find('.nominee-row')
+                .length;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PROFILE IMAGE PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewNomineeProfile(
+            input
+        )
+        {
+            const row =
+                $(input).closest(
+                    '.nominee-row'
                 );
 
+            const preview =
+                row.find(
+                    '.nominee-profile-preview'
+                );
 
+            if (
+                !preview.length
+            ) {
+                return;
+            }
+
+            preview.html('');
+
+            if (
+                !input.files ||
+                input.files.length === 0
+            ) {
+                return;
+            }
+
+            const file =
+                input.files[0];
+
+            if (
+                !validateImage(
+                    file,
+                    'Nominee Profile Image',
+                    NOMINEE_PHOTO_MAX_SIZE
+                )
+            ) {
+
+                input.value = '';
+
+                return;
+            }
+
+            const reader =
+                new FileReader();
+
+            reader.onload =
+                function (event) {
+
+                    preview.html(`
+
+                        <div>
+
+                            <p class="mb-2">
+
+                                <b>
+                                    New Profile:
+                                </b>
+
+                            </p>
+
+                            <img
+                                src="${event.target.result}"
+                                alt="Nominee Profile"
+                                class="img-thumbnail"
+                                style="
+                                    width:80px;
+                                    height:80px;
+                                    object-fit:cover;
+                                    border-radius:50%;
+                                    border:2px solid #28a745;
+                                    cursor:pointer;
+                                "
+                                onclick="
+                                    window.open(
+                                        this.src,
+                                        '_blank'
+                                    );
+                                "
+                            >
+
+                            <div class="mt-1">
+
+                                <small
+                                    class="text-success">
+
+                                    <i class="fa fa-check-circle"></i>
+
+                                    ${escapeHtml(file.name)}
+
+                                </small>
+
+                            </div>
+
+                        </div>
+                    `);
+                };
+
+            reader.onerror =
+                function () {
+
+                    alert(
+                        'Unable to preview nominee profile image.'
+                    );
+
+                    input.value = '';
+
+                    preview.html('');
+                };
+
+            reader.readAsDataURL(file);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PROFILE IMAGE CHANGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '.nominee-profile-image',
+            function ()
+            {
+                previewNomineeProfile(
+                    this
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADD NOMINEE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#add-nominee').on(
+            'click',
+            function ()
+            {
+                const index =
+                    nomineeIndex;
+
+                const row = `
+
+                    <tr
+                        class="nominee-row"
+                        data-index="${index}">
+
+                        <td>
+
+                            <input
+                                type="file"
+                                name="nominee_profile_images[${index}]"
+                                class="form-control nominee-profile-image"
+                                accept=".jpg,.jpeg,.png,.webp">
+
+                            <small
+                                class="text-muted d-block mt-1">
+
+                                JPG, JPEG, PNG or WEBP.
+                                Maximum 2 MB.
+
+                            </small>
+
+                            <div
+                                class="nominee-profile-preview mt-2">
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="nominees[${index}][name]"
+                                class="form-control"
+                                placeholder="Nominee Name">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="nominees[${index}][relationship]"
+                                class="form-control"
+                                placeholder="Relationship">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="date"
+                                name="nominees[${index}][date_of_birth]"
+                                class="form-control nominee-dob">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="nominees[${index}][mobile]"
+                                maxlength="10"
+                                inputmode="numeric"
+                                class="form-control nominee-mobile"
+                                placeholder="10 Digit">
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                type="number"
+                                name="nominees[${index}][percentage]"
+                                class="form-control nominee-percentage"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="100">
+
+                        </td>
+
+                        <td>
+
+                            <textarea
+                                name="nominees[${index}][address]"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Nominee Address"></textarea>
+
+                        </td>
+
+                        <td class="text-center">
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm remove-nominee"
+                                title="Remove Nominee">
+
+                                <i class="fa fa-trash"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+                $('#nominee-wrapper')
+                    .append(row);
+
+                nomineeIndex++;
+
+                setNomineeDobMaxDates();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | REMOVE NOMINEE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'click',
+            '.remove-nominee',
+            function ()
+            {
+                $(this)
+                    .closest(
+                        '.nominee-row'
+                    )
+                    .remove();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE MOBILE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '.nominee-mobile',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            10
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PERCENTAGE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '.nominee-percentage',
+            function ()
+            {
+                let value =
+                    parseFloat(
+                        this.value
+                    );
+
+                if (
+                    isNaN(value)
+                ) {
+                    return;
+                }
+
+                if (
+                    value < 0
+                ) {
+                    value = 0;
+                }
+
+                if (
+                    value > 100
+                ) {
+                    value = 100;
+                }
+
+                this.value =
+                    value;
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE DOB MAX DATE
+        |--------------------------------------------------------------------------
+        */
+
+        function setNomineeDobMaxDates()
+        {
+            const today =
+                new Date()
+                    .toISOString()
+                    .split('T')[0];
+
+            $('.nominee-dob')
+                .attr(
+                    'max',
+                    today
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BANK IFSC
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#bank_ifsc_code',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /[^A-Z0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            11
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BANK ACCOUNT NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#bank_account_number',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            50
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BANK TEXT FIELDS
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#bank_account_holder_name, #bank_name, #bank_branch_name',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BANK UPI
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#bank_upi_id',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .trim()
+                        .toLowerCase();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MOBILE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#mobile, #alternate_mobile',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            10
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AADHAAR
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#aadhar_number',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            12
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PINCODE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#pincode',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            6
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAN NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#pan_number',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /[^A-Z0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            10
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '#license_number',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER CODE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#driver_code',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .trim()
+                        .toUpperCase()
+                        .replace(
+                            /\s+/g,
+                            ''
+                        );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NAME FIELDS
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#first_name, #last_name, #father_name',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE AUTHORITY
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#license_issuing_authority',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADDRESS FIELDS
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#country, #state, #city, #address',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMAIL
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#email',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .trim()
+                        .toLowerCase();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE HELPER
+        |--------------------------------------------------------------------------
+        */
+
+        function parseDateValue(value)
+        {
+            if (!value) {
+                return null;
+            }
+
+            const date =
+                new Date(
+                    value + 'T00:00:00'
+                );
+
+            if (
+                isNaN(
+                    date.getTime()
+                )
+            ) {
+                return null;
+            }
+
+            return date;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TODAY
+        |--------------------------------------------------------------------------
+        */
+
+        function getToday()
+        {
             const today =
                 new Date();
-
 
             today.setHours(
                 0,
@@ -3934,349 +6306,177 @@
                 0
             );
 
+            return today;
+        }
 
-            if (
-                selectedDate >
-                today
-            ) {
 
-                alert(
-                    'Date of Birth cannot be a future date.'
-                );
+        /*
+        |--------------------------------------------------------------------------
+        | DATE OF BIRTH
+        |--------------------------------------------------------------------------
+        */
 
-                this.value = '';
+        $(document).on(
+            'change',
+            '#date_of_birth',
+            function ()
+            {
+                if (!this.value) {
+                    return;
+                }
+
+                const selectedDate =
+                    parseDateValue(
+                        this.value
+                    );
+
+                const today =
+                    getToday();
+
+                if (
+                    selectedDate &&
+                    selectedDate > today
+                ) {
+
+                    alert(
+                        'Date of Birth cannot be a future date.'
+                    );
+
+                    this.value = '';
+
+                    return;
+                }
+
+                const joiningDate =
+                    parseDateValue(
+                        $('#joining_date').val()
+                    );
+
+                if (
+                    selectedDate &&
+                    joiningDate &&
+                    joiningDate < selectedDate
+                ) {
+
+                    alert(
+                        'Date of Birth cannot be after Joining Date.'
+                    );
+
+                    this.value = '';
+                }
             }
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LICENSE ISSUE DATE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#license_issue_date',
-        function ()
-        {
-            validateLicenseDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LICENSE EXPIRY DATE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#license_expiry_date',
-        function ()
-        {
-            validateLicenseDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LICENSE DATE VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
-    function validateLicenseDates()
-    {
-        const issueDate =
-            $('#license_issue_date').val();
-
-
-        const expiryDate =
-            $('#license_expiry_date').val();
-
-
-        const today =
-            new Date();
-
-
-        today.setHours(
-            0,
-            0,
-            0,
-            0
         );
 
 
-        if (issueDate) {
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE DATES
+        |--------------------------------------------------------------------------
+        */
 
-            const selectedIssueDate =
-                new Date(
-                    issueDate + 'T00:00:00'
+        $(document).on(
+            'change',
+            '#license_issue_date, #license_expiry_date',
+            function ()
+            {
+                validateLicenseDates();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        function validateLicenseDates()
+        {
+            const issueDate =
+                parseDateValue(
+                    $('#license_issue_date').val()
                 );
+
+            const expiryDate =
+                parseDateValue(
+                    $('#license_expiry_date').val()
+                );
+
+            const today =
+                getToday();
 
 
             if (
-                selectedIssueDate >
-                today
+                issueDate &&
+                issueDate > today
             ) {
 
                 alert(
                     'Licence Issue Date cannot be a future date.'
                 );
 
-
                 $('#license_issue_date')
-                    .val('');
-
+                    .val('')
+                    .focus();
 
                 return false;
             }
-        }
-
-
-        if (
-            issueDate &&
-            expiryDate
-        ) {
-
-            const selectedIssueDate =
-                new Date(
-                    issueDate + 'T00:00:00'
-                );
-
-
-            const selectedExpiryDate =
-                new Date(
-                    expiryDate + 'T00:00:00'
-                );
 
 
             if (
-                selectedExpiryDate <
-                selectedIssueDate
+                issueDate &&
+                expiryDate &&
+                expiryDate < issueDate
             ) {
 
                 alert(
                     'Licence Expiry Date cannot be before Licence Issue Date.'
                 );
 
-
                 $('#license_expiry_date')
-                    .val('');
-
-
-                return false;
-            }
-        }
-
-
-        return true;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EMPLOYMENT DATE HELPERS
-    |--------------------------------------------------------------------------
-    */
-
-    function parseDateValue(value)
-    {
-        if (!value) {
-            return null;
-        }
-
-
-        return new Date(
-            value + 'T00:00:00'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EMPLOYMENT DATE VALIDATION
-    |--------------------------------------------------------------------------
-    |
-    | Rules:
-    |
-    | Joining Date:
-    | - Required
-    | - Cannot be future date
-    |
-    | Resignation Date:
-    | - Optional
-    | - Cannot be before Joining Date
-    |
-    | Last Working Date:
-    | - Optional
-    | - Cannot be before Joining Date
-    | - If resignation exists, cannot be before resignation
-    |
-    | Termination Date:
-    | - Optional
-    | - Cannot be before Joining Date
-    |
-    |--------------------------------------------------------------------------
-    */
-
-    function validateEmploymentDates(
-        showAlert = true
-    )
-    {
-        const joiningDate =
-            $('#joining_date').val();
-
-
-        const resignationDate =
-            $('#resignation_date').val();
-
-
-        const lastWorkingDate =
-            $('#last_working_date').val();
-
-
-        const terminationDate =
-            $('#termination_date').val();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Joining Date
-        |--------------------------------------------------------------------------
-        */
-
-        if (!joiningDate) {
-
-            if (showAlert) {
-
-                alert(
-                    'Joining Date is required.'
-                );
-
-                $('#joining_date')
-                    .focus();
-            }
-
-            return false;
-        }
-
-
-        const joining =
-            parseDateValue(
-                joiningDate
-            );
-
-
-        const resignation =
-            parseDateValue(
-                resignationDate
-            );
-
-
-        const lastWorking =
-            parseDateValue(
-                lastWorkingDate
-            );
-
-
-        const termination =
-            parseDateValue(
-                terminationDate
-            );
-
-
-        const today =
-            new Date();
-
-
-        today.setHours(
-            0,
-            0,
-            0,
-            0
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Joining Date cannot be future
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            joining >
-            today
-        ) {
-
-            if (showAlert) {
-
-                alert(
-                    'Joining Date cannot be a future date.'
-                );
-
-                $('#joining_date')
                     .val('')
                     .focus();
-            }
-
-            return false;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Resignation Date
-        |--------------------------------------------------------------------------
-        */
-
-        if (resignation) {
-
-            if (
-                resignation <
-                joining
-            ) {
-
-                if (showAlert) {
-
-                    alert(
-                        'Resignation Date cannot be before Joining Date.'
-                    );
-
-                    $('#resignation_date')
-                        .val('')
-                        .focus();
-                }
 
                 return false;
             }
+
+
+            return true;
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Last Working Date
+        | EMPLOYMENT DATES
         |--------------------------------------------------------------------------
         */
 
-        if (lastWorking) {
+        function validateEmploymentDates(
+            showAlert = true
+        )
+        {
+            const joiningDate =
+                $('#joining_date').val();
 
-            if (
-                lastWorking <
-                joining
-            ) {
+            const resignationDate =
+                $('#resignation_date').val();
+
+            const lastWorkingDate =
+                $('#last_working_date').val();
+
+            const terminationDate =
+                $('#termination_date').val();
+
+
+            if (!joiningDate) {
 
                 if (showAlert) {
 
                     alert(
-                        'Last Working Date cannot be before Joining Date.'
+                        'Joining Date is required.'
                     );
 
-                    $('#last_working_date')
-                        .val('')
+                    $('#joining_date')
                         .focus();
                 }
 
@@ -4284,45 +6484,308 @@
             }
 
 
+            const joining =
+                parseDateValue(
+                    joiningDate
+                );
+
+            const resignation =
+                parseDateValue(
+                    resignationDate
+                );
+
+            const lastWorking =
+                parseDateValue(
+                    lastWorkingDate
+                );
+
+            const termination =
+                parseDateValue(
+                    terminationDate
+                );
+
+            const today =
+                getToday();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Joining Date
+            |--------------------------------------------------------------------------
+            */
+
             if (
-                resignation &&
-                lastWorking <
+                joining > today
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Joining Date cannot be a future date.'
+                    );
+
+                    $('#joining_date')
+                        .val('')
+                        .focus();
+                }
+
+                return false;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DOB -> Joining
+            |--------------------------------------------------------------------------
+            */
+
+            const dob =
+                parseDateValue(
+                    $('#date_of_birth').val()
+                );
+
+            if (
+                dob &&
+                joining < dob
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Joining Date cannot be before Date of Birth.'
+                    );
+
+                    $('#joining_date')
+                        .val('')
+                        .focus();
+                }
+
+                return false;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Resignation
+            |--------------------------------------------------------------------------
+            */
+
+            if (
                 resignation
             ) {
 
-                if (showAlert) {
+                if (
+                    resignation > today
+                ) {
 
-                    alert(
-                        'Last Working Date cannot be before Resignation Date.'
-                    );
+                    if (showAlert) {
 
-                    $('#last_working_date')
-                        .val('')
-                        .focus();
+                        alert(
+                            'Resignation Date cannot be a future date.'
+                        );
+
+                        $('#resignation_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
                 }
 
-                return false;
+
+                if (
+                    resignation < joining
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Resignation Date cannot be before Joining Date.'
+                        );
+
+                        $('#resignation_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
             }
-        }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Termination Date
-        |--------------------------------------------------------------------------
-        */
-
-        if (termination) {
+            /*
+            |--------------------------------------------------------------------------
+            | Last Working
+            |--------------------------------------------------------------------------
+            */
 
             if (
-                termination <
-                joining
+                lastWorking
+            ) {
+
+                if (
+                    lastWorking > today
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Last Working Date cannot be a future date.'
+                        );
+
+                        $('#last_working_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+
+
+                if (
+                    lastWorking < joining
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Last Working Date cannot be before Joining Date.'
+                        );
+
+                        $('#last_working_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+
+
+                if (
+                    resignation &&
+                    lastWorking < resignation
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Last Working Date cannot be before Resignation Date.'
+                        );
+
+                        $('#last_working_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Termination
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                termination
+            ) {
+
+                if (
+                    termination > today
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Termination Date cannot be a future date.'
+                        );
+
+                        $('#termination_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+
+
+                if (
+                    termination < joining
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Termination Date cannot be before Joining Date.'
+                        );
+
+                        $('#termination_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+
+
+                if (
+                    resignation &&
+                    termination < resignation
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Termination Date cannot be before Resignation Date.'
+                        );
+
+                        $('#termination_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+
+
+                if (
+                    lastWorking &&
+                    termination < lastWorking
+                ) {
+
+                    if (showAlert) {
+
+                        alert(
+                            'Termination Date cannot be before Last Working Date.'
+                        );
+
+                        $('#termination_date')
+                            .val('')
+                            .focus();
+                    }
+
+                    return false;
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Resignation + Termination
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                resignation &&
+                termination
             ) {
 
                 if (showAlert) {
 
                     alert(
-                        'Termination Date cannot be before Joining Date.'
+                        'A driver cannot have both Resignation Date and Termination Date.'
                     );
 
                     $('#termination_date')
@@ -4332,535 +6795,828 @@
 
                 return false;
             }
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Resignation + Termination
-        |--------------------------------------------------------------------------
-        |
-        | A driver should normally have only one exit event.
-        |
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            resignation &&
-            termination
-        ) {
-
-            if (showAlert) {
-
-                alert(
-                    'A driver cannot have both Resignation Date and Termination Date.'
-                );
-
-                $('#termination_date')
-                    .val('')
-                    .focus();
-            }
-
-            return false;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Last Working Date required for exit
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            resignation &&
-            !lastWorkingDate
-        ) {
-
-            if (showAlert) {
-
-                alert(
-                    'Last Working Date is required when Resignation Date is provided.'
-                );
-
-                $('#last_working_date')
-                    .focus();
-            }
-
-            return false;
-        }
-
-
-        if (
-            termination &&
-            !lastWorkingDate
-        ) {
-
-            if (showAlert) {
-
-                alert(
-                    'Last Working Date is required when Termination Date is provided.'
-                );
-
-                $('#last_working_date')
-                    .focus();
-            }
-
-            return false;
-        }
-
-
-        return true;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | JOINING DATE CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#joining_date',
-        function ()
-        {
-            validateEmploymentDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RESIGNATION DATE CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#resignation_date',
-        function ()
-        {
-            validateEmploymentDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LAST WORKING DATE CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#last_working_date',
-        function ()
-        {
-            validateEmploymentDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TERMINATION DATE CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '#termination_date',
-        function ()
-        {
-            validateEmploymentDates();
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'submit',
-        'form',
-        function (event)
-        {
-            const form =
-                this;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Driver Code
+            | Last Working Required
             |--------------------------------------------------------------------------
             */
 
-            $('#driver_code').val(
+            if (
+                resignation &&
+                !lastWorkingDate
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Last Working Date is required when Resignation Date is provided.'
+                    );
+
+                    $('#last_working_date')
+                        .focus();
+                }
+
+                return false;
+            }
+
+
+            if (
+                termination &&
+                !lastWorkingDate
+            ) {
+
+                if (showAlert) {
+
+                    alert(
+                        'Last Working Date is required when Termination Date is provided.'
+                    );
+
+                    $('#last_working_date')
+                        .focus();
+                }
+
+                return false;
+            }
+
+
+            return true;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMPLOYMENT DATE EVENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#joining_date, #resignation_date, #last_working_date, #termination_date',
+            function ()
+            {
+                validateEmploymentDates();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PERCENTAGE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        function validateNomineePercentages()
+        {
+            let total =
+                0;
+
+            let hasPercentage =
+                false;
+
+
+            $('.nominee-percentage')
+                .each(
+                    function ()
+                    {
+                        const value =
+                            parseFloat(
+                                $(this).val()
+                            );
+
+                        if (
+                            !isNaN(value)
+                        ) {
+
+                            total += value;
+
+                            hasPercentage =
+                                true;
+                        }
+                    }
+                );
+
+
+            if (
+                total > 100
+            ) {
+
+                alert(
+                    'Total nominee percentage cannot exceed 100%.'
+                );
+
+                return false;
+            }
+
+
+            return true;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION FORMATTING
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '#qualification-wrapper input[type="text"]',
+            function ()
+            {
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE FORMATTING
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'blur',
+            '.nominee-row input[type="text"], .nominee-row textarea',
+            function ()
+            {
+                if (
+                    $(this)
+                        .hasClass(
+                            'nominee-mobile'
+                        )
+                ) {
+                    return;
+                }
+
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BANK ACCOUNT TYPE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#bank_account_type',
+            function ()
+            {
+                const value =
+                    $(this).val();
+
+                if (
+                    value &&
+                    ![
+                        'savings',
+                        'current'
+                    ].includes(value)
+                ) {
+
+                    $(this).val('');
+                }
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORM SUBMIT
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'submit',
+            'form',
+            function (event)
+            {
+                const form =
+                    this;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | EMPLOYMENT VALIDATION
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !validateEmploymentDates(
+                        true
+                    )
+                ) {
+
+                    event.preventDefault();
+
+                    return false;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LICENSE VALIDATION
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !validateLicenseDates()
+                ) {
+
+                    event.preventDefault();
+
+                    return false;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMINEE PERCENTAGE
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !validateNomineePercentages()
+                ) {
+
+                    event.preventDefault();
+
+                    return false;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DRIVER CODE
+                |--------------------------------------------------------------------------
+                */
+
                 $('#driver_code')
-                    .val()
-                    .trim()
-                    .toUpperCase()
-                    .replace(/\s+/g, '')
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Names
-            |--------------------------------------------------------------------------
-            */
-
-            $(
-                '#first_name, #last_name, #father_name'
-            ).each(
-                function ()
-                {
-                    $(this).val(
-                        $(this)
+                    .val(
+                        $('#driver_code')
                             .val()
-                            .replace(/\s+/g, ' ')
                             .trim()
+                            .toUpperCase()
+                            .replace(
+                                /\s+/g,
+                                ''
+                            )
                     );
-                }
-            );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Mobile
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | NAMES
+                |--------------------------------------------------------------------------
+                */
 
-            $('#mobile, #alternate_mobile').each(
-                function ()
-                {
-                    $(this).val(
+                $(
+                    '#first_name, #last_name, #father_name'
+                ).each(
+                    function ()
+                    {
                         $(this)
-                            .val()
-                            .replace(/[^0-9]/g, '')
-                            .slice(0, 10)
+                            .val(
+                                $(this)
+                                    .val()
+                                    .replace(
+                                        /\s+/g,
+                                        ' '
+                                    )
+                                    .trim()
+                            );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | MOBILE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#mobile, #alternate_mobile')
+                    .each(
+                        function ()
+                        {
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /[^0-9]/g,
+                                            ''
+                                        )
+                                        .slice(
+                                            0,
+                                            10
+                                        )
+                                );
+                        }
                     );
-                }
-            );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Email
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | EMAIL
+                |--------------------------------------------------------------------------
+                */
 
-            $('#email').val(
                 $('#email')
-                    .val()
-                    .trim()
-                    .toLowerCase()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Address
-            |--------------------------------------------------------------------------
-            */
-
-            $(
-                '#country, #state, #city, #address'
-            ).each(
-                function ()
-                {
-                    $(this).val(
-                        $(this)
+                    .val(
+                        $('#email')
                             .val()
-                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .toLowerCase()
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ADDRESS
+                |--------------------------------------------------------------------------
+                */
+
+                $(
+                    '#country, #state, #city, #address'
+                ).each(
+                    function ()
+                    {
+                        $(this)
+                            .val(
+                                $(this)
+                                    .val()
+                                    .replace(
+                                        /\s+/g,
+                                        ' '
+                                    )
+                                    .trim()
+                            );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PINCODE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#pincode')
+                    .val(
+                        $('#pincode')
+                            .val()
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                6
+                            )
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LICENSE
+                |--------------------------------------------------------------------------
+                */
+
+                $('#license_number')
+                    .val(
+                        $('#license_number')
+                            .val()
+                            .trim()
+                            .toUpperCase()
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | LICENSE AUTHORITY
+                |--------------------------------------------------------------------------
+                */
+
+                $('#license_issuing_authority')
+                    .val(
+                        $('#license_issuing_authority')
+                            .val()
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
                             .trim()
                     );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | AADHAAR
+                |--------------------------------------------------------------------------
+                */
+
+                $('#aadhar_number')
+                    .val(
+                        $('#aadhar_number')
+                            .val()
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                12
+                            )
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PAN
+                |--------------------------------------------------------------------------
+                */
+
+                $('#pan_number')
+                    .val(
+                        $('#pan_number')
+                            .val()
+                            .toUpperCase()
+                            .replace(
+                                /[^A-Z0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                10
+                            )
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | QUALIFICATIONS
+                |--------------------------------------------------------------------------
+                */
+
+                $('#qualification-wrapper')
+                    .find(
+                        'input[type="text"]'
+                    )
+                    .each(
+                        function ()
+                        {
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMINEES
+                |--------------------------------------------------------------------------
+                */
+
+                $('.nominee-row')
+                    .find(
+                        'input[type="text"], textarea'
+                    )
+                    .each(
+                        function ()
+                        {
+                            if (
+                                $(this)
+                                    .hasClass(
+                                        'nominee-mobile'
+                                    )
+                            ) {
+                                return;
+                            }
+
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                $('.nominee-mobile')
+                    .each(
+                        function ()
+                        {
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /[^0-9]/g,
+                                            ''
+                                        )
+                                        .slice(
+                                            0,
+                                            10
+                                        )
+                                );
+                        }
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | BANK DETAILS
+                |--------------------------------------------------------------------------
+                */
+
+                $(
+                    '#bank_account_holder_name, #bank_name, #bank_branch_name'
+                ).each(
+                    function ()
+                    {
+                        $(this)
+                            .val(
+                                $(this)
+                                    .val()
+                                    .replace(
+                                        /\s+/g,
+                                        ' '
+                                    )
+                                    .trim()
+                            );
+                    }
+                );
+
+
+                $('#bank_ifsc_code')
+                    .val(
+                        $('#bank_ifsc_code')
+                            .val()
+                            .toUpperCase()
+                            .replace(
+                                /[^A-Z0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                11
+                            )
+                    );
+
+
+                $('#bank_account_number')
+                    .val(
+                        $('#bank_account_number')
+                            .val()
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                50
+                            )
+                    );
+
+
+                $('#bank_upi_id')
+                    .val(
+                        $('#bank_upi_id')
+                            .val()
+                            .trim()
+                            .toLowerCase()
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DOUBLE SUBMIT PROTECTION
+                |--------------------------------------------------------------------------
+                */
+
+                const submitButton =
+                    $(form)
+                        .find(
+                            'button[type="submit"]'
+                        );
+
+
+                if (
+                    submitButton.length &&
+                    !submitButton.data(
+                        'submitted'
+                    )
+                ) {
+
+                    submitButton
+                        .data(
+                            'submitted',
+                            true
+                        )
+                        .prop(
+                            'disabled',
+                            true
+                        )
+                        .html(
+                            '<i class="fa fa-spinner fa-spin"></i> Updating Driver...'
+                        );
+                }
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT READY
+        |--------------------------------------------------------------------------
+        */
+
+        $(document)
+            .ready(
+                function ()
+                {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DEFAULT COUNTRY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const countryInput =
+                        $('#country');
+
+                    if (
+                        countryInput.length &&
+                        countryInput.val() === ''
+                    ) {
+
+                        countryInput.val(
+                            'India'
+                        );
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | TODAY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const todayString =
+                        new Date()
+                            .toISOString()
+                            .split('T')[0];
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MAIN DATE LIMITS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#date_of_birth')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#joining_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#resignation_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#last_working_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#termination_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#license_issue_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NOMINEE DOB LIMIT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    setNomineeDobMaxDates();
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DEBUG / VALIDATION CHECK
+                    |--------------------------------------------------------------------------
+                    */
+
+                    console.log(
+                        'Driver Edit Script Loaded'
+                    );
+
+                    console.log(
+                        'Qualification Rows:',
+                        $('#qualification-wrapper .qualification-row').length
+                    );
+
+                    console.log(
+                        'Nominee Rows:',
+                        $('#nominee-wrapper .nominee-row').length
+                    );
+
+                    console.log(
+                        'Qualification Add Button:',
+                        $('#add-qualification').length
+                    );
+
+                    console.log(
+                        'Nominee Add Button:',
+                        $('#add-nominee').length
+                    );
+
+                    console.log(
+                        'Driver Photo:',
+                        $('#driver_photo').length
+                    );
+
+                    console.log(
+                        'Driving Licence:',
+                        $('#driving_license_document').length
+                    );
+
+                    console.log(
+                        'Aadhar:',
+                        $('#aadhar_document').length
+                    );
+
+                    console.log(
+                        'PAN:',
+                        $('#pan_document').length
+                    );
+
+                    console.log(
+                        'Bank Details:',
+                        $('#bank_account_holder_name').length
+                    );
+
                 }
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Pincode
-            |--------------------------------------------------------------------------
-            */
-
-            $('#pincode').val(
-                $('#pincode')
-                    .val()
-                    .replace(/[^0-9]/g, '')
-                    .slice(0, 6)
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | License Number
-            |--------------------------------------------------------------------------
-            */
-
-            $('#license_number').val(
-                $('#license_number')
-                    .val()
-                    .trim()
-                    .toUpperCase()
-                    .replace(/\s+/g, ' ')
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | License Authority
-            |--------------------------------------------------------------------------
-            */
-
-            $('#license_issuing_authority').val(
-                $('#license_issuing_authority')
-                    .val()
-                    .replace(/\s+/g, ' ')
-                    .trim()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Aadhar
-            |--------------------------------------------------------------------------
-            */
-
-            $('#aadhar_number').val(
-                $('#aadhar_number')
-                    .val()
-                    .replace(/[^0-9]/g, '')
-                    .slice(0, 12)
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PAN
-            |--------------------------------------------------------------------------
-            */
-
-            $('#pan_number').val(
-                $('#pan_number')
-                    .val()
-                    .toUpperCase()
-                    .replace(/[^A-Z0-9]/g, '')
-                    .slice(0, 10)
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Employment Dates
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !validateEmploymentDates(true)
-            ) {
-
-                event.preventDefault();
-
-                return false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | License Dates
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !validateLicenseDates()
-            ) {
-
-                event.preventDefault();
-
-                return false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DOUBLE SUBMIT PROTECTION
-            |--------------------------------------------------------------------------
-            */
-
-            const submitButton =
-                $(form).find(
-                    'button[type="submit"]'
-                );
-
-
-            if (
-                submitButton.length &&
-                !submitButton.data('submitted')
-            ) {
-
-                submitButton
-                    .data(
-                        'submitted',
-                        true
-                    )
-                    .prop(
-                        'disabled',
-                        true
-                    )
-                    .html(
-                        '<i class="fa fa-spinner fa-spin"></i> Updating Driver...'
-                    );
-            }
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DOCUMENT READY
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).ready(
-        function ()
-        {
-            /*
-            |--------------------------------------------------------------------------
-            | Default Country
-            |--------------------------------------------------------------------------
-            */
-
-            const countryInput =
-                $('#country');
-
-
-            if (
-                countryInput.length &&
-                countryInput.val() === ''
-            ) {
-
-                countryInput.val(
-                    'India'
-                );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Set min dates dynamically
-            |--------------------------------------------------------------------------
-            |
-            | This is UX protection only.
-            | Laravel FormRequest validation should still be used.
-            |--------------------------------------------------------------------------
-            */
-
-            const joiningDate =
-                $('#joining_date');
-
-
-            if (joiningDate.length) {
-
-                joiningDate.attr(
-                    'max',
-                    new Date()
-                        .toISOString()
-                        .split('T')[0]
-                );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DEBUG
-            |--------------------------------------------------------------------------
-            */
-
-            console.log(
-                'Driver Edit File + Employment Validation JS Loaded'
-            );
-
-
-            console.log(
-                'Driving Licence Input:',
-                $('#driving_license_document').length
-            );
-
-
-            console.log(
-                'Driving Licence Preview:',
-                $('#driving-license-document-preview').length
-            );
-
-
-            console.log(
-                'Aadhar Input:',
-                $('#aadhar_document').length
-            );
-
-
-            console.log(
-                'Aadhar Preview:',
-                $('#aadhar-document-preview').length
-            );
-
-
-            console.log(
-                'PAN Input:',
-                $('#pan_document').length
-            );
-
-
-            console.log(
-                'PAN Preview:',
-                $('#pan-document-preview').length
-            );
-
-
-            console.log(
-                'Driver Photo Input:',
-                $('#driver_photo').length
-            );
-
-
-            console.log(
-                'Driver Photo Preview:',
-                $('#driver-photo-preview').length
-            );
-
-
-            console.log(
-                'Joining Date:',
-                $('#joining_date').length
-            );
-
-
-            console.log(
-                'Resignation Date:',
-                $('#resignation_date').length
-            );
-
-
-            console.log(
-                'Last Working Date:',
-                $('#last_working_date').length
-            );
-
-
-            console.log(
-                'Termination Date:',
-                $('#termination_date').length
-            );
-        }
-    );
-
-
-})(jQuery);
+    })(jQuery);
 </script>
-
 @endpush

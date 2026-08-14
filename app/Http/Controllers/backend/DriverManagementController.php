@@ -7,6 +7,8 @@ use App\Http\Requests\Backend\DriverManagement\StoreDriverRequest;
 use App\Http\Requests\Backend\DriverManagement\UpdateDriverRequest;
 use App\Services\DriverManagement\DriverManagementService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class DriverManagementController extends Controller
@@ -15,6 +17,7 @@ class DriverManagementController extends Controller
      * Driver Management Service
      */
     protected DriverManagementService $driverService;
+
 
     /**
      * Constructor
@@ -25,33 +28,41 @@ class DriverManagementController extends Controller
         $this->driverService = $driverService;
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | INDEX
     |--------------------------------------------------------------------------
     */
+
     public function index(): View
     {
         $drivers = $this->driverService->getDrivers();
 
-        return view('backend.driver-management.index', compact('drivers'));
+        return view('backend.driver-management.index',
+            compact('drivers')
+        );
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | CREATE
     |--------------------------------------------------------------------------
     */
+
     public function create(): View
     {
         return view('backend.driver-management.create');
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
     */
+
     public function store(
         StoreDriverRequest $request
     ): RedirectResponse {
@@ -71,35 +82,53 @@ class DriverManagementController extends Controller
 
         } catch (\Throwable $e) {
 
+            Log::error(
+                'Driver creation failed.',
+                [
+                    'user_id' => Auth::id(),
+                    'exception' => $e,
+                ]
+            );
+
             return back()
                 ->withInput()
                 ->with(
                     'error',
-                    $e->getMessage()
+                    'Unable to create driver. Please try again.'
                 );
         }
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | SHOW
     |--------------------------------------------------------------------------
     */
-    public function show(string $id): View
-    {
-        $driver = $this->driverService->findById($id);
 
-        return view('backend.driver-management.show', compact('driver'));
+    public function show(
+        string $id
+    ): View {
 
+        $driver =
+            $this->driverService->findById($id);
+
+        return view('backend.driver-management.show',
+            compact('driver')
+        );
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | EDIT
     |--------------------------------------------------------------------------
     */
-    public function edit(string $id): View
-    {
+
+    public function edit(
+        string $id
+    ): View {
+
         $driver = $this->driverService->findById($id);
 
         return view('backend.driver-management.edit', compact('driver'));
@@ -110,6 +139,7 @@ class DriverManagementController extends Controller
     | UPDATE
     |--------------------------------------------------------------------------
     */
+
     public function update(
         UpdateDriverRequest $request,
         string $id
@@ -117,7 +147,8 @@ class DriverManagementController extends Controller
 
         try {
 
-            $driver = $this->driverService->findById($id);
+            $driver =
+                $this->driverService->findById($id);
 
             $this->driverService->update(
                 $driver,
@@ -133,27 +164,43 @@ class DriverManagementController extends Controller
 
         } catch (\Throwable $e) {
 
+            Log::error(
+                'Driver update failed.',
+                [
+                    'driver_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e,
+                ]
+            );
+
             return back()
                 ->withInput()
                 ->with(
                     'error',
-                    $e->getMessage()
+                    'Unable to update driver. Please try again.'
                 );
         }
     }
+
 
     /*
     |--------------------------------------------------------------------------
     | DELETE
     |--------------------------------------------------------------------------
     */
-    public function destroy(string $id): RedirectResponse
-    {
+
+    public function destroy(
+        string $id
+    ): RedirectResponse {
+
         try {
 
-            $driver = $this->driverService->findById($id);
+            $driver =
+                $this->driverService->findById($id);
 
-            $this->driverService->delete($driver);
+            $this->driverService->delete(
+                $driver
+            );
 
             return redirect()
                 ->route('driver-management.index')
@@ -164,10 +211,19 @@ class DriverManagementController extends Controller
 
         } catch (\Throwable $e) {
 
+            Log::error(
+                'Driver deletion failed.',
+                [
+                    'driver_id' => $id,
+                    'user_id' => Auth::id(),
+                    'exception' => $e,
+                ]
+            );
+
             return back()
                 ->with(
                     'error',
-                    $e->getMessage()
+                    'Unable to delete driver. Please try again.'
                 );
         }
     }

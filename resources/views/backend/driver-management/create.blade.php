@@ -4,6 +4,24 @@
     Create Driver
 @endsection
 
+@push('styles')
+<style>
+    .table-bordered, .table-bordered td, .table-bordered th {
+        border: 2px solid #023a85;
+    }
+
+    .table td,
+    .table th {
+        vertical-align: middle;
+    }
+
+    .vehicle-type-code {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+@endpush
+
 @section('content')
 
 <div class="pd-ltr-20 xs-pd-20-10">
@@ -1466,6 +1484,670 @@
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- DRIVER QUALIFICATION --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;">
+
+                            <b>
+                                Driver Qualification
+                            </b>
+
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered table-striped"
+                                id="qualification-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th style="width:20%;">
+                                            Qualification
+                                        </th>
+
+                                        <th style="width:22%;">
+                                            Institute / Board
+                                        </th>
+
+                                        <th style="width:12%;">
+                                            Passing Year
+                                        </th>
+
+                                        <th style="width:14%;">
+                                            Percentage / Grade
+                                        </th>
+
+                                        <th style="width:22%;">
+                                            Document
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Action
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody id="qualification-wrapper">
+
+                                    <tr
+                                        class="qualification-row"
+                                        data-index="0">
+
+                                        {{-- Qualification --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][qualification]"
+                                                class="form-control"
+                                                placeholder="e.g. HSC, Diploma, B.Com">
+
+                                            @error('qualifications.0.qualification')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Institute / Board --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][institute]"
+                                                class="form-control"
+                                                placeholder="Institute / Board">
+
+                                            @error('qualifications.0.institute')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Passing Year --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="qualifications[0][passing_year]"
+                                                class="form-control"
+                                                min="1900"
+                                                max="{{ date('Y') }}"
+                                                placeholder="YYYY">
+
+                                            @error('qualifications.0.passing_year')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Percentage / Grade --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="qualifications[0][grade]"
+                                                class="form-control"
+                                                placeholder="72% / A">
+
+                                            @error('qualifications.0.grade')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Document --}}
+                                        <td>
+
+                                            <input
+                                                type="file"
+                                                name="qualification_documents[0]"
+                                                class="form-control qualification-document"
+                                                accept=".jpg,.jpeg,.png,.webp,.pdf">
+
+                                            <small class="text-muted d-block mt-1">
+                                                JPG, JPEG, PNG, WEBP or PDF. Max 5 MB.
+                                            </small>
+
+                                            <div
+                                                class="qualification-document-preview mt-2">
+                                            </div>
+
+                                            @error('qualification_documents.0')
+
+                                                <small class="text-danger d-block">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-qualification"
+                                                disabled
+                                                title="Remove">
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-qualification"
+                                class="btn btn-primary btn-sm">
+
+                                <i class="fa fa-plus"></i>
+
+                                Add More Qualification
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
+                    {{-- DRIVER NOMINEE --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;">
+
+                            <b>
+                                Driver Nominee
+                            </b>
+
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered table-striped"
+                                id="nominee-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th style="width:15%;">
+                                            Profile Image
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Nominee Name
+                                        </th>
+
+                                        <th style="width:14%;">
+                                            Relationship
+                                        </th>
+
+                                        <th style="width:13%;">
+                                            Date of Birth
+                                        </th>
+
+                                        <th style="width:13%;">
+                                            Mobile
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Percentage
+                                        </th>
+
+                                        <th style="width:18%;">
+                                            Address
+                                        </th>
+
+                                        <th style="width:8%;">
+                                            Action
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="nominee-wrapper">
+
+                                    <tr
+                                        class="nominee-row"
+                                        data-index="0">
+
+                                        {{-- Profile Image --}}
+                                        <td>
+
+                                            <input
+                                                type="file"
+                                                name="nominee_profile_images[0]"
+                                                class="form-control nominee-profile-image"
+                                                accept=".jpg,.jpeg,.png,.webp">
+
+                                            <small class="text-muted d-block mt-1">
+                                                JPG, JPEG, PNG or WEBP. Max 2 MB.
+                                            </small>
+
+                                            <div
+                                                class="nominee-profile-preview mt-2">
+                                            </div>
+
+                                            @error('nominee_profile_images.0')
+
+                                                <small class="text-danger d-block">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Nominee Name --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][name]"
+                                                class="form-control"
+                                                placeholder="Nominee Name">
+
+                                            @error('nominees.0.name')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Relationship --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][relationship]"
+                                                class="form-control"
+                                                placeholder="Father / Mother / Wife">
+
+                                            @error('nominees.0.relationship')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Date of Birth --}}
+                                        <td>
+
+                                            <input
+                                                type="date"
+                                                name="nominees[0][date_of_birth]"
+                                                class="form-control">
+
+                                            @error('nominees.0.date_of_birth')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Mobile --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="nominees[0][mobile]"
+                                                maxlength="10"
+                                                inputmode="numeric"
+                                                class="form-control nominee-mobile"
+                                                placeholder="10 Digit">
+
+                                            @error('nominees.0.mobile')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Percentage --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="nominees[0][percentage]"
+                                                class="form-control nominee-percentage"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                placeholder="100">
+
+                                            @error('nominees.0.percentage')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Address --}}
+                                        <td>
+
+                                            <textarea
+                                                name="nominees[0][address]"
+                                                class="form-control"
+                                                rows="2"
+                                                placeholder="Nominee Address"></textarea>
+
+                                            @error('nominees.0.address')
+
+                                                <small class="text-danger">
+                                                    {{ $message }}
+                                                </small>
+
+                                            @enderror
+
+                                        </td>
+
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-nominee"
+                                                disabled
+                                                title="Remove">
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-nominee"
+                                class="btn btn-primary btn-sm">
+
+                                <i class="fa fa-plus"></i>
+
+                                Add More Nominee
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
+                    {{-- DRIVER BANK DETAILS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;">
+
+                            <b>
+                                Driver Bank Details
+                            </b>
+
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered table-striped">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Account Holder Name
+                                        </th>
+
+                                        <th>
+                                            Bank Name
+                                        </th>
+
+                                        <th>
+                                            Account Number
+                                        </th>
+
+                                        <th>
+                                            IFSC Code
+                                        </th>
+
+                                        <th>
+                                            Branch Name
+                                        </th>
+
+                                        <th>
+                                            Account Type
+                                        </th>
+
+                                        <th>
+                                            UPI ID
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    <tr>
+
+                                        {{-- Account Holder --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[account_holder_name]"
+                                                id="bank_account_holder_name"
+                                                class="form-control"
+                                                placeholder="Account Holder Name">
+
+                                        </td>
+
+
+                                        {{-- Bank Name --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[bank_name]"
+                                                id="bank_name"
+                                                class="form-control"
+                                                placeholder="Bank Name">
+
+                                        </td>
+
+
+                                        {{-- Account Number --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[account_number]"
+                                                id="bank_account_number"
+                                                class="form-control"
+                                                placeholder="Account Number"
+                                                autocomplete="off">
+
+                                        </td>
+
+
+                                        {{-- IFSC --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[ifsc_code]"
+                                                id="bank_ifsc_code"
+                                                maxlength="11"
+                                                class="form-control text-uppercase"
+                                                placeholder="HDFC0001234"
+                                                autocomplete="off">
+
+                                        </td>
+
+
+                                        {{-- Branch --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[branch_name]"
+                                                id="bank_branch_name"
+                                                class="form-control"
+                                                placeholder="Branch Name">
+
+                                        </td>
+
+
+                                        {{-- Account Type --}}
+                                        <td>
+
+                                            <select
+                                                name="bank_details[account_type]"
+                                                id="bank_account_type"
+                                                class="form-control">
+
+                                                <option value="">
+                                                    Select
+                                                </option>
+
+                                                <option value="savings">
+                                                    Savings
+                                                </option>
+
+                                                <option value="current">
+                                                    Current
+                                                </option>
+
+                                            </select>
+
+                                        </td>
+
+
+                                        {{-- UPI --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="bank_details[upi_id]"
+                                                id="bank_upi_id"
+                                                class="form-control"
+                                                placeholder="example@upi"
+                                                autocomplete="off">
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
 
                     {{-- ========================================================= --}}
                     {{-- EMPLOYMENT STATUS --}}
@@ -1645,1787 +2327,3080 @@
 @push('scripts')
 
 <script>
+    (function ($) {
 
-/*
-|--------------------------------------------------------------------------
-| Generic File Preview
-|--------------------------------------------------------------------------
-*/
-function previewFile(inputId, previewId)
-{
-    const fileInput = document.getElementById(inputId);
-    const preview   = document.getElementById(previewId);
+        'use strict';
 
-    if (!fileInput || !preview) {
-        return;
-    }
 
-    preview.innerHTML = '';
+        /*
+        |--------------------------------------------------------------------------
+        | CONFIGURATION
+        |--------------------------------------------------------------------------
+        */
 
-    if (!fileInput.files || !fileInput.files[0]) {
-        return;
-    }
+        const DRIVER_PHOTO_MAX_SIZE =
+            2 * 1024 * 1024; // 2 MB
 
-    const file = fileInput.files[0];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Allowed File Types
-    |--------------------------------------------------------------------------
-    */
-    const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-        'application/pdf'
-    ];
+        const NOMINEE_PHOTO_MAX_SIZE =
+            2 * 1024 * 1024; // 2 MB
 
-    if (!allowedTypes.includes(file.type)) {
 
-        alert(
-            'Please select a valid JPG, JPEG, PNG, WEBP or PDF file.'
-        );
+        const DOCUMENT_MAX_SIZE =
+            5 * 1024 * 1024; // 5 MB
 
-        fileInput.value = '';
 
-        return;
-    }
+        const IMAGE_TYPES = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Maximum File Size - 2 MB
-    |--------------------------------------------------------------------------
-    */
-    const maxSize = 2 * 1024 * 1024;
 
-    if (file.size > maxSize) {
+        const DOCUMENT_TYPES = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'application/pdf'
+        ];
 
-        alert(
-            'File size must not exceed 2 MB.'
-        );
 
-        fileInput.value = '';
+        const PAN_REGEX =
+            /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Image Preview
-    |--------------------------------------------------------------------------
-    */
-    if (file.type.startsWith('image/')) {
+        /*
+        |--------------------------------------------------------------------------
+        | HTML ESCAPE
+        |--------------------------------------------------------------------------
+        */
 
-        const reader = new FileReader();
+        function escapeHtml(value)
+        {
+            return $('<div>')
+                .text(value || '')
+                .html();
+        }
 
-        reader.onload = function(e) {
 
-            preview.innerHTML = `
-                <div>
+        /*
+        |--------------------------------------------------------------------------
+        | GET FILE EXTENSION
+        |--------------------------------------------------------------------------
+        */
 
-                    <img
-                        src="${e.target.result}"
-                        alt="Document Preview"
-                        class="img-thumbnail"
-                        style="
-                            width:160px;
-                            height:120px;
-                            object-fit:cover;
-                            border-radius:10px;
-                            border:2px solid #28a745;
-                            box-shadow:0 2px 8px rgba(0,0,0,.15);
-                        ">
+        function getFileExtension(file)
+        {
+            if (!file || !file.name) {
+                return '';
+            }
 
-                    <div class="mt-2">
+            const parts =
+                file.name.split('.');
 
-                        <small style="color:#28a745;">
+            if (parts.length < 2) {
+                return '';
+            }
 
-                            <i class="fa fa-check-circle"></i>
+            return parts
+                .pop()
+                .toLowerCase();
+        }
 
-                            ${escapeHtml(file.name)}
 
-                        </small>
+        /*
+        |--------------------------------------------------------------------------
+        | IMAGE CHECK
+        |--------------------------------------------------------------------------
+        */
 
-                    </div>
+        function isImageFile(file)
+        {
+            if (!file) {
+                return false;
+            }
 
-                </div>
-            `;
-        };
+            const extension =
+                getFileExtension(file);
 
-        reader.onerror = function() {
-
-            alert(
-                'Unable to preview the selected file.'
+            return (
+                IMAGE_TYPES.includes(file.type) ||
+                [
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp'
+                ].includes(extension)
             );
+        }
 
-            fileInput.value = '';
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF CHECK
+        |--------------------------------------------------------------------------
+        */
+
+        function isPdfFile(file)
+        {
+            if (!file) {
+                return false;
+            }
+
+            return (
+                file.type === 'application/pdf' ||
+                getFileExtension(file) === 'pdf'
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESET FILE
+        |--------------------------------------------------------------------------
+        */
+
+        function resetFile(
+            input,
+            preview
+        )
+        {
+            if (input) {
+                input.value = '';
+            }
+
+            if (preview) {
+                preview.innerHTML = '';
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GENERIC FILE PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewFile(
+            inputId,
+            previewId,
+            maxSize = DOCUMENT_MAX_SIZE,
+            title = 'Document'
+        )
+        {
+            const fileInput =
+                document.getElementById(inputId);
+
+            const preview =
+                document.getElementById(previewId);
+
+            if (
+                !fileInput ||
+                !preview
+            ) {
+                return;
+            }
+
 
             preview.innerHTML = '';
 
-        };
 
-        reader.readAsDataURL(file);
+            if (
+                !fileInput.files ||
+                !fileInput.files[0]
+            ) {
+                return;
+            }
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PDF Preview
-    |--------------------------------------------------------------------------
-    */
-    if (file.type === 'application/pdf') {
+            const file =
+                fileInput.files[0];
 
-        const pdfUrl = URL.createObjectURL(file);
 
-        preview.innerHTML = `
-            <div>
+            /*
+            |--------------------------------------------------------------------------
+            | FILE TYPE
+            |--------------------------------------------------------------------------
+            */
 
-                <div
-                    style="
-                        width:160px;
-                        height:120px;
-                        border:2px solid #dc3545;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        background:#f8f9fa;
-                    ">
+            if (
+                !DOCUMENT_TYPES.includes(file.type) &&
+                ![
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp',
+                    'pdf'
+                ].includes(
+                    getFileExtension(file)
+                )
+            ) {
 
-                    <div class="text-center">
+                alert(
+                    `${title} must be JPG, JPEG, PNG, WEBP or PDF.`
+                );
 
-                        <i
-                            class="fa fa-file-pdf-o"
+                resetFile(
+                    fileInput,
+                    preview
+                );
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FILE SIZE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                file.size > maxSize
+            ) {
+
+                alert(
+                    `${title} size must not exceed ${
+                        maxSize / 1024 / 1024
+                    } MB.`
+                );
+
+                resetFile(
+                    fileInput,
+                    preview
+                );
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | IMAGE PREVIEW
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isImageFile(file)
+            ) {
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        preview.innerHTML = `
+
+                            <div>
+
+                                <img
+                                    src="${event.target.result}"
+                                    alt="${escapeHtml(title)} Preview"
+                                    class="img-thumbnail"
+                                    style="
+                                        width:160px;
+                                        height:120px;
+                                        object-fit:cover;
+                                        border-radius:10px;
+                                        border:2px solid #28a745;
+                                        box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                        cursor:pointer;
+                                    "
+                                    onclick="
+                                        window.open(
+                                            this.src,
+                                            '_blank'
+                                        );
+                                    "
+                                >
+
+                                <div class="mt-2">
+
+                                    <small
+                                        class="text-success">
+
+                                        <i class="fa fa-check-circle"></i>
+
+                                        ${escapeHtml(file.name)}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+                        `;
+                    };
+
+
+                reader.onerror =
+                    function () {
+
+                        alert(
+                            `Unable to preview ${title}.`
+                        );
+
+                        resetFile(
+                            fileInput,
+                            preview
+                        );
+                    };
+
+
+                reader.readAsDataURL(file);
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PDF PREVIEW
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isPdfFile(file)
+            ) {
+
+                const pdfUrl =
+                    URL.createObjectURL(file);
+
+
+                preview.innerHTML = `
+
+                    <div>
+
+                        <div
                             style="
-                                font-size:45px;
-                                color:#dc3545;
-                            ">
-                        </i>
+                                width:160px;
+                                height:120px;
+                                border:2px solid #dc3545;
+                                border-radius:10px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                background:#f8f9fa;
+                                cursor:pointer;
+                            "
+                            onclick="
+                                window.open(
+                                    '${pdfUrl}',
+                                    '_blank'
+                                );
+                            "
+                        >
 
-                        <br>
+                            <div class="text-center">
 
-                        <small>
-                            PDF Document
-                        </small>
+                                <i
+                                    class="fa fa-file-pdf-o"
+                                    style="
+                                        font-size:45px;
+                                        color:#dc3545;
+                                    ">
+                                </i>
+
+                                <br>
+
+                                <small>
+                                    PDF Document
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <a
+                                href="${pdfUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-sm btn-outline-danger">
+
+                                <i class="fa fa-eye"></i>
+
+                                View PDF
+
+                            </a>
+
+                        </div>
+
+
+                        <div class="mt-1">
+
+                            <small
+                                class="text-success">
+
+                                <i class="fa fa-check-circle"></i>
+
+                                ${escapeHtml(file.name)}
+
+                            </small>
+
+                        </div>
 
                     </div>
-
-                </div>
-
-                <div class="mt-2">
-
-                    <a
-                        href="${pdfUrl}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="btn btn-sm btn-outline-danger">
-
-                        <i class="fa fa-eye"></i>
-
-                        View PDF
-
-                    </a>
-
-                    <small
-                        class="d-block mt-1"
-                        style="color:#28a745;">
-
-                        <i class="fa fa-check-circle"></i>
-
-                        ${escapeHtml(file.name)}
-
-                    </small>
-
-                </div>
-
-            </div>
-        `;
-    }
-}
+                `;
+            }
+        }
 
 
-/*
-|--------------------------------------------------------------------------
-| Escape HTML
-|--------------------------------------------------------------------------
-*/
-function escapeHtml(value)
-{
-    return $('<div>')
-        .text(value)
-        .html();
-}
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER PHOTO PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewDriverPhoto()
+        {
+            const fileInput =
+                document.getElementById(
+                    'driver_photo'
+                );
+
+            const preview =
+                document.getElementById(
+                    'driver-photo-preview'
+                );
 
 
-/*
-|--------------------------------------------------------------------------
-| Driver Photo Preview
-|--------------------------------------------------------------------------
-*/
-function previewImage(inputId, previewId)
-{
-    const fileInput = document.getElementById(inputId);
-    const preview   = document.getElementById(previewId);
+            if (
+                !fileInput ||
+                !preview
+            ) {
+                return;
+            }
 
-    if (!fileInput || !preview) {
-        return;
-    }
 
-    preview.innerHTML = '';
+            preview.innerHTML = '';
 
-    if (!fileInput.files || !fileInput.files[0]) {
-        return;
-    }
 
-    const file = fileInput.files[0];
+            if (
+                !fileInput.files ||
+                !fileInput.files[0]
+            ) {
+                return;
+            }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Allowed Image Types
-    |--------------------------------------------------------------------------
-    */
-    const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/webp'
-    ];
 
-    if (!allowedTypes.includes(file.type)) {
+            const file =
+                fileInput.files[0];
 
-        alert(
-            'Please select a valid JPG, JPEG, PNG or WEBP image.'
+
+            if (
+                !IMAGE_TYPES.includes(
+                    file.type
+                ) &&
+                ![
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp'
+                ].includes(
+                    getFileExtension(file)
+                )
+            ) {
+
+                alert(
+                    'Driver photo must be JPG, JPEG, PNG or WEBP.'
+                );
+
+                resetFile(
+                    fileInput,
+                    preview
+                );
+
+                return;
+            }
+
+
+            if (
+                file.size >
+                DRIVER_PHOTO_MAX_SIZE
+            ) {
+
+                alert(
+                    'Driver photo size must not exceed 2 MB.'
+                );
+
+                resetFile(
+                    fileInput,
+                    preview
+                );
+
+                return;
+            }
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    preview.innerHTML = `
+
+                        <div>
+
+                            <img
+                                src="${event.target.result}"
+                                alt="Driver Photo Preview"
+                                class="img-thumbnail"
+                                style="
+                                    width:120px;
+                                    height:120px;
+                                    object-fit:cover;
+                                    border-radius:10px;
+                                    border:2px solid #28a745;
+                                    box-shadow:0 2px 8px rgba(0,0,0,.15);
+                                    cursor:pointer;
+                                "
+                                onclick="
+                                    window.open(
+                                        this.src,
+                                        '_blank'
+                                    );
+                                "
+                            >
+
+                            <div class="mt-2">
+
+                                <small
+                                    class="text-success">
+
+                                    <i class="fa fa-check-circle"></i>
+
+                                    Driver Photo Selected
+
+                                </small>
+
+                            </div>
+
+                        </div>
+                    `;
+                };
+
+
+            reader.onerror =
+                function () {
+
+                    alert(
+                        'Unable to preview the selected driver photo.'
+                    );
+
+                    resetFile(
+                        fileInput,
+                        preview
+                    );
+                };
+
+
+            reader.readAsDataURL(file);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION INDEX
+        |--------------------------------------------------------------------------
+        */
+
+        let qualificationIndex =
+
+            $('#qualification-wrapper')
+                .find('.qualification-row')
+                .length;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION DOCUMENT PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        function previewQualificationDocument(
+            input
+        )
+        {
+            const row =
+                $(input).closest(
+                    '.qualification-row'
+                );
+
+            const preview =
+                row.find(
+                    '.qualification-document-preview'
+                );
+
+
+            if (
+                !preview.length
+            ) {
+                return;
+            }
+
+
+            preview.html('');
+
+
+            if (
+                !input.files ||
+                !input.files[0]
+            ) {
+                return;
+            }
+
+
+            const file =
+                input.files[0];
+
+
+            if (
+                !DOCUMENT_TYPES.includes(
+                    file.type
+                ) &&
+                ![
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp',
+                    'pdf'
+                ].includes(
+                    getFileExtension(file)
+                )
+            ) {
+
+                alert(
+                    'Qualification document must be JPG, JPEG, PNG, WEBP or PDF.'
+                );
+
+                input.value = '';
+
+                return;
+            }
+
+
+            if (
+                file.size >
+                DOCUMENT_MAX_SIZE
+            ) {
+
+                alert(
+                    'Qualification document size must not exceed 5 MB.'
+                );
+
+                input.value = '';
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | IMAGE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isImageFile(file)
+            ) {
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function (event) {
+
+                        preview.html(`
+
+                            <div>
+
+                                <img
+                                    src="${event.target.result}"
+                                    alt="Qualification Document"
+                                    class="img-thumbnail"
+                                    style="
+                                        width:120px;
+                                        height:90px;
+                                        object-fit:cover;
+                                        border-radius:8px;
+                                        border:2px solid #28a745;
+                                        cursor:pointer;
+                                    "
+                                    onclick="
+                                        window.open(
+                                            this.src,
+                                            '_blank'
+                                        );
+                                    "
+                                >
+
+                                <div class="mt-1">
+
+                                    <small
+                                        class="text-success">
+
+                                        <i class="fa fa-check-circle"></i>
+
+                                        ${escapeHtml(file.name)}
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+                        `);
+                    };
+
+
+                reader.readAsDataURL(file);
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PDF
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isPdfFile(file)
+            ) {
+
+                const pdfUrl =
+                    URL.createObjectURL(file);
+
+
+                preview.html(`
+
+                    <div>
+
+                        <div
+                            style="
+                                width:120px;
+                                height:90px;
+                                border:2px solid #dc3545;
+                                border-radius:8px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:center;
+                                background:#f8f9fa;
+                                cursor:pointer;
+                            "
+                            onclick="
+                                window.open(
+                                    '${pdfUrl}',
+                                    '_blank'
+                                );
+                            "
+                        >
+
+                            <div class="text-center">
+
+                                <i
+                                    class="fa fa-file-pdf-o"
+                                    style="
+                                        font-size:30px;
+                                        color:#dc3545;
+                                    ">
+                                </i>
+
+                                <br>
+
+                                <small>
+                                    PDF
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mt-1">
+
+                            <small
+                                class="text-success">
+
+                                <i class="fa fa-check-circle"></i>
+
+                                ${escapeHtml(file.name)}
+
+                            </small>
+
+                        </div>
+
+
+                        <div class="mt-1">
+
+                            <a
+                                href="${pdfUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-outline-danger btn-xs">
+
+                                <i class="fa fa-eye"></i>
+
+                                View
+
+                            </a>
+
+                        </div>
+
+                    </div>
+                `);
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADD QUALIFICATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#add-qualification').on(
+            'click',
+            function () {
+
+                const index =
+                    qualificationIndex;
+
+
+                const currentYear =
+                    new Date().getFullYear();
+
+
+                const row = `
+
+                    <tr
+                        class="qualification-row"
+                        data-index="${index}">
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][qualification]"
+                                class="form-control"
+                                placeholder="e.g. HSC, Diploma, B.Com">
+
+                        </td>
+
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][institute]"
+                                class="form-control"
+                                placeholder="Institute / Board">
+
+                        </td>
+
+
+                        <td>
+
+                            <input
+                                type="number"
+                                name="qualifications[${index}][passing_year]"
+                                class="form-control"
+                                min="1900"
+                                max="${currentYear}"
+                                placeholder="YYYY">
+
+                        </td>
+
+
+                        <td>
+
+                            <input
+                                type="text"
+                                name="qualifications[${index}][grade]"
+                                class="form-control"
+                                placeholder="72% / A">
+
+                        </td>
+
+
+                        <td>
+
+                            <input
+                                type="file"
+                                name="qualification_documents[${index}]"
+                                class="form-control qualification-document"
+                                accept=".jpg,.jpeg,.png,.webp,.pdf">
+
+                            <small
+                                class="text-muted d-block mt-1">
+
+                                JPG, JPEG, PNG, WEBP or PDF.
+                                Max 5 MB.
+
+                            </small>
+
+
+                            <div
+                                class="qualification-document-preview mt-2">
+                            </div>
+
+                        </td>
+
+
+                        <td class="text-center">
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm remove-qualification"
+                                title="Remove Qualification">
+
+                                <i class="fa fa-trash"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+
+                $('#qualification-wrapper')
+                    .append(row);
+
+
+                qualificationIndex++;
+            }
         );
 
-        fileInput.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | QUALIFICATION DOCUMENT CHANGE
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Maximum Size - 2 MB
-    |--------------------------------------------------------------------------
-    */
-    const maxSize = 2 * 1024 * 1024;
+        $(document).on(
+            'change',
+            '.qualification-document',
+            function () {
 
-    if (file.size > maxSize) {
-
-        alert(
-            'Driver photo size must not exceed 2 MB.'
+                previewQualificationDocument(
+                    this
+                );
+            }
         );
 
-        fileInput.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | REMOVE QUALIFICATION
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Image Reader
-    |--------------------------------------------------------------------------
-    */
-    const reader = new FileReader();
+        $(document).on(
+            'click',
+            '.remove-qualification',
+            function () {
 
-    reader.onload = function(e) {
+                $(this)
+                    .closest(
+                        '.qualification-row'
+                    )
+                    .remove();
 
-        preview.innerHTML = `
-            <div>
-
-                <img
-                    src="${e.target.result}"
-                    alt="Driver Photo Preview"
-                    class="img-thumbnail"
-                    style="
-                        width:120px;
-                        height:120px;
-                        object-fit:cover;
-                        border-radius:10px;
-                        border:2px solid #28a745;
-                        box-shadow:0 2px 8px rgba(0,0,0,.15);
-                    ">
-
-                <div class="mt-2">
-
-                    <small style="color:#28a745;">
-
-                        <i class="fa fa-check-circle"></i>
-
-                        Driver Photo Selected
-
-                    </small>
-
-                </div>
-
-            </div>
-        `;
-    };
-
-    reader.onerror = function() {
-
-        alert(
-            'Unable to preview the selected image.'
+            }
         );
 
-        fileInput.value = '';
 
-        preview.innerHTML = '';
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE INDEX
+        |--------------------------------------------------------------------------
+        */
 
-    };
+        let nomineeIndex =
 
-    reader.readAsDataURL(file);
-}
+            $('#nominee-wrapper')
+                .find('.nominee-row')
+                .length;
 
 
-/*
-|--------------------------------------------------------------------------
-| Mobile Number Validation
-|--------------------------------------------------------------------------
-*/
-$('#mobile, #alternate_mobile').on('input', function(){
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PROFILE IMAGE PREVIEW
+        |--------------------------------------------------------------------------
+        */
 
-    this.value = this.value
-        .replace(/[^0-9]/g, '')
-        .slice(0, 10);
+        function previewNomineeProfile(
+            input
+        )
+        {
+            const row =
+                $(input).closest(
+                    '.nominee-row'
+                );
 
-});
+            const preview =
+                row.find(
+                    '.nominee-profile-preview'
+                );
 
 
-/*
-|--------------------------------------------------------------------------
-| Aadhar Number Validation
-|--------------------------------------------------------------------------
-*/
-$('#aadhar_number').on('input', function(){
+            if (
+                !preview.length
+            ) {
+                return;
+            }
 
-    this.value = this.value
-        .replace(/[^0-9]/g, '')
-        .slice(0, 12);
 
-});
+            preview.html('');
 
 
-/*
-|--------------------------------------------------------------------------
-| Pincode Validation
-|--------------------------------------------------------------------------
-*/
-$('#pincode').on('input', function(){
+            if (
+                !input.files ||
+                !input.files[0]
+            ) {
+                return;
+            }
 
-    this.value = this.value
-        .replace(/[^0-9]/g, '')
-        .slice(0, 6);
 
-});
+            const file =
+                input.files[0];
 
 
-/*
-|--------------------------------------------------------------------------
-| PAN Number Formatting
-|--------------------------------------------------------------------------
-*/
-$('#pan_number').on('input', function(){
+            if (
+                !IMAGE_TYPES.includes(
+                    file.type
+                ) &&
+                ![
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'webp'
+                ].includes(
+                    getFileExtension(file)
+                )
+            ) {
 
-    this.value = this.value
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, '')
-        .slice(0, 10);
+                alert(
+                    'Nominee profile image must be JPG, JPEG, PNG or WEBP.'
+                );
 
-});
+                input.value = '';
 
+                return;
+            }
 
-/*
-|--------------------------------------------------------------------------
-| Licence Number Formatting
-|--------------------------------------------------------------------------
-*/
-$('#license_number').on('input', function(){
 
-    this.value = this.value
-        .toUpperCase()
-        .replace(/\s+/g, ' ')
-        .trim();
+            if (
+                file.size >
+                NOMINEE_PHOTO_MAX_SIZE
+            ) {
 
-});
+                alert(
+                    'Nominee profile image size must not exceed 2 MB.'
+                );
 
+                input.value = '';
 
-/*
-|--------------------------------------------------------------------------
-| Driver Code Formatting
-|--------------------------------------------------------------------------
-*/
-$('#driver_code').on('blur', function(){
+                return;
+            }
 
-    this.value = this.value
-        .trim()
-        .toUpperCase()
-        .replace(/\s+/g, '');
 
-});
+            const reader =
+                new FileReader();
 
 
-/*
-|--------------------------------------------------------------------------
-| First Name Formatting
-|--------------------------------------------------------------------------
-*/
-$('#first_name').on('blur', function(){
+            reader.onload =
+                function (event) {
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                    preview.html(`
 
-});
+                        <div>
 
+                            <img
+                                src="${event.target.result}"
+                                alt="Nominee Profile"
+                                class="img-thumbnail"
+                                style="
+                                    width:75px;
+                                    height:75px;
+                                    object-fit:cover;
+                                    border-radius:50%;
+                                    border:2px solid #28a745;
+                                    cursor:pointer;
+                                "
+                                onclick="
+                                    window.open(
+                                        this.src,
+                                        '_blank'
+                                    );
+                                "
+                            >
 
-/*
-|--------------------------------------------------------------------------
-| Last Name Formatting
-|--------------------------------------------------------------------------
-*/
-$('#last_name').on('blur', function(){
+                            <div class="mt-1">
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                                <small
+                                    class="text-success">
 
-});
+                                    <i class="fa fa-check-circle"></i>
 
+                                    Selected
 
-/*
-|--------------------------------------------------------------------------
-| Father Name Formatting
-|--------------------------------------------------------------------------
-*/
-$('#father_name').on('blur', function(){
+                                </small>
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                            </div>
 
-});
+                        </div>
+                    `);
+                };
 
 
-/*
-|--------------------------------------------------------------------------
-| Licence Issuing Authority Formatting
-|--------------------------------------------------------------------------
-*/
-$('#license_issuing_authority').on('blur', function(){
+            reader.onerror =
+                function () {
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                    alert(
+                        'Unable to preview nominee profile image.'
+                    );
 
-});
+                    input.value = '';
 
+                    preview.html('');
+                };
 
-/*
-|--------------------------------------------------------------------------
-| Country Formatting
-|--------------------------------------------------------------------------
-*/
-$('#country').on('blur', function(){
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+            reader.readAsDataURL(file);
+        }
 
-});
 
+        /*
+        |--------------------------------------------------------------------------
+        | ADD NOMINEE
+        |--------------------------------------------------------------------------
+        */
 
-/*
-|--------------------------------------------------------------------------
-| State Formatting
-|--------------------------------------------------------------------------
-*/
-$('#state').on('blur', function(){
+        $('#add-nominee').on(
+            'click',
+            function () {
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                const index =
+                    nomineeIndex;
 
-});
 
+                const row = `
 
-/*
-|--------------------------------------------------------------------------
-| City Formatting
-|--------------------------------------------------------------------------
-*/
-$('#city').on('blur', function(){
+                    <tr
+                        class="nominee-row"
+                        data-index="${index}">
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                        <td>
 
-});
+                            <input
+                                type="file"
+                                name="nominee_profile_images[${index}]"
+                                class="form-control nominee-profile-image"
+                                accept=".jpg,.jpeg,.png,.webp">
 
+                            <small
+                                class="text-muted d-block mt-1">
 
-/*
-|--------------------------------------------------------------------------
-| Address Formatting
-|--------------------------------------------------------------------------
-*/
-$('#address').on('blur', function(){
+                                JPG, JPEG, PNG or WEBP.
+                                Max 2 MB.
 
-    this.value = this.value
-        .replace(/\s+/g, ' ')
-        .trim();
+                            </small>
 
-});
+                            <div
+                                class="nominee-profile-preview mt-2">
+                            </div>
 
+                        </td>
 
-/*
-|--------------------------------------------------------------------------
-| Email Formatting
-|--------------------------------------------------------------------------
-*/
-$('#email').on('blur', function(){
 
-    this.value = this.value
-        .trim()
-        .toLowerCase();
+                        <td>
 
-});
+                            <input
+                                type="text"
+                                name="nominees[${index}][name]"
+                                class="form-control"
+                                placeholder="Nominee Name">
 
+                        </td>
 
-/*
-|--------------------------------------------------------------------------
-| Date Helper
-|--------------------------------------------------------------------------
-*/
-function parseDate(dateValue)
-{
-    if (!dateValue) {
-        return null;
-    }
 
-    const date = new Date(dateValue + 'T00:00:00');
+                        <td>
 
-    if (isNaN(date.getTime())) {
-        return null;
-    }
+                            <input
+                                type="text"
+                                name="nominees[${index}][relationship]"
+                                class="form-control"
+                                placeholder="Relationship">
 
-    return date;
-}
+                        </td>
 
 
-/*
-|--------------------------------------------------------------------------
-| Get Today
-|--------------------------------------------------------------------------
-*/
-function getToday()
-{
-    const today = new Date();
+                        <td>
 
-    today.setHours(0, 0, 0, 0);
+                            <input
+                                type="date"
+                                name="nominees[${index}][date_of_birth]"
+                                class="form-control">
 
-    return today;
-}
+                        </td>
 
 
-/*
-|--------------------------------------------------------------------------
-| Date of Birth Validation
-|--------------------------------------------------------------------------
-*/
-$('#date_of_birth').on('change', function(){
+                        <td>
 
-    const dob = this.value;
+                            <input
+                                type="text"
+                                name="nominees[${index}][mobile]"
+                                maxlength="10"
+                                inputmode="numeric"
+                                class="form-control nominee-mobile"
+                                placeholder="10 Digit">
 
-    if (!dob) {
-        return;
-    }
+                        </td>
 
-    const selectedDob = parseDate(dob);
-    const today       = getToday();
 
-    if (!selectedDob) {
-        this.value = '';
+                        <td>
 
-        alert(
-            'Please select a valid Date of Birth.'
+                            <input
+                                type="number"
+                                name="nominees[${index}][percentage]"
+                                class="form-control nominee-percentage"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                placeholder="100">
+
+                        </td>
+
+
+                        <td>
+
+                            <textarea
+                                name="nominees[${index}][address]"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Nominee Address"></textarea>
+
+                        </td>
+
+
+                        <td class="text-center">
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm remove-nominee"
+                                title="Remove Nominee">
+
+                                <i class="fa fa-trash"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+                `;
+
+
+                $('#nominee-wrapper')
+                    .append(row);
+
+
+                nomineeIndex++;
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOB Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedDob > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PROFILE IMAGE CHANGE
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Date of Birth cannot be a future date.'
+        $(document).on(
+            'change',
+            '.nominee-profile-image',
+            function () {
+
+                previewNomineeProfile(
+                    this
+                );
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | REMOVE NOMINEE
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Validate Existing Joining Date
-    |--------------------------------------------------------------------------
-    */
-    const joiningDate = $('#joining_date').val();
+        $(document).on(
+            'click',
+            '.remove-nominee',
+            function () {
 
-    if (joiningDate) {
+                $(this)
+                    .closest(
+                        '.nominee-row'
+                    )
+                    .remove();
 
-        const selectedJoiningDate = parseDate(joiningDate);
-
-        if (selectedJoiningDate && selectedJoiningDate < selectedDob) {
-
-            alert(
-                'Date of Birth cannot be after Joining Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Joining Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#joining_date').on('change', function(){
-
-    const joiningDate = this.value;
-
-    if (!joiningDate) {
-        return;
-    }
-
-    const selectedJoiningDate = parseDate(joiningDate);
-    const today               = getToday();
-
-    if (!selectedJoiningDate) {
-
-        this.value = '';
-
-        alert(
-            'Please select a valid Joining Date.'
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedJoiningDate > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE MOBILE VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Joining Date cannot be a future date.'
+        $(document).on(
+            'input',
+            '.nominee-mobile',
+            function () {
+
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            10
+                        );
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE PERCENTAGE VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Cannot Be Before DOB
-    |--------------------------------------------------------------------------
-    */
-    const dob = $('#date_of_birth').val();
+        $(document).on(
+            'input',
+            '.nominee-percentage',
+            function () {
 
-    if (dob) {
-
-        const selectedDob = parseDate(dob);
-
-        if (selectedDob && selectedJoiningDate < selectedDob) {
-
-            alert(
-                'Joining Date cannot be before Date of Birth.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Validate Existing Resignation Date
-    |--------------------------------------------------------------------------
-    */
-    const resignationDate = $('#resignation_date').val();
-
-    if (resignationDate) {
-
-        const selectedResignationDate = parseDate(resignationDate);
-
-        if (
-            selectedResignationDate &&
-            selectedResignationDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Joining Date cannot be after Resignation Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Validate Existing Last Working Date
-    |--------------------------------------------------------------------------
-    */
-    const lastWorkingDate = $('#last_working_date').val();
-
-    if (lastWorkingDate) {
-
-        const selectedLastWorkingDate = parseDate(lastWorkingDate);
-
-        if (
-            selectedLastWorkingDate &&
-            selectedLastWorkingDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Joining Date cannot be after Last Working Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Validate Existing Termination Date
-    |--------------------------------------------------------------------------
-    */
-    const terminationDate = $('#termination_date').val();
-
-    if (terminationDate) {
-
-        const selectedTerminationDate = parseDate(terminationDate);
-
-        if (
-            selectedTerminationDate &&
-            selectedTerminationDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Joining Date cannot be after Termination Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
+                let value =
+                    parseFloat(
+                        this.value
+                    );
 
 
-/*
-|--------------------------------------------------------------------------
-| Resignation Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#resignation_date').on('change', function(){
+                if (
+                    isNaN(value)
+                ) {
+                    return;
+                }
 
-    const resignationDate = this.value;
 
-    if (!resignationDate) {
-        return;
-    }
+                if (
+                    value < 0
+                ) {
+                    value = 0;
+                }
 
-    const selectedResignationDate = parseDate(resignationDate);
-    const today                  = getToday();
 
-    if (!selectedResignationDate) {
+                if (
+                    value > 100
+                ) {
+                    value = 100;
+                }
 
-        this.value = '';
 
-        alert(
-            'Please select a valid Resignation Date.'
+                this.value =
+                    value;
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Resignation Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedResignationDate > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | BANK IFSC FORMATTING
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Resignation Date cannot be a future date.'
+        $(document).on(
+            'input',
+            '#bank_ifsc_code',
+            function () {
+
+                this.value =
+                    this.value
+                        .toUpperCase()
+                        .replace(
+                            /[^A-Z0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            11
+                        );
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | BANK ACCOUNT NUMBER
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Check
-    |--------------------------------------------------------------------------
-    */
-    const joiningDate = $('#joining_date').val();
+        $(document).on(
+            'input',
+            '#bank_account_number',
+            function () {
 
-    if (joiningDate) {
-
-        const selectedJoiningDate = parseDate(joiningDate);
-
-        if (
-            selectedJoiningDate &&
-            selectedResignationDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Resignation Date cannot be before Joining Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Last Working Date Check
-    |--------------------------------------------------------------------------
-    */
-    const lastWorkingDate = $('#last_working_date').val();
-
-    if (lastWorkingDate) {
-
-        const selectedLastWorkingDate = parseDate(lastWorkingDate);
-
-        if (
-            selectedLastWorkingDate &&
-            selectedResignationDate > selectedLastWorkingDate
-        ) {
-
-            alert(
-                'Resignation Date cannot be after Last Working Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Termination Date Check
-    |--------------------------------------------------------------------------
-    */
-    const terminationDate = $('#termination_date').val();
-
-    if (terminationDate) {
-
-        const selectedTerminationDate = parseDate(terminationDate);
-
-        if (
-            selectedTerminationDate &&
-            selectedResignationDate > selectedTerminationDate
-        ) {
-
-            alert(
-                'Resignation Date cannot be after Termination Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Last Working Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#last_working_date').on('change', function(){
-
-    const lastWorkingDate = this.value;
-
-    if (!lastWorkingDate) {
-        return;
-    }
-
-    const selectedLastWorkingDate = parseDate(lastWorkingDate);
-    const today                  = getToday();
-
-    if (!selectedLastWorkingDate) {
-
-        this.value = '';
-
-        alert(
-            'Please select a valid Last Working Date.'
+                this.value =
+                    this.value
+                        .replace(
+                            /[^0-9]/g,
+                            ''
+                        )
+                        .slice(
+                            0,
+                            50
+                        );
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Last Working Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedLastWorkingDate > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | BANK ACCOUNT HOLDER
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Last Working Date cannot be a future date.'
+        $(document).on(
+            'blur',
+            '#bank_account_holder_name',
+            function () {
+
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | BANK NAME
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Check
-    |--------------------------------------------------------------------------
-    */
-    const joiningDate = $('#joining_date').val();
+        $(document).on(
+            'blur',
+            '#bank_name',
+            function () {
 
-    if (joiningDate) {
-
-        const selectedJoiningDate = parseDate(joiningDate);
-
-        if (
-            selectedJoiningDate &&
-            selectedLastWorkingDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Last Working Date cannot be before Joining Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resignation Date Check
-    |--------------------------------------------------------------------------
-    */
-    const resignationDate = $('#resignation_date').val();
-
-    if (resignationDate) {
-
-        const selectedResignationDate = parseDate(resignationDate);
-
-        if (
-            selectedResignationDate &&
-            selectedLastWorkingDate < selectedResignationDate
-        ) {
-
-            alert(
-                'Last Working Date cannot be before Resignation Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Termination Date Check
-    |--------------------------------------------------------------------------
-    */
-    const terminationDate = $('#termination_date').val();
-
-    if (terminationDate) {
-
-        const selectedTerminationDate = parseDate(terminationDate);
-
-        if (
-            selectedTerminationDate &&
-            selectedLastWorkingDate > selectedTerminationDate
-        ) {
-
-            alert(
-                'Last Working Date cannot be after Termination Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Termination Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#termination_date').on('change', function(){
-
-    const terminationDate = this.value;
-
-    if (!terminationDate) {
-        return;
-    }
-
-    const selectedTerminationDate = parseDate(terminationDate);
-    const today                   = getToday();
-
-    if (!selectedTerminationDate) {
-
-        this.value = '';
-
-        alert(
-            'Please select a valid Termination Date.'
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Termination Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedTerminationDate > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | BANK BRANCH
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Termination Date cannot be a future date.'
+        $(document).on(
+            'blur',
+            '#bank_branch_name',
+            function () {
+
+                this.value =
+                    this.value
+                        .replace(
+                            /\s+/g,
+                            ' '
+                        )
+                        .trim();
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | BANK UPI
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Check
-    |--------------------------------------------------------------------------
-    */
-    const joiningDate = $('#joining_date').val();
+        $(document).on(
+            'blur',
+            '#bank_upi_id',
+            function () {
 
-    if (joiningDate) {
-
-        const selectedJoiningDate = parseDate(joiningDate);
-
-        if (
-            selectedJoiningDate &&
-            selectedTerminationDate < selectedJoiningDate
-        ) {
-
-            alert(
-                'Termination Date cannot be before Joining Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Resignation Date Check
-    |--------------------------------------------------------------------------
-    */
-    const resignationDate = $('#resignation_date').val();
-
-    if (resignationDate) {
-
-        const selectedResignationDate = parseDate(resignationDate);
-
-        if (
-            selectedResignationDate &&
-            selectedTerminationDate < selectedResignationDate
-        ) {
-
-            alert(
-                'Termination Date cannot be before Resignation Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Last Working Date Check
-    |--------------------------------------------------------------------------
-    */
-    const lastWorkingDate = $('#last_working_date').val();
-
-    if (lastWorkingDate) {
-
-        const selectedLastWorkingDate = parseDate(lastWorkingDate);
-
-        if (
-            selectedTerminationDate < selectedLastWorkingDate
-        ) {
-
-            alert(
-                'Termination Date cannot be before Last Working Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Licence Issue Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#license_issue_date').on('change', function(){
-
-    const issueDate  = this.value;
-    const expiryDate = $('#license_expiry_date').val();
-
-    if (!issueDate) {
-        return;
-    }
-
-    const selectedIssueDate = parseDate(issueDate);
-    const today             = getToday();
-
-    if (!selectedIssueDate) {
-
-        this.value = '';
-
-        alert(
-            'Please select a valid Licence Issue Date.'
+                this.value =
+                    this.value
+                        .trim()
+                        .toLowerCase();
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Issue Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (selectedIssueDate > today) {
+        /*
+        |--------------------------------------------------------------------------
+        | MOBILE NUMBER
+        |--------------------------------------------------------------------------
+        */
 
-        alert(
-            'Licence Issue Date cannot be a future date.'
+        $('#mobile, #alternate_mobile')
+            .on(
+                'input',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                10
+                            );
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AADHAAR NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#aadhar_number')
+            .on(
+                'input',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                12
+                            );
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PINCODE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#pincode')
+            .on(
+                'input',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /[^0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                6
+                            );
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAN NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#pan_number')
+            .on(
+                'input',
+                function () {
+
+                    this.value =
+                        this.value
+                            .toUpperCase()
+                            .replace(
+                                /[^A-Z0-9]/g,
+                                ''
+                            )
+                            .slice(
+                                0,
+                                10
+                            );
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $('#license_number')
+            .on(
+                'input',
+                function () {
+
+                    this.value =
+                        this.value
+                            .toUpperCase()
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
+                            .trim();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER CODE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#driver_code')
+            .on(
+                'blur',
+                function () {
+
+                    this.value =
+                        this.value
+                            .trim()
+                            .toUpperCase()
+                            .replace(
+                                /\s+/g,
+                                ''
+                            );
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NAME FORMATTING
+        |--------------------------------------------------------------------------
+        */
+
+        $('#first_name, #last_name, #father_name')
+            .on(
+                'blur',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
+                            .trim();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE AUTHORITY
+        |--------------------------------------------------------------------------
+        */
+
+        $('#license_issuing_authority')
+            .on(
+                'blur',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
+                            .trim();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | COUNTRY / STATE / CITY / ADDRESS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#country, #state, #city, #address')
+            .on(
+                'blur',
+                function () {
+
+                    this.value =
+                        this.value
+                            .replace(
+                                /\s+/g,
+                                ' '
+                            )
+                            .trim();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMAIL
+        |--------------------------------------------------------------------------
+        */
+
+        $('#email')
+            .on(
+                'blur',
+                function () {
+
+                    this.value =
+                        this.value
+                            .trim()
+                            .toLowerCase();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER PHOTO EVENT
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'change',
+            '#driver_photo',
+            function () {
+
+                previewDriverPhoto();
+            }
         );
 
-        this.value = '';
 
-        return;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVING LICENSE DOCUMENT EVENT
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Issue Date Cannot Be After Expiry
-    |--------------------------------------------------------------------------
-    */
-    if (expiryDate) {
+        $(document).on(
+            'change',
+            '#driving_license_document',
+            function () {
 
-        const selectedExpiryDate = parseDate(expiryDate);
-
-        if (
-            selectedExpiryDate &&
-            selectedIssueDate > selectedExpiryDate
-        ) {
-
-            alert(
-                'Licence Issue Date cannot be after Licence Expiry Date.'
-            );
-
-            this.value = '';
-
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Licence Expiry Date Validation
-|--------------------------------------------------------------------------
-*/
-$('#license_expiry_date').on('change', function(){
-
-    const expiryDate = this.value;
-    const issueDate  = $('#license_issue_date').val();
-
-    if (!expiryDate) {
-        return;
-    }
-
-    const selectedExpiryDate = parseDate(expiryDate);
-
-    if (!selectedExpiryDate) {
-
-        this.value = '';
-
-        alert(
-            'Please select a valid Licence Expiry Date.'
+                previewFile(
+                    'driving_license_document',
+                    'driving-license-document-preview',
+                    DOCUMENT_MAX_SIZE,
+                    'Driving Licence Document'
+                );
+            }
         );
 
-        return;
-    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Expiry Cannot Be Before Issue
-    |--------------------------------------------------------------------------
-    */
-    if (issueDate) {
+        /*
+        |--------------------------------------------------------------------------
+        | AADHAAR DOCUMENT EVENT
+        |--------------------------------------------------------------------------
+        */
 
-        const selectedIssueDate = parseDate(issueDate);
+        $(document).on(
+            'change',
+            '#aadhar_document',
+            function () {
 
-        if (
-            selectedIssueDate &&
-            selectedExpiryDate < selectedIssueDate
-        ) {
-
-            alert(
-                'Licence Expiry Date cannot be before Licence Issue Date.'
-            );
-
-            this.value = '';
-
-            return;
-        }
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Driver Photo - Validation + Preview
-|--------------------------------------------------------------------------
-*/
-$('#driver_photo').on('change', function(){
-
-    previewImage(
-        'driver_photo',
-        'driver-photo-preview'
-    );
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Driving Licence Document - Preview
-|--------------------------------------------------------------------------
-*/
-$('#driving_license_document').on('change', function(){
-
-    previewFile(
-        'driving_license_document',
-        'driving-license-document-preview'
-    );
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Aadhar Document - Preview
-|--------------------------------------------------------------------------
-*/
-$('#aadhar_document').on('change', function(){
-
-    previewFile(
-        'aadhar_document',
-        'aadhar-document-preview'
-    );
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| PAN Document - Preview
-|--------------------------------------------------------------------------
-*/
-$('#pan_document').on('change', function(){
-
-    previewFile(
-        'pan_document',
-        'pan-document-preview'
-    );
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Validate Employment Dates Before Submit
-|--------------------------------------------------------------------------
-*/
-function validateEmploymentDates()
-{
-    const dob            = $('#date_of_birth').val();
-    const joiningDate    = $('#joining_date').val();
-    const resignationDate = $('#resignation_date').val();
-    const lastWorkingDate = $('#last_working_date').val();
-    const terminationDate = $('#termination_date').val();
-
-    const today = getToday();
-
-    const dobDate = parseDate(dob);
-    const joiningDateObj = parseDate(joiningDate);
-    const resignationDateObj = parseDate(resignationDate);
-    const lastWorkingDateObj = parseDate(lastWorkingDate);
-    const terminationDateObj = parseDate(terminationDate);
-
-    /*
-    |--------------------------------------------------------------------------
-    | DOB -> Joining Date
-    |--------------------------------------------------------------------------
-    */
-    if (
-        dobDate &&
-        joiningDateObj &&
-        joiningDateObj < dobDate
-    ) {
-
-        alert(
-            'Joining Date cannot be before Date of Birth.'
+                previewFile(
+                    'aadhar_document',
+                    'aadhar-document-preview',
+                    DOCUMENT_MAX_SIZE,
+                    'Aadhaar Document'
+                );
+            }
         );
 
-        $('#joining_date').focus();
 
-        return false;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | PAN DOCUMENT EVENT
+        |--------------------------------------------------------------------------
+        */
 
+        $(document).on(
+            'change',
+            '#pan_document',
+            function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Joining Date Cannot Be Future
-    |--------------------------------------------------------------------------
-    */
-    if (
-        joiningDateObj &&
-        joiningDateObj > today
-    ) {
-
-        alert(
-            'Joining Date cannot be a future date.'
+                previewFile(
+                    'pan_document',
+                    'pan-document-preview',
+                    DOCUMENT_MAX_SIZE,
+                    'PAN Document'
+                );
+            }
         );
 
-        $('#joining_date').focus();
 
-        return false;
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | DATE HELPER
+        |--------------------------------------------------------------------------
+        */
+
+        function parseDate(
+            dateValue
+        )
+        {
+            if (!dateValue) {
+                return null;
+            }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Resignation Date
-    |--------------------------------------------------------------------------
-    */
-    if (resignationDateObj) {
+            const date =
+                new Date(
+                    dateValue + 'T00:00:00'
+                );
 
-        if (resignationDateObj > today) {
 
-            alert(
-                'Resignation Date cannot be a future date.'
-            );
+            if (
+                isNaN(
+                    date.getTime()
+                )
+            ) {
+                return null;
+            }
 
-            $('#resignation_date').focus();
 
-            return false;
+            return date;
         }
 
-        if (
-            joiningDateObj &&
-            resignationDateObj < joiningDateObj
-        ) {
 
-            alert(
-                'Resignation Date cannot be before Joining Date.'
+        /*
+        |--------------------------------------------------------------------------
+        | TODAY
+        |--------------------------------------------------------------------------
+        */
+
+        function getToday()
+        {
+            const today =
+                new Date();
+
+
+            today.setHours(
+                0,
+                0,
+                0,
+                0
             );
 
-            $('#resignation_date').focus();
 
-            return false;
+            return today;
         }
 
-    }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE OF BIRTH VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#date_of_birth')
+            .on(
+                'change',
+                function () {
+
+                    if (!this.value) {
+                        return;
+                    }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Last Working Date
-    |--------------------------------------------------------------------------
-    */
-    if (lastWorkingDateObj) {
+                    const dob =
+                        parseDate(
+                            this.value
+                        );
 
-        if (lastWorkingDateObj > today) {
 
-            alert(
-                'Last Working Date cannot be a future date.'
+                    const today =
+                        getToday();
+
+
+                    if (!dob) {
+
+                        this.value = '';
+
+                        alert(
+                            'Please select a valid Date of Birth.'
+                        );
+
+                        return;
+                    }
+
+
+                    if (
+                        dob > today
+                    ) {
+
+                        this.value = '';
+
+                        alert(
+                            'Date of Birth cannot be a future date.'
+                        );
+
+                        return;
+                    }
+
+
+                    const joiningDate =
+                        parseDate(
+                            $('#joining_date').val()
+                        );
+
+
+                    if (
+                        joiningDate &&
+                        joiningDate < dob
+                    ) {
+
+                        this.value = '';
+
+                        alert(
+                            'Date of Birth cannot be after Joining Date.'
+                        );
+                    }
+                }
             );
 
-            $('#last_working_date').focus();
 
-            return false;
+        /*
+        |--------------------------------------------------------------------------
+        | JOINING DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#joining_date')
+            .on(
+                'change',
+                function () {
+
+                    validateEmploymentDates();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESIGNATION DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#resignation_date')
+            .on(
+                'change',
+                function () {
+
+                    validateEmploymentDates();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LAST WORKING DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#last_working_date')
+            .on(
+                'change',
+                function () {
+
+                    validateEmploymentDates();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | TERMINATION DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        $('#termination_date')
+            .on(
+                'change',
+                function () {
+
+                    validateEmploymentDates();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMPLOYMENT DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        function validateEmploymentDates()
+        {
+            const dob =
+                parseDate(
+                    $('#date_of_birth').val()
+                );
+
+
+            const joining =
+                parseDate(
+                    $('#joining_date').val()
+                );
+
+
+            const resignation =
+                parseDate(
+                    $('#resignation_date').val()
+                );
+
+
+            const lastWorking =
+                parseDate(
+                    $('#last_working_date').val()
+                );
+
+
+            const termination =
+                parseDate(
+                    $('#termination_date').val()
+                );
+
+
+            const today =
+                getToday();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DOB -> Joining
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                dob &&
+                joining &&
+                joining < dob
+            ) {
+
+                alert(
+                    'Joining Date cannot be before Date of Birth.'
+                );
+
+                $('#joining_date').focus();
+
+                return false;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Joining Date
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                joining &&
+                joining > today
+            ) {
+
+                alert(
+                    'Joining Date cannot be a future date.'
+                );
+
+                $('#joining_date')
+                    .focus();
+
+                return false;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Resignation Date
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                resignation
+            ) {
+
+                if (
+                    resignation > today
+                ) {
+
+                    alert(
+                        'Resignation Date cannot be a future date.'
+                    );
+
+                    $('#resignation_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    joining &&
+                    resignation < joining
+                ) {
+
+                    alert(
+                        'Resignation Date cannot be before Joining Date.'
+                    );
+
+                    $('#resignation_date')
+                        .focus();
+
+                    return false;
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Last Working Date
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                lastWorking
+            ) {
+
+                if (
+                    lastWorking > today
+                ) {
+
+                    alert(
+                        'Last Working Date cannot be a future date.'
+                    );
+
+                    $('#last_working_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    joining &&
+                    lastWorking < joining
+                ) {
+
+                    alert(
+                        'Last Working Date cannot be before Joining Date.'
+                    );
+
+                    $('#last_working_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    resignation &&
+                    lastWorking < resignation
+                ) {
+
+                    alert(
+                        'Last Working Date cannot be before Resignation Date.'
+                    );
+
+                    $('#last_working_date')
+                        .focus();
+
+                    return false;
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Termination Date
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                termination
+            ) {
+
+                if (
+                    termination > today
+                ) {
+
+                    alert(
+                        'Termination Date cannot be a future date.'
+                    );
+
+                    $('#termination_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    joining &&
+                    termination < joining
+                ) {
+
+                    alert(
+                        'Termination Date cannot be before Joining Date.'
+                    );
+
+                    $('#termination_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    resignation &&
+                    termination < resignation
+                ) {
+
+                    alert(
+                        'Termination Date cannot be before Resignation Date.'
+                    );
+
+                    $('#termination_date')
+                        .focus();
+
+                    return false;
+                }
+
+
+                if (
+                    lastWorking &&
+                    termination < lastWorking
+                ) {
+
+                    alert(
+                        'Termination Date cannot be before Last Working Date.'
+                    );
+
+                    $('#termination_date')
+                        .focus();
+
+                    return false;
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXIT EVENT CHECK
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                resignation &&
+                termination
+            ) {
+
+                alert(
+                    'A driver cannot have both Resignation Date and Termination Date.'
+                );
+
+                $('#termination_date')
+                    .focus();
+
+                return false;
+            }
+
+
+            return true;
         }
 
-        if (
-            joiningDateObj &&
-            lastWorkingDateObj < joiningDateObj
-        ) {
 
-            alert(
-                'Last Working Date cannot be before Joining Date.'
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE ISSUE DATE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#license_issue_date')
+            .on(
+                'change',
+                function () {
+
+                    validateLicenseDates();
+                }
             );
 
-            $('#last_working_date').focus();
 
-            return false;
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE EXPIRY DATE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#license_expiry_date')
+            .on(
+                'change',
+                function () {
+
+                    validateLicenseDates();
+                }
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LICENSE DATE VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        function validateLicenseDates()
+        {
+            const issueDate =
+                parseDate(
+                    $('#license_issue_date').val()
+                );
+
+
+            const expiryDate =
+                parseDate(
+                    $('#license_expiry_date').val()
+                );
+
+
+            const today =
+                getToday();
+
+
+            if (
+                issueDate &&
+                issueDate > today
+            ) {
+
+                alert(
+                    'Licence Issue Date cannot be a future date.'
+                );
+
+                $('#license_issue_date')
+                    .val('')
+                    .focus();
+
+                return false;
+            }
+
+
+            if (
+                issueDate &&
+                expiryDate &&
+                expiryDate < issueDate
+            ) {
+
+                alert(
+                    'Licence Expiry Date cannot be before Licence Issue Date.'
+                );
+
+                $('#license_expiry_date')
+                    .val('')
+                    .focus();
+
+                return false;
+            }
+
+
+            return true;
         }
 
-        if (
-            resignationDateObj &&
-            lastWorkingDateObj < resignationDateObj
-        ) {
 
-            alert(
-                'Last Working Date cannot be before Resignation Date.'
-            );
+        /*
+        |--------------------------------------------------------------------------
+        | NOMINEE TOTAL PERCENTAGE
+        |--------------------------------------------------------------------------
+        */
 
-            $('#last_working_date').focus();
+        function validateNomineePercentages()
+        {
+            let total = 0;
 
-            return false;
+
+            $('.nominee-percentage')
+                .each(
+                    function () {
+
+                        const value =
+                            parseFloat(
+                                $(this).val()
+                            );
+
+
+                        if (
+                            !isNaN(value)
+                        ) {
+
+                            total += value;
+                        }
+                    }
+                );
+
+
+            if (
+                total > 100
+            ) {
+
+                alert(
+                    'Total nominee percentage cannot exceed 100%.'
+                );
+
+                return false;
+            }
+
+
+            return true;
         }
 
-    }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAN VALIDATION
+        |--------------------------------------------------------------------------
+        */
+
+        function validatePan()
+        {
+            const pan =
+                $('#pan_number')
+                    .val()
+                    .trim()
+                    .toUpperCase();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Termination Date
-    |--------------------------------------------------------------------------
-    */
-    if (terminationDateObj) {
+            if (
+                !pan
+            ) {
+                return true;
+            }
 
-        if (terminationDateObj > today) {
 
-            alert(
-                'Termination Date cannot be a future date.'
-            );
+            if (
+                !PAN_REGEX.test(pan)
+            ) {
 
-            $('#termination_date').focus();
+                alert(
+                    'Please enter a valid PAN number.'
+                );
 
-            return false;
+                $('#pan_number')
+                    .focus();
+
+                return false;
+            }
+
+
+            return true;
         }
 
-        if (
-            joiningDateObj &&
-            terminationDateObj < joiningDateObj
-        ) {
 
-            alert(
-                'Termination Date cannot be before Joining Date.'
+        /*
+        |--------------------------------------------------------------------------
+        | FORM SUBMIT
+        |--------------------------------------------------------------------------
+        */
+
+        $('form')
+            .on(
+                'submit',
+                function (event) {
+
+                    const form =
+                        this;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Employment Date Validation
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        !validateEmploymentDates()
+                    ) {
+
+                        event.preventDefault();
+
+                        return false;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | License Date Validation
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        !validateLicenseDates()
+                    ) {
+
+                        event.preventDefault();
+
+                        return false;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Nominee Percentage Validation
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        !validateNomineePercentages()
+                    ) {
+
+                        event.preventDefault();
+
+                        return false;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PAN Validation
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        !validatePan()
+                    ) {
+
+                        event.preventDefault();
+
+                        return false;
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DRIVER CODE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#driver_code')
+                        .val(
+                            $('#driver_code')
+                                .val()
+                                .trim()
+                                .toUpperCase()
+                                .replace(
+                                    /\s+/g,
+                                    ''
+                                )
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NAMES
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $(
+                        '#first_name, #last_name, #father_name'
+                    ).each(
+                        function () {
+
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MOBILE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#mobile, #alternate_mobile')
+                        .each(
+                            function () {
+
+                                $(this)
+                                    .val(
+                                        $(this)
+                                            .val()
+                                            .replace(
+                                                /[^0-9]/g,
+                                                ''
+                                            )
+                                            .slice(
+                                                0,
+                                                10
+                                            )
+                                    );
+                            }
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | EMAIL
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#email')
+                        .val(
+                            $('#email')
+                                .val()
+                                .trim()
+                                .toLowerCase()
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | ADDRESS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $(
+                        '#country, #state, #city, #address'
+                    ).each(
+                        function () {
+
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PINCODE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#pincode')
+                        .val(
+                            $('#pincode')
+                                .val()
+                                .replace(
+                                    /[^0-9]/g,
+                                    ''
+                                )
+                                .slice(
+                                    0,
+                                    6
+                                )
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | LICENSE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#license_number')
+                        .val(
+                            $('#license_number')
+                                .val()
+                                .trim()
+                                .toUpperCase()
+                                .replace(
+                                    /\s+/g,
+                                    ' '
+                                )
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | LICENSE AUTHORITY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#license_issuing_authority')
+                        .val(
+                            $('#license_issuing_authority')
+                                .val()
+                                .replace(
+                                    /\s+/g,
+                                    ' '
+                                )
+                                .trim()
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | AADHAAR
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#aadhar_number')
+                        .val(
+                            $('#aadhar_number')
+                                .val()
+                                .replace(
+                                    /[^0-9]/g,
+                                    ''
+                                )
+                                .slice(
+                                    0,
+                                    12
+                                )
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | PAN
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#pan_number')
+                        .val(
+                            $('#pan_number')
+                                .val()
+                                .toUpperCase()
+                                .replace(
+                                    /[^A-Z0-9]/g,
+                                    ''
+                                )
+                                .slice(
+                                    0,
+                                    10
+                                )
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | QUALIFICATION FIELDS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $(
+                        '#qualification-wrapper input[type="text"]'
+                    ).each(
+                        function () {
+
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NOMINEE FIELDS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $(
+                        '.nominee-row input[type="text"], .nominee-row textarea'
+                    ).each(
+                        function () {
+
+                            if (
+                                $(this).hasClass(
+                                    'nominee-mobile'
+                                )
+                            ) {
+                                return;
+                            }
+
+
+                            $(this)
+                                .val(
+                                    $(this)
+                                        .val()
+                                        .replace(
+                                            /\s+/g,
+                                            ' '
+                                        )
+                                        .trim()
+                                );
+                        }
+                    );
+
+
+                    $('.nominee-mobile')
+                        .each(
+                            function () {
+
+                                $(this)
+                                    .val(
+                                        $(this)
+                                            .val()
+                                            .replace(
+                                                /[^0-9]/g,
+                                                ''
+                                            )
+                                            .slice(
+                                                0,
+                                                10
+                                            )
+                                    );
+                            }
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | BANK DETAILS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $('#bank_account_holder_name, #bank_name, #bank_branch_name')
+                        .each(
+                            function () {
+
+                                $(this)
+                                    .val(
+                                        $(this)
+                                            .val()
+                                            .replace(
+                                                /\s+/g,
+                                                ' '
+                                            )
+                                            .trim()
+                                    );
+                            }
+                        );
+
+
+                    $('#bank_ifsc_code')
+                        .val(
+                            $('#bank_ifsc_code')
+                                .val()
+                                .toUpperCase()
+                                .replace(
+                                    /[^A-Z0-9]/g,
+                                    ''
+                                )
+                                .slice(
+                                    0,
+                                    11
+                                )
+                        );
+
+
+                    $('#bank_account_number')
+                        .val(
+                            $('#bank_account_number')
+                                .val()
+                                .replace(
+                                    /[^0-9]/g,
+                                    ''
+                                )
+                                .slice(
+                                    0,
+                                    50
+                                )
+                        );
+
+
+                    $('#bank_upi_id')
+                        .val(
+                            $('#bank_upi_id')
+                                .val()
+                                .trim()
+                                .toLowerCase()
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DOUBLE SUBMIT PROTECTION
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const submitButton =
+                        $(form)
+                            .find(
+                                'button[type="submit"]'
+                            );
+
+
+                    if (
+                        submitButton.length &&
+                        !submitButton.data(
+                            'submitted'
+                        )
+                    ) {
+
+                        submitButton
+                            .data(
+                                'submitted',
+                                true
+                            )
+                            .prop(
+                                'disabled',
+                                true
+                            )
+                            .html(
+                                '<i class="fa fa-spinner fa-spin"></i> Saving Driver...'
+                            );
+                    }
+                }
             );
 
-            $('#termination_date').focus();
 
-            return false;
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT READY
+        |--------------------------------------------------------------------------
+        */
 
-        if (
-            resignationDateObj &&
-            terminationDateObj < resignationDateObj
-        ) {
+        $(document)
+            .ready(
+                function () {
 
-            alert(
-                'Termination Date cannot be before Resignation Date.'
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DEFAULT COUNTRY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (
+                        $('#country').length &&
+                        $('#country').val() === ''
+                    ) {
+
+                        $('#country')
+                            .val(
+                                'India'
+                            );
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DATE MAXIMUMS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const todayString =
+                        new Date()
+                            .toISOString()
+                            .split('T')[0];
+
+
+                    $('#date_of_birth')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#joining_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#resignation_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#last_working_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#termination_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('#license_issue_date')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+
+
+                    $('.nominee-row input[type="date"]')
+                        .attr(
+                            'max',
+                            todayString
+                        );
+                }
             );
 
-            $('#termination_date').focus();
-
-            return false;
-        }
-
-        if (
-            lastWorkingDateObj &&
-            terminationDateObj < lastWorkingDateObj
-        ) {
-
-            alert(
-                'Termination Date cannot be before Last Working Date.'
-            );
-
-            $('#termination_date').focus();
-
-            return false;
-        }
-
-    }
-
-
-    return true;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| Trim Text Inputs Before Submit
-|--------------------------------------------------------------------------
-*/
-$('form').on('submit', function(e){
-
-    /*
-    |--------------------------------------------------------------------------
-    | Employment Date Validation
-    |--------------------------------------------------------------------------
-    */
-    if (!validateEmploymentDates()) {
-
-        e.preventDefault();
-
-        return false;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Driver Basic Information
-    |--------------------------------------------------------------------------
-    */
-    $('#driver_code').val(
-        $('#driver_code').val()
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, '')
-    );
-
-    $('#first_name').val(
-        $('#first_name').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-    $('#last_name').val(
-        $('#last_name').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-    $('#father_name').val(
-        $('#father_name').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Contact Information
-    |--------------------------------------------------------------------------
-    */
-    $('#mobile').val(
-        $('#mobile').val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10)
-    );
-
-    $('#alternate_mobile').val(
-        $('#alternate_mobile').val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10)
-    );
-
-    $('#email').val(
-        $('#email').val()
-            .trim()
-            .toLowerCase()
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Address Information
-    |--------------------------------------------------------------------------
-    */
-    $('#country').val(
-        $('#country').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-    $('#state').val(
-        $('#state').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-    $('#city').val(
-        $('#city').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-    $('#pincode').val(
-        $('#pincode').val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 6)
-    );
-
-    $('#address').val(
-        $('#address').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Licence Information
-    |--------------------------------------------------------------------------
-    */
-    $('#license_number').val(
-        $('#license_number').val()
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, ' ')
-    );
-
-    $('#license_issuing_authority').val(
-        $('#license_issuing_authority').val()
-            .replace(/\s+/g, ' ')
-            .trim()
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Identity Documents
-    |--------------------------------------------------------------------------
-    */
-    $('#aadhar_number').val(
-        $('#aadhar_number').val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 12)
-    );
-
-    $('#pan_number').val(
-        $('#pan_number').val()
-            .toUpperCase()
-            .replace(/[^A-Z0-9]/g, '')
-            .slice(0, 10)
-    );
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Prevent Double Form Submission
-|--------------------------------------------------------------------------
-*/
-$('form').on('submit', function(e){
-
-    /*
-    |--------------------------------------------------------------------------
-    | Do Not Disable Button If Validation Failed
-    |--------------------------------------------------------------------------
-    */
-    if (e.isDefaultPrevented()) {
-        return;
-    }
-
-    const form = this;
-
-    const submitButton = $(form)
-        .find('button[type="submit"]');
-
-    if (submitButton.length) {
-
-        submitButton
-            .prop('disabled', true)
-            .html(
-                '<i class="fa fa-spinner fa-spin"></i> Saving Driver...'
-            );
-
-    }
-
-});
-
-
-/*
-|--------------------------------------------------------------------------
-| Document Ready
-|--------------------------------------------------------------------------
-*/
-$(document).ready(function(){
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Country
-    |--------------------------------------------------------------------------
-    */
-    if ($('#country').val() === '') {
-
-        $('#country').val('India');
-
-    }
-    
-
-});
-
+    })(jQuery);
 </script>
 
 @endpush
