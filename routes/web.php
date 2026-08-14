@@ -86,7 +86,7 @@ Route::get('/login', function () {
 | OptimizeImagesMiddleware is explicitly called here.
 |
 */
-Route::prefix('admin')
+Route::prefix('')
     ->middleware([
         OptimizeImagesMiddleware::class,
         RedirectIfAuthenticatedCustom::class,
