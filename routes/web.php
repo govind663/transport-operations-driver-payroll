@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -349,3 +350,143 @@ Route::prefix('admin')
         )->name('admin.logout');
 
     });
+
+/*
+|--------------------------------------------------------------------------
+| Temporary Server Utility Routes
+|--------------------------------------------------------------------------
+| IMPORTANT:
+| Ye routes temporary server setup / deployment ke liye hain.
+| Production setup complete hone ke baad REMOVE kar dena.
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| Server Check
+|--------------------------------------------------------------------------
+*/
+Route::get('/server-check', function () {
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Laravel server is working fine.',
+    ]);
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Laravel Optimize Clear
+|--------------------------------------------------------------------------
+*/
+Route::get('/optimize-clear', function () {
+
+    try {
+
+        Artisan::call('optimize:clear');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All Laravel caches cleared successfully.',
+            'output'  => trim(Artisan::output()),
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Cache clear failed.',
+            'error'   => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Generate APP_KEY
+|--------------------------------------------------------------------------
+*/
+Route::get('/key-generate', function () {
+
+    try {
+
+        Artisan::call('key:generate', [
+            '--force' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'APP_KEY generated successfully.',
+            'output'  => trim(Artisan::output()),
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'APP_KEY generation failed.',
+            'error'   => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Composer Dump Autoload
+|--------------------------------------------------------------------------
+*/
+Route::get('/composer-dump-autoload', function () {
+
+    $composer = '/opt/cpanel/composer/bin/composer';
+
+    $command = 'cd ' . escapeshellarg(base_path())
+        . ' && '
+        . escapeshellarg($composer)
+        . ' dump-autoload 2>&1';
+
+    $output = shell_exec($command);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Composer autoload dumped successfully.',
+        'output'  => $output,
+    ]);
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Composer Clear Cache
+|--------------------------------------------------------------------------
+*/
+Route::get('/composer-clear-cache', function () {
+
+    $composer = '/opt/cpanel/composer/bin/composer';
+
+    $command = 'cd ' . escapeshellarg(base_path())
+        . ' && '
+        . escapeshellarg($composer)
+        . ' clear-cache 2>&1';
+
+    $output = shell_exec($command);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Composer cache cleared successfully.',
+        'output'  => $output,
+    ]);
+
+});
