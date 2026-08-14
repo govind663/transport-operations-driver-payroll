@@ -364,13 +364,11 @@ Route::prefix('admin')
 |--------------------------------------------------------------------------
 */
 
-
 /*
 |--------------------------------------------------------------------------
 | 01. SERVER CHECK
 |--------------------------------------------------------------------------
 */
-
 Route::get('/server-check', function () {
 
     return response()->json([
@@ -383,13 +381,11 @@ Route::get('/server-check', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 02. COMPOSER DUMP AUTOLOAD
 |--------------------------------------------------------------------------
 */
-
 Route::get('/composer-dump-autoload', function () {
 
     try {
@@ -432,13 +428,11 @@ Route::get('/composer-dump-autoload', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 03. DATABASE MIGRATION
 |--------------------------------------------------------------------------
 */
-
 Route::get('/migrate', function () {
 
     try {
@@ -467,13 +461,11 @@ Route::get('/migrate', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 04. CLEAR ALL LARAVEL CACHE
 |--------------------------------------------------------------------------
 */
-
 Route::get('/optimize-clear', function () {
 
     try {
@@ -500,13 +492,11 @@ Route::get('/optimize-clear', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 05. OPTIMIZE LARAVEL
 |--------------------------------------------------------------------------
 */
-
 Route::get('/optimize', function () {
 
     try {
@@ -533,13 +523,11 @@ Route::get('/optimize', function () {
 
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | 06. MIGRATION STATUS
 |--------------------------------------------------------------------------
 */
-
 Route::get('/migrate-status', function () {
 
     try {
@@ -557,6 +545,105 @@ Route::get('/migrate-status', function () {
         return response()->json([
             'success' => false,
             'message' => 'Unable to fetch migration status.',
+            'error' => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| Composer Install
+|--------------------------------------------------------------------------
+| Runs: composer install --optimize-autoloader
+|--------------------------------------------------------------------------
+*/
+Route::get('/composer-install', function () {
+
+    try {
+
+        $composer = '/opt/cpanel/composer/bin/composer';
+
+        if (!file_exists($composer)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Composer executable not found.',
+                'path' => $composer,
+            ], 500);
+        }
+
+        $command = 'cd '
+            . escapeshellarg(base_path())
+            . ' && '
+            . escapeshellarg($composer)
+            . ' install --no-dev --optimize-autoloader 2>&1';
+
+        $output = shell_exec($command);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Composer install completed.',
+            'output' => $output,
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Composer install failed.',
+            'error' => config('app.debug')
+                ? $e->getMessage()
+                : 'Server error.',
+        ], 500);
+
+    }
+
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Composer Update
+|--------------------------------------------------------------------------
+| Runs: composer update --no-dev --optimize-autoloader
+|--------------------------------------------------------------------------
+*/
+Route::get('/composer-update', function () {
+
+    try {
+
+        $composer = '/opt/cpanel/composer/bin/composer';
+
+        if (!file_exists($composer)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Composer executable not found.',
+                'path' => $composer,
+            ], 500);
+        }
+
+        $command = 'cd '
+            . escapeshellarg(base_path())
+            . ' && '
+            . escapeshellarg($composer)
+            . ' update --no-dev --optimize-autoloader 2>&1';
+
+        $output = shell_exec($command);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Composer update completed.',
+            'output' => $output,
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Composer update failed.',
             'error' => config('app.debug')
                 ? $e->getMessage()
                 : 'Server error.',
