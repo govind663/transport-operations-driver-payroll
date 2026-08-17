@@ -107,6 +107,8 @@
 
                             <th>Company Name</th>
 
+                            <th>Category</th>
+
                             <th>Contact Person</th>
 
                             <th>Mobile</th>
@@ -198,6 +200,13 @@
                                     </small>
 
                                 @endif
+
+                            </td>
+
+                            {{-- Category --}}
+                            <td>
+
+                                {{ $client->category->name ?? '-' }}
 
                             </td>
 
