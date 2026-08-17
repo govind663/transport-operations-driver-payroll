@@ -10,11 +10,11 @@
 
 <style>
     .client-logo{
-        width:150px;
-        height:60ch;
+        width:45px;
+        height:45px;
         object-fit:cover;
-        /* border-radius:50%; */
-        border:2px solid #0e0b9d;
+        border-radius:50%;
+        border:2px solid #dee2e6;
     }
 
     .table td,
@@ -139,7 +139,7 @@
                             <td>{{ $key + 1 }}</td>
 
                             {{-- Company Logo --}}
-                            <td class="text-nowrap text-justify">
+                            <td class="text-wrap text-justify">
 
                                 <img
                                     src="{{ $client->company_logo_url }}"
@@ -149,8 +149,8 @@
                                     decoding="async"
                                     data-no-optimize="1"
                                     style="
-                                        width:150px;
-                                        height:70px;
+                                        width:60px;
+                                        height:60px;
                                         object-fit:cover;
                                         border-radius:8px;
                                         border:1px solid #dee2e6;
