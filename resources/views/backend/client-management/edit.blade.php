@@ -444,8 +444,8 @@
                                             decoding="async"
                                             data-no-optimize="1"
                                             style="
-                                                width:120px;
-                                                height:120px;
+                                                width:100%;
+                                                height:250px;
                                                 object-fit:cover;
                                                 border-radius:10px;
                                                 border:2px solid #dee2e6;
@@ -1014,8 +1014,8 @@ function previewImage(inputId, previewId)
                     src="${e.target.result}"
                     alt="New Company Logo"
                     style="
-                        width:120px;
-                        height:120px;
+                        width:100%;
+                        height:50%;
                         object-fit:cover;
                         border-radius:10px;
                         border:2px solid #28a745;
