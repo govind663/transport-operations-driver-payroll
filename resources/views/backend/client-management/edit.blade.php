@@ -421,30 +421,18 @@
                             </small>
 
                             @error('company_logo')
-
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
-
                             @enderror
-
 
                             {{-- ===================================================== --}}
                             {{-- LOGO PREVIEW --}}
                             {{-- ===================================================== --}}
-                            <div
-                                id="company-logo-preview"
-                                class="mt-3">
+                            <div id="company-logo-preview" class="mt-3">
 
                                 @if($client->company_logo)
 
-                                    {{-- ================================================= --}}
-                                    {{-- CURRENT COMPANY LOGO --}}
-                                    {{-- ================================================= --}}
                                     <div class="position-relative d-inline-block">
 
                                         <img
@@ -455,8 +443,6 @@
                                             loading="lazy"
                                             decoding="async"
                                             data-no-optimize="1"
-                                            width="120"
-                                            height="120"
                                             style="
                                                 width:120px;
                                                 height:120px;
@@ -464,37 +450,22 @@
                                                 border-radius:10px;
                                                 border:2px solid #dee2e6;
                                                 box-shadow:0 2px 8px rgba(0,0,0,.15);
-                                                background:#f8f9fa;
                                             "
-                                            onerror="
-                                                this.onerror=null;
-                                                this.src='{{ asset('backend/assets/img/logo/company.png') }}';
-                                            ">
+                                            onerror="this.onerror=null; this.src='{{ asset('backend/assets/img/logo/company.png') }}';">
 
                                     </div>
 
-
-                                    {{-- ================================================= --}}
-                                    {{-- CURRENT LOGO INFO --}}
-                                    {{-- ================================================= --}}
                                     <div class="mt-2">
 
                                         <small class="text-muted">
-
                                             <i class="fa fa-info-circle"></i>
-
                                             Current Company Logo
-
                                         </small>
 
                                     </div>
 
-
                                 @else
 
-                                    {{-- ================================================= --}}
-                                    {{-- DEFAULT LOGO --}}
-                                    {{-- ================================================= --}}
                                     <div>
 
                                         <img
@@ -502,11 +473,6 @@
                                             alt="Default Company Logo"
                                             id="current-company-logo"
                                             class="img-thumbnail"
-                                            loading="lazy"
-                                            decoding="async"
-                                            data-no-optimize="1"
-                                            width="120"
-                                            height="120"
                                             style="
                                                 width:120px;
                                                 height:120px;
@@ -514,17 +480,13 @@
                                                 border-radius:10px;
                                                 border:2px solid #dee2e6;
                                                 box-shadow:0 2px 8px rgba(0,0,0,.15);
-                                                background:#f8f9fa;
                                             ">
 
                                         <div class="mt-2">
 
                                             <small class="text-muted">
-
                                                 <i class="fa fa-info-circle"></i>
-
                                                 No company logo uploaded.
-
                                             </small>
 
                                         </div>

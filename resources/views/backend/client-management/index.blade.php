@@ -136,9 +136,7 @@
                             {{-- Sr No --}}
                             <td>{{ $key + 1 }}</td>
 
-                            {{-- ========================================================= --}}
-                            {{-- COMPANY LOGO --}}
-                            {{-- ========================================================= --}}
+                            {{-- Company Logo --}}
                             <td class="text-wrap text-justify">
 
                                 <img
@@ -148,8 +146,6 @@
                                     loading="lazy"
                                     decoding="async"
                                     data-no-optimize="1"
-                                    width="60"
-                                    height="60"
                                     style="
                                         width:60px;
                                         height:60px;
@@ -158,11 +154,7 @@
                                         border:1px solid #dee2e6;
                                         background:#f8f9fa;
                                     "
-                                    onerror="
-                                        this.onerror=null;
-                                        this.src='{{ asset('backend/assets/img/logo/company.png') }}';
-                                    "
-                                >
+                                    onerror="this.onerror=null; this.src='{{ asset('backend/assets/img/logo/company.png') }}';">
 
                             </td>
 
