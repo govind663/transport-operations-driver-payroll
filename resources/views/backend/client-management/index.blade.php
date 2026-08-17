@@ -137,7 +137,7 @@
                             <td>{{ $key + 1 }}</td>
 
                             {{-- Company Logo --}}
-                            <td>
+                            <td class="text-wrap text-justify">
 
                                 @php
 
@@ -186,7 +186,7 @@
                             </td>
 
                             {{-- Company Name --}}
-                            <td>
+                            <td class="text-wrap text-justify">
 
                                 <strong>
 
