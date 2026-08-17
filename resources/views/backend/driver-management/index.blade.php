@@ -218,10 +218,6 @@
                                 Status
                             </th>
 
-                            <th>
-                                Created At
-                            </th>
-
                             <th class="no-export">
                                 Edit
                             </th>
@@ -548,17 +544,6 @@
                                         </span>
 
                                     @endif
-
-                                </td>
-
-                                {{-- ========================================= --}}
-                                {{-- Created Date --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    {{ optional(
-                                        $driver->created_at
-                                    )->format('d-m-Y') }}
 
                                 </td>
 

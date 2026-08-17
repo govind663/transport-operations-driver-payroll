@@ -195,10 +195,6 @@
                                 Remarks
                             </th>
 
-                            <th class="text-wrap">
-                                Created At
-                            </th>
-
                             <th class="text-wrap no-export">
                                 Edit
                             </th>
@@ -671,22 +667,6 @@
                                     @endif
 
                                 </td>
-
-
-
-                                {{-- ========================================= --}}
-                                {{-- Created At --}}
-                                {{-- ========================================= --}}
-
-                                <td>
-
-                                    {{ optional(
-                                        $workingSheet->created_at
-                                    )->format('d-m-Y') }}
-
-                                </td>
-
-
 
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}

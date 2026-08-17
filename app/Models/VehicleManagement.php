@@ -35,11 +35,18 @@ class VehicleManagement extends Model
 
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
         'manufacturing_year' => 'integer',
         'capacity' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'deleted_by' => 'integer',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
     ];
 
     /*
@@ -95,6 +102,20 @@ class VehicleManagement extends Model
         return $this->belongsTo(
             User::class,
             'updated_by'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETED BY
+    |--------------------------------------------------------------------------
+    */
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(
+            User::class,
+            'deleted_by'
         );
     }
 

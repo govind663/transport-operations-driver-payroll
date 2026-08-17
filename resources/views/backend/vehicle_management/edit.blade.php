@@ -129,9 +129,9 @@
 
                                         {{ $vehicleCategory->name }}
 
-                                        @if($vehicleCategory->code)
+                                        {{-- @if($vehicleCategory->code)
                                             ({{ $vehicleCategory->code }})
-                                        @endif
+                                        @endif --}}
 
                                     </option>
 
@@ -187,9 +187,9 @@
 
                                         {{ $vehicleType->name }}
 
-                                        @if($vehicleType->code)
+                                        {{-- @if($vehicleType->code)
                                             ({{ $vehicleType->code }})
-                                        @endif
+                                        @endif --}}
 
                                     </option>
 

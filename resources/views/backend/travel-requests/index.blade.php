@@ -138,7 +138,6 @@
                             <th class="text-wrap">Passengers</th>
                             <th class="text-wrap">Purpose</th>
                             <th class="text-wrap">Status</th>
-                            <th class="text-wrap">Created At</th>
                             <th class="text-wrap no-export">Edit</th>
                             <th class="text-wrap no-export">Delete</th>
                         </tr>
@@ -458,22 +457,6 @@
                                     </span>
 
                                 </td>
-
-
-
-                                {{-- ========================================= --}}
-                                {{-- Created At --}}
-                                {{-- ========================================= --}}
-
-                                <td>
-
-                                    {{ optional(
-                                        $travelRequest->created_at
-                                    )->format('d-m-Y') }}
-
-                                </td>
-
-
 
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}

@@ -129,8 +129,6 @@
 
                             <th>Status</th>
 
-                            <th>Created At</th>
-
                             <th class="no-export">Edit</th>
 
                             <th class="no-export">Delete</th>
@@ -333,16 +331,6 @@
                                         </span>
 
                                 @endswitch
-
-                            </td>
-
-
-                            {{-- Created Date --}}
-                            <td>
-
-                                {{ optional(
-                                    $vehicle->created_at
-                                )->format('d-m-Y') }}
 
                             </td>
 
