@@ -136,34 +136,33 @@
                             {{-- Sr No --}}
                             <td>{{ $key + 1 }}</td>
 
-                            {{-- Company Logo --}}
+                            {{-- ========================================================= --}}
+                            {{-- COMPANY LOGO --}}
+                            {{-- ========================================================= --}}
                             <td class="text-wrap text-justify">
 
-                                @php
-
-                                    $companyLogo = $client->company_logo;
-
-                                    $logoUrl = $companyLogo
-                                        ? asset('storage/' . ltrim($companyLogo, '/'))
-                                        : asset('backend/assets/img/logo/company.png');
-
-                                @endphp
-
                                 <img
-                                    src="{{ $logoUrl }}"
+                                    src="{{ $client->company_logo_url }}"
                                     alt="{{ $client->company_name }}"
                                     class="img-fluid client-logo"
                                     loading="lazy"
                                     decoding="async"
                                     data-no-optimize="1"
+                                    width="60"
+                                    height="60"
                                     style="
                                         width:60px;
                                         height:60px;
                                         object-fit:cover;
                                         border-radius:8px;
                                         border:1px solid #dee2e6;
+                                        background:#f8f9fa;
                                     "
-                                    onerror="this.onerror=null; this.src='{{ asset('backend/assets/img/logo/company.png') }}';">
+                                    onerror="
+                                        this.onerror=null;
+                                        this.src='{{ asset('backend/assets/img/logo/company.png') }}';
+                                    "
+                                >
 
                             </td>
 

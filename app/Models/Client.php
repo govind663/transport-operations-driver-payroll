@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,6 +16,7 @@ class Client extends Model
     | Table
     |--------------------------------------------------------------------------
     */
+
     protected $table = 'clients';
 
     /*
@@ -22,6 +24,7 @@ class Client extends Model
     | Mass Assignable
     |--------------------------------------------------------------------------
     */
+
     protected $fillable = [
 
         // Basic Information
@@ -58,7 +61,7 @@ class Client extends Model
         // Status
         'status',
 
-        // Audit Columns
+        // Audit
         'created_by',
         'updated_by',
         'deleted_by',
@@ -69,17 +72,18 @@ class Client extends Model
     | Attribute Casting
     |--------------------------------------------------------------------------
     */
+
     protected $casts = [
 
-        'status'      => 'boolean',
+        'status' => 'boolean',
 
-        'created_by'  => 'integer',
-        'updated_by'  => 'integer',
-        'deleted_by'  => 'integer',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+        'deleted_by' => 'integer',
 
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
-        'deleted_at'  => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /*
@@ -114,9 +118,62 @@ class Client extends Model
      */
     public function getCompanyLogoUrlAttribute(): string
     {
-        return $this->company_logo
-            ? asset('storage/' . $this->company_logo)
-            : asset('backend/assets/img/logo/company.png');
+        /*
+        |--------------------------------------------------------------------------
+        | Default Logo
+        |--------------------------------------------------------------------------
+        */
+
+        if (empty($this->company_logo)) {
+            return asset(
+                'backend/assets/img/logo/company.png'
+            );
+        }
+
+        $logo = ltrim($this->company_logo, '/');
+
+        /*
+        |--------------------------------------------------------------------------
+        | New FileUploadService Path
+        |
+        | Example:
+        | client/company-logo/filename.webp
+        |--------------------------------------------------------------------------
+        */
+
+        if (str_starts_with($logo, 'client/')) {
+
+            return asset(
+                'storage/' . $logo
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Already Storage Path
+        |
+        | Example:
+        | storage/client/company-logo/filename.webp
+        |--------------------------------------------------------------------------
+        */
+
+        if (str_starts_with($logo, 'storage/')) {
+
+            return asset($logo);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Legacy Logo Path
+        |
+        | Example:
+        | filename.webp
+        |--------------------------------------------------------------------------
+        */
+
+        return asset(
+            'backend/assets/uploads/client/' . $logo
+        );
     }
 
     /*
@@ -141,17 +198,11 @@ class Client extends Model
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Check if client is active.
-     */
     public function isActive(): bool
     {
         return (bool) $this->status;
     }
 
-    /**
-     * Check if client is inactive.
-     */
     public function isInactive(): bool
     {
         return ! $this->status;
