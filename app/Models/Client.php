@@ -26,6 +26,7 @@ class Client extends Model
 
         // Basic Information
         'client_code',
+        'category',
         'company_name',
         'contact_person',
         'company_logo',

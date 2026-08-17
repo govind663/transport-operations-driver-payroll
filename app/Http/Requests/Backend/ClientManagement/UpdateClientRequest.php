@@ -35,6 +35,11 @@ class UpdateClientRequest extends FormRequest
                 'max:30',                
             ],
 
+            'category' => [
+                'required',
+                'in:RIL,OTHER',
+            ],
+
             'company_name' => [
                 'required',
                 'string',
@@ -199,6 +204,9 @@ class UpdateClientRequest extends FormRequest
             'client_code.required'        => 'Client code is required.',
             'client_code.unique'          => 'This client code already exists.',
             'client_code.max'             => 'Client code may not be greater than 30 characters.',
+
+            'category.required'           => 'Client category is required.',
+            'category.in'                 => 'Please select a valid client category.',
 
             'company_name.required'       => 'Company name is required.',
             'company_name.max'            => 'Company name may not be greater than 200 characters.',

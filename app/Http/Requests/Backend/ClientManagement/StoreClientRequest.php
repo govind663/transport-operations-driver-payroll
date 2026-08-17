@@ -33,6 +33,11 @@ class StoreClientRequest extends FormRequest
                 'unique:clients,client_code',
             ],
 
+            'category' => [
+                'required',
+                'in:RIL,OTHER',
+            ],
+
             'company_name' => [
                 'required',
                 'string',
@@ -198,6 +203,9 @@ class StoreClientRequest extends FormRequest
             'client_code.required'        => 'Client code is required.',
             'client_code.unique'          => 'This client code already exists.',
             'client_code.max'             => 'Client code may not be greater than 30 characters.',
+
+            'category.required'           => 'Client category is required.',
+            'category.in'                 => 'Please select a valid client category.',
 
             'company_name.required'       => 'Company name is required.',
             'company_name.max'            => 'Company name may not be greater than 200 characters.',

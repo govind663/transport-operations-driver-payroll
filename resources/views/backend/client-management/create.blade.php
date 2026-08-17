@@ -139,6 +139,45 @@
 
                     </div>
 
+                    {{-- Client Category --}}
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label>
+                                <b>
+                                    Client Category
+                                    <span class="text-danger">*</span>
+                                </b>
+                            </label>
+
+                            <select
+                                name="category"
+                                id="category"
+                                class="form-control custom-select2 @error('category') is-invalid @enderror">
+
+                                <option value="">Select Category</option>
+
+                                <option value="RIL" {{ old('category') === 'RIL' ? 'selected' : '' }}>
+                                    RIL
+                                </option>
+
+                                <option value="OTHER" {{ old('category') === 'OTHER' ? 'selected' : '' }}>
+                                    OTHER
+                                </option>
+
+                            </select>
+
+                            @error('category')
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+
+                        </div>
+
+                    </div>
+
                     {{-- Contact Person --}}
                     <div class="col-md-4">
 
@@ -172,7 +211,7 @@
                     </div>
 
                     {{-- GST Number --}}
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
@@ -198,7 +237,7 @@
                     </div>
 
                     {{-- PAN Number --}}
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
