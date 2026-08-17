@@ -206,7 +206,7 @@
                             {{-- Category --}}
                             <td>
 
-                                {{ $client->category->name ?? '-' }}
+                                {{ $client->category ?? '-' }}
 
                             </td>
 
