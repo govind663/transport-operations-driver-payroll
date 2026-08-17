@@ -421,15 +421,9 @@
                             </small>
 
                             @error('company_logo')
-
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
-
                             @enderror
 
 
@@ -444,26 +438,26 @@
 
                                     @php
 
-                                        $companyLogo = $client->company_logo;
+                                        $companyLogo = trim($client->company_logo);
 
                                         /*
                                         |--------------------------------------------------------------------------
-                                        | FileUploadService Path
+                                        | Generate Company Logo URL
                                         |--------------------------------------------------------------------------
                                         */
+
                                         if (str_starts_with($companyLogo, 'client/')) {
 
-                                            $logoUrl = asset('storage/' . $companyLogo);
+                                            // New FileUploadService path
+                                            $logoUrl = asset(
+                                                'storage/' . ltrim($companyLogo, '/')
+                                            );
 
                                         } else {
 
-                                            /*
-                                            |--------------------------------------------------------------------------
-                                            | Old / Legacy Logo Path
-                                            |--------------------------------------------------------------------------
-                                            */
+                                            // Old / Legacy logo path
                                             $logoUrl = asset(
-                                                'backend/assets/uploads/client/' . $companyLogo
+                                                'backend/assets/uploads/client/' . ltrim($companyLogo, '/')
                                             );
 
                                         }
@@ -471,6 +465,9 @@
                                     @endphp
 
 
+                                    {{-- ================================================= --}}
+                                    {{-- CURRENT LOGO --}}
+                                    {{-- ================================================= --}}
                                     <div class="position-relative d-inline-block">
 
                                         <img
@@ -496,6 +493,10 @@
 
                                     </div>
 
+
+                                    {{-- ================================================= --}}
+                                    {{-- CURRENT LOGO INFO --}}
+                                    {{-- ================================================= --}}
                                     <div class="mt-2">
 
                                         <small class="text-muted">
@@ -508,21 +509,29 @@
 
                                     </div>
 
+
                                 @else
 
-                                    {{-- Default Logo --}}
+                                    {{-- ================================================= --}}
+                                    {{-- DEFAULT LOGO --}}
+                                    {{-- ================================================= --}}
                                     <div>
 
                                         <img
                                             src="{{ asset('backend/assets/img/logo/company.png') }}"
                                             alt="Default Company Logo"
+                                            id="current-company-logo"
                                             class="img-thumbnail"
+                                            loading="lazy"
+                                            decoding="async"
+                                            data-no-optimize="1"
                                             style="
                                                 width:120px;
                                                 height:120px;
                                                 object-fit:cover;
                                                 border-radius:10px;
                                                 border:2px solid #dee2e6;
+                                                box-shadow:0 2px 8px rgba(0,0,0,.15);
                                             ">
 
                                         <div class="mt-2">

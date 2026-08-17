@@ -143,23 +143,9 @@
 
                                     $companyLogo = $client->company_logo;
 
-                                    if ($companyLogo) {
-
-                                        if (str_starts_with($companyLogo, 'client/')) {
-
-                                            $logoUrl = asset('storage/' . $companyLogo);
-
-                                        } else {
-
-                                            $logoUrl = asset('backend/assets/uploads/client/' . $companyLogo);
-
-                                        }
-
-                                    } else {
-
-                                        $logoUrl = asset('backend/assets/img/logo/company.png');
-
-                                    }
+                                    $logoUrl = $companyLogo
+                                        ? asset('storage/' . ltrim($companyLogo, '/'))
+                                        : asset('backend/assets/img/logo/company.png');
 
                                 @endphp
 
@@ -170,6 +156,13 @@
                                     loading="lazy"
                                     decoding="async"
                                     data-no-optimize="1"
+                                    style="
+                                        width:60px;
+                                        height:60px;
+                                        object-fit:cover;
+                                        border-radius:8px;
+                                        border:1px solid #dee2e6;
+                                    "
                                     onerror="this.onerror=null; this.src='{{ asset('backend/assets/img/logo/company.png') }}';">
 
                             </td>
