@@ -139,7 +139,7 @@
                             <td>{{ $key + 1 }}</td>
 
                             {{-- Company Logo --}}
-                            <td class="text-wrap text-justify">
+                            <td class="text-nowrap text-justify">
 
                                 <img
                                     src="{{ $client->company_logo_url }}"
