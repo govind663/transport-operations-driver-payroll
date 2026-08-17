@@ -49,7 +49,6 @@ class ClientManagementService
     | Store Client
     |--------------------------------------------------------------------------
     */
-
     public function store(array $data): Client
     {
         /*
@@ -58,12 +57,20 @@ class ClientManagementService
         |--------------------------------------------------------------------------
         */
 
-        if (isset($data['company_logo'])) {
+        if (
+            isset($data['company_logo']) &&
+            $data['company_logo'] instanceof \Illuminate\Http\UploadedFile &&
+            $data['company_logo']->isValid()
+        ) {
 
             $data['company_logo'] = $this->fileUploadService->upload(
                 $data['company_logo'],
                 'client/company-logo'
             );
+        } else {
+
+            // Do not store invalid/non-file value
+            unset($data['company_logo']);
         }
 
         /*
@@ -77,27 +84,56 @@ class ClientManagementService
         return Client::create($data);
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | Update Client
     |--------------------------------------------------------------------------
     */
-
     public function update(Client $client, array $data): Client
     {
         /*
         |--------------------------------------------------------------------------
-        | Replace Company Logo
+        | Company Logo Upload / Replace
         |--------------------------------------------------------------------------
         */
 
-        if (isset($data['company_logo'])) {
+        if (
+            isset($data['company_logo']) &&
+            $data['company_logo'] instanceof \Illuminate\Http\UploadedFile &&
+            $data['company_logo']->isValid()
+        ) {
 
-            $data['company_logo'] = $this->fileUploadService->replace(
+            $newLogo = $this->fileUploadService->replace(
                 $data['company_logo'],
                 $client->company_logo,
                 'client/company-logo'
             );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Save New Logo Path
+            |--------------------------------------------------------------------------
+            */
+
+            if ($newLogo) {
+                $data['company_logo'] = $newLogo;
+            } else {
+                // Upload failed → keep old logo
+                unset($data['company_logo']);
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | No New Logo Uploaded
+            |--------------------------------------------------------------------------
+            | Existing logo must remain unchanged.
+            |--------------------------------------------------------------------------
+            */
+
+            unset($data['company_logo']);
         }
 
         /*
@@ -107,6 +143,12 @@ class ClientManagementService
         */
 
         $data['updated_by'] = Auth::id();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Client
+        |--------------------------------------------------------------------------
+        */
 
         $client->update($data);
 
