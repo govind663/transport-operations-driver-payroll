@@ -200,6 +200,10 @@
                             </a>
                         </li>
 
+                        <li><a href="#">Allowances</a></li>
+
+                        <li><a href="#">Expenses</a></li>
+
                     </ul>
 
                 </li>
@@ -287,11 +291,7 @@
 
                     <ul class="submenu">
 
-                        <li><a href="#">Salary Processing</a></li>
-
-                        <li><a href="#">Allowances</a></li>
-
-                        <li><a href="#">Expenses</a></li>
+                        <li><a href="#">Salary Processing</a></li>                        
 
                         <li><a href="#">Salary Slips</a></li>
 

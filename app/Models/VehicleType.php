@@ -20,6 +20,7 @@ class VehicleType extends Model
         'status',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     protected $casts = [
@@ -65,6 +66,20 @@ class VehicleType extends Model
         return $this->belongsTo(
             User::class,
             'updated_by'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETED BY
+    |--------------------------------------------------------------------------
+    */
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(
+            User::class,
+            'deleted_by'
         );
     }
 

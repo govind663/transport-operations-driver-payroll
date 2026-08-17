@@ -110,10 +110,6 @@
 
                             <th>Status</th>
 
-                            <th>Created By</th>
-
-                            <th>Created At</th>
-
                             <th class="no-export">Edit</th>
 
                             <th class="no-export">Delete</th>
@@ -240,34 +236,6 @@
                                     </span>
 
                                 @endif
-
-                            </td>
-
-
-                            {{-- Created By --}}
-                            <td>
-
-                                @if($vehicleType->createdBy)
-
-                                    {{ $vehicleType->createdBy->name }}
-
-                                @else
-
-                                    <span class="text-muted">
-                                        -
-                                    </span>
-
-                                @endif
-
-                            </td>
-
-
-                            {{-- Created Date --}}
-                            <td>
-
-                                {{ optional(
-                                    $vehicleType->created_at
-                                )->format('d-m-Y') }}
 
                             </td>
 
