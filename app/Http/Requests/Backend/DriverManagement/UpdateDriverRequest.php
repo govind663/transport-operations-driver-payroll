@@ -46,8 +46,6 @@ class UpdateDriverRequest extends FormRequest
                 'required',
                 'string',
                 'max:30',
-                Rule::unique('drivers', 'driver_code')
-                    ->ignore($driverId),
             ],
 
             'driver_type' => [
@@ -151,11 +149,9 @@ class UpdateDriverRequest extends FormRequest
             ],
 
             'email' => [
-                'nullable',
+                'required',
                 'email',
                 'max:255',
-                Rule::unique('drivers', 'email')
-                    ->ignore($driverId),
             ],
 
 
@@ -202,11 +198,9 @@ class UpdateDriverRequest extends FormRequest
             */
 
             'license_number' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
-                Rule::unique('drivers', 'license_number')
-                    ->ignore($driverId),
             ],
 
             'license_type' => [
@@ -222,7 +216,7 @@ class UpdateDriverRequest extends FormRequest
             ],
 
             'license_expiry_date' => [
-                'required',
+                'nullable',
                 'date',
                 'after_or_equal:license_issue_date',
             ],
@@ -320,13 +314,13 @@ class UpdateDriverRequest extends FormRequest
             ],
 
             'nominees.*.name' => [
-                'required',
+                'nullable',
                 'string',
                 'max:150',
             ],
 
             'nominees.*.relationship' => [
-                'required',
+                'nullable',
                 'string',
                 'max:100',
             ],

@@ -4,6 +4,7 @@ namespace App\Services\DriverManagement;
 
 use App\Models\Driver;
 use App\Services\FileUploadService;
+use App\Services\User\UserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,12 +18,20 @@ class DriverManagementService
 
 
     /**
+     * User Service
+     */
+    protected UserService $userService;
+
+
+    /**
      * Constructor
      */
     public function __construct(
-        FileUploadService $fileUploadService
+        FileUploadService $fileUploadService,
+        UserService $userService
     ) {
         $this->fileUploadService = $fileUploadService;
+        $this->userService = $userService;
     }
 
 
@@ -51,7 +60,6 @@ class DriverManagementService
     | FIND DRIVER
     |--------------------------------------------------------------------------
     */
-
     public function findById(
         string|int $id
     ): Driver {
@@ -71,7 +79,6 @@ class DriverManagementService
     | STORE DRIVER
     |--------------------------------------------------------------------------
     */
-
     public function store(
         array $data
     ): Driver {
@@ -243,7 +250,32 @@ class DriverManagementService
             |--------------------------------------------------------------------------
             */
 
-            return Driver::create($data);
+            $driver = Driver::create($data);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE DRIVER LOGIN CREDENTIAL
+            |--------------------------------------------------------------------------
+            |
+            | UserService handles creation of the driver's
+            | authentication credentials.
+            |
+            |--------------------------------------------------------------------------
+            */
+
+            $this->userService->createDriverCredential(
+                $driver
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RETURN DRIVER
+            |--------------------------------------------------------------------------
+            */
+
+            return $driver;
         });
     }
 
@@ -253,7 +285,6 @@ class DriverManagementService
     | UPDATE DRIVER
     |--------------------------------------------------------------------------
     */
-
     public function update(
         Driver $driver,
         array $data
@@ -566,7 +597,6 @@ class DriverManagementService
     | DELETE DRIVER
     |--------------------------------------------------------------------------
     */
-
     public function delete(
         Driver $driver
     ): bool {
@@ -601,7 +631,6 @@ class DriverManagementService
     | PROCESS QUALIFICATIONS
     |--------------------------------------------------------------------------
     */
-
     protected function processQualifications(
         array $qualifications = [],
         array $qualificationDocuments = [],
@@ -846,7 +875,6 @@ class DriverManagementService
     |
     |--------------------------------------------------------------------------
     */
-
     protected function processNominees(
         array $nominees = [],
         array $nomineeProfileImages = [],
@@ -1117,7 +1145,6 @@ class DriverManagementService
     | PROCESS BANK DETAILS
     |--------------------------------------------------------------------------
     */
-
     protected function processBankDetails(
         array $bankDetails = []
     ): array {
@@ -1254,7 +1281,6 @@ class DriverManagementService
     | NORMALIZE DRIVER DATA
     |--------------------------------------------------------------------------
     */
-
     protected function normalizeDriverData(
         array &$data
     ): void {

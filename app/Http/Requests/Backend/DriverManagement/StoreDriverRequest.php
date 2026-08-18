@@ -138,7 +138,7 @@ class StoreDriverRequest extends FormRequest
             ],
 
             'email' => [
-                'nullable',
+                'required',
                 'email',
                 'max:255',
                 'unique:drivers,email',
@@ -207,7 +207,7 @@ class StoreDriverRequest extends FormRequest
             ],
 
             'license_expiry_date' => [
-                'required',
+                'nullable',
                 'date',
                 'after_or_equal:license_issue_date',
             ],
@@ -302,13 +302,13 @@ class StoreDriverRequest extends FormRequest
             ],
 
             'nominees.*.name' => [
-                'required',
+                'nullable',
                 'string',
                 'max:150',
             ],
 
             'nominees.*.relationship' => [
-                'required',
+                'nullable',
                 'string',
                 'max:100',
             ],
