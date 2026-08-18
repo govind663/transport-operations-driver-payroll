@@ -109,7 +109,7 @@ class DashboardService
             |--------------------------------------------------------------------------
             */
 
-            'total_clients' => Client::count(),
+            'total_clients' => Client::Where('status', '1')->count(),
 
             'active_drivers' => Driver::where(
                 'status',
@@ -127,7 +127,6 @@ class DashboardService
             | Operations
             |--------------------------------------------------------------------------
             */
-
             'travel_requests' => TravelRequest::count(),
 
             'pending_duty_assignments' => DutyAssignment::where(
@@ -137,7 +136,7 @@ class DashboardService
 
             'open_duty_slips' => DutySlip::whereIn(
                 'status',
-                ['pending', 'open']
+                ['pending', 'started']
             )->count(),
 
             'working_sheets' => WorkingSheet::count(),
@@ -240,14 +239,14 @@ class DashboardService
                 'driver_id',
                 $driverId
             )
-                ->whereDate('duty_date', today())
+                ->whereDate('assigned_at', today())
                 ->count(),
 
             'open_duty_slips' => DutySlip::where(
-                'driver_id',
+                'duty_assignment_id',
                 $driverId
             )
-                ->whereIn('status', ['pending', 'open'])
+                ->whereIn('status', ['pending', 'started'])
                 ->count(),
 
             'completed_duties' => DutyAssignment::where(
@@ -258,7 +257,7 @@ class DashboardService
                 ->count(),
 
             'working_sheets' => WorkingSheet::where(
-                'driver_id',
+                'duty_slip_id',
                 $driverId
             )->count(),
 

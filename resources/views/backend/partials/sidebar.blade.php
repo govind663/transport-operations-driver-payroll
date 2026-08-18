@@ -331,7 +331,7 @@
 
             <a href="javascript:;" class="dropdown-toggle">
 
-                <span class="micon bi bi-gear"></span>
+                <span class="micon bi bi-diagram-3"></span>
                 <span class="mtext">Operations</span>
 
             </a>
