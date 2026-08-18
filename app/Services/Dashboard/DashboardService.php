@@ -50,9 +50,9 @@ class DashboardService
             |--------------------------------------------------------------------------
             */
 
-            'total_clients' => Client::count(),
+            'total_clients' => Client::Where('status', 'active')->count(), 
 
-            'total_drivers' => Driver::count(),
+            'total_drivers' => Driver::Where('status', 'active')->count(),
 
             'total_vehicles' => VehicleManagement::count(),
 
