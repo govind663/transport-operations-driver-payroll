@@ -98,6 +98,18 @@ class StoreDriverRequest extends FormRequest
                 Rule::in(Driver::EMPLOYMENT_STATUSES),
             ],
 
+            'pf_status' => [
+                'required',
+                'string',
+                Rule::in(Driver::PF_STATUSES),
+            ],
+
+            'document_status' => [
+                'required',
+                'string',
+                Rule::in(Driver::DOCUMENT_STATUSES),
+            ],
+
             'resignation_date' => [
                 'nullable',
                 'date',
@@ -542,6 +554,24 @@ class StoreDriverRequest extends FormRequest
 
             'status.in' =>
                 'Invalid driver employment status selected.',
+            
+            'pf_status.required' =>
+                'Please select PF status.',
+
+            'pf_status.string' =>
+                'PF status must be a valid value.',
+
+            'pf_status.in' =>
+                'Invalid PF status selected.',
+
+            'document_status.required' =>
+                'Please select document status.',
+
+            'document_status.string' =>
+                'Document status must be a valid value.',
+
+            'document_status.in' =>
+                'Invalid document status selected.',
 
             'resignation_date.date' =>
                 'Please enter a valid resignation date.',

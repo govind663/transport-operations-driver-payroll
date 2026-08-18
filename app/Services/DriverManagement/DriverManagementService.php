@@ -96,6 +96,21 @@ class DriverManagementService
 
             /*
             |--------------------------------------------------------------------------
+            | PF & DOCUMENT STATUS DEFAULTS
+            |--------------------------------------------------------------------------
+            */
+
+            $data['pf_status'] =
+                $data['pf_status']
+                ?? Driver::PF_NO;
+
+            $data['document_status'] =
+                $data['document_status']
+                ?? Driver::DOCUMENT_PENDING;
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Normalize Basic Values
             |--------------------------------------------------------------------------
             */
@@ -257,11 +272,6 @@ class DriverManagementService
             |--------------------------------------------------------------------------
             | CREATE DRIVER LOGIN CREDENTIAL
             |--------------------------------------------------------------------------
-            |
-            | UserService handles creation of the driver's
-            | authentication credentials.
-            |
-            |--------------------------------------------------------------------------
             */
 
             $this->userService->createDriverCredential(
@@ -271,14 +281,13 @@ class DriverManagementService
 
             /*
             |--------------------------------------------------------------------------
-            | RETURN DRIVER
+            | RETURN FRESH DRIVER
             |--------------------------------------------------------------------------
             */
 
-            return $driver;
+            return $driver->fresh();
         });
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -319,12 +328,14 @@ class DriverManagementService
             |--------------------------------------------------------------------------
             */
 
+            $newDriverPhoto = null;
+
             if (
                 isset($data['driver_photo']) &&
                 $data['driver_photo']
             ) {
 
-                $newPhoto =
+                $newDriverPhoto =
                     $this->fileUploadService->upload(
                         $data['driver_photo'],
                         'driver'
@@ -354,7 +365,7 @@ class DriverManagementService
                 */
 
                 $data['driver_photo'] =
-                    $newPhoto;
+                    $newDriverPhoto;
             }
 
 
@@ -583,11 +594,46 @@ class DriverManagementService
 
             /*
             |--------------------------------------------------------------------------
+            | UPDATE USER PROFILE IMAGE
+            |--------------------------------------------------------------------------
+            |
+            | If driver already has login credentials and
+            | driver photo was changed, synchronize it
+            | with users.profile_image.
+            |
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $newDriverPhoto &&
+                !empty($driver->user_id)
+            ) {
+
+                $user = $driver->user;
+
+                if ($user) {
+
+                    $user->update([
+                        'profile_image' =>
+                            $newDriverPhoto,
+                        'updated_by' =>
+                            Auth::id(),
+                    ]);
+                }
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
             | RETURN FRESH DRIVER
             |--------------------------------------------------------------------------
             */
 
-            return $driver->fresh();
+            return $driver->fresh([
+                'user',
+                'createdBy',
+                'updatedBy',
+            ]);
         });
     }
 

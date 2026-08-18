@@ -4143,119 +4143,220 @@
 
                 </div>
 
-                {{-- ========================================================= --}}
-                {{-- EMPLOYMENT STATUS --}}
-                {{-- ========================================================= --}}
-                <div class="col-md-4">
+                <div class="row">
+                    {{-- ========================================================= --}}
+                    {{-- EMPLOYMENT STATUS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
 
-                    <div class="form-group">
+                        <div class="form-group">
 
-                        <label for="status">
-                            <b>
-                                Employment Status
-                                <span class="text-danger">*</span>
-                            </b>
-                        </label>
+                            <label for="status">
+                                <b>
+                                    Employment Status
+                                    <span class="text-danger">*</span>
+                                </b>
+                            </label>
 
-                        <select
-                            name="status"
-                            id="status"
-                            class="form-control custom-select2 @error('status') is-invalid @enderror"
-                            required
-                        >
-
-                            <option value="">
-                                Select Employment Status
-                            </option>
-
-                            <option
-                                value="active"
-                                @selected(old('status', 'active') === 'active')
+                            <select
+                                name="status"
+                                id="status"
+                                class="form-control custom-select2 @error('status') is-invalid @enderror"
+                                required
                             >
-                                Active
-                            </option>
 
-                            <option
-                                value="on_leave"
-                                @selected(old('status') === 'on_leave')
-                            >
-                                On Leave
-                            </option>
+                                <option value="">
+                                    Select Employment Status
+                                </option>
 
-                            <option
-                                value="notice_period"
-                                @selected(old('status') === 'notice_period')
-                            >
-                                Notice Period
-                            </option>
+                                @foreach(\App\Models\Driver::EMPLOYMENT_STATUSES as $status)
 
-                            <option
-                                value="resigned"
-                                @selected(old('status') === 'resigned')
-                            >
-                                Resigned
-                            </option>
+                                    <option
+                                        value="{{ $status }}"
+                                        @selected(old('status', $driver->status) === $status)
+                                    >
+                                        {{ ucwords(str_replace('_', ' ', $status)) }}
+                                    </option>
 
-                            <option
-                                value="terminated"
-                                @selected(old('status') === 'terminated')
-                            >
-                                Terminated
-                            </option>
+                                @endforeach
 
-                            <option
-                                value="inactive"
-                                @selected(old('status') === 'inactive')
-                            >
-                                Inactive
-                            </option>
+                            </select>
 
-                        </select>
+                            @error('status')
 
-                        @error('status')
-                            <span class="invalid-feedback d-block">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                        @enderror
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+
+                            @enderror
+
+                        </div>
 
                     </div>
 
-                </div>
+                    {{-- ========================================================= --}}
+                    {{-- PF STATUS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
 
-                {{-- ========================================================= --}}
-                {{-- ACTION BUTTONS --}}
-                {{-- ========================================================= --}}
-                <div class="col-12">
+                        <div class="form-group">
 
-                    <div
-                        class="d-flex justify-content-end align-items-center mt-4"
-                        style="gap:10px;">
+                            <label for="pf_status">
 
-                        {{-- Cancel --}}
-                        <a
-                            href="{{ route('driver-management.index') }}"
-                            class="btn btn-danger">
+                                <b>
+                                    PF Applicable
+                                    <span class="text-danger">*</span>
+                                </b>
 
-                            <i class="fa fa-times"></i>
+                            </label>
 
-                            Cancel
+                            <select
+                                name="pf_status"
+                                id="pf_status"
+                                class="form-control custom-select2 @error('pf_status') is-invalid @enderror"
+                                required
+                            >
 
-                        </a>
+                                <option value="">
+                                    Select PF Status
+                                </option>
 
+                                @foreach(\App\Models\Driver::PF_STATUSES as $pfStatus)
 
-                        {{-- Update Driver --}}
-                        <button
-                            type="submit"
-                            class="btn btn-success">
+                                    <option
+                                        value="{{ $pfStatus }}"
+                                        @selected(old('pf_status', $driver->pf_status) === $pfStatus)
+                                    >
 
-                            <i class="fa fa-save"></i>
+                                        @if($pfStatus === \App\Models\Driver::PF_YES)
 
-                            Update Driver
+                                            Yes
 
-                        </button>
+                                        @elseif($pfStatus === \App\Models\Driver::PF_NO)
+
+                                            No
+
+                                        @endif
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            @error('pf_status')
+
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+
+                            @enderror
+
+                        </div>
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- DOCUMENT STATUS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="document_status">
+
+                                <b>
+                                    Document Status
+                                    <span class="text-danger">*</span>
+                                </b>
+
+                            </label>
+
+                            <select
+                                name="document_status"
+                                id="document_status"
+                                class="form-control custom-select2 @error('document_status') is-invalid @enderror"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Document Status
+                                </option>
+
+                                @foreach(\App\Models\Driver::DOCUMENT_STATUSES as $documentStatus)
+
+                                    <option
+                                        value="{{ $documentStatus }}"
+                                        @selected(old('document_status', $driver->document_status) === $documentStatus)
+                                    >
+
+                                        @if($documentStatus === \App\Models\Driver::DOCUMENT_RECEIVED)
+
+                                            Received
+
+                                        @elseif($documentStatus === \App\Models\Driver::DOCUMENT_PENDING)
+
+                                            Pending
+
+                                        @elseif($documentStatus === \App\Models\Driver::DOCUMENT_REJECTED)
+
+                                            Rejected
+
+                                        @endif
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            @error('document_status')
+
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
+                    {{-- ACTION BUTTONS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12">
+
+                        <div
+                            class="d-flex justify-content-end align-items-center mt-4"
+                            style="gap:10px;">
+
+                            {{-- Cancel --}}
+                            <a
+                                href="{{ route('driver-management.index') }}"
+                                class="btn btn-danger">
+
+                                <i class="fa fa-times"></i>
+
+                                Cancel
+
+                            </a>
+
+
+                            {{-- Update Driver --}}
+                            <button
+                                type="submit"
+                                class="btn btn-success">
+
+                                <i class="fa fa-save"></i>
+
+                                Update Driver
+
+                            </button>
+
+                        </div>
+
+                    </div>
                 </div>
 
             </div>

@@ -130,6 +130,38 @@ class Driver extends Model
 
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | PF Status Constants
+    |--------------------------------------------------------------------------
+    */
+    public const PF_YES = 'yes';
+
+    public const PF_NO = 'no';
+
+    public const PF_STATUSES = [
+        self::PF_YES,
+        self::PF_NO,
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Document Status Constants
+    |--------------------------------------------------------------------------
+    */
+    public const DOCUMENT_RECEIVED = 'received';
+
+    public const DOCUMENT_PENDING = 'pending';
+
+    public const DOCUMENT_REJECTED = 'rejected';
+
+    public const DOCUMENT_STATUSES = [
+        self::DOCUMENT_RECEIVED,
+        self::DOCUMENT_PENDING,
+        self::DOCUMENT_REJECTED,
+    ];
+
 
     /*
     |--------------------------------------------------------------------------
@@ -169,12 +201,14 @@ class Driver extends Model
         'last_working_date',
         'termination_date',
         'status',
+        'pf_status',
+        'document_status',
 
         /*
         |--------------------------------------------------------------------------
         | Contact Information
         |--------------------------------------------------------------------------
-        */
+        */ 
         'mobile',
         'alternate_mobile',
         'email',

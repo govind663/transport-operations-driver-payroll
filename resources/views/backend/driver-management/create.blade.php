@@ -581,7 +581,6 @@
 
                     </div>
 
-
                     {{-- Resignation Date --}}
                     <div class="col-md-3">
 
@@ -622,7 +621,6 @@
 
                     </div>
 
-
                     {{-- Last Working Date --}}
                     <div class="col-md-3">
 
@@ -662,7 +660,6 @@
                         </div>
 
                     </div>
-
 
                     {{-- Termination Date --}}
                     <div class="col-md-3">
@@ -2263,6 +2260,130 @@
 
                             {{-- Validation Error --}}
                             @error('status')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
+                    {{-- PF STATUS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="pf_status">
+
+                                <b>
+                                    PF Applicable
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+                                </b>
+
+                            </label>
+
+                            <select
+                                name="pf_status"
+                                id="pf_status"
+                                class="form-control custom-select2 @error('pf_status') is-invalid @enderror">
+
+                                <option value="">
+                                    Select PF Status
+                                </option>
+
+                                @foreach(\App\Models\Driver::PF_STATUSES as $pfStatus)
+
+                                    <option
+                                        value="{{ $pfStatus }}"
+                                        {{ old('pf_status') === $pfStatus ? 'selected' : '' }}>
+
+                                        {{ ucfirst($pfStatus) }}
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            <small class="text-muted">
+                                Select whether PF is applicable for this driver.
+                            </small>
+
+                            @error('pf_status')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- ========================================================= --}}
+                    {{-- DOCUMENT STATUS --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="document_status">
+
+                                <b>
+                                    Document Status
+
+                                    <span class="text-danger">
+                                        *
+                                    </span>
+                                </b>
+
+                            </label>
+
+                            <select
+                                name="document_status"
+                                id="document_status"
+                                class="form-control custom-select2 @error('document_status') is-invalid @enderror">
+
+                                <option value="">
+                                    Select Document Status
+                                </option>
+
+                                @foreach(\App\Models\Driver::DOCUMENT_STATUSES as $documentStatus)
+
+                                    <option
+                                        value="{{ $documentStatus }}"
+                                        {{ old('document_status') === $documentStatus ? 'selected' : '' }}>
+
+                                        {{ ucfirst($documentStatus) }}
+
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            <small class="text-muted">
+                                Current status of required driver documents.
+                            </small>
+
+                            @error('document_status')
 
                                 <span class="invalid-feedback d-block">
 
