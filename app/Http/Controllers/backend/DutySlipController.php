@@ -5,27 +5,37 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\DutySlip\StoreDutySlipRequest;
 use App\Http\Requests\Backend\DutySlip\UpdateDutySlipRequest;
+use App\Models\Allowance;
 use App\Models\DutyAssignment;
 use App\Models\DutySlip;
+use App\Models\Expense;
 use App\Services\DutySlip\DutySlipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DutySlipController extends Controller
 {
-    /**
-     * Duty Slip Service
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Duty Slip Service
+    |--------------------------------------------------------------------------
+    */
+
     protected DutySlipService $dutySlipService;
 
-    /**
-     * Constructor
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Constructor
+    |--------------------------------------------------------------------------
+    */
+
     public function __construct(
         DutySlipService $dutySlipService
     ) {
         $this->dutySlipService = $dutySlipService;
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -38,13 +48,14 @@ class DutySlipController extends Controller
      */
     public function index(): View
     {
-        $dutySlips =
-            $this->dutySlipService->getDutySlips();
+        $dutySlips = $this->dutySlipService
+            ->getDutySlips();
 
         return view('backend.duty-slips.index',
             compact('dutySlips')
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -57,6 +68,16 @@ class DutySlipController extends Controller
      */
     public function create(): View
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Assignments
+        |--------------------------------------------------------------------------
+        |
+        | Only valid active duty assignments should be available
+        | while creating a new duty slip.
+        |
+        */
+
         $dutyAssignments = DutyAssignment::query()
             ->whereIn('status', [
                 DutyAssignment::STATUS_ASSIGNED,
@@ -71,10 +92,44 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allowance Master
+        |--------------------------------------------------------------------------
+        |
+        | Used by Duty Slip > Driver Allowance > Add More.
+        |
+        */
+
+        $allowances = Allowance::query()
+            ->latest('id')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Expense Master
+        |--------------------------------------------------------------------------
+        |
+        | Used by Duty Slip > Driver Expense > Add More.
+        |
+        */
+
+        $expenses = Expense::query()
+            ->latest('id')
+            ->get();
+
+
         return view('backend.duty-slips.create',
-            compact('dutyAssignments')
+            compact(
+                'dutyAssignments',
+                'allowances',
+                'expenses'
+            )
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -101,6 +156,7 @@ class DutySlipController extends Controller
             );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | SHOW
@@ -114,15 +170,18 @@ class DutySlipController extends Controller
         DutySlip $dutySlip
     ): View {
 
-        $dutySlip =
-            $this->dutySlipService->findById(
+        $dutySlip = $this->dutySlipService
+            ->findById(
                 $dutySlip->id
             );
 
-        return view('backend.duty-slips.show',
+
+        return view(
+            'backend.duty-slips.show',
             compact('dutySlip')
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -137,10 +196,27 @@ class DutySlipController extends Controller
         DutySlip $dutySlip
     ): View {
 
-        $dutySlip =
-            $this->dutySlipService->findById(
+        /*
+        |--------------------------------------------------------------------------
+        | Load Duty Slip
+        |--------------------------------------------------------------------------
+        |
+        | Existing allowances and expenses are loaded so that
+        | Add More rows can be populated on the edit page.
+        |
+        */
+
+        $dutySlip = $this->dutySlipService
+            ->findById(
                 $dutySlip->id
             );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Assignments
+        |--------------------------------------------------------------------------
+        */
 
         $dutyAssignments = DutyAssignment::query()
             ->with([
@@ -151,13 +227,39 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allowance Master
+        |--------------------------------------------------------------------------
+        */
+
+        $allowances = Allowance::query()
+            ->latest('id')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Expense Master
+        |--------------------------------------------------------------------------
+        */
+
+        $expenses = Expense::query()
+            ->latest('id')
+            ->get();
+
+
         return view('backend.duty-slips.edit',
             compact(
                 'dutySlip',
-                'dutyAssignments'
+                'dutyAssignments',
+                'allowances',
+                'expenses'
             )
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -178,6 +280,7 @@ class DutySlipController extends Controller
             $request->validated()
         );
 
+
         return redirect()
             ->route('duty-slips.index')
             ->with(
@@ -185,6 +288,7 @@ class DutySlipController extends Controller
                 'Duty slip updated successfully.'
             );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -202,6 +306,7 @@ class DutySlipController extends Controller
         $this->dutySlipService->delete(
             $dutySlip
         );
+
 
         return redirect()
             ->route('duty-slips.index')

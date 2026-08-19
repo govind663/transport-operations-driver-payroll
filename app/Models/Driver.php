@@ -360,6 +360,20 @@ class Driver extends Model
         );
     }
 
+    public function dutySlipAllowances()
+    {
+        return $this->hasMany(
+            DriverAllowance::class
+        );
+    }
+
+    public function dutySlipExpenses()
+    {
+        return $this->hasMany(
+            DriverExpense::class
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Accessors

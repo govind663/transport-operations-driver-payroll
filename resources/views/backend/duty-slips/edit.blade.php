@@ -8,61 +8,33 @@
 
 <style>
 
-    /*
-    |--------------------------------------------------------------------------
-    | Section Heading
-    |--------------------------------------------------------------------------
-    */
-
     .form-section-title {
-        color: #023a85;
+        color: #023a85 !important;
         font-weight: 600;
         margin-bottom: 10px;
     }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Form Labels
-    |--------------------------------------------------------------------------
-    */
-
-    .form-group label {
-        font-weight: 600;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Required Star
-    |--------------------------------------------------------------------------
-    */
 
     .required {
         color: #dc3545;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Card
-    |--------------------------------------------------------------------------
-    */
-
-    .duty-slip-card {
-        border-radius: 8px;
+    .expense-box {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
     }
 
+    .total-expense-box {
+        background: #e9f7ef;
+        border: 1px solid #28a745;
+        border-radius: 6px;
+        padding: 15px;
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Readonly Field
-    |--------------------------------------------------------------------------
-    */
-
-    .readonly-field {
-        background-color: #f8f9fa;
-        cursor: not-allowed;
+    .form-control:focus {
+        border-color: #023a85;
+        box-shadow: 0 0 0 0.1rem rgba(2, 58, 133, .15);
     }
 
 </style>
@@ -95,7 +67,6 @@
 
                     </div>
 
-
                     <nav aria-label="breadcrumb">
 
                         <ol class="breadcrumb">
@@ -108,7 +79,6 @@
 
                             </li>
 
-
                             <li class="breadcrumb-item">
 
                                 <a href="{{ route('duty-slips.index') }}">
@@ -116,7 +86,6 @@
                                 </a>
 
                             </li>
-
 
                             <li class="breadcrumb-item active">
 
@@ -130,26 +99,9 @@
 
                 </div>
 
-
-                {{-- Back Button --}}
-                <div class="col-md-4 col-sm-12 text-right">
-
-                    <a
-                        href="{{ route('duty-slips.index') }}"
-                        class="btn btn-secondary">
-
-                        <i class="fa fa-arrow-left"></i>
-
-                        Back
-
-                    </a>
-
-                </div>
-
             </div>
 
         </div>
-
 
 
         {{-- ========================================================= --}}
@@ -161,7 +113,7 @@
             <div class="alert alert-danger">
 
                 <strong>
-                    Please fix the following errors:
+                    Please correct the following errors:
                 </strong>
 
                 <ul class="mb-0 mt-2">
@@ -181,7 +133,6 @@
         @endif
 
 
-
         {{-- ========================================================= --}}
         {{-- SUCCESS MESSAGE --}}
         {{-- ========================================================= --}}
@@ -197,35 +148,31 @@
         @endif
 
 
-
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
 
         <form
             action="{{ route('duty-slips.update', $dutySlip->id) }}"
-            method="POST">
+            method="POST"
+            id="duty-slip-form">
 
             @csrf
 
             @method('PUT')
 
 
-            <div class="card-box pd-20 mb-30 duty-slip-card">
+            <div class="card-box pd-20 mb-30">
 
 
-                {{-- ===================================================== --}}
+                {{-- ================================================= --}}
                 {{-- DUTY SLIP INFORMATION --}}
-                {{-- ===================================================== --}}
+                {{-- ================================================= --}}
 
                 <div class="mb-4">
 
                     <h5 class="form-section-title">
-
-                        <b>
-                            Duty Slip Information
-                        </b>
-
+                        Duty Slip Information
                     </h5>
 
                     <hr>
@@ -244,16 +191,17 @@
 
                         <div class="form-group">
 
-                            <label for="slip_no">
+                            <label>
 
-                                Duty Slip Number
+                                <b>
+                                    Duty Slip Number
+                                </b>
 
                                 <span class="required">
                                     *
                                 </span>
 
                             </label>
-
 
                             <input
                                 type="text"
@@ -262,7 +210,6 @@
                                 class="form-control @error('slip_no') is-invalid @enderror"
                                 value="{{ old('slip_no', $dutySlip->slip_no) }}"
                                 placeholder="Enter Duty Slip Number">
-
 
                             @error('slip_no')
 
@@ -276,10 +223,13 @@
 
                             @enderror
 
+                            <small class="text-muted">
+                                Example: DS001, DS002
+                            </small>
+
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -290,16 +240,17 @@
 
                         <div class="form-group">
 
-                            <label for="duty_assignment_id">
+                            <label>
 
-                                Duty Assignment
+                                <b>
+                                    Duty Assignment
+                                </b>
 
                                 <span class="required">
                                     *
                                 </span>
 
                             </label>
-
 
                             <select
                                 name="duty_assignment_id"
@@ -309,7 +260,6 @@
                                 <option value="">
                                     Select Duty Assignment
                                 </option>
-
 
                                 @foreach($dutyAssignments ?? [] as $assignment)
 
@@ -322,15 +272,24 @@
                                             ? 'selected'
                                             : '' }}>
 
-                                        {{ $assignment->assignment_no
-                                            ?? $assignment->id }}
+                                        {{ $assignment->assignment_no ?? 'DA-' . $assignment->id }}
+
+                                        @if(!empty($assignment->driver))
+
+                                            -
+                                            {{ trim(
+                                                ($assignment->driver->first_name ?? '') .
+                                                ' ' .
+                                                ($assignment->driver->last_name ?? '')
+                                            ) }}
+
+                                        @endif
 
                                     </option>
 
                                 @endforeach
 
                             </select>
-
 
                             @error('duty_assignment_id')
 
@@ -349,71 +308,6 @@
                     </div>
 
 
-
-                    {{-- ================================================= --}}
-                    {{-- Travel Request --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="travel_request_id">
-
-                                Travel Request
-
-                            </label>
-
-
-                            <select
-                                name="travel_request_id"
-                                id="travel_request_id"
-                                class="form-control custom-select2 @error('travel_request_id') is-invalid @enderror">
-
-                                <option value="">
-                                    Select Travel Request
-                                </option>
-
-
-                                @foreach($travelRequests ?? [] as $travelRequest)
-
-                                    <option
-                                        value="{{ $travelRequest->id }}"
-                                        {{ (string) old(
-                                            'travel_request_id',
-                                            $dutySlip->travel_request_id
-                                        ) === (string) $travelRequest->id
-                                            ? 'selected'
-                                            : '' }}>
-
-                                        {{ $travelRequest->request_no
-                                            ?? $travelRequest->id }}
-
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-
-                            @error('travel_request_id')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
                     {{-- ================================================= --}}
                     {{-- Duty Date --}}
                     {{-- ================================================= --}}
@@ -422,16 +316,17 @@
 
                         <div class="form-group">
 
-                            <label for="duty_date">
+                            <label>
 
-                                Duty Date
+                                <b>
+                                    Duty Date
+                                </b>
 
                                 <span class="required">
                                     *
                                 </span>
 
                             </label>
-
 
                             <input
                                 type="date"
@@ -442,7 +337,6 @@
                                     'duty_date',
                                     optional($dutySlip->duty_date)->format('Y-m-d')
                                 ) }}">
-
 
                             @error('duty_date')
 
@@ -461,151 +355,14 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Reporting Time --}}
+                    {{-- DRIVER & VEHICLE INFORMATION --}}
                     {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="reporting_time">
-
-                                Reporting Time
-
-                            </label>
-
-
-                            <input
-                                type="time"
-                                name="reporting_time"
-                                id="reporting_time"
-                                class="form-control @error('reporting_time') is-invalid @enderror"
-                                value="{{ old(
-                                    'reporting_time',
-                                    $dutySlip->reporting_time
-                                ) }}">
-
-
-                            @error('reporting_time')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Duty Start Time --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="start_time">
-
-                                Start Time
-
-                            </label>
-
-
-                            <input
-                                type="time"
-                                name="start_time"
-                                id="start_time"
-                                class="form-control @error('start_time') is-invalid @enderror"
-                                value="{{ old(
-                                    'start_time',
-                                    $dutySlip->start_time
-                                ) }}">
-
-
-                            @error('start_time')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Duty End Time --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="end_time">
-
-                                End Time
-
-                            </label>
-
-
-                            <input
-                                type="time"
-                                name="end_time"
-                                id="end_time"
-                                class="form-control @error('end_time') is-invalid @enderror"
-                                value="{{ old(
-                                    'end_time',
-                                    $dutySlip->end_time
-                                ) }}">
-
-
-                            @error('end_time')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ========================================================= --}}
-                    {{-- DRIVER INFORMATION --}}
-                    {{-- ========================================================= --}}
 
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
-                            <b>
-                                Driver Information
-                            </b>
-
+                            Driver & Vehicle Information
                         </h5>
 
                         <hr>
@@ -613,25 +370,25 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- Driver --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="driver_id">
+                            <label>
 
-                                Driver
+                                <b>
+                                    Driver
+                                </b>
 
                                 <span class="required">
                                     *
                                 </span>
 
                             </label>
-
 
                             <select
                                 name="driver_id"
@@ -641,7 +398,6 @@
                                 <option value="">
                                     Select Driver
                                 </option>
-
 
                                 @foreach($drivers ?? [] as $driver)
 
@@ -654,7 +410,7 @@
                                             ? 'selected'
                                             : '' }}>
 
-                                        {{ $driver->driver_code }}
+                                        {{ $driver->driver_code ?? 'DRV-' . $driver->id }}
 
                                         -
 
@@ -669,7 +425,6 @@
                                 @endforeach
 
                             </select>
-
 
                             @error('driver_id')
 
@@ -688,25 +443,25 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- Vehicle --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="vehicle_id">
+                            <label>
 
-                                Vehicle
+                                <b>
+                                    Vehicle
+                                </b>
 
                                 <span class="required">
                                     *
                                 </span>
 
                             </label>
-
 
                             <select
                                 name="vehicle_id"
@@ -716,7 +471,6 @@
                                 <option value="">
                                     Select Vehicle
                                 </option>
-
 
                                 @foreach($vehicles ?? [] as $vehicle)
 
@@ -731,14 +485,13 @@
 
                                         {{ $vehicle->vehicle_number
                                             ?? $vehicle->registration_number
-                                            ?? $vehicle->id }}
+                                            ?? 'Vehicle-' . $vehicle->id }}
 
                                     </option>
 
                                 @endforeach
 
                             </select>
-
 
                             @error('vehicle_id')
 
@@ -757,19 +510,58 @@
                     </div>
 
 
+                    {{-- ================================================= --}}
+                    {{-- Vehicle Type --}}
+                    {{-- ================================================= --}}
 
-                    {{-- ========================================================= --}}
-                    {{-- PASSENGER INFORMATION --}}
-                    {{-- ========================================================= --}}
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Vehicle Type
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="vehicle_type"
+                                id="vehicle_type"
+                                class="form-control @error('vehicle_type') is-invalid @enderror"
+                                value="{{ old(
+                                    'vehicle_type',
+                                    $dutySlip->vehicle_type
+                                ) }}"
+                                placeholder="Enter Vehicle Type">
+
+                            @error('vehicle_type')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- ================================================= --}}
+                    {{-- TRIP INFORMATION --}}
+                    {{-- ================================================= --}}
 
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
-                            <b>
-                                Passenger Information
-                            </b>
-
+                            Trip Information
                         </h5>
 
                         <hr>
@@ -777,42 +569,32 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Passenger Name --}}
+                    {{-- Start Date --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
 
                         <div class="form-group">
 
-                            <label for="passenger_name">
-
-                                Passenger Name
-
+                            <label>
+                                <b>Start Date</b>
                             </label>
 
-
                             <input
-                                type="text"
-                                name="passenger_name"
-                                id="passenger_name"
-                                class="form-control @error('passenger_name') is-invalid @enderror"
+                                type="date"
+                                name="start_date"
+                                id="start_date"
+                                class="form-control @error('start_date') is-invalid @enderror"
                                 value="{{ old(
-                                    'passenger_name',
-                                    $dutySlip->passenger_name
-                                ) }}"
-                                placeholder="Enter Passenger Name">
+                                    'start_date',
+                                    optional($dutySlip->start_date)->format('Y-m-d')
+                                ) }}">
 
-
-                            @error('passenger_name')
+                            @error('start_date')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
 
                             @enderror
@@ -822,45 +604,33 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Passenger Mobile --}}
+                    {{-- Start Time --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
 
                         <div class="form-group">
 
-                            <label for="passenger_mobile">
-
-                                Passenger Mobile
-
+                            <label>
+                                <b>Start Time</b>
                             </label>
 
-
                             <input
-                                type="text"
-                                name="passenger_mobile"
-                                id="passenger_mobile"
-                                maxlength="10"
-                                class="form-control @error('passenger_mobile') is-invalid @enderror"
+                                type="time"
+                                name="start_time"
+                                id="start_time"
+                                class="form-control @error('start_time') is-invalid @enderror"
                                 value="{{ old(
-                                    'passenger_mobile',
-                                    $dutySlip->passenger_mobile
-                                ) }}"
-                                placeholder="Enter Mobile Number">
+                                    'start_time',
+                                    $dutySlip->start_time
+                                ) }}">
 
-
-                            @error('passenger_mobile')
+                            @error('start_time')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
-
                             @enderror
 
                         </div>
@@ -868,45 +638,33 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Number Of Passengers --}}
+                    {{-- End Date --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
 
                         <div class="form-group">
 
-                            <label for="number_of_passengers">
-
-                                Number Of Passengers
-
+                            <label>
+                                <b>End Date</b>
                             </label>
 
-
                             <input
-                                type="number"
-                                name="number_of_passengers"
-                                id="number_of_passengers"
-                                min="1"
-                                class="form-control @error('number_of_passengers') is-invalid @enderror"
+                                type="date"
+                                name="end_date"
+                                id="end_date"
+                                class="form-control @error('end_date') is-invalid @enderror"
                                 value="{{ old(
-                                    'number_of_passengers',
-                                    $dutySlip->number_of_passengers
-                                ) }}"
-                                placeholder="Enter Number">
+                                    'end_date',
+                                    optional($dutySlip->end_date)->format('Y-m-d')
+                                ) }}">
 
-
-                            @error('number_of_passengers')
+                            @error('end_date')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
-
                             @enderror
 
                         </div>
@@ -914,144 +672,122 @@
                     </div>
 
 
+                    {{-- ================================================= --}}
+                    {{-- End Time --}}
+                    {{-- ================================================= --}}
 
-                    {{-- ========================================================= --}}
-                    {{-- ROUTE INFORMATION --}}
-                    {{-- ========================================================= --}}
+                    <div class="col-md-3">
 
-                    <div class="col-12 mt-3">
+                        <div class="form-group">
 
-                        <h5 class="form-section-title">
+                            <label>
+                                <b>End Time</b>
+                            </label>
 
-                            <b>
-                                Route Information
-                            </b>
+                            <input
+                                type="time"
+                                name="end_time"
+                                id="end_time"
+                                class="form-control @error('end_time') is-invalid @enderror"
+                                value="{{ old(
+                                    'end_time',
+                                    $dutySlip->end_time
+                                ) }}">
 
-                        </h5>
+                            @error('end_time')
 
-                        <hr>
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+
+                        </div>
 
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Pickup Location --}}
+                    {{-- Pickup --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-6">
 
                         <div class="form-group">
 
-                            <label for="pickup_location">
-
-                                Pickup Location
-
-                                <span class="required">
-                                    *
-                                </span>
-
+                            <label>
+                                <b>Pickup Location</b>
                             </label>
-
 
                             <input
                                 type="text"
                                 name="pickup_location"
                                 id="pickup_location"
-                                class="form-control @error('pickup_location') is-invalid @enderror"
+                                class="form-control"
                                 value="{{ old(
                                     'pickup_location',
                                     $dutySlip->pickup_location
                                 ) }}"
                                 placeholder="Enter Pickup Location">
 
-
-                            @error('pickup_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
                         </div>
 
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Drop Location --}}
+                    {{-- Drop --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-6">
 
                         <div class="form-group">
 
-                            <label for="drop_location">
-
-                                Drop Location
-
-                                <span class="required">
-                                    *
-                                </span>
-
+                            <label>
+                                <b>Drop Location</b>
                             </label>
-
 
                             <input
                                 type="text"
                                 name="drop_location"
                                 id="drop_location"
-                                class="form-control @error('drop_location') is-invalid @enderror"
+                                class="form-control"
                                 value="{{ old(
                                     'drop_location',
                                     $dutySlip->drop_location
                                 ) }}"
                                 placeholder="Enter Drop Location">
 
-
-                            @error('drop_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
                         </div>
 
                     </div>
 
-
-
+                                        {{-- ================================================= --}}
+                    {{-- KM INFORMATION --}}
                     {{-- ================================================= --}}
+
+                    <div class="col-12 mt-3">
+
+                        <h5 class="form-section-title">
+                            Kilometer Information
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+
                     {{-- Opening KM --}}
-                    {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="opening_km">
-
-                                Opening KM
-
+                            <label>
+                                <b>Opening KM</b>
                             </label>
-
 
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0"
                                 name="opening_km"
                                 id="opening_km"
                                 class="form-control @error('opening_km') is-invalid @enderror"
@@ -1059,17 +795,14 @@
                                     'opening_km',
                                     $dutySlip->opening_km
                                 ) }}"
+                                min="0"
+                                step="0.01"
                                 placeholder="Enter Opening KM">
-
 
                             @error('opening_km')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
 
                             @enderror
@@ -1079,26 +812,18 @@
                     </div>
 
 
-
-                    {{-- ================================================= --}}
                     {{-- Closing KM --}}
-                    {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="closing_km">
-
-                                Closing KM
-
+                            <label>
+                                <b>Closing KM</b>
                             </label>
-
 
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0"
                                 name="closing_km"
                                 id="closing_km"
                                 class="form-control @error('closing_km') is-invalid @enderror"
@@ -1106,17 +831,14 @@
                                     'closing_km',
                                     $dutySlip->closing_km
                                 ) }}"
+                                min="0"
+                                step="0.01"
                                 placeholder="Enter Closing KM">
-
 
                             @error('closing_km')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
 
                             @enderror
@@ -1126,74 +848,42 @@
                     </div>
 
 
-
-                    {{-- ================================================= --}}
                     {{-- Total KM --}}
-                    {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="total_km">
-
-                                Total KM
-
+                            <label>
+                                <b>Total KM</b>
                             </label>
-
 
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0"
                                 name="total_km"
                                 id="total_km"
-                                class="form-control readonly-field @error('total_km') is-invalid @enderror"
+                                class="form-control"
                                 value="{{ old(
                                     'total_km',
                                     $dutySlip->total_km
                                 ) }}"
-                                placeholder="Calculated automatically"
+                                min="0"
+                                step="0.01"
                                 readonly>
-
-
-                            <small class="text-muted">
-
-                                Calculated from Closing KM − Opening KM.
-
-                            </small>
-
-
-                            @error('total_km')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
 
                         </div>
 
                     </div>
 
 
-
-                    {{-- ========================================================= --}}
-                    {{-- FINANCIAL INFORMATION --}}
-                    {{-- ========================================================= --}}
+                    {{-- ================================================= --}}
+                    {{-- PASSENGER INFORMATION --}}
+                    {{-- ================================================= --}}
 
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
-                            <b>
-                                Financial Information
-                            </b>
-
+                            Passenger Information
                         </h5>
 
                         <hr>
@@ -1201,44 +891,1117 @@
                     </div>
 
 
-
-                    {{-- ================================================= --}}
-                    {{-- Rate --}}
-                    {{-- ================================================= --}}
+                    {{-- Passenger Name --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="rate">
-
-                                Rate
-
+                            <label>
+                                <b>Passenger Name</b>
                             </label>
 
+                            <input
+                                type="text"
+                                name="passenger_name"
+                                id="passenger_name"
+                                class="form-control"
+                                value="{{ old(
+                                    'passenger_name',
+                                    $dutySlip->passenger_name
+                                ) }}"
+                                placeholder="Enter Passenger Name">
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Passenger Mobile --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label>
+                                <b>Passenger Mobile</b>
+                            </label>
+
+                            <input
+                                type="text"
+                                name="passenger_mobile"
+                                id="passenger_mobile"
+                                maxlength="10"
+                                class="form-control"
+                                value="{{ old(
+                                    'passenger_mobile',
+                                    $dutySlip->passenger_mobile
+                                ) }}"
+                                placeholder="Enter Passenger Mobile">
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Number Of Passengers --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label>
+                                <b>Number Of Passengers</b>
+                            </label>
 
                             <input
                                 type="number"
-                                step="0.01"
-                                min="0"
-                                name="rate"
-                                id="rate"
-                                class="form-control @error('rate') is-invalid @enderror"
+                                name="number_of_passengers"
+                                id="number_of_passengers"
+                                class="form-control"
                                 value="{{ old(
-                                    'rate',
-                                    $dutySlip->rate
+                                    'number_of_passengers',
+                                    $dutySlip->number_of_passengers ?? 1
                                 ) }}"
-                                placeholder="Enter Rate">
+                                min="1"
+                                placeholder="Enter Number Of Passengers">
+
+                        </div>
+
+                    </div>
+
+                                        {{-- ========================================================= --}}
+                    {{-- DRIVER ALLOWANCE --}}
+                    {{-- ========================================================= --}}
+
+                    <div class="col-12 mt-4">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;"
+                        >
+                            <b>Driver Allowance</b>
+                        </h5>
+
+                        <hr>
+
+                    </div>
 
 
-                            @error('rate')
+                    <div class="col-12">
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered table-striped"
+                                id="allowance-table"
+                            >
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th style="width:30%;">
+                                            Allowance
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Quantity
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Rate
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Amount
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Remarks
+                                        </th>
+
+                                        <th style="width:12%;">
+                                            Status
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Action
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="allowance-wrapper">
+
+
+                                    @forelse(
+                                        $dutySlip->allowances ?? []
+                                        as $index => $driverAllowance
+                                    )
+
+                                        <tr
+                                            class="allowance-row"
+                                            data-index="{{ $index }}"
+                                        >
+
+
+                                            {{-- Allowance --}}
+
+                                            <td>
+
+                                                <select
+                                                    name="allowances[{{ $index }}][allowance_id]"
+                                                    class="form-control custom-select2 allowance-select"
+                                                >
+
+                                                    <option value="">
+                                                        Select Allowance
+                                                    </option>
+
+
+                                                    @foreach(
+                                                        $allowances ?? []
+                                                        as $allowance
+                                                    )
+
+                                                        <option
+                                                            value="{{ $allowance->id }}"
+                                                            data-rate="{{ $allowance->amount ?? 0 }}"
+                                                            data-calculation-type="{{ $allowance->calculation_type }}"
+                                                            {{ (string) $driverAllowance->allowance_id === (string) $allowance->id
+                                                                ? 'selected'
+                                                                : '' }}
+                                                        >
+
+                                                            {{ $allowance->name }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            {{-- Quantity --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[{{ $index }}][quantity]"
+                                                    class="form-control allowance-quantity"
+                                                    value="{{ old(
+                                                        "allowances.$index.quantity",
+                                                        $driverAllowance->quantity
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Rate --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[{{ $index }}][rate]"
+                                                    class="form-control allowance-rate"
+                                                    value="{{ old(
+                                                        "allowances.$index.rate",
+                                                        $driverAllowance->rate
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Amount --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[{{ $index }}][amount]"
+                                                    class="form-control allowance-amount"
+                                                    value="{{ old(
+                                                        "allowances.$index.amount",
+                                                        $driverAllowance->amount
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Remarks --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="text"
+                                                    name="allowances[{{ $index }}][remarks]"
+                                                    class="form-control"
+                                                    value="{{ old(
+                                                        "allowances.$index.remarks",
+                                                        $driverAllowance->remarks
+                                                    ) }}"
+                                                    placeholder="Remarks"
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Status --}}
+
+                                            <td>
+
+                                                <select
+                                                    name="allowances[{{ $index }}][status]"
+                                                    class="form-control custom-select2"
+                                                >
+
+                                                    @foreach([
+                                                        'pending' => 'Pending',
+                                                        'approved' => 'Approved',
+                                                        'rejected' => 'Rejected',
+                                                        'paid' => 'Paid',
+                                                        'cancelled' => 'Cancelled'
+                                                    ] as $statusValue => $statusLabel)
+
+                                                        <option
+                                                            value="{{ $statusValue }}"
+                                                            {{ old(
+                                                                "allowances.$index.status",
+                                                                $driverAllowance->status
+                                                            ) === $statusValue
+                                                                ? 'selected'
+                                                                : '' }}
+                                                        >
+
+                                                            {{ $statusLabel }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            {{-- Action --}}
+
+                                            <td class="text-center">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-danger btn-sm remove-allowance"
+                                                    title="Remove"
+                                                >
+
+                                                    <i class="fa fa-trash"></i>
+
+                                                </button>
+
+                                            </td>
+
+
+                                        </tr>
+
+                                    @empty
+
+
+                                        {{-- ================================================= --}}
+                                        {{-- NO EXISTING ALLOWANCE --}}
+                                        {{-- ================================================= --}}
+
+                                        <tr
+                                            class="allowance-row"
+                                            data-index="0"
+                                        >
+
+                                            <td>
+
+                                                <select
+                                                    name="allowances[0][allowance_id]"
+                                                    class="form-control custom-select2 allowance-select"
+                                                >
+
+                                                    <option value="">
+                                                        Select Allowance
+                                                    </option>
+
+                                                    @foreach(
+                                                        $allowances ?? []
+                                                        as $allowance
+                                                    )
+
+                                                        <option
+                                                            value="{{ $allowance->id }}"
+                                                            data-rate="{{ $allowance->amount ?? 0 }}"
+                                                            data-calculation-type="{{ $allowance->calculation_type }}"
+                                                        >
+
+                                                            {{ $allowance->name }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[0][quantity]"
+                                                    class="form-control allowance-quantity"
+                                                    value="1"
+                                                    min="0"
+                                                    step="0.01"
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[0][rate]"
+                                                    class="form-control allowance-rate"
+                                                    value="0.00"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="allowances[0][amount]"
+                                                    class="form-control allowance-amount"
+                                                    value="0.00"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="text"
+                                                    name="allowances[0][remarks]"
+                                                    class="form-control"
+                                                    placeholder="Remarks"
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <select
+                                                    name="allowances[0][status]"
+                                                    class="form-control custom-select2"
+                                                >
+
+                                                    <option
+                                                        value="pending"
+                                                        selected
+                                                    >
+                                                        Pending
+                                                    </option>
+
+                                                    <option value="approved">
+                                                        Approved
+                                                    </option>
+
+                                                    <option value="rejected">
+                                                        Rejected
+                                                    </option>
+
+                                                    <option value="paid">
+                                                        Paid
+                                                    </option>
+
+                                                    <option value="cancelled">
+                                                        Cancelled
+                                                    </option>
+
+                                                </select>
+
+                                            </td>
+
+
+                                            <td class="text-center">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-danger btn-sm remove-allowance"
+                                                    disabled
+                                                    title="Remove"
+                                                >
+
+                                                    <i class="fa fa-trash"></i>
+
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-allowance"
+                                class="btn btn-primary btn-sm"
+                            >
+
+                                <i class="fa fa-plus"></i>
+
+                                Add More Allowance
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                                        {{-- ========================================================= --}}
+                    {{-- DRIVER EXPENSE --}}
+                    {{-- ========================================================= --}}
+
+                    <div class="col-12 mt-4">
+
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;"
+                        >
+                            <b>Driver Expense</b>
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+
+                    <div class="col-12">
+
+                        <div class="table-responsive">
+
+                            <table
+                                class="table table-bordered table-striped"
+                                id="expense-table"
+                            >
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th style="width:30%;">
+                                            Expense
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Quantity
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Rate
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Amount
+                                        </th>
+
+                                        <th style="width:15%;">
+                                            Remarks
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Status
+                                        </th>
+
+                                        <th style="width:10%;">
+                                            Action
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="expense-wrapper">
+
+
+                                    @forelse(
+                                        $dutySlip->expenses ?? []
+                                        as $index => $driverExpense
+                                    )
+
+                                        <tr
+                                            class="expense-row"
+                                            data-index="{{ $index }}"
+                                        >
+
+
+                                            {{-- Expense --}}
+
+                                            <td>
+
+                                                <select
+                                                    name="expenses[{{ $index }}][expense_id]"
+                                                    class="form-control custom-select2 expense-select"
+                                                >
+
+                                                    <option value="">
+                                                        Select Expense
+                                                    </option>
+
+
+                                                    @foreach(
+                                                        $expenses ?? []
+                                                        as $expense
+                                                    )
+
+                                                        <option
+                                                            value="{{ $expense->id }}"
+                                                            data-rate="{{ $expense->amount ?? 0 }}"
+                                                            {{ (string) $driverExpense->expense_id === (string) $expense->id
+                                                                ? 'selected'
+                                                                : '' }}
+                                                        >
+
+                                                            {{ $expense->name }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            {{-- Quantity --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[{{ $index }}][quantity]"
+                                                    class="form-control expense-quantity"
+                                                    value="{{ old(
+                                                        "expenses.$index.quantity",
+                                                        $driverExpense->quantity
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Rate --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[{{ $index }}][rate]"
+                                                    class="form-control expense-rate"
+                                                    value="{{ old(
+                                                        "expenses.$index.rate",
+                                                        $driverExpense->rate
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Amount --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[{{ $index }}][amount]"
+                                                    class="form-control expense-amount"
+                                                    value="{{ old(
+                                                        "expenses.$index.amount",
+                                                        $driverExpense->amount
+                                                    ) }}"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Remarks --}}
+
+                                            <td>
+
+                                                <input
+                                                    type="text"
+                                                    name="expenses[{{ $index }}][remarks]"
+                                                    class="form-control"
+                                                    value="{{ old(
+                                                        "expenses.$index.remarks",
+                                                        $driverExpense->remarks
+                                                    ) }}"
+                                                    placeholder="Remarks"
+                                                >
+
+                                            </td>
+
+
+                                            {{-- Status --}}
+
+                                            <td>
+
+                                                <select
+                                                    name="expenses[{{ $index }}][status]"
+                                                    class="form-control custom-select2"
+                                                >
+
+                                                    @foreach([
+                                                        'pending' => 'Pending',
+                                                        'approved' => 'Approved',
+                                                        'rejected' => 'Rejected',
+                                                        'paid' => 'Paid',
+                                                        'cancelled' => 'Cancelled'
+                                                    ] as $statusValue => $statusLabel)
+
+                                                        <option
+                                                            value="{{ $statusValue }}"
+                                                            {{ old(
+                                                                "expenses.$index.status",
+                                                                $driverExpense->status
+                                                            ) === $statusValue
+                                                                ? 'selected'
+                                                                : '' }}
+                                                        >
+
+                                                            {{ $statusLabel }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            {{-- Action --}}
+
+                                            <td class="text-center">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-danger btn-sm remove-expense"
+                                                    title="Remove"
+                                                >
+
+                                                    <i class="fa fa-trash"></i>
+
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+
+
+                                    @empty
+
+
+                                        {{-- Empty Expense Row --}}
+
+                                        <tr
+                                            class="expense-row"
+                                            data-index="0"
+                                        >
+
+                                            <td>
+
+                                                <select
+                                                    name="expenses[0][expense_id]"
+                                                    class="form-control custom-select2 expense-select"
+                                                >
+
+                                                    <option value="">
+                                                        Select Expense
+                                                    </option>
+
+                                                    @foreach(
+                                                        $expenses ?? []
+                                                        as $expense
+                                                    )
+
+                                                        <option
+                                                            value="{{ $expense->id }}"
+                                                            data-rate="{{ $expense->amount ?? 0 }}"
+                                                        >
+
+                                                            {{ $expense->name }}
+
+                                                        </option>
+
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[0][quantity]"
+                                                    class="form-control expense-quantity"
+                                                    value="1"
+                                                    min="0"
+                                                    step="0.01"
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[0][rate]"
+                                                    class="form-control expense-rate"
+                                                    value="0.00"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="number"
+                                                    name="expenses[0][amount]"
+                                                    class="form-control expense-amount"
+                                                    value="0.00"
+                                                    min="0"
+                                                    step="0.01"
+                                                    readonly
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                    type="text"
+                                                    name="expenses[0][remarks]"
+                                                    class="form-control"
+                                                    placeholder="Remarks"
+                                                >
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <select
+                                                    name="expenses[0][status]"
+                                                    class="form-control custom-select2"
+                                                >
+
+                                                    <option
+                                                        value="pending"
+                                                        selected
+                                                    >
+                                                        Pending
+                                                    </option>
+
+                                                    <option value="approved">
+                                                        Approved
+                                                    </option>
+
+                                                    <option value="rejected">
+                                                        Rejected
+                                                    </option>
+
+                                                    <option value="paid">
+                                                        Paid
+                                                    </option>
+
+                                                    <option value="cancelled">
+                                                        Cancelled
+                                                    </option>
+
+                                                </select>
+
+                                            </td>
+
+
+                                            <td class="text-center">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-danger btn-sm remove-expense"
+                                                    disabled
+                                                    title="Remove"
+                                                >
+
+                                                    <i class="fa fa-trash"></i>
+
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-expense"
+                                class="btn btn-primary btn-sm"
+                            >
+
+                                <i class="fa fa-plus"></i>
+
+                                Add More Expense
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                                        {{-- ========================================================= --}}
+                    {{-- FINANCIAL SUMMARY --}}
+                    {{-- ========================================================= --}}
+
+                    <div class="col-12 mt-4">
+
+                        <div class="card">
+
+                            <div class="card-body">
+
+                                <h6
+                                    class="text-primary"
+                                    style="color:#023a85 !important;"
+                                >
+                                    <b>Financial Summary</b>
+                                </h6>
+
+                                <hr>
+
+
+                                <div class="row">
+
+
+                                    {{-- Total Allowance --}}
+
+                                    <div class="col-md-4">
+
+                                        <div class="form-group">
+
+                                            <label>
+                                                Total Allowance
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                id="total-allowance"
+                                                class="form-control"
+                                                value="{{ number_format(
+                                                    $dutySlip->total_allowance ?? 0,
+                                                    2,
+                                                    '.',
+                                                    ''
+                                                ) }}"
+                                                readonly
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="total_allowance"
+                                                id="total_allowance"
+                                                value="{{ $dutySlip->total_allowance ?? 0 }}"
+                                            >
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {{-- Total Expense --}}
+
+                                    <div class="col-md-4">
+
+                                        <div class="form-group">
+
+                                            <label>
+                                                Total Expense
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                id="total-expense"
+                                                class="form-control"
+                                                value="{{ number_format(
+                                                    $dutySlip->total_expense ?? 0,
+                                                    2,
+                                                    '.',
+                                                    ''
+                                                ) }}"
+                                                readonly
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="total_expense"
+                                                id="total_expense"
+                                                value="{{ $dutySlip->total_expense ?? 0 }}"
+                                            >
+
+                                        </div>
+
+                                    </div>
+
+
+                                    {{-- Grand Total --}}
+
+                                    <div class="col-md-4">
+
+                                        <div class="form-group">
+
+                                            <label>
+                                                <b>Grand Total</b>
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                id="grand-total"
+                                                class="form-control"
+                                                value="{{ number_format(
+                                                    $dutySlip->grand_total ?? 0,
+                                                    2,
+                                                    '.',
+                                                    ''
+                                                ) }}"
+                                                readonly
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="grand_total"
+                                                id="grand_total"
+                                                value="{{ $dutySlip->grand_total ?? 0 }}"
+                                            >
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- ========================================================= --}}
+                    {{-- REMARKS --}}
+                    {{-- ========================================================= --}}
+
+                    <div class="col-12 mt-3">
+
+                        <h5 class="form-section-title">
+                            Remarks
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+
+                    <div class="col-md-12">
+
+                        <div class="form-group">
+
+                            <label>
+                                <b>Remarks</b>
+                            </label>
+
+                            <textarea
+                                name="remarks"
+                                id="remarks"
+                                rows="4"
+                                class="form-control @error('remarks') is-invalid @enderror"
+                                placeholder="Enter Remarks">{{ old(
+                                    'remarks',
+                                    $dutySlip->remarks
+                                ) }}</textarea>
+
+                            @error('remarks')
 
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
 
                             @enderror
@@ -1246,101 +2009,6 @@
                         </div>
 
                     </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Amount --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="amount">
-
-                                Amount
-
-                            </label>
-
-
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                name="amount"
-                                id="amount"
-                                class="form-control @error('amount') is-invalid @enderror"
-                                value="{{ old(
-                                    'amount',
-                                    $dutySlip->amount
-                                ) }}"
-                                placeholder="Enter Amount">
-
-
-                            @error('amount')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Driver Amount --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label for="driver_amount">
-
-                                Driver Amount
-
-                            </label>
-
-
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                name="driver_amount"
-                                id="driver_amount"
-                                class="form-control @error('driver_amount') is-invalid @enderror"
-                                value="{{ old(
-                                    'driver_amount',
-                                    $dutySlip->driver_amount
-                                ) }}"
-                                placeholder="Enter Driver Amount">
-
-
-                            @error('driver_amount')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
 
 
                     {{-- ========================================================= --}}
@@ -1350,11 +2018,7 @@
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
-                            <b>
-                                Status
-                            </b>
-
+                            Status
                         </h5>
 
                         <hr>
@@ -1362,18 +2026,13 @@
                     </div>
 
 
-
-                    {{-- ================================================= --}}
-                    {{-- Status --}}
-                    {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="status">
+                            <label>
 
-                                Status
+                                <b>Status</b>
 
                                 <span class="required">
                                     *
@@ -1387,79 +2046,29 @@
                                 id="status"
                                 class="form-control custom-select2 @error('status') is-invalid @enderror">
 
-                                <option value="">
-                                    Select Status
-                                </option>
 
+                                @foreach([
+                                    'draft' => 'Draft',
+                                    'open' => 'Open',
+                                    'completed' => 'Completed',
+                                    'cancelled' => 'Cancelled'
+                                ] as $statusValue => $statusLabel)
 
-                                <option
-                                    value="draft"
-                                    {{ old(
-                                        'status',
-                                        $dutySlip->status
-                                    ) === 'draft'
-                                        ? 'selected'
-                                        : '' }}>
+                                    <option
+                                        value="{{ $statusValue }}"
+                                        {{ old(
+                                            'status',
+                                            $dutySlip->status
+                                        ) === $statusValue
+                                            ? 'selected'
+                                            : '' }}
+                                    >
 
-                                    Draft
+                                        {{ $statusLabel }}
 
-                                </option>
+                                    </option>
 
-
-                                <option
-                                    value="open"
-                                    {{ old(
-                                        'status',
-                                        $dutySlip->status
-                                    ) === 'open'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    Open
-
-                                </option>
-
-
-                                <option
-                                    value="in_progress"
-                                    {{ old(
-                                        'status',
-                                        $dutySlip->status
-                                    ) === 'in_progress'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    In Progress
-
-                                </option>
-
-
-                                <option
-                                    value="completed"
-                                    {{ old(
-                                        'status',
-                                        $dutySlip->status
-                                    ) === 'completed'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    Completed
-
-                                </option>
-
-
-                                <option
-                                    value="cancelled"
-                                    {{ old(
-                                        'status',
-                                        $dutySlip->status
-                                    ) === 'cancelled'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    Cancelled
-
-                                </option>
+                                @endforeach
 
                             </select>
 
@@ -1481,51 +2090,6 @@
                     </div>
 
 
-
-                    {{-- ========================================================= --}}
-                    {{-- REMARKS --}}
-                    {{-- ========================================================= --}}
-
-                    <div class="col-md-8">
-
-                        <div class="form-group">
-
-                            <label for="remarks">
-
-                                Remarks
-
-                            </label>
-
-
-                            <textarea
-                                name="remarks"
-                                id="remarks"
-                                rows="3"
-                                class="form-control @error('remarks') is-invalid @enderror"
-                                placeholder="Enter remarks">{{ old(
-                                    'remarks',
-                                    $dutySlip->remarks
-                                ) }}</textarea>
-
-
-                            @error('remarks')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
                     {{-- ========================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ========================================================= --}}
@@ -1534,10 +2098,10 @@
 
                         <div class="text-right mt-4">
 
-
                             <a
                                 href="{{ route('duty-slips.index') }}"
-                                class="btn btn-danger">
+                                class="btn btn-danger"
+                            >
 
                                 <i class="fa fa-times"></i>
 
@@ -1548,7 +2112,9 @@
 
                             <button
                                 type="submit"
-                                class="btn btn-success">
+                                class="btn btn-success"
+                                id="update-duty-slip-btn"
+                            >
 
                                 <i class="fa fa-save"></i>
 
@@ -1576,23 +2142,61 @@
 
 @endsection
 
-
 @push('scripts')
 
 <script>
 
 $(document).ready(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function numberValue(value)
+    {
+        const number = parseFloat(value);
+
+        return isNaN(number) || number < 0
+            ? 0
+            : number;
+    }
+
+
+    function formatAmount(value)
+    {
+        return numberValue(value).toFixed(2);
+    }
+
 
     /*
     |--------------------------------------------------------------------------
-    | Mobile Number
+    | SLIP NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    $('#slip_no').on('blur', function () {
+
+        this.value = $(this)
+            .val()
+            .trim()
+            .toUpperCase()
+            .replace(/\s+/g, '');
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MOBILE
     |--------------------------------------------------------------------------
     */
 
     $('#passenger_mobile').on('input', function () {
 
-        this.value = this.value
+        this.value = $(this)
+            .val()
             .replace(/[^0-9]/g, '')
             .slice(0, 10);
 
@@ -1601,161 +2205,1161 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Text Formatting
+    | TOTAL KM
     |--------------------------------------------------------------------------
     */
 
-    $('#slip_no, #passenger_name, #pickup_location, #drop_location')
-        .on('blur', function () {
+    function calculateTotalKm()
+    {
+        const opening =
+            numberValue($('#opening_km').val());
 
-            this.value = this.value
-                .replace(/\s+/g, ' ')
-                .trim();
+        const closing =
+            numberValue($('#closing_km').val());
+
+        let totalKm = 0;
+
+        if (closing >= opening) {
+
+            totalKm = closing - opening;
+
+        }
+
+        $('#total_km').val(
+            formatAmount(totalKm)
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PER KM ALLOWANCE
+        |--------------------------------------------------------------------------
+        */
+
+        $('#allowance-wrapper .allowance-row')
+            .each(function () {
+
+                const row = $(this);
+
+                const option =
+                    row.find(
+                        '.allowance-select option:selected'
+                    );
+
+                const calculationType =
+                    option.attr(
+                        'data-calculation-type'
+                    );
+
+
+                if (calculationType === 'per_km') {
+
+                    row.find('.allowance-quantity')
+                        .val(formatAmount(totalKm));
+
+                    calculateAllowanceRow(row);
+
+                }
+
+            });
+
+
+        calculateFinancialSummary();
+    }
+
+
+    $('#opening_km, #closing_km').on(
+        'input',
+        function () {
+
+            calculateTotalKm();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSING KM VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    $('#closing_km').on(
+        'change',
+        function () {
+
+            const opening =
+                numberValue($('#opening_km').val());
+
+            const closing =
+                numberValue($('#closing_km').val());
+
+
+            if (
+                closing > 0 &&
+                closing < opening
+            ) {
+
+                alert(
+                    'Closing KM cannot be less than Opening KM.'
+                );
+
+                $(this).val('');
+
+                calculateTotalKm();
+
+            }
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE RATE
+    |--------------------------------------------------------------------------
+    */
+
+    function setAllowanceRate(row)
+    {
+        const option =
+            row.find(
+                '.allowance-select option:selected'
+            );
+
+
+        const rate =
+            numberValue(
+                option.attr('data-rate')
+            );
+
+
+        const calculationType =
+            option.attr(
+                'data-calculation-type'
+            );
+
+
+        row.find('.allowance-rate')
+            .val(
+                formatAmount(rate)
+            );
+
+
+        if (calculationType === 'per_km') {
+
+            const totalKm =
+                numberValue(
+                    $('#total_km').val()
+                );
+
+            row.find('.allowance-quantity')
+                .val(
+                    formatAmount(totalKm)
+                );
+
+        }
+
+
+        if (calculationType === 'fixed') {
+
+            const quantity =
+                row.find(
+                    '.allowance-quantity'
+                ).val();
+
+
+            if (
+                quantity === '' ||
+                numberValue(quantity) <= 0
+            ) {
+
+                row.find(
+                    '.allowance-quantity'
+                ).val('1');
+
+            }
+
+        }
+
+
+        calculateAllowanceRow(row);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE CALCULATION
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateAllowanceRow(row)
+    {
+        const quantity =
+            numberValue(
+                row.find(
+                    '.allowance-quantity'
+                ).val()
+            );
+
+
+        const rate =
+            numberValue(
+                row.find(
+                    '.allowance-rate'
+                ).val()
+            );
+
+
+        const amount =
+            quantity * rate;
+
+
+        row.find(
+            '.allowance-amount'
+        ).val(
+            formatAmount(amount)
+        );
+
+
+        calculateFinancialSummary();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '.allowance-select',
+        function () {
+
+            const row =
+                $(this).closest(
+                    '.allowance-row'
+                );
+
+            setAllowanceRate(row);
+
+        }
+    );
+
+
+    $(document).on(
+        'input',
+        '.allowance-quantity',
+        function () {
+
+            calculateAllowanceRow(
+                $(this).closest(
+                    '.allowance-row'
+                )
+            );
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADD ALLOWANCE
+    |--------------------------------------------------------------------------
+    */
+
+    $('#add-allowance').on(
+        'click',
+        function () {
+
+            const wrapper =
+                $('#allowance-wrapper');
+
+            const index =
+                wrapper.find(
+                    '.allowance-row'
+                ).length;
+
+
+            const row = `
+
+                <tr
+                    class="allowance-row"
+                    data-index="${index}"
+                >
+
+                    <td>
+
+                        <select
+                            name="allowances[${index}][allowance_id]"
+                            class="form-control custom-select2 allowance-select"
+                        >
+
+                            <option value="">
+                                Select Allowance
+                            </option>
+
+                            @foreach($allowances ?? [] as $allowance)
+
+                                <option
+                                    value="{{ $allowance->id }}"
+                                    data-rate="{{ $allowance->amount ?? 0 }}"
+                                    data-calculation-type="{{ $allowance->calculation_type }}"
+                                >
+
+                                    {{ $allowance->name }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][quantity]"
+                            class="form-control allowance-quantity"
+                            value="1"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][rate]"
+                            class="form-control allowance-rate"
+                            value="0.00"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][amount]"
+                            class="form-control allowance-amount"
+                            value="0.00"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            name="allowances[${index}][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            name="allowances[${index}][status]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="pending" selected>
+                                Pending
+                            </option>
+
+                            <option value="approved">
+                                Approved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                            <option value="paid">
+                                Paid
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td class="text-center">
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-allowance"
+                        >
+
+                            <i class="fa fa-trash"></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            wrapper.append(row);
+
+
+            initializeSelect2(
+                wrapper.find(
+                    '.allowance-row:last .custom-select2'
+                )
+            );
+
+
+            updateAllowanceRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE ALLOWANCE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'click',
+        '.remove-allowance',
+        function () {
+
+            $(this)
+                .closest('.allowance-row')
+                .remove();
+
+
+            updateAllowanceIndexes();
+
+            updateAllowanceRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE INDEX
+    |--------------------------------------------------------------------------
+    */
+
+    function updateAllowanceIndexes()
+    {
+        $('#allowance-wrapper .allowance-row')
+            .each(function (index) {
+
+                $(this).attr(
+                    'data-index',
+                    index
+                );
+
+
+                $(this)
+                    .find('[name]')
+                    .each(function () {
+
+                        const name =
+                            $(this).attr('name');
+
+                        if (!name) {
+                            return;
+                        }
+
+                        $(this).attr(
+                            'name',
+                            name.replace(
+                                /allowances\[\d+\]/,
+                                `allowances[${index}]`
+                            )
+                        );
+
+                    });
+
+            });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE REMOVE BUTTON
+    |--------------------------------------------------------------------------
+    */
+
+    function updateAllowanceRemoveButtons()
+    {
+        const rows =
+            $('#allowance-wrapper .allowance-row');
+
+
+        rows
+            .find('.remove-allowance')
+            .prop(
+                'disabled',
+                rows.length <= 1
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE RATE
+    |--------------------------------------------------------------------------
+    */
+
+    function setExpenseRate(row)
+    {
+        const option =
+            row.find(
+                '.expense-select option:selected'
+            );
+
+
+        const rate =
+            numberValue(
+                option.attr('data-rate')
+            );
+
+
+        row.find('.expense-rate')
+            .val(
+                formatAmount(rate)
+            );
+
+
+        calculateExpenseRow(row);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE CALCULATION
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateExpenseRow(row)
+    {
+        const quantity =
+            numberValue(
+                row.find(
+                    '.expense-quantity'
+                ).val()
+            );
+
+
+        const rate =
+            numberValue(
+                row.find(
+                    '.expense-rate'
+                ).val()
+            );
+
+
+        const amount =
+            quantity * rate;
+
+
+        row.find(
+            '.expense-amount'
+        ).val(
+            formatAmount(amount)
+        );
+
+
+        calculateFinancialSummary();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE SELECT
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '.expense-select',
+        function () {
+
+            setExpenseRate(
+                $(this).closest(
+                    '.expense-row'
+                )
+            );
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE QUANTITY
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'input',
+        '.expense-quantity',
+        function () {
+
+            calculateExpenseRow(
+                $(this).closest(
+                    '.expense-row'
+                )
+            );
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADD EXPENSE
+    |--------------------------------------------------------------------------
+    */
+
+    $('#add-expense').on(
+        'click',
+        function () {
+
+            const wrapper =
+                $('#expense-wrapper');
+
+            const index =
+                wrapper.find(
+                    '.expense-row'
+                ).length;
+
+
+            const row = `
+
+                <tr
+                    class="expense-row"
+                    data-index="${index}"
+                >
+
+                    <td>
+
+                        <select
+                            name="expenses[${index}][expense_id]"
+                            class="form-control custom-select2 expense-select"
+                        >
+
+                            <option value="">
+                                Select Expense
+                            </option>
+
+                            @foreach($expenses ?? [] as $expense)
+
+                                <option
+                                    value="{{ $expense->id }}"
+                                    data-rate="{{ $expense->amount ?? 0 }}"
+                                >
+
+                                    {{ $expense->name }}
+
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][quantity]"
+                            class="form-control expense-quantity"
+                            value="1"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][rate]"
+                            class="form-control expense-rate"
+                            value="0.00"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][amount]"
+                            class="form-control expense-amount"
+                            value="0.00"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            name="expenses[${index}][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            name="expenses[${index}][status]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="pending" selected>
+                                Pending
+                            </option>
+
+                            <option value="approved">
+                                Approved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                            <option value="paid">
+                                Paid
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td class="text-center">
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-expense"
+                        >
+
+                            <i class="fa fa-trash"></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            wrapper.append(row);
+
+
+            initializeSelect2(
+                wrapper.find(
+                    '.expense-row:last .custom-select2'
+                )
+            );
+
+
+            updateExpenseRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE EXPENSE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'click',
+        '.remove-expense',
+        function () {
+
+            $(this)
+                .closest('.expense-row')
+                .remove();
+
+
+            updateExpenseIndexes();
+
+            updateExpenseRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE INDEX
+    |--------------------------------------------------------------------------
+    */
+
+    function updateExpenseIndexes()
+    {
+        $('#expense-wrapper .expense-row')
+            .each(function (index) {
+
+                $(this).attr(
+                    'data-index',
+                    index
+                );
+
+
+                $(this)
+                    .find('[name]')
+                    .each(function () {
+
+                        const name =
+                            $(this).attr('name');
+
+                        if (!name) {
+                            return;
+                        }
+
+                        $(this).attr(
+                            'name',
+                            name.replace(
+                                /expenses\[\d+\]/,
+                                `expenses[${index}]`
+                            )
+                        );
+
+                    });
+
+            });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE REMOVE BUTTON
+    |--------------------------------------------------------------------------
+    */
+
+    function updateExpenseRemoveButtons()
+    {
+        const rows =
+            $('#expense-wrapper .expense-row');
+
+
+        rows
+            .find('.remove-expense')
+            .prop(
+                'disabled',
+                rows.length <= 1
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FINANCIAL SUMMARY
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateFinancialSummary()
+    {
+        let allowanceTotal = 0;
+        let expenseTotal = 0;
+
+
+        $('#allowance-wrapper .allowance-row')
+            .each(function () {
+
+                allowanceTotal +=
+                    numberValue(
+                        $(this)
+                            .find('.allowance-amount')
+                            .val()
+                    );
+
+            });
+
+
+        $('#expense-wrapper .expense-row')
+            .each(function () {
+
+                expenseTotal +=
+                    numberValue(
+                        $(this)
+                            .find('.expense-amount')
+                            .val()
+                    );
+
+            });
+
+
+        const grandTotal =
+            allowanceTotal +
+            expenseTotal;
+
+
+        $('#total-allowance').val(
+            formatAmount(allowanceTotal)
+        );
+
+        $('#total-expense').val(
+            formatAmount(expenseTotal)
+        );
+
+        $('#grand-total').val(
+            formatAmount(grandTotal)
+        );
+
+
+        $('#total_allowance').val(
+            formatAmount(allowanceTotal)
+        );
+
+        $('#total_expense').val(
+            formatAmount(expenseTotal)
+        );
+
+        $('#grand_total').val(
+            formatAmount(grandTotal)
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SELECT2
+    |--------------------------------------------------------------------------
+    */
+
+    function initializeSelect2(element)
+    {
+        if (
+            element &&
+            element.length &&
+            $.fn.select2
+        ) {
+
+            element.select2({
+                width: '100%',
+                placeholder: 'Select',
+                allowClear: true
+            });
+
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE EXISTING SELECT2
+    |--------------------------------------------------------------------------
+    */
+
+    $('.custom-select2').each(
+        function () {
+
+            initializeSelect2(
+                $(this)
+            );
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE EXISTING ALLOWANCES
+    |--------------------------------------------------------------------------
+    */
+
+    $('#allowance-wrapper .allowance-row')
+        .each(function () {
+
+            const row =
+                $(this);
+
+            if (
+                row.find(
+                    '.allowance-select'
+                ).val()
+            ) {
+
+                setAllowanceRate(row);
+
+            } else {
+
+                calculateAllowanceRow(row);
+
+            }
 
         });
 
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Total KM
+    | INITIALIZE EXISTING EXPENSES
     |--------------------------------------------------------------------------
     */
 
-    function calculateTotalKm()
-    {
+    $('#expense-wrapper .expense-row')
+        .each(function () {
 
-        const opening =
-            parseFloat($('#opening_km').val());
+            const row =
+                $(this);
 
-        const closing =
-            parseFloat($('#closing_km').val());
+            if (
+                row.find(
+                    '.expense-select'
+                ).val()
+            ) {
 
+                setExpenseRate(row);
 
-        if (
-            !isNaN(opening) &&
-            !isNaN(closing) &&
-            closing >= opening
-        ) {
+            } else {
 
-            $('#total_km').val(
-                (closing - opening).toFixed(2)
-            );
+                calculateExpenseRow(row);
 
-        } else {
+            }
 
-            $('#total_km').val('');
-
-        }
-
-    }
-
-
-    $('#opening_km, #closing_km')
-        .on('input change', calculateTotalKm);
+        });
 
 
     /*
     |--------------------------------------------------------------------------
-    | Prevent Invalid Closing KM
+    | INITIALIZATION
     |--------------------------------------------------------------------------
     */
 
-    $('#closing_km').on('change', function () {
+    updateAllowanceIndexes();
 
-        const opening =
-            parseFloat($('#opening_km').val());
+    updateExpenseIndexes();
 
-        const closing =
-            parseFloat($(this).val());
+    updateAllowanceRemoveButtons();
 
+    updateExpenseRemoveButtons();
 
-        if (
-            !isNaN(opening) &&
-            !isNaN(closing) &&
-            closing < opening
-        ) {
+    calculateTotalKm();
 
-            alert(
-                'Closing KM cannot be less than Opening KM.'
-            );
-
-            $(this).val('');
-
-            $('#total_km').val('');
-
-        }
-
-    });
+    calculateFinancialSummary();
 
 
     /*
     |--------------------------------------------------------------------------
-    | Time Validation
+    | FORM SUBMIT
     |--------------------------------------------------------------------------
     */
 
-    $('#end_time').on('change', function () {
+    $('#duty-slip-form').on(
+        'submit',
+        function () {
 
-        const startTime =
-            $('#start_time').val();
+            updateAllowanceIndexes();
 
-        const endTime =
-            $(this).val();
+            updateExpenseIndexes();
+
+            calculateTotalKm();
 
 
-        if (
-            startTime &&
-            endTime &&
-            endTime < startTime
-        ) {
+            $('#allowance-wrapper .allowance-row')
+                .each(function () {
 
-            alert(
-                'End Time cannot be before Start Time.'
+                    calculateAllowanceRow(
+                        $(this)
+                    );
+
+                });
+
+
+            $('#expense-wrapper .expense-row')
+                .each(function () {
+
+                    calculateExpenseRow(
+                        $(this)
+                    );
+
+                });
+
+
+            calculateFinancialSummary();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FORMAT SLIP NUMBER
+            |--------------------------------------------------------------------------
+            */
+
+            $('#slip_no').val(
+                $('#slip_no')
+                    .val()
+                    .trim()
+                    .toUpperCase()
+                    .replace(/\s+/g, '')
             );
 
-            $(this).val('');
 
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | PREVENT DOUBLE SUBMIT
+            |--------------------------------------------------------------------------
+            */
 
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Prevent Double Submit
-    |--------------------------------------------------------------------------
-    */
-
-    $('form').on('submit', function () {
-
-        const form = this;
-
-        const submitButton =
-            $(form).find(
-                'button[type="submit"]'
-            );
-
-
-        if (submitButton.length) {
-
-            submitButton
+            $('#update-duty-slip-btn')
                 .prop('disabled', true)
                 .html(
                     '<i class="fa fa-spinner fa-spin"></i> Updating Duty Slip...'
                 );
 
         }
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Initial Total KM
-    |--------------------------------------------------------------------------
-    */
-
-    calculateTotalKm();
+    );
 
 });
 

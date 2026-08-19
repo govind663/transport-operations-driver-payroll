@@ -221,11 +221,9 @@
 
                 <div class="row">
 
-
                     {{-- ================================================= --}}
                     {{-- Duty Slip Number --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -272,12 +270,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Duty Assignment --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -348,12 +343,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Duty Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -393,12 +385,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- DRIVER INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -411,12 +400,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Driver --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -484,12 +470,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Vehicle --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -551,12 +534,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Vehicle Type --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -593,12 +573,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- TRIP INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -611,12 +588,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Start Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -652,12 +626,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Start Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -693,12 +664,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- End Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -734,12 +702,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- End Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -775,12 +740,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Pickup Location --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -817,12 +779,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Drop Location --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -859,12 +818,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- KM INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -877,12 +833,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Opening KM --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -921,12 +874,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Closing KM --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -965,12 +915,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Total KM --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -998,12 +945,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- PASSENGER INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -1016,12 +960,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Passenger Name --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1058,12 +999,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Passenger Mobile --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1101,12 +1039,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Number Of Passengers --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1144,280 +1079,525 @@
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- DRIVER ALLOWANCE --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
 
-
-                    {{-- ================================================= --}}
-                    {{-- EXPENSE INFORMATION --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-3">
-
-                        <h5 class="form-section-title">
-
-                            Expense Information
-
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;"
+                        >
+                            <b>Driver Allowance</b>
                         </h5>
 
                         <hr>
 
                     </div>
 
+                    <div class="col-12">
 
+                        <div class="table-responsive">
 
-                    <div class="col-md-3">
+                            <table
+                                class="table table-bordered table-striped"
+                                id="allowance-table"
+                            >
 
-                        <div class="form-group">
+                                <thead>
+                                    <tr>
+                                        <th style="width:30%;">Allowance</th>
+                                        <th style="width:15%;">Quantity</th>
+                                        <th style="width:15%;">Rate</th>
+                                        <th style="width:15%;">Amount</th>
+                                        <th style="width:15%;">Remarks</th>
+                                        <th style="width:12%;">Status</th>
+                                        <th style="width:10%;">Action</th>
+                                    </tr>
+                                </thead>
 
-                            <label>
-                                <b>Fuel Expense</b>
-                            </label>
+                                <tbody id="allowance-wrapper">
 
-                            <input
-                                type="number"
-                                name="fuel_expense"
-                                id="fuel_expense"
-                                class="form-control expense-input @error('fuel_expense') is-invalid @enderror"
-                                value="{{ old('fuel_expense', 0) }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00">
+                                    <tr
+                                        class="allowance-row"
+                                        data-index="0"
+                                    >
 
-                            @error('fuel_expense')
+                                        {{-- Allowance --}}
+                                        <td>
 
-                                <span class="invalid-feedback d-block">
+                                            <select
+                                                name="allowances[0][allowance_id]"
+                                                class="form-control custom-select2"
+                                            >
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                                <option value="">
+                                                    Select Allowance
+                                                </option>
 
-                                </span>
+                                                @foreach($allowances ?? [] as $allowance)
 
-                            @enderror
+                                                    <option
+                                                        value="{{ $allowance->id }}"
+                                                        data-rate="{{ $allowance->amount ?? 0 }}"
+                                                        data-calculation-type="{{ $allowance->calculation_type }}"
+                                                    >
+                                                        {{ $allowance->name }}
+                                                    </option>
+
+                                                @endforeach
+
+                                            </select>
+
+                                        </td>
+
+                                        {{-- Quantity --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="allowances[0][quantity]"
+                                                class="form-control allowance-quantity"
+                                                value="1"
+                                                min="0"
+                                                step="0.01"
+                                            >
+
+                                        </td>
+
+                                        {{-- Rate --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="allowances[0][rate]"
+                                                class="form-control allowance-rate"
+                                                value="0"
+                                                min="0"
+                                                step="0.01"
+                                                readonly
+                                            >
+
+                                        </td>
+
+                                        {{-- Amount --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="allowances[0][amount]"
+                                                class="form-control allowance-amount"
+                                                value="0"
+                                                min="0"
+                                                step="0.01"
+                                                readonly
+                                            >
+
+                                        </td>
+
+                                        {{-- Remarks --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="allowances[0][remarks]"
+                                                class="form-control"
+                                                placeholder="Remarks"
+                                            >
+
+                                        </td>
+
+                                        {{-- Status --}}
+                                        <td>
+
+                                            <select
+                                                name="allowances[0][status]"
+                                                class="form-control custom-select2"
+                                            >
+
+                                                <option value="pending" selected>
+                                                    Pending
+                                                </option>
+
+                                                <option value="approved">
+                                                    Approved
+                                                </option>
+
+                                                <option value="rejected">
+                                                    Rejected
+                                                </option>
+
+                                                <option value="paid">
+                                                    Paid
+                                                </option>
+
+                                                <option value="cancelled">
+                                                    Cancelled
+                                                </option>
+
+                                            </select>
+
+                                        </td>
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-allowance"
+                                                disabled
+                                                title="Remove"
+                                            >
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-allowance"
+                                class="btn btn-primary btn-sm"
+                            >
+
+                                <i class="fa fa-plus"></i>
+                                Add More Allowance
+
+                            </button>
 
                         </div>
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- DRIVER EXPENSE --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
 
+                        <h5
+                            class="text-primary"
+                            style="color:#023a85 !important;"
+                        >
+                            <b>Driver Expense</b>
+                        </h5>
 
-                    <div class="col-md-3">
+                        <hr>
 
-                        <div class="form-group">
+                    </div>
 
-                            <label>
-                                <b>Toll Expense</b>
-                            </label>
+                    <div class="col-12">
 
-                            <input
-                                type="number"
-                                name="toll_expense"
-                                id="toll_expense"
-                                class="form-control expense-input @error('toll_expense') is-invalid @enderror"
-                                value="{{ old('toll_expense', 0) }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00">
+                        <div class="table-responsive">
 
-                            @error('toll_expense')
+                            <table
+                                class="table table-bordered table-striped"
+                                id="expense-table"
+                            >
 
-                                <span class="invalid-feedback d-block">
+                                <thead>
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                    <tr>
+                                        <th style="width:30%;">Expense</th>
+                                        <th style="width:15%;">Quantity</th>
+                                        <th style="width:15%;">Rate</th>
+                                        <th style="width:15%;">Amount</th>
+                                        <th style="width:15%;">Remarks</th>
+                                        <th style="width:10%;">Status</th>
+                                        <th style="width:10%;">Action</th>
+                                    </tr>
 
-                                </span>
+                                </thead>
 
-                            @enderror
+                                <tbody id="expense-wrapper">
+
+                                    <tr
+                                        class="expense-row"
+                                        data-index="0"
+                                    >
+
+                                        {{-- Expense --}}
+                                        <td>
+
+                                            <select
+                                                name="expenses[0][expense_id]"
+                                                class="form-control custom-select2"
+                                            >
+
+                                                <option value="">
+                                                    Select Expense
+                                                </option>
+
+                                                @foreach($expenses ?? [] as $expense)
+
+                                                    <option
+                                                        value="{{ $expense->id }}"
+                                                        data-rate="{{ $expense->amount ?? 0 }}"
+                                                    >
+                                                        {{ $expense->name }}
+                                                    </option>
+
+                                                @endforeach
+
+                                            </select>
+
+                                        </td>
+
+                                        {{-- Quantity --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="expenses[0][quantity]"
+                                                class="form-control expense-quantity"
+                                                value="1"
+                                                min="0"
+                                                step="0.01"
+                                            >
+
+                                        </td>
+
+                                        {{-- Rate --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="expenses[0][rate]"
+                                                class="form-control expense-rate"
+                                                value="0"
+                                                min="0"
+                                                step="0.01"
+                                                readonly
+                                            >
+
+                                        </td>
+
+                                        {{-- Amount --}}
+                                        <td>
+
+                                            <input
+                                                type="number"
+                                                name="expenses[0][amount]"
+                                                class="form-control expense-amount"
+                                                value="0"
+                                                min="0"
+                                                step="0.01"
+                                                readonly
+                                            >
+
+                                        </td>
+
+                                        {{-- Remarks --}}
+                                        <td>
+
+                                            <input
+                                                type="text"
+                                                name="expenses[0][remarks]"
+                                                class="form-control"
+                                                placeholder="Remarks"
+                                            >
+
+                                        </td>
+
+                                        {{-- Status --}}
+                                        <td>
+
+                                            <select
+                                                name="expenses[0][status]"
+                                                class="form-control custom-select2"
+                                            >
+
+                                                <option value="pending" selected>
+                                                    Pending
+                                                </option>
+
+                                                <option value="approved">
+                                                    Approved
+                                                </option>
+
+                                                <option value="rejected">
+                                                    Rejected
+                                                </option>
+
+                                                <option value="paid">
+                                                    Paid
+                                                </option>
+
+                                                <option value="cancelled">
+                                                    Cancelled
+                                                </option>
+
+                                            </select>
+
+                                        </td>
+
+                                        {{-- Action --}}
+                                        <td class="text-center">
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-sm remove-expense"
+                                                disabled
+                                                title="Remove"
+                                            >
+
+                                                <i class="fa fa-trash"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div class="mt-2">
+
+                            <button
+                                type="button"
+                                id="add-expense"
+                                class="btn btn-primary btn-sm"
+                            >
+
+                                <i class="fa fa-plus"></i>
+                                Add More Expense
+
+                            </button>
 
                         </div>
 
                     </div>
 
+                    {{-- ========================================================= --}}
+                    {{-- ALLOWANCE / EXPENSE SUMMARY --}}
+                    {{-- ========================================================= --}}
+                    <div class="col-12 mt-4">
+
+                        <div class="card">
+
+                            <div class="card-body">
+
+                                <h6
+                                    class="text-primary"
+                                    style="color:#023a85 !important;">
+                                    <b>Financial Summary</b>
+                                </h6>
+
+                                <hr>
+
+                                <div class="row">
+
+                                    {{-- Total Allowance --}}
+                                    <div class="col-md-4">
+
+                                        <div class="form-group">
+
+                                            <label>
+                                                Total Allowance
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                id="total-allowance"
+                                                class="form-control"
+                                                value="0.00"
+                                                readonly
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="total_allowance"
+                                                id="total_allowance"
+                                                value="0.00"
+                                            >
+
+                                        </div>
+
+                                    </div>
 
 
-                    <div class="col-md-3">
+                                    {{-- Total Expense --}}
+                                    <div class="col-md-4">
 
-                        <div class="form-group">
+                                        <div class="form-group">
 
-                            <label>
-                                <b>Parking Expense</b>
-                            </label>
+                                            <label>
+                                                Total Expense
+                                            </label>
 
-                            <input
-                                type="number"
-                                name="parking_expense"
-                                id="parking_expense"
-                                class="form-control expense-input @error('parking_expense') is-invalid @enderror"
-                                value="{{ old('parking_expense', 0) }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00">
+                                            <input
+                                                type="text"
+                                                id="total-expense"
+                                                class="form-control"
+                                                value="0.00"
+                                                readonly
+                                            >
 
-                            @error('parking_expense')
+                                            <input
+                                                type="hidden"
+                                                name="total_expense"
+                                                id="total_expense"
+                                                value="0.00"
+                                            >
 
-                                <span class="invalid-feedback d-block">
+                                        </div>
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
+                                    </div>
 
 
+                                    {{-- Grand Total --}}
+                                    <div class="col-md-4">
 
-                    <div class="col-md-3">
+                                        <div class="form-group">
 
-                        <div class="form-group">
+                                            <label>
+                                                <b>Grand Total</b>
+                                            </label>
 
-                            <label>
-                                <b>Other Expense</b>
-                            </label>
+                                            <input
+                                                type="text"
+                                                id="grand-total"
+                                                class="form-control"
+                                                value="0.00"
+                                                readonly
+                                            >
 
-                            <input
-                                type="number"
-                                name="other_expense"
-                                id="other_expense"
-                                class="form-control expense-input @error('other_expense') is-invalid @enderror"
-                                value="{{ old('other_expense', 0) }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00">
+                                            <input
+                                                type="hidden"
+                                                name="grand_total"
+                                                id="grand_total"
+                                                value="0.00"
+                                            >
 
-                            @error('other_expense')
+                                        </div>
 
-                                <span class="invalid-feedback d-block">
+                                    </div>
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                </div>
 
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Total Expense --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="total-expense-box">
-
-                            <label>
-
-                                <b>
-                                    Total Expense
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="number"
-                                name="total_expense"
-                                id="total_expense"
-                                class="form-control"
-                                value="{{ old('total_expense', 0) }}"
-                                readonly
-                                step="0.01">
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Driver Advance --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Driver Advance
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="number"
-                                name="driver_advance"
-                                id="driver_advance"
-                                class="form-control @error('driver_advance') is-invalid @enderror"
-                                value="{{ old('driver_advance', 0) }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00">
-
-                            @error('driver_advance')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
                     </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Balance Amount --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Balance Amount
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="number"
-                                name="balance_amount"
-                                id="balance_amount"
-                                class="form-control"
-                                value="{{ old('balance_amount', 0) }}"
-                                readonly
-                                step="0.01">
-
-                        </div>
-
-                    </div>
-
-
 
                     {{-- ================================================= --}}
                     {{-- REMARKS --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -1429,8 +1609,6 @@
                         <hr>
 
                     </div>
-
-
 
                     <div class="col-md-12">
 
@@ -1467,12 +1645,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- STATUS --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -1484,8 +1659,6 @@
                         <hr>
 
                     </div>
-
-
 
                     <div class="col-md-4">
 
@@ -1558,12 +1731,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12">
 
                         <div class="text-right mt-4">
@@ -1592,7 +1762,6 @@
 
                     </div>
 
-
                 </div>
 
             </div>
@@ -1615,16 +1784,38 @@
 
 $(document).ready(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function numberValue(value)
+    {
+        const number = parseFloat(value);
+
+        return isNaN(number) || number < 0
+            ? 0
+            : number;
+    }
+
+
+    function formatAmount(value)
+    {
+        return numberValue(value).toFixed(2);
+    }
+
 
     /*
     |--------------------------------------------------------------------------
-    | Duty Slip Number Formatting
+    | DUTY SLIP NUMBER
     |--------------------------------------------------------------------------
     */
 
     $('#slip_no').on('blur', function () {
 
-        this.value = this.value
+        this.value = $(this)
+            .val()
             .trim()
             .toUpperCase()
             .replace(/\s+/g, '');
@@ -1632,296 +1823,1174 @@ $(document).ready(function () {
     });
 
 
-
     /*
     |--------------------------------------------------------------------------
-    | Mobile Number Formatting
+    | MOBILE NUMBER - LIVE
     |--------------------------------------------------------------------------
     */
 
     $('#passenger_mobile').on('input', function () {
 
-        this.value = this.value
+        this.value = $(this)
+            .val()
             .replace(/[^0-9]/g, '')
             .slice(0, 10);
 
     });
 
 
-
     /*
     |--------------------------------------------------------------------------
-    | Number Validation
+    | NUMBER VALIDATION - LIVE
     |--------------------------------------------------------------------------
     */
 
-    $('#opening_km, #closing_km, .expense-input, #driver_advance')
-        .on('input', function () {
+    $(document).on(
+        'input',
+        '#opening_km, #closing_km, ' +
+        '.allowance-quantity, .allowance-rate, ' +
+        '.expense-quantity, .expense-rate',
+        function () {
 
-            if (this.value < 0) {
+            let value = this.value;
 
-                this.value = 0;
-
+            /*
+            | Allow empty field while typing
+            */
+            if (value === '') {
+                return;
             }
 
-        });
+            value = parseFloat(value);
 
+            if (isNaN(value) || value < 0) {
+                this.value = 0;
+            }
+
+        }
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Total KM
+    | TOTAL KM
     |--------------------------------------------------------------------------
     */
 
     function calculateTotalKm()
     {
-
         const opening =
-            parseFloat(
+            numberValue(
                 $('#opening_km').val()
-            ) || 0;
+            );
 
         const closing =
-            parseFloat(
+            numberValue(
                 $('#closing_km').val()
-            ) || 0;
+            );
+
+        let totalKm = 0;
 
 
         if (closing >= opening) {
 
-            $('#total_km').val(
-                (closing - opening).toFixed(2)
-            );
-
-        } else {
-
-            $('#total_km').val('0.00');
+            totalKm = closing - opening;
 
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE TOTAL KM
+        |--------------------------------------------------------------------------
+        */
+
+        $('#total_km').val(
+            formatAmount(totalKm)
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE PER KM ALLOWANCES
+        |--------------------------------------------------------------------------
+        */
+
+        $('#allowance-wrapper .allowance-row')
+            .each(function () {
+
+                const row = $(this);
+
+                const selectedOption =
+                    row.find(
+                        '.allowance-select option:selected'
+                    );
+
+                const calculationType =
+                    selectedOption.attr(
+                        'data-calculation-type'
+                    );
+
+
+                if (calculationType === 'per_km') {
+
+                    row.find('.allowance-quantity')
+                        .val(
+                            formatAmount(totalKm)
+                        );
+
+                    calculateAllowanceRow(row);
+
+                }
+
+            });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE FINANCIAL SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        calculateFinancialSummary();
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | OPENING / CLOSING KM - LIVE
+    |--------------------------------------------------------------------------
+    */
 
-    $('#opening_km, #closing_km')
-        .on('input change', function () {
+    $(document).on(
+        'input',
+        '#opening_km, #closing_km',
+        function () {
 
             calculateTotalKm();
 
-        });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calculate Total Expense
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateTotalExpense()
-    {
-
-        const fuel =
-            parseFloat(
-                $('#fuel_expense').val()
-            ) || 0;
-
-        const toll =
-            parseFloat(
-                $('#toll_expense').val()
-            ) || 0;
-
-        const parking =
-            parseFloat(
-                $('#parking_expense').val()
-            ) || 0;
-
-        const other =
-            parseFloat(
-                $('#other_expense').val()
-            ) || 0;
-
-
-        const total =
-            fuel +
-            toll +
-            parking +
-            other;
-
-
-        $('#total_expense').val(
-            total.toFixed(2)
-        );
-
-
-        calculateBalance();
-
-    }
-
-
-
-    $('.expense-input')
-        .on('input change', function () {
-
-            calculateTotalExpense();
-
-        });
-
+        }
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Balance Amount
+    | CLOSING KM VALIDATION
     |--------------------------------------------------------------------------
     */
 
-    function calculateBalance()
-    {
+    $('#closing_km').on(
+        'change',
+        function () {
 
-        const totalExpense =
-            parseFloat(
-                $('#total_expense').val()
-            ) || 0;
+            const opening =
+                numberValue(
+                    $('#opening_km').val()
+                );
 
-        const advance =
-            parseFloat(
-                $('#driver_advance').val()
-            ) || 0;
+            const closing =
+                numberValue(
+                    $('#closing_km').val()
+                );
 
-
-        const balance =
-            totalExpense - advance;
-
-
-        $('#balance_amount').val(
-            balance.toFixed(2)
-        );
-
-    }
-
-
-
-    $('#driver_advance')
-        .on('input change', function () {
-
-            calculateBalance();
-
-        });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Date Validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#start_date').on('change', function () {
-
-        const startDate = this.value;
-
-        const endDate =
-            $('#end_date').val();
-
-
-        if (
-            startDate &&
-            endDate
-        ) {
 
             if (
-                new Date(endDate) <
-                new Date(startDate)
+                closing > 0 &&
+                closing < opening
             ) {
 
                 alert(
-                    'End date cannot be before start date.'
+                    'Closing KM cannot be less than Opening KM.'
                 );
 
-                $('#end_date').val('');
+                $(this).val('');
+
+                calculateTotalKm();
 
             }
 
         }
-
-    });
-
-
-
-    $('#end_date').on('change', function () {
-
-        const endDate = this.value;
-
-        const startDate =
-            $('#start_date').val();
-
-
-        if (
-            startDate &&
-            endDate
-        ) {
-
-            if (
-                new Date(endDate) <
-                new Date(startDate)
-            ) {
-
-                alert(
-                    'End date cannot be before start date.'
-                );
-
-                this.value = '';
-
-            }
-
-        }
-
-    });
-
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | KM Validation
+    | ALLOWANCE RATE
     |--------------------------------------------------------------------------
     */
 
-    $('#closing_km').on('change', function () {
+    function setAllowanceRate(row)
+    {
+        const select =
+            row.find('.allowance-select');
 
-        const opening =
-            parseFloat(
-                $('#opening_km').val()
-            ) || 0;
-
-        const closing =
-            parseFloat(
-                $('#closing_km').val()
-            ) || 0;
+        const selectedOption =
+            select.find('option:selected');
 
 
-        if (
-            closing > 0 &&
-            closing < opening
-        ) {
+        /*
+        |--------------------------------------------------------------------------
+        | GET RATE / AMOUNT
+        |--------------------------------------------------------------------------
+        */
 
-            alert(
-                'Closing KM cannot be less than Opening KM.'
+        let rate =
+            selectedOption.attr('data-rate');
+
+        rate = numberValue(rate);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CALCULATION TYPE
+        |--------------------------------------------------------------------------
+        */
+
+        const calculationType =
+            selectedOption.attr(
+                'data-calculation-type'
             );
 
-            this.value = '';
 
-            $('#total_km').val('0.00');
+        /*
+        |--------------------------------------------------------------------------
+        | SET RATE
+        |--------------------------------------------------------------------------
+        */
+
+        row.find('.allowance-rate')
+            .val(
+                formatAmount(rate)
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PER KM
+        |--------------------------------------------------------------------------
+        */
+
+        if (calculationType === 'per_km') {
+
+            const totalKm =
+                numberValue(
+                    $('#total_km').val()
+                );
+
+            row.find('.allowance-quantity')
+                .val(
+                    formatAmount(totalKm)
+                );
 
         }
 
-    });
 
+        /*
+        |--------------------------------------------------------------------------
+        | FIXED
+        |--------------------------------------------------------------------------
+        */
+
+        if (calculationType === 'fixed') {
+
+            const currentQuantity =
+                row.find('.allowance-quantity').val();
+
+            if (
+                currentQuantity === '' ||
+                numberValue(currentQuantity) <= 0
+            ) {
+
+                row.find('.allowance-quantity')
+                    .val('1');
+
+            }
+
+        }
+
+
+        calculateAllowanceRow(row);
+    }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Text Formatting
+    | ALLOWANCE ROW CALCULATION - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateAllowanceRow(row)
+    {
+        const quantity =
+            numberValue(
+                row.find('.allowance-quantity').val()
+            );
+
+        const rate =
+            numberValue(
+                row.find('.allowance-rate').val()
+            );
+
+
+        const amount =
+            quantity * rate;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE ROW AMOUNT
+        |--------------------------------------------------------------------------
+        */
+
+        row.find('.allowance-amount')
+            .val(
+                formatAmount(amount)
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        calculateFinancialSummary();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE SELECT - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '.allowance-select',
+        function () {
+
+            const row =
+                $(this).closest('.allowance-row');
+
+            setAllowanceRate(row);
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE QUANTITY / RATE - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'input',
+        '.allowance-quantity, .allowance-rate',
+        function () {
+
+            const row =
+                $(this).closest('.allowance-row');
+
+            calculateAllowanceRow(row);
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADD MORE ALLOWANCE
+    |--------------------------------------------------------------------------
+    */
+
+    $('#add-allowance').on(
+        'click',
+        function () {
+
+            const wrapper =
+                $('#allowance-wrapper');
+
+            const index =
+                wrapper.find('.allowance-row').length;
+
+
+            const row = `
+
+                <tr
+                    class="allowance-row"
+                    data-index="${index}"
+                >
+
+                    <td>
+
+                        <select
+                            name="allowances[${index}][allowance_id]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="">
+                                Select Allowance
+                            </option>
+
+                            @foreach($allowances ?? [] as $allowance)
+
+                                <option
+                                    value="{{ $allowance->id }}"
+                                    data-rate="{{ $allowance->amount ?? 0 }}"
+                                    data-calculation-type="{{ $allowance->calculation_type }}"
+                                >
+                                    {{ $allowance->name }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][quantity]"
+                            class="form-control allowance-quantity"
+                            value="1"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][rate]"
+                            class="form-control allowance-rate"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="allowances[${index}][amount]"
+                            class="form-control allowance-amount"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            name="allowances[${index}][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                        >
+
+                    </td>
+
+                    <td>
+
+                        <select
+                            name="allowances[${index}][status]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="pending" selected>
+                                Pending
+                            </option>
+
+                            <option value="approved">
+                                Approved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                            <option value="paid">
+                                Paid
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td class="text-center">
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-allowance"
+                            title="Remove"
+                        >
+                            <i class="fa fa-trash"></i>
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            wrapper.append(row);
+
+
+            updateAllowanceIndexes();
+
+            updateAllowanceRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE ALLOWANCE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'click',
+        '.remove-allowance',
+        function () {
+
+            $(this)
+                .closest('.allowance-row')
+                .remove();
+
+
+            updateAllowanceIndexes();
+
+            updateAllowanceRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE INDEXES
+    |--------------------------------------------------------------------------
+    */
+
+    function updateAllowanceIndexes()
+    {
+        $('#allowance-wrapper .allowance-row')
+            .each(function (index) {
+
+                const row = $(this);
+
+
+                row.attr(
+                    'data-index',
+                    index
+                );
+
+
+                row.find('[name]').each(
+                    function () {
+
+                        const name =
+                            $(this).attr('name');
+
+
+                        if (!name) {
+                            return;
+                        }
+
+
+                        $(this).attr(
+                            'name',
+                            name.replace(
+                                /allowances\[\d+\]/,
+                                `allowances[${index}]`
+                            )
+                        );
+
+                    }
+                );
+
+            });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE REMOVE BUTTONS
+    |--------------------------------------------------------------------------
+    */
+
+    function updateAllowanceRemoveButtons()
+    {
+        const rows =
+            $('#allowance-wrapper .allowance-row');
+
+
+        rows
+            .find('.remove-allowance')
+            .prop(
+                'disabled',
+                rows.length <= 1
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE RATE
+    |--------------------------------------------------------------------------
+    */
+
+    function setExpenseRate(row)
+    {
+        const select =
+            row.find('.expense-select');
+
+        const selectedOption =
+            select.find('option:selected');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GET AMOUNT FROM DATABASE
+        |--------------------------------------------------------------------------
+        */
+
+        let rate =
+            selectedOption.attr('data-rate');
+
+        rate = numberValue(rate);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SET RATE
+        |--------------------------------------------------------------------------
+        */
+
+        row.find('.expense-rate')
+            .val(
+                formatAmount(rate)
+            );
+
+
+        calculateExpenseRow(row);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE ROW CALCULATION - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateExpenseRow(row)
+    {
+        const quantity =
+            numberValue(
+                row.find('.expense-quantity').val()
+            );
+
+        const rate =
+            numberValue(
+                row.find('.expense-rate').val()
+            );
+
+
+        const amount =
+            quantity * rate;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE EXPENSE AMOUNT
+        |--------------------------------------------------------------------------
+        */
+
+        row.find('.expense-amount')
+            .val(
+                formatAmount(amount)
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE SUMMARY
+        |--------------------------------------------------------------------------
+        */
+
+        calculateFinancialSummary();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE SELECT - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'change',
+        '.expense-select',
+        function () {
+
+            const row =
+                $(this).closest('.expense-row');
+
+            setExpenseRate(row);
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE QUANTITY / RATE - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'input',
+        '.expense-quantity, .expense-rate',
+        function () {
+
+            const row =
+                $(this).closest('.expense-row');
+
+            calculateExpenseRow(row);
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADD MORE EXPENSE
+    |--------------------------------------------------------------------------
+    */
+
+    $('#add-expense').on(
+        'click',
+        function () {
+
+            const wrapper =
+                $('#expense-wrapper');
+
+            const index =
+                wrapper.find('.expense-row').length;
+
+
+            const row = `
+
+                <tr
+                    class="expense-row"
+                    data-index="${index}"
+                >
+
+                    <td>
+
+                        <select
+                            name="expenses[${index}][expense_id]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="">
+                                Select Expense
+                            </option>
+
+                            @foreach($expenses ?? [] as $expense)
+
+                                <option
+                                    value="{{ $expense->id }}"
+                                    data-rate="{{ $expense->amount ?? 0 }}"
+                                >
+                                    {{ $expense->name }}
+                                </option>
+
+                            @endforeach
+
+                        </select>
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][quantity]"
+                            class="form-control expense-quantity"
+                            value="1"
+                            min="0"
+                            step="0.01"
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][rate]"
+                            class="form-control expense-rate"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="expenses[${index}][amount]"
+                            class="form-control expense-amount"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
+
+                    </td>
+
+
+                    <td>
+
+                        <input
+                            type="text"
+                            name="expenses[${index}][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                        >
+
+                    </td>
+
+                    <td>
+
+                        <select
+                            name="expenses[${index}][status]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option value="pending" selected>
+                                Pending
+                            </option>
+
+                            <option value="approved">
+                                Approved
+                            </option>
+
+                            <option value="rejected">
+                                Rejected
+                            </option>
+
+                            <option value="paid">
+                                Paid
+                            </option>
+
+                            <option value="cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </td>
+
+
+                    <td class="text-center">
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-expense"
+                            title="Remove"
+                        >
+                            <i class="fa fa-trash"></i>
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            wrapper.append(row);
+
+
+            updateExpenseIndexes();
+
+            updateExpenseRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE EXPENSE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'click',
+        '.remove-expense',
+        function () {
+
+            $(this)
+                .closest('.expense-row')
+                .remove();
+
+
+            updateExpenseIndexes();
+
+            updateExpenseRemoveButtons();
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE INDEXES
+    |--------------------------------------------------------------------------
+    */
+
+    function updateExpenseIndexes()
+    {
+        $('#expense-wrapper .expense-row')
+            .each(function (index) {
+
+                const row = $(this);
+
+
+                row.attr(
+                    'data-index',
+                    index
+                );
+
+
+                row.find('[name]').each(
+                    function () {
+
+                        const name =
+                            $(this).attr('name');
+
+
+                        if (!name) {
+                            return;
+                        }
+
+
+                        $(this).attr(
+                            'name',
+                            name.replace(
+                                /expenses\[\d+\]/,
+                                `expenses[${index}]`
+                            )
+                        );
+
+                    }
+                );
+
+            });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXPENSE REMOVE BUTTONS
+    |--------------------------------------------------------------------------
+    */
+
+    function updateExpenseRemoveButtons()
+    {
+        const rows =
+            $('#expense-wrapper .expense-row');
+
+
+        rows
+            .find('.remove-expense')
+            .prop(
+                'disabled',
+                rows.length <= 1
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FINANCIAL SUMMARY - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateFinancialSummary()
+    {
+        let allowanceTotal = 0;
+        let expenseTotal = 0;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CALCULATE ALLOWANCE TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $('#allowance-wrapper .allowance-row')
+            .each(function () {
+
+                const amount =
+                    numberValue(
+                        $(this)
+                            .find('.allowance-amount')
+                            .val()
+                    );
+
+                allowanceTotal += amount;
+
+            });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CALCULATE EXPENSE TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $('#expense-wrapper .expense-row')
+            .each(function () {
+
+                const amount =
+                    numberValue(
+                        $(this)
+                            .find('.expense-amount')
+                            .val()
+                    );
+
+                expenseTotal += amount;
+
+            });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GRAND TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        const grandTotal =
+            allowanceTotal +
+            expenseTotal;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANT
+        |--------------------------------------------------------------------------
+        | Summary fields are INPUT fields.
+        | Therefore use .val(), NOT .text()
+        |--------------------------------------------------------------------------
+        */
+
+        $('#total-allowance')
+            .val(
+                formatAmount(allowanceTotal)
+            );
+
+
+        $('#total-expense')
+            .val(
+                formatAmount(expenseTotal)
+            );
+
+
+        $('#grand-total')
+            .val(
+                formatAmount(grandTotal)
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | HIDDEN INPUTS
+        |--------------------------------------------------------------------------
+        */
+
+        $('#total_allowance')
+            .val(
+                formatAmount(allowanceTotal)
+            );
+
+
+        $('#total_expense')
+            .val(
+                formatAmount(expenseTotal)
+            );
+
+
+        $('#grand_total')
+            .val(
+                formatAmount(grandTotal)
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORCE FINANCIAL SUMMARY LIVE UPDATE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'input change',
+        '.allowance-quantity, ' +
+        '.allowance-rate, ' +
+        '.expense-quantity, ' +
+        '.expense-rate',
+        function () {
+
+            calculateFinancialSummary();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TEXT FORMATTING
     |--------------------------------------------------------------------------
     */
 
@@ -1930,141 +2999,303 @@ $(document).ready(function () {
         '#drop_location, ' +
         '#passenger_name, ' +
         '#vehicle_type'
-    ).on('blur', function () {
+    ).on(
+        'blur',
+        function () {
 
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Remarks Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#remarks').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Form Submit
-    |--------------------------------------------------------------------------
-    */
-
-    $('form').on('submit', function () {
-
-
-        $('#slip_no').val(
-
-            $('#slip_no')
-                .val()
-                .trim()
-                .toUpperCase()
-                .replace(/\s+/g, '')
-
-        );
-
-
-        $('#pickup_location').val(
-
-            $('#pickup_location')
+            this.value = $(this)
                 .val()
                 .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        $('#drop_location').val(
-
-            $('#drop_location')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        $('#passenger_name').val(
-
-            $('#passenger_name')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        $('#remarks').val(
-
-            $('#remarks')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Recalculate Before Submit
-        |--------------------------------------------------------------------------
-        */
-
-        calculateTotalKm();
-
-        calculateTotalExpense();
-
-        calculateBalance();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent Double Submission
-        |--------------------------------------------------------------------------
-        */
-
-        const submitButton =
-            $(this).find(
-                'button[type="submit"]'
-            );
-
-
-        if (submitButton.length) {
-
-            submitButton
-                .prop('disabled', true)
-                .html(
-                    '<i class="fa fa-spinner fa-spin"></i> Saving Duty Slip...'
-                );
+                .trim();
 
         }
-
-    });
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | Initial Calculation
+    | REMARKS FORMATTING
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'blur',
+        '#remarks, ' +
+        'input[name*="[remarks]"], ' +
+        'textarea[name*="[remarks]"]',
+        function () {
+
+            this.value = $(this)
+                .val()
+                .replace(/\s+/g, ' ')
+                .trim();
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORM SUBMIT
+    |--------------------------------------------------------------------------
+    */
+
+    $('form').on(
+        'submit',
+        function () {
+
+            const form = $(this);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE INDEXES
+            |--------------------------------------------------------------------------
+            */
+
+            updateAllowanceIndexes();
+
+            updateExpenseIndexes();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL ALLOWANCE CALCULATION
+            |--------------------------------------------------------------------------
+            */
+
+            $('#allowance-wrapper .allowance-row')
+                .each(function () {
+
+                    calculateAllowanceRow(
+                        $(this)
+                    );
+
+                });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL EXPENSE CALCULATION
+            |--------------------------------------------------------------------------
+            */
+
+            $('#expense-wrapper .expense-row')
+                .each(function () {
+
+                    calculateExpenseRow(
+                        $(this)
+                    );
+
+                });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL TOTAL KM
+            |--------------------------------------------------------------------------
+            */
+
+            calculateTotalKm();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL FINANCIAL SUMMARY
+            |--------------------------------------------------------------------------
+            */
+
+            calculateFinancialSummary();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SLIP NUMBER FORMAT
+            |--------------------------------------------------------------------------
+            */
+
+            if ($('#slip_no').length) {
+
+                $('#slip_no').val(
+
+                    $('#slip_no')
+                        .val()
+                        .trim()
+                        .toUpperCase()
+                        .replace(/\s+/g, '')
+
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | COMMON TEXT FORMAT
+            |--------------------------------------------------------------------------
+            */
+
+            $(
+                '#pickup_location, ' +
+                '#drop_location, ' +
+                '#passenger_name, ' +
+                '#vehicle_type, ' +
+                '#remarks'
+            ).each(function () {
+
+                if ($(this).length) {
+
+                    $(this).val(
+
+                        $(this)
+                            .val()
+                            .replace(/\s+/g, ' ')
+                            .trim()
+
+                    );
+
+                }
+
+            });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DYNAMIC REMARKS
+            |--------------------------------------------------------------------------
+            */
+
+            $(
+                '#allowance-wrapper input[name*="[remarks]"], ' +
+                '#expense-wrapper input[name*="[remarks]"]'
+            ).each(function () {
+
+                this.value = $(this)
+                    .val()
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+            });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PREVENT DUPLICATE SUBMISSION
+            |--------------------------------------------------------------------------
+            */
+
+            const submitButton =
+                form.find(
+                    'button[type="submit"]'
+                );
+
+
+            if (submitButton.length) {
+
+                submitButton
+                    .prop('disabled', true)
+                    .html(
+                        '<i class="fa fa-spinner fa-spin"></i> Saving Duty Slip...'
+                    );
+
+            }
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE EXISTING ALLOWANCE ROWS
+    |--------------------------------------------------------------------------
+    */
+
+    $('#allowance-wrapper .allowance-row')
+        .each(function () {
+
+            const row = $(this);
+
+
+            if (
+                row.find('.allowance-select').val()
+            ) {
+
+                setAllowanceRate(row);
+
+            } else {
+
+                calculateAllowanceRow(row);
+
+            }
+
+        });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE EXISTING EXPENSE ROWS
+    |--------------------------------------------------------------------------
+    */
+
+    $('#expense-wrapper .expense-row')
+        .each(function () {
+
+            const row = $(this);
+
+
+            if (
+                row.find('.expense-select').val()
+            ) {
+
+                setExpenseRate(row);
+
+            } else {
+
+                calculateExpenseRow(row);
+
+            }
+
+        });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE INDEXES
+    |--------------------------------------------------------------------------
+    */
+
+    updateAllowanceIndexes();
+
+    updateExpenseIndexes();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIALIZE REMOVE BUTTONS
+    |--------------------------------------------------------------------------
+    */
+
+    updateAllowanceRemoveButtons();
+
+    updateExpenseRemoveButtons();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL TOTAL KM
     |--------------------------------------------------------------------------
     */
 
     calculateTotalKm();
 
-    calculateTotalExpense();
 
-    calculateBalance();
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL FINANCIAL SUMMARY
+    |--------------------------------------------------------------------------
+    */
+
+    calculateFinancialSummary();
 
 });
 

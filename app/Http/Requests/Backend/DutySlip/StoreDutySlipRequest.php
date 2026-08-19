@@ -16,6 +16,7 @@ class StoreDutySlipRequest extends FormRequest
         return true;
     }
 
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -27,7 +28,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Duty Slip Number
+            | DUTY SLIP INFORMATION
             |--------------------------------------------------------------------------
             */
 
@@ -38,81 +39,108 @@ class StoreDutySlipRequest extends FormRequest
                 'unique:duty_slips,slip_no',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Duty Assignment
-            |--------------------------------------------------------------------------
-            */
-
             'duty_assignment_id' => [
                 'required',
                 'integer',
                 'exists:duty_assignments,id',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Duty Date
-            |--------------------------------------------------------------------------
-            */
-
             'duty_date' => [
                 'required',
                 'date',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | Start Time
+            | DRIVER
             |--------------------------------------------------------------------------
             */
+
+            'driver_id' => [
+                'required',
+                'integer',
+                'exists:drivers,id',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE
+            |--------------------------------------------------------------------------
+            */
+
+            'vehicle_id' => [
+                'nullable',
+                'integer',
+                'exists:vehicles,id',
+            ],
+
+            'vehicle_type' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TRIP INFORMATION
+            |--------------------------------------------------------------------------
+            */
+
+            'start_date' => [
+                'nullable',
+                'date',
+            ],
 
             'start_time' => [
                 'nullable',
                 'date_format:H:i',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | End Time
-            |--------------------------------------------------------------------------
-            */
+            'end_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+            ],
 
             'end_time' => [
                 'nullable',
                 'date_format:H:i',
             ],
 
+            'pickup_location' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
+            'drop_location' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
+
             /*
             |--------------------------------------------------------------------------
-            | Opening Meter
+            | KILOMETER INFORMATION
             |--------------------------------------------------------------------------
             */
 
-            'opening_meter' => [
+            'opening_km' => [
                 'nullable',
                 'numeric',
                 'min:0',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Closing Meter
-            |--------------------------------------------------------------------------
-            */
-
-            'closing_meter' => [
+            'closing_km' => [
                 'nullable',
                 'numeric',
                 'min:0',
-                'gte:opening_meter',
+                'gte:opening_km',
             ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Total KM
-            |--------------------------------------------------------------------------
-            */
 
             'total_km' => [
                 'nullable',
@@ -120,10 +148,167 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | Fuel Quantity
+            | PASSENGER INFORMATION
             |--------------------------------------------------------------------------
+            */
+
+            'passenger_name' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+
+            'passenger_mobile' => [
+                'nullable',
+                'digits:10',
+            ],
+
+            'number_of_passengers' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER ALLOWANCES
+            |--------------------------------------------------------------------------
+            |
+            | Example:
+            |
+            | driver_allowances[0][allowance_id]
+            | driver_allowances[0][quantity]
+            | driver_allowances[0][rate]
+            | driver_allowances[0][amount]
+            | driver_allowances[0][remarks]
+            | driver_allowances[0][status]
+            |
+            */
+
+            'driver_allowances' => [
+                'nullable',
+                'array',
+            ],
+
+            'driver_allowances.*.allowance_id' => [
+                'required',
+                'integer',
+                'exists:allowances,id',
+                'distinct',
+            ],
+
+            'driver_allowances.*.quantity' => [
+                'required',
+                'numeric',
+                'min:0.01',
+            ],
+
+            'driver_allowances.*.rate' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'driver_allowances.*.amount' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'driver_allowances.*.remarks' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+
+            'driver_allowances.*.status' => [
+                'required',
+                Rule::in([
+                    'pending',
+                    'approved',
+                    'rejected',
+                    'paid',
+                    'cancelled',
+                ]),
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER EXPENSES
+            |--------------------------------------------------------------------------
+            |
+            | Example:
+            |
+            | driver_expenses[0][expense_id]
+            | driver_expenses[0][quantity]
+            | driver_expenses[0][rate]
+            | driver_expenses[0][amount]
+            | driver_expenses[0][remarks]
+            | driver_expenses[0][status]
+            |
+            */
+
+            'driver_expenses' => [
+                'nullable',
+                'array',
+            ],
+
+            'driver_expenses.*.expense_id' => [
+                'required',
+                'integer',
+                'exists:expenses,id',
+                'distinct',
+            ],
+
+            'driver_expenses.*.quantity' => [
+                'required',
+                'numeric',
+                'min:0.01',
+            ],
+
+            'driver_expenses.*.rate' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'driver_expenses.*.amount' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+            'driver_expenses.*.remarks' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+
+            'driver_expenses.*.status' => [
+                'required',
+                Rule::in([
+                    'pending',
+                    'approved',
+                    'rejected',
+                    'paid',
+                    'cancelled',
+                ]),
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FUEL INFORMATION
+            |--------------------------------------------------------------------------
+            |
+            | These are vehicle/trip related fields.
+            | They are NOT driver expense line items.
+            |
             */
 
             'fuel_quantity' => [
@@ -132,21 +317,16 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Fuel Amount
-            |--------------------------------------------------------------------------
-            */
-
             'fuel_amount' => [
                 'nullable',
                 'numeric',
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | Status
+            | DUTY SLIP STATUS
             |--------------------------------------------------------------------------
             */
 
@@ -160,9 +340,10 @@ class StoreDutySlipRequest extends FormRequest
                 ]),
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | Remarks
+            | REMARKS
             |--------------------------------------------------------------------------
             */
 
@@ -174,6 +355,7 @@ class StoreDutySlipRequest extends FormRequest
         ];
     }
 
+
     /**
      * Custom validation messages.
      */
@@ -183,7 +365,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Slip Number
+            | DUTY SLIP
             |--------------------------------------------------------------------------
             */
 
@@ -202,7 +384,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Duty Assignment
+            | DUTY ASSIGNMENT
             |--------------------------------------------------------------------------
             */
 
@@ -218,7 +400,36 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Duty Date
+            | DRIVER
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_id.required' =>
+                'Please select a driver.',
+
+            'driver_id.integer' =>
+                'Invalid driver selected.',
+
+            'driver_id.exists' =>
+                'Selected driver does not exist.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE
+            |--------------------------------------------------------------------------
+            */
+
+            'vehicle_id.integer' =>
+                'Invalid vehicle selected.',
+
+            'vehicle_id.exists' =>
+                'Selected vehicle does not exist.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY DATE
             |--------------------------------------------------------------------------
             */
 
@@ -231,19 +442,28 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Start Time
+            | START / END DATE
+            |--------------------------------------------------------------------------
+            */
+
+            'start_date.date' =>
+                'Please enter a valid start date.',
+
+            'end_date.date' =>
+                'Please enter a valid end date.',
+
+            'end_date.after_or_equal' =>
+                'End date cannot be before start date.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | START / END TIME
             |--------------------------------------------------------------------------
             */
 
             'start_time.date_format' =>
                 'Start time must be in HH:MM format.',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | End Time
-            |--------------------------------------------------------------------------
-            */
 
             'end_time.date_format' =>
                 'End time must be in HH:MM format.',
@@ -251,38 +471,43 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Opening Meter
+            | LOCATION
             |--------------------------------------------------------------------------
             */
 
-            'opening_meter.numeric' =>
-                'Opening meter must be a valid number.',
+            'pickup_location.string' =>
+                'Pickup location must be valid text.',
 
-            'opening_meter.min' =>
-                'Opening meter cannot be negative.',
+            'pickup_location.max' =>
+                'Pickup location may not exceed 500 characters.',
+
+            'drop_location.string' =>
+                'Drop location must be valid text.',
+
+            'drop_location.max' =>
+                'Drop location may not exceed 500 characters.',
 
 
             /*
             |--------------------------------------------------------------------------
-            | Closing Meter
+            | KM
             |--------------------------------------------------------------------------
             */
 
-            'closing_meter.numeric' =>
-                'Closing meter must be a valid number.',
+            'opening_km.numeric' =>
+                'Opening KM must be a valid number.',
 
-            'closing_meter.min' =>
-                'Closing meter cannot be negative.',
+            'opening_km.min' =>
+                'Opening KM cannot be negative.',
 
-            'closing_meter.gte' =>
-                'Closing meter must be greater than or equal to opening meter.',
+            'closing_km.numeric' =>
+                'Closing KM must be a valid number.',
 
+            'closing_km.min' =>
+                'Closing KM cannot be negative.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Total KM
-            |--------------------------------------------------------------------------
-            */
+            'closing_km.gte' =>
+                'Closing KM must be greater than or equal to opening KM.',
 
             'total_km.numeric' =>
                 'Total KM must be a valid number.',
@@ -293,7 +518,151 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Fuel Quantity
+            | PASSENGER
+            |--------------------------------------------------------------------------
+            */
+
+            'passenger_name.string' =>
+                'Passenger name must be valid text.',
+
+            'passenger_name.max' =>
+                'Passenger name may not exceed 150 characters.',
+
+            'passenger_mobile.digits' =>
+                'Passenger mobile number must contain exactly 10 digits.',
+
+            'number_of_passengers.integer' =>
+                'Number of passengers must be a valid number.',
+
+            'number_of_passengers.min' =>
+                'At least one passenger is required.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER ALLOWANCES
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_allowances.array' =>
+                'Driver allowances must be provided in a valid format.',
+
+            'driver_allowances.*.allowance_id.required' =>
+                'Please select an allowance.',
+
+            'driver_allowances.*.allowance_id.integer' =>
+                'Invalid allowance selected.',
+
+            'driver_allowances.*.allowance_id.exists' =>
+                'Selected allowance does not exist.',
+
+            'driver_allowances.*.allowance_id.distinct' =>
+                'The same allowance cannot be added more than once.',
+
+            'driver_allowances.*.quantity.required' =>
+                'Allowance quantity is required.',
+
+            'driver_allowances.*.quantity.numeric' =>
+                'Allowance quantity must be a valid number.',
+
+            'driver_allowances.*.quantity.min' =>
+                'Allowance quantity must be greater than zero.',
+
+            'driver_allowances.*.rate.required' =>
+                'Allowance rate is required.',
+
+            'driver_allowances.*.rate.numeric' =>
+                'Allowance rate must be a valid number.',
+
+            'driver_allowances.*.rate.min' =>
+                'Allowance rate cannot be negative.',
+
+            'driver_allowances.*.amount.required' =>
+                'Allowance amount is required.',
+
+            'driver_allowances.*.amount.numeric' =>
+                'Allowance amount must be a valid number.',
+
+            'driver_allowances.*.amount.min' =>
+                'Allowance amount cannot be negative.',
+
+            'driver_allowances.*.remarks.string' =>
+                'Allowance remarks must be valid text.',
+
+            'driver_allowances.*.remarks.max' =>
+                'Allowance remarks may not exceed 1000 characters.',
+
+            'driver_allowances.*.status.required' =>
+                'Allowance status is required.',
+
+            'driver_allowances.*.status.in' =>
+                'Selected allowance status is invalid.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER EXPENSES
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_expenses.array' =>
+                'Driver expenses must be provided in a valid format.',
+
+            'driver_expenses.*.expense_id.required' =>
+                'Please select an expense.',
+
+            'driver_expenses.*.expense_id.integer' =>
+                'Invalid expense selected.',
+
+            'driver_expenses.*.expense_id.exists' =>
+                'Selected expense does not exist.',
+
+            'driver_expenses.*.expense_id.distinct' =>
+                'The same expense cannot be added more than once.',
+
+            'driver_expenses.*.quantity.required' =>
+                'Expense quantity is required.',
+
+            'driver_expenses.*.quantity.numeric' =>
+                'Expense quantity must be a valid number.',
+
+            'driver_expenses.*.quantity.min' =>
+                'Expense quantity must be greater than zero.',
+
+            'driver_expenses.*.rate.required' =>
+                'Expense rate is required.',
+
+            'driver_expenses.*.rate.numeric' =>
+                'Expense rate must be a valid number.',
+
+            'driver_expenses.*.rate.min' =>
+                'Expense rate cannot be negative.',
+
+            'driver_expenses.*.amount.required' =>
+                'Expense amount is required.',
+
+            'driver_expenses.*.amount.numeric' =>
+                'Expense amount must be a valid number.',
+
+            'driver_expenses.*.amount.min' =>
+                'Expense amount cannot be negative.',
+
+            'driver_expenses.*.remarks.string' =>
+                'Expense remarks must be valid text.',
+
+            'driver_expenses.*.remarks.max' =>
+                'Expense remarks may not exceed 1000 characters.',
+
+            'driver_expenses.*.status.required' =>
+                'Expense status is required.',
+
+            'driver_expenses.*.status.in' =>
+                'Selected expense status is invalid.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FUEL
             |--------------------------------------------------------------------------
             */
 
@@ -302,13 +671,6 @@ class StoreDutySlipRequest extends FormRequest
 
             'fuel_quantity.min' =>
                 'Fuel quantity cannot be negative.',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Fuel Amount
-            |--------------------------------------------------------------------------
-            */
 
             'fuel_amount.numeric' =>
                 'Fuel amount must be a valid number.',
@@ -319,7 +681,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Status
+            | DUTY SLIP STATUS
             |--------------------------------------------------------------------------
             */
 
@@ -332,7 +694,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Remarks
+            | REMARKS
             |--------------------------------------------------------------------------
             */
 

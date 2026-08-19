@@ -4,13 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class DutySlip extends Model
+class DriverAllowance extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
-    protected $table = 'duty_slips';
+    /*
+    |--------------------------------------------------------------------------
+    | Table
+    |--------------------------------------------------------------------------
+    */
+
+    protected $table = 'driver_allowances';
 
 
     /*
@@ -18,58 +23,51 @@ class DutySlip extends Model
     | Fillable
     |--------------------------------------------------------------------------
     */
+
     protected $fillable = [
 
         /*
         |--------------------------------------------------------------------------
-        | Duty Slip Information
+        | References
         |--------------------------------------------------------------------------
         */
-        'slip_no',
-        'duty_assignment_id',
-        'duty_date',
 
+        'driver_id',
+        'duty_slip_id',
+        'allowance_id',
 
         /*
         |--------------------------------------------------------------------------
-        | Trip Information
+        | Amount Information
         |--------------------------------------------------------------------------
         */
-        'start_time',
-        'end_time',
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Meter Information
-        |--------------------------------------------------------------------------
-        */
-        'opening_meter',
-        'closing_meter',
-        'total_km',
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Status
-        |--------------------------------------------------------------------------
-        */
-        'status',
-
+        'quantity',
+        'rate',
+        'amount',
 
         /*
         |--------------------------------------------------------------------------
         | Remarks
         |--------------------------------------------------------------------------
         */
+
         'remarks',
 
+        /*
+        |--------------------------------------------------------------------------
+        | Status
+        |--------------------------------------------------------------------------
+        */
+
+        'status',
 
         /*
         |--------------------------------------------------------------------------
         | Audit
         |--------------------------------------------------------------------------
         */
+
         'created_by',
         'updated_by',
     ];
@@ -80,22 +78,25 @@ class DutySlip extends Model
     | Casts
     |--------------------------------------------------------------------------
     */
+
     protected $casts = [
 
         'id' => 'integer',
 
-        'duty_assignment_id' => 'integer',
+        'driver_id' => 'integer',
 
-        'duty_date' => 'date:Y-m-d',
+        'duty_slip_id' => 'integer',
 
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'allowance_id' => 'integer',
 
-        'opening_meter' => 'decimal:2',
-        'closing_meter' => 'decimal:2',
-        'total_km' => 'decimal:2',
+        'quantity' => 'decimal:2',
+
+        'rate' => 'decimal:2',
+
+        'amount' => 'decimal:2',
 
         'created_by' => 'integer',
+
         'updated_by' => 'integer',
     ];
 
@@ -105,11 +106,14 @@ class DutySlip extends Model
     | Status Constants
     |--------------------------------------------------------------------------
     */
-    public const STATUS_OPEN = 'open';
 
-    public const STATUS_STARTED = 'started';
+    public const STATUS_PENDING = 'pending';
 
-    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_APPROVED = 'approved';
+
+    public const STATUS_REJECTED = 'rejected';
+
+    public const STATUS_PAID = 'paid';
 
     public const STATUS_CANCELLED = 'cancelled';
 
@@ -119,57 +123,62 @@ class DutySlip extends Model
     | Status List
     |--------------------------------------------------------------------------
     */
+
     public const STATUSES = [
 
-        self::STATUS_OPEN,
+        self::STATUS_PENDING,
 
-        self::STATUS_STARTED,
+        self::STATUS_APPROVED,
 
-        self::STATUS_COMPLETED,
+        self::STATUS_REJECTED,
+
+        self::STATUS_PAID,
 
         self::STATUS_CANCELLED,
-
     ];
 
 
     /*
     |--------------------------------------------------------------------------
-    | Status Helpers
+    | Driver
     |--------------------------------------------------------------------------
     */
-    public function isOpen(): bool
+
+    public function driver()
     {
-        return $this->status === self::STATUS_OPEN;
-    }
-
-
-    public function isStarted(): bool
-    {
-        return $this->status === self::STATUS_STARTED;
-    }
-
-
-    public function isCompleted(): bool
-    {
-        return $this->status === self::STATUS_COMPLETED;
-    }
-
-
-    public function isCancelled(): bool
-    {
-        return $this->status === self::STATUS_CANCELLED;
+        return $this->belongsTo(
+            Driver::class,
+            'driver_id'
+        );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Duty Assignment
+    | Duty Slip
     |--------------------------------------------------------------------------
     */
-    public function dutyAssignment()
+
+    public function dutySlip()
     {
         return $this->belongsTo(
-            DutyAssignment::class
+            DutySlip::class,
+            'duty_slip_id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowance Master
+    |--------------------------------------------------------------------------
+    */
+
+    public function allowance()
+    {
+        return $this->belongsTo(
+            Allowance::class,
+            'allowance_id'
         );
     }
 
@@ -179,6 +188,7 @@ class DutySlip extends Model
     | Created By
     |--------------------------------------------------------------------------
     */
+
     public function createdBy()
     {
         return $this->belongsTo(
@@ -193,6 +203,7 @@ class DutySlip extends Model
     | Updated By
     |--------------------------------------------------------------------------
     */
+
     public function updatedBy()
     {
         return $this->belongsTo(
@@ -204,122 +215,176 @@ class DutySlip extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Working Sheet
+    | Status Helpers
     |--------------------------------------------------------------------------
     */
-    public function workingSheet()
+
+    public function isPending(): bool
     {
-        return $this->hasOne(
-            WorkingSheet::class
+        return $this->status === self::STATUS_PENDING;
+    }
+
+
+    public function isApproved(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+
+    public function isPaid(): bool
+    {
+        return $this->status === self::STATUS_PAID;
+    }
+
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Active Status
+    |--------------------------------------------------------------------------
+    */
+
+    public function isActive(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_PENDING,
+                self::STATUS_APPROVED,
+                self::STATUS_PAID,
+            ],
+            true
         );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Driver Allowances
+    | Calculated Amount
     |--------------------------------------------------------------------------
     */
-    public function driverAllowances()
-    {
-        return $this->hasMany(
-            DriverAllowance::class,
-            'duty_slip_id'
-        );
-    }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Driver Expenses
-    |--------------------------------------------------------------------------
-    */
-    public function driverExpenses()
-    {
-        return $this->hasMany(
-            DriverExpense::class,
-            'duty_slip_id'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Approved Driver Allowances
-    |--------------------------------------------------------------------------
-    */
-    public function approvedDriverAllowances()
-    {
-        return $this->hasMany(
-            DriverAllowance::class,
-            'duty_slip_id'
-        )->where(
-            'status',
-            DriverAllowance::STATUS_APPROVED
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Approved Driver Expenses
-    |--------------------------------------------------------------------------
-    */
-    public function approvedDriverExpenses()
-    {
-        return $this->hasMany(
-            DriverExpense::class,
-            'duty_slip_id'
-        )->where(
-            'status',
-            DriverExpense::STATUS_APPROVED
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Allowance Total
-    |--------------------------------------------------------------------------
-    */
-    public function getAllowanceTotalAttribute(): float
-    {
-        return (float) $this->driverAllowances()
-            ->where(
-                'status',
-                DriverAllowance::STATUS_APPROVED
-            )
-            ->sum('amount');
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Expense Total
-    |--------------------------------------------------------------------------
-    */
-    public function getExpenseTotalAttribute(): float
-    {
-        return (float) $this->driverExpenses()
-            ->where(
-                'status',
-                DriverExpense::STATUS_APPROVED
-            )
-            ->sum('amount');
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Grand Total
-    |--------------------------------------------------------------------------
-    */
-    public function getGrandTotalAttribute(): float
+    public function getCalculatedAmountAttribute(): float
     {
         return round(
-            $this->allowance_total
-            + $this->expense_total,
+            (float) $this->quantity *
+            (float) $this->rate,
             2
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopePending($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_PENDING
+        );
+    }
+
+
+    public function scopeApproved($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_APPROVED
+        );
+    }
+
+
+    public function scopeRejected($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_REJECTED
+        );
+    }
+
+
+    public function scopePaid($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_PAID
+        );
+    }
+
+
+    public function scopeCancelled($query)
+    {
+        return $query->where(
+            'status',
+            self::STATUS_CANCELLED
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Active Scope
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeActive($query)
+    {
+        return $query->whereIn(
+            'status',
+            [
+                self::STATUS_PENDING,
+                self::STATUS_APPROVED,
+                self::STATUS_PAID,
+            ]
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Duty Slip Scope
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeForDutySlip(
+        $query,
+        int $dutySlipId
+    ) {
+        return $query->where(
+            'duty_slip_id',
+            $dutySlipId
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Driver Scope
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeForDriver(
+        $query,
+        int $driverId
+    ) {
+        return $query->where(
+            'driver_id',
+            $driverId
         );
     }
 }
