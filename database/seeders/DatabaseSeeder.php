@@ -17,7 +17,9 @@ class DatabaseSeeder extends Seeder
             VehicleCategorySeeder::class,
             VehicleTypeSeeder::class,
             VehicleManagementSeeder::class,
-            ClientSeeder::class
+            ClientSeeder::class,
+            AllowanceSeeder::class,
+            ExpenseSeeder::class
         ]);
     }
 }
