@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Allowance extends Model
+class Expense extends Model
 {
     use HasFactory, SoftDeletes;
+
 
     /*
     |--------------------------------------------------------------------------
@@ -16,7 +17,7 @@ class Allowance extends Model
     |--------------------------------------------------------------------------
     */
 
-    protected $table = 'allowances';
+    protected $table = 'expenses';
 
 
     /*
@@ -29,22 +30,29 @@ class Allowance extends Model
 
         /*
         |--------------------------------------------------------------------------
-        | Allowance Information
+        | Expense Information
         |--------------------------------------------------------------------------
         */
 
-        'allowance_code',
+        'expense_code',
         'name',
         'description',
 
         /*
         |--------------------------------------------------------------------------
-        | Amount / Calculation
+        | Expense Category
+        |--------------------------------------------------------------------------
+        */
+
+        'expense_type',
+
+        /*
+        |--------------------------------------------------------------------------
+        | Amount
         |--------------------------------------------------------------------------
         */
 
         'amount',
-        'calculation_type',
 
         /*
         |--------------------------------------------------------------------------
@@ -96,34 +104,46 @@ class Allowance extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Calculation Type Constants
+    | Expense Type Constants
     |--------------------------------------------------------------------------
     */
 
-    public const CALCULATION_FIXED = 'fixed';
+    public const TYPE_FUEL = 'fuel';
 
-    public const CALCULATION_PER_DAY = 'per_day';
+    public const TYPE_TOLL = 'toll';
 
-    public const CALCULATION_PER_KM = 'per_km';
+    public const TYPE_PARKING = 'parking';
 
-    public const CALCULATION_PER_HOUR = 'per_hour';
+    public const TYPE_FOOD = 'food';
+
+    public const TYPE_MAINTENANCE = 'maintenance';
+
+    public const TYPE_REPAIR = 'repair';
+
+    public const TYPE_MISCELLANEOUS = 'miscellaneous';
 
 
     /*
     |--------------------------------------------------------------------------
-    | Calculation Types
+    | Expense Types
     |--------------------------------------------------------------------------
     */
 
-    public const CALCULATION_TYPES = [
+    public const EXPENSE_TYPES = [
 
-        self::CALCULATION_FIXED,
+        self::TYPE_FUEL,
 
-        self::CALCULATION_PER_DAY,
+        self::TYPE_TOLL,
 
-        self::CALCULATION_PER_KM,
+        self::TYPE_PARKING,
 
-        self::CALCULATION_PER_HOUR,
+        self::TYPE_FOOD,
+
+        self::TYPE_MAINTENANCE,
+
+        self::TYPE_REPAIR,
+
+        self::TYPE_MISCELLANEOUS,
     ];
 
 
@@ -140,7 +160,7 @@ class Allowance extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Created By Relationship
+    | Relationships
     |--------------------------------------------------------------------------
     */
 
@@ -153,12 +173,6 @@ class Allowance extends Model
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Updated By Relationship
-    |--------------------------------------------------------------------------
-    */
-
     public function updatedBy()
     {
         return $this->belongsTo(
@@ -167,12 +181,6 @@ class Allowance extends Model
         );
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Deleted By Relationship
-    |--------------------------------------------------------------------------
-    */
 
     public function deletedBy()
     {
@@ -185,7 +193,7 @@ class Allowance extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Scope - Active
+    | Scopes - Status
     |--------------------------------------------------------------------------
     */
 
@@ -198,12 +206,6 @@ class Allowance extends Model
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Scope - Inactive
-    |--------------------------------------------------------------------------
-    */
-
     public function scopeInactive($query)
     {
         return $query->where(
@@ -215,163 +217,169 @@ class Allowance extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Scope - Fixed
+    | Scopes - Expense Type
     |--------------------------------------------------------------------------
     */
 
-    public function scopeFixed($query)
+    public function scopeFuel($query)
     {
         return $query->where(
-            'calculation_type',
-            self::CALCULATION_FIXED
+            'expense_type',
+            self::TYPE_FUEL
+        );
+    }
+
+
+    public function scopeToll($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_TOLL
+        );
+    }
+
+
+    public function scopeParking($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_PARKING
+        );
+    }
+
+
+    public function scopeFood($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_FOOD
+        );
+    }
+
+
+    public function scopeMaintenance($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_MAINTENANCE
+        );
+    }
+
+
+    public function scopeRepair($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_REPAIR
+        );
+    }
+
+
+    public function scopeMiscellaneous($query)
+    {
+        return $query->where(
+            'expense_type',
+            self::TYPE_MISCELLANEOUS
         );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Scope - Per Day
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopePerDay($query)
-    {
-        return $query->where(
-            'calculation_type',
-            self::CALCULATION_PER_DAY
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Scope - Per KM
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopePerKm($query)
-    {
-        return $query->where(
-            'calculation_type',
-            self::CALCULATION_PER_KM
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Scope - Per Hour
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopePerHour($query)
-    {
-        return $query->where(
-            'calculation_type',
-            self::CALCULATION_PER_HOUR
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Fixed
-    |--------------------------------------------------------------------------
-    */
-
-    public function isFixed(): bool
-    {
-        return $this->calculation_type ===
-            self::CALCULATION_FIXED;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Per Day
-    |--------------------------------------------------------------------------
-    */
-
-    public function isPerDay(): bool
-    {
-        return $this->calculation_type ===
-            self::CALCULATION_PER_DAY;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Per KM
-    |--------------------------------------------------------------------------
-    */
-
-    public function isPerKm(): bool
-    {
-        return $this->calculation_type ===
-            self::CALCULATION_PER_KM;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Per Hour
-    |--------------------------------------------------------------------------
-    */
-
-    public function isPerHour(): bool
-    {
-        return $this->calculation_type ===
-            self::CALCULATION_PER_HOUR;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Active
+    | Helpers - Status
     |--------------------------------------------------------------------------
     */
 
     public function isActive(): bool
     {
-        return $this->status ===
-            self::STATUS_ACTIVE;
+        return $this->status === self::STATUS_ACTIVE;
     }
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Helper - Is Inactive
-    |--------------------------------------------------------------------------
-    */
 
     public function isInactive(): bool
     {
-        return $this->status ===
-            self::STATUS_INACTIVE;
+        return $this->status === self::STATUS_INACTIVE;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Helper - Calculation Type Label
+    | Helpers - Expense Type
     |--------------------------------------------------------------------------
     */
 
-    public function getCalculationTypeLabelAttribute(): string
+    public function isFuel(): bool
     {
-        return match ($this->calculation_type) {
+        return $this->expense_type === self::TYPE_FUEL;
+    }
 
-            self::CALCULATION_FIXED =>
-                'Fixed Amount',
 
-            self::CALCULATION_PER_DAY =>
-                'Per Day',
+    public function isToll(): bool
+    {
+        return $this->expense_type === self::TYPE_TOLL;
+    }
 
-            self::CALCULATION_PER_KM =>
-                'Per KM',
 
-            self::CALCULATION_PER_HOUR =>
-                'Per Hour',
+    public function isParking(): bool
+    {
+        return $this->expense_type === self::TYPE_PARKING;
+    }
+
+
+    public function isFood(): bool
+    {
+        return $this->expense_type === self::TYPE_FOOD;
+    }
+
+
+    public function isMaintenance(): bool
+    {
+        return $this->expense_type === self::TYPE_MAINTENANCE;
+    }
+
+
+    public function isRepair(): bool
+    {
+        return $this->expense_type === self::TYPE_REPAIR;
+    }
+
+
+    public function isMiscellaneous(): bool
+    {
+        return $this->expense_type === self::TYPE_MISCELLANEOUS;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessor - Expense Type Label
+    |--------------------------------------------------------------------------
+    */
+
+    public function getExpenseTypeLabelAttribute(): string
+    {
+        return match ($this->expense_type) {
+
+            self::TYPE_FUEL =>
+                'Fuel',
+
+            self::TYPE_TOLL =>
+                'Toll',
+
+            self::TYPE_PARKING =>
+                'Parking',
+
+            self::TYPE_FOOD =>
+                'Food',
+
+            self::TYPE_MAINTENANCE =>
+                'Maintenance',
+
+            self::TYPE_REPAIR =>
+                'Repair',
+
+            self::TYPE_MISCELLANEOUS =>
+                'Miscellaneous',
 
             default =>
                 'Unknown',
@@ -381,7 +389,7 @@ class Allowance extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Helper - Status Label
+    | Accessor - Status Label
     |--------------------------------------------------------------------------
     */
 

@@ -16,6 +16,7 @@ class StoreAllowanceRequest extends FormRequest
         return true;
     }
 
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -38,17 +39,19 @@ class StoreAllowanceRequest extends FormRequest
                 'unique:allowances,allowance_code',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Allowance Name
             |--------------------------------------------------------------------------
             */
 
-            'allowance_name' => [
+            'name' => [
                 'required',
                 'string',
                 'max:150',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -62,6 +65,20 @@ class StoreAllowanceRequest extends FormRequest
                 'max:2000',
             ],
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Amount
+            |--------------------------------------------------------------------------
+            */
+
+            'amount' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
+
+
             /*
             |--------------------------------------------------------------------------
             | Calculation Type
@@ -72,45 +89,12 @@ class StoreAllowanceRequest extends FormRequest
                 'required',
                 Rule::in([
                     'fixed',
-                    'percentage',
+                    'per_day',
+                    'per_km',
+                    'per_hour',
                 ]),
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Amount
-            |--------------------------------------------------------------------------
-            */
-
-            'amount' => [
-                'nullable',
-                'numeric',
-                'min:0',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Percentage
-            |--------------------------------------------------------------------------
-            */
-
-            'percentage' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                'max:100',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Taxable
-            |--------------------------------------------------------------------------
-            */
-
-            'is_taxable' => [
-                'required',
-                'boolean',
-            ],
 
             /*
             |--------------------------------------------------------------------------
@@ -124,6 +108,7 @@ class StoreAllowanceRequest extends FormRequest
             ],
         ];
     }
+
 
     /**
      * Custom validation messages.
@@ -157,13 +142,13 @@ class StoreAllowanceRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'allowance_name.required' =>
+            'name.required' =>
                 'Allowance name is required.',
 
-            'allowance_name.string' =>
+            'name.string' =>
                 'Allowance name must be a valid text.',
 
-            'allowance_name.max' =>
+            'name.max' =>
                 'Allowance name may not exceed 150 characters.',
 
 
@@ -182,22 +167,12 @@ class StoreAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Calculation Type
-            |--------------------------------------------------------------------------
-            */
-
-            'calculation_type.required' =>
-                'Calculation type is required.',
-
-            'calculation_type.in' =>
-                'Selected calculation type is invalid.',
-
-
-            /*
-            |--------------------------------------------------------------------------
             | Amount
             |--------------------------------------------------------------------------
             */
+
+            'amount.required' =>
+                'Allowance amount is required.',
 
             'amount.numeric' =>
                 'Amount must be a valid number.',
@@ -208,31 +183,15 @@ class StoreAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Percentage
+            | Calculation Type
             |--------------------------------------------------------------------------
             */
 
-            'percentage.numeric' =>
-                'Percentage must be a valid number.',
+            'calculation_type.required' =>
+                'Calculation type is required.',
 
-            'percentage.min' =>
-                'Percentage cannot be negative.',
-
-            'percentage.max' =>
-                'Percentage cannot be greater than 100.',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Taxable
-            |--------------------------------------------------------------------------
-            */
-
-            'is_taxable.required' =>
-                'Please select whether this allowance is taxable.',
-
-            'is_taxable.boolean' =>
-                'Invalid taxable status selected.',
+            'calculation_type.in' =>
+                'Selected calculation type is invalid.',
 
 
             /*

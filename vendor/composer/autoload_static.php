@@ -763,6 +763,7 @@ class ComposerStaticInit01d97aa79dec38ddfa7fcad78138d3bd
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'App\\Services\\Allowance\\AllowanceService' => __DIR__ . '/../..' . '/app/Services/Allowance/AllowanceService.php',
         'App\\Services\\ClientManagement\\ClientManagementService' => __DIR__ . '/../..' . '/app/Services/ClientManagement/ClientManagementService.php',
+        'App\\Services\\Dashboard\\DashboardService' => __DIR__ . '/../..' . '/app/Services/Dashboard/DashboardService.php',
         'App\\Services\\DriverManagement\\DriverManagementService' => __DIR__ . '/../..' . '/app/Services/DriverManagement/DriverManagementService.php',
         'App\\Services\\DutyAssignment\\DutyAssignmentService' => __DIR__ . '/../..' . '/app/Services/DutyAssignment/DutyAssignmentService.php',
         'App\\Services\\DutySlip\\DutySlipService' => __DIR__ . '/../..' . '/app/Services/DutySlip/DutySlipService.php',

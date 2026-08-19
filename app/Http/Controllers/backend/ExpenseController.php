@@ -3,22 +3,22 @@
 namespace App\Http\Controllers\backend;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Backend\Allowance\StoreAllowanceRequest;
-use App\Http\Requests\Backend\Allowance\UpdateAllowanceRequest;
-use App\Models\Allowance;
-use App\Services\Allowance\AllowanceService;
+use App\Http\Requests\Backend\Expense\StoreExpenseRequest;
+use App\Http\Requests\Backend\Expense\UpdateExpenseRequest;
+use App\Models\Expense;
+use App\Services\Expense\ExpenseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class AllowanceController extends Controller
+class ExpenseController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Allowance Service
+    | Expense Service
     |--------------------------------------------------------------------------
     */
 
-    protected AllowanceService $allowanceService;
+    protected ExpenseService $expenseService;
 
 
     /*
@@ -28,9 +28,9 @@ class AllowanceController extends Controller
     */
 
     public function __construct(
-        AllowanceService $allowanceService
+        ExpenseService $expenseService
     ) {
-        $this->allowanceService = $allowanceService;
+        $this->expenseService = $expenseService;
     }
 
 
@@ -41,15 +41,15 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Display a listing of allowances.
+     * Display a listing of expenses.
      */
     public function index(): View
     {
-        $allowances = $this->allowanceService
-            ->getAllowances();
+        $expenses = $this->expenseService
+            ->getExpenses();
 
-        return view('backend.allowances.index',
-            compact('allowances')
+        return view('backend.expenses.index',
+            compact('expenses')
         );
     }
 
@@ -61,11 +61,11 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Show the form for creating a new allowance.
+     * Show the form for creating a new expense.
      */
     public function create(): View
     {
-        return view('backend.allowances.create'
+        return view('backend.expenses.create'
         );
     }
 
@@ -77,21 +77,21 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Store a newly created allowance.
+     * Store a newly created expense.
      */
     public function store(
-        StoreAllowanceRequest $request
+        StoreExpenseRequest $request
     ): RedirectResponse {
 
-        $this->allowanceService->store(
+        $this->expenseService->store(
             $request->validated()
         );
 
         return redirect()
-            ->route('allowances.index')
+            ->route('expenses.index')
             ->with(
                 'success',
-                'Allowance created successfully.'
+                'Expense created successfully.'
             );
     }
 
@@ -103,17 +103,17 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Display the specified allowance.
+     * Display the specified expense.
      */
     public function show(
-        Allowance $allowance
+        Expense $expense
     ): View {
 
-        $allowance = $this->allowanceService
-            ->findById($allowance->id);
+        $expense = $this->expenseService
+            ->findById($expense->id);
 
-        return view('backend.allowances.show',
-            compact('allowance')
+        return view('backend.expenses.show',
+            compact('expense')
         );
     }
 
@@ -125,17 +125,17 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Show the form for editing the specified allowance.
+     * Show the form for editing the specified expense.
      */
     public function edit(
-        Allowance $allowance
+        Expense $expense
     ): View {
 
-        $allowance = $this->allowanceService
-            ->findById($allowance->id);
+        $expense = $this->expenseService
+            ->findById($expense->id);
 
-        return view('backend.allowances.edit',
-            compact('allowance')
+        return view('backend.expenses.edit',
+            compact('expense')
         );
     }
 
@@ -147,23 +147,23 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Update the specified allowance.
+     * Update the specified expense.
      */
     public function update(
-        UpdateAllowanceRequest $request,
-        Allowance $allowance
+        UpdateExpenseRequest $request,
+        Expense $expense
     ): RedirectResponse {
 
-        $this->allowanceService->update(
-            $allowance,
+        $this->expenseService->update(
+            $expense,
             $request->validated()
         );
 
         return redirect()
-            ->route('allowances.index')
+            ->route('expenses.index')
             ->with(
                 'success',
-                'Allowance updated successfully.'
+                'Expense updated successfully.'
             );
     }
 
@@ -175,21 +175,21 @@ class AllowanceController extends Controller
     */
 
     /**
-     * Remove the specified allowance.
+     * Remove the specified expense.
      */
     public function destroy(
-        Allowance $allowance
+        Expense $expense
     ): RedirectResponse {
 
-        $this->allowanceService->delete(
-            $allowance
+        $this->expenseService->delete(
+            $expense
         );
 
         return redirect()
-            ->route('allowances.index')
+            ->route('expenses.index')
             ->with(
                 'success',
-                'Allowance deleted successfully.'
+                'Expense deleted successfully.'
             );
     }
 }

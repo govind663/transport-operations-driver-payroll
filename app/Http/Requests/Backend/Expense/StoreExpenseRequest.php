@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Backend\Allowance;
+namespace App\Http\Requests\Backend\Expense;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateAllowanceRequest extends FormRequest
+class StoreExpenseRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,42 +24,25 @@ class UpdateAllowanceRequest extends FormRequest
      */
     public function rules(): array
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Current Allowance
-        |--------------------------------------------------------------------------
-        */
-
-        $allowance = $this->route('allowance');
-
-        $allowanceId = is_object($allowance)
-            ? $allowance->id
-            : $allowance;
-
-
         return [
 
             /*
             |--------------------------------------------------------------------------
-            | Allowance Code
+            | Expense Code
             |--------------------------------------------------------------------------
             */
 
-            'allowance_code' => [
+            'expense_code' => [
                 'required',
                 'string',
                 'max:100',
-
-                Rule::unique(
-                    'allowances',
-                    'allowance_code'
-                )->ignore($allowanceId),
+                'unique:expenses,expense_code',
             ],
 
 
             /*
             |--------------------------------------------------------------------------
-            | Allowance Name
+            | Expense Name
             |--------------------------------------------------------------------------
             */
 
@@ -85,6 +68,26 @@ class UpdateAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
+            | Expense Type
+            |--------------------------------------------------------------------------
+            */
+
+            'expense_type' => [
+                'required',
+                Rule::in([
+                    'fuel',
+                    'toll',
+                    'parking',
+                    'food',
+                    'maintenance',
+                    'repair',
+                    'miscellaneous',
+                ]),
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Amount
             |--------------------------------------------------------------------------
             */
@@ -93,23 +96,6 @@ class UpdateAllowanceRequest extends FormRequest
                 'required',
                 'numeric',
                 'min:0',
-            ],
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Calculation Type
-            |--------------------------------------------------------------------------
-            */
-
-            'calculation_type' => [
-                'required',
-                Rule::in([
-                    'fixed',
-                    'per_day',
-                    'per_km',
-                    'per_hour',
-                ]),
             ],
 
 
@@ -136,37 +122,37 @@ class UpdateAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Allowance Code
+            | Expense Code
             |--------------------------------------------------------------------------
             */
 
-            'allowance_code.required' =>
-                'Allowance code is required.',
+            'expense_code.required' =>
+                'Expense code is required.',
 
-            'allowance_code.string' =>
-                'Allowance code must be a valid text.',
+            'expense_code.string' =>
+                'Expense code must be a valid text.',
 
-            'allowance_code.max' =>
-                'Allowance code may not exceed 100 characters.',
+            'expense_code.max' =>
+                'Expense code may not exceed 100 characters.',
 
-            'allowance_code.unique' =>
-                'This allowance code already exists.',
+            'expense_code.unique' =>
+                'This expense code already exists.',
 
 
             /*
             |--------------------------------------------------------------------------
-            | Allowance Name
+            | Expense Name
             |--------------------------------------------------------------------------
             */
 
             'name.required' =>
-                'Allowance name is required.',
+                'Expense name is required.',
 
             'name.string' =>
-                'Allowance name must be a valid text.',
+                'Expense name must be a valid text.',
 
             'name.max' =>
-                'Allowance name may not exceed 150 characters.',
+                'Expense name may not exceed 150 characters.',
 
 
             /*
@@ -184,12 +170,25 @@ class UpdateAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
+            | Expense Type
+            |--------------------------------------------------------------------------
+            */
+
+            'expense_type.required' =>
+                'Expense type is required.',
+
+            'expense_type.in' =>
+                'Selected expense type is invalid.',
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Amount
             |--------------------------------------------------------------------------
             */
 
             'amount.required' =>
-                'Allowance amount is required.',
+                'Expense amount is required.',
 
             'amount.numeric' =>
                 'Amount must be a valid number.',
@@ -200,28 +199,15 @@ class UpdateAllowanceRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Calculation Type
-            |--------------------------------------------------------------------------
-            */
-
-            'calculation_type.required' =>
-                'Calculation type is required.',
-
-            'calculation_type.in' =>
-                'Selected calculation type is invalid.',
-
-
-            /*
-            |--------------------------------------------------------------------------
             | Status
             |--------------------------------------------------------------------------
             */
 
             'status.required' =>
-                'Allowance status is required.',
+                'Expense status is required.',
 
             'status.boolean' =>
-                'Invalid allowance status selected.',
+                'Invalid expense status selected.',
         ];
     }
 }

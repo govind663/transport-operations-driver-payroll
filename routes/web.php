@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\backend\AllowanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -19,11 +20,13 @@ use App\Http\Controllers\backend\ClientManagementController;
 use App\Http\Controllers\backend\DriverManagementController;
 use App\Http\Controllers\backend\DutyAssignmentController;
 use App\Http\Controllers\backend\DutySlipController;
+use App\Http\Controllers\backend\ExpenseController;
 use App\Http\Controllers\backend\TravelRequestController;
 use App\Http\Controllers\backend\VehicleCategoryController;
 use App\Http\Controllers\backend\VehicleManagementController;
 use App\Http\Controllers\backend\VehicleTypeController;
 use App\Http\Controllers\backend\WorkingSheetController;
+
 /*
 |--------------------------------------------------------------------------
 | Middleware
@@ -240,6 +243,21 @@ Route::prefix('admin')
             'vehicle-management',
             VehicleManagementController::class
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allowances Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource('allowances', AllowanceController::class);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Expenses Management
+        |--------------------------------------------------------------------------
+        */
+        Route::resource('expenses', ExpenseController::class);
 
         /*
         |--------------------------------------------------------------------------

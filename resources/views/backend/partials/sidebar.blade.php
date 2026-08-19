@@ -275,16 +275,10 @@
 
                     <li>
 
-                        {{-- <a href="{{ route('allowances.index') }}"
+                        <a href="{{ route('allowances.index') }}"
                             class="{{ request()->routeIs('allowances.*') ? 'active' : '' }}">
 
-                            Allowances
-
-                        </a> --}}
-
-                        <a href="javascript:void(0);">
-
-                            Allowances
+                            Allowances Management
 
                         </a>
 
@@ -298,16 +292,10 @@
 
                     <li>
 
-                        {{-- <a href="{{ route('expenses.index') }}"
+                        <a href="{{ route('expenses.index') }}"
                             class="{{ request()->routeIs('expenses.*') ? 'active' : '' }}">
 
-                            Expenses
-
-                        </a> --}}
-
-                        <a href="javascript:void(0);">
-
-                            Expenses
+                            Expenses Management
 
                         </a>
 

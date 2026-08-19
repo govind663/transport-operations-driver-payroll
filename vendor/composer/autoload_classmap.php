@@ -74,6 +74,7 @@ return array(
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'App\\Services\\Allowance\\AllowanceService' => $baseDir . '/app/Services/Allowance/AllowanceService.php',
     'App\\Services\\ClientManagement\\ClientManagementService' => $baseDir . '/app/Services/ClientManagement/ClientManagementService.php',
+    'App\\Services\\Dashboard\\DashboardService' => $baseDir . '/app/Services/Dashboard/DashboardService.php',
     'App\\Services\\DriverManagement\\DriverManagementService' => $baseDir . '/app/Services/DriverManagement/DriverManagementService.php',
     'App\\Services\\DutyAssignment\\DutyAssignmentService' => $baseDir . '/app/Services/DutyAssignment/DutyAssignmentService.php',
     'App\\Services\\DutySlip\\DutySlipService' => $baseDir . '/app/Services/DutySlip/DutySlipService.php',

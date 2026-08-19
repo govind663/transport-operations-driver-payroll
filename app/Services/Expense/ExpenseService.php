@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Services\Allowance;
+namespace App\Services\Expense;
 
-use App\Models\Allowance;
+use App\Models\Expense;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class AllowanceService
+class ExpenseService
 {
     /*
     |--------------------------------------------------------------------------
-    | GET ALLOWANCES
+    | GET EXPENSES
     |--------------------------------------------------------------------------
     */
 
-    public function getAllowances(
+    public function getExpenses(
         int $perPage = 20
     ): LengthAwarePaginator {
 
-        return Allowance::query()
+        return Expense::query()
             ->with([
                 'createdBy',
                 'updatedBy',
@@ -31,15 +31,15 @@ class AllowanceService
 
     /*
     |--------------------------------------------------------------------------
-    | FIND ALLOWANCE
+    | FIND EXPENSE
     |--------------------------------------------------------------------------
     */
 
     public function findById(
         string|int $id
-    ): Allowance {
+    ): Expense {
 
-        return Allowance::query()
+        return Expense::query()
             ->with([
                 'createdBy',
                 'updatedBy',
@@ -56,7 +56,7 @@ class AllowanceService
 
     public function store(
         array $data
-    ): Allowance {
+    ): Expense {
 
         return DB::transaction(function () use ($data) {
 
@@ -80,13 +80,13 @@ class AllowanceService
 
             /*
             |--------------------------------------------------------------------------
-            | Calculation Type
+            | Expense Type
             |--------------------------------------------------------------------------
             */
 
-            $data['calculation_type'] =
-                $data['calculation_type']
-                ?? Allowance::CALCULATION_FIXED;
+            $data['expense_type'] =
+                $data['expense_type']
+                ?? Expense::TYPE_MISCELLANEOUS;
 
 
             /*
@@ -108,16 +108,16 @@ class AllowanceService
 
             $data['status'] =
                 $data['status']
-                ?? Allowance::STATUS_ACTIVE;
+                ?? Expense::STATUS_ACTIVE;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Create Allowance
+            | Create Expense
             |--------------------------------------------------------------------------
             */
 
-            return Allowance::create($data);
+            return Expense::create($data);
         });
     }
 
@@ -129,12 +129,12 @@ class AllowanceService
     */
 
     public function update(
-        Allowance $allowance,
+        Expense $expense,
         array $data
-    ): Allowance {
+    ): Expense {
 
         return DB::transaction(function () use (
-            $allowance,
+            $expense,
             $data
         ) {
 
@@ -149,13 +149,13 @@ class AllowanceService
 
             /*
             |--------------------------------------------------------------------------
-            | Calculation Type
+            | Expense Type
             |--------------------------------------------------------------------------
             */
 
-            $data['calculation_type'] =
-                $data['calculation_type']
-                ?? $allowance->calculation_type;
+            $data['expense_type'] =
+                $data['expense_type']
+                ?? $expense->expense_type;
 
 
             /*
@@ -166,16 +166,16 @@ class AllowanceService
 
             $data['amount'] =
                 $data['amount']
-                ?? $allowance->amount;
+                ?? $expense->amount;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Update Allowance
+            | Update Expense
             |--------------------------------------------------------------------------
             */
 
-            $allowance->update($data);
+            $expense->update($data);
 
 
             /*
@@ -184,7 +184,7 @@ class AllowanceService
             |--------------------------------------------------------------------------
             */
 
-            return $allowance->fresh([
+            return $expense->fresh([
                 'createdBy',
                 'updatedBy',
             ]);
@@ -199,11 +199,11 @@ class AllowanceService
     */
 
     public function delete(
-        Allowance $allowance
+        Expense $expense
     ): bool {
 
         return DB::transaction(function () use (
-            $allowance
+            $expense
         ) {
 
             /*
@@ -212,9 +212,9 @@ class AllowanceService
             |--------------------------------------------------------------------------
             */
 
-            $allowance->deleted_by = Auth::id();
+            $expense->deleted_by = Auth::id();
 
-            $allowance->save();
+            $expense->save();
 
 
             /*
@@ -223,7 +223,7 @@ class AllowanceService
             |--------------------------------------------------------------------------
             */
 
-            return $allowance->delete();
+            return $expense->delete();
         });
     }
 }
