@@ -92,6 +92,22 @@
 
 </style>
 
+<style>
+    .table-bordered, .table-bordered td, .table-bordered th {
+        border: 2px solid #023a85;
+    }
+
+    .table td,
+    .table th {
+        vertical-align: middle;
+    }
+
+    .vehicle-type-code {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+
 @endpush
 
 
