@@ -4,13 +4,14 @@
     Edit Working Sheet
 @endsection
 
+
 @push('styles')
 
 <style>
 
     /*
     |--------------------------------------------------------------------------
-    | Working Sheet
+    | WORKING SHEET
     |--------------------------------------------------------------------------
     */
 
@@ -20,14 +21,23 @@
         margin-bottom: 10px;
     }
 
+
     .form-section {
         margin-bottom: 30px;
     }
+
 
     .form-section hr {
         margin-top: 8px;
         margin-bottom: 20px;
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DUTY SLIP INFORMATION
+    |--------------------------------------------------------------------------
+    */
 
     .duty-slip-info {
         background: #f8f9fa;
@@ -38,16 +48,26 @@
         display: none;
     }
 
+
     .duty-slip-info .info-label {
         font-size: 12px;
         color: #6c757d;
         margin-bottom: 2px;
     }
 
+
     .duty-slip-info .info-value {
         font-weight: 600;
         color: #343a40;
+        word-break: break-word;
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CALCULATION BOX
+    |--------------------------------------------------------------------------
+    */
 
     .calculation-box {
         background: #f8f9fa;
@@ -56,6 +76,13 @@
         padding: 20px;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL AMOUNT
+    |--------------------------------------------------------------------------
+    */
+
     .total-amount-box {
         background: #e8f5e9;
         border: 1px solid #c8e6c9;
@@ -63,10 +90,12 @@
         padding: 15px;
     }
 
+
     .total-amount-box label {
         color: #2e7d32;
         font-weight: 600;
     }
+
 
     .total-amount-box input {
         font-size: 20px;
@@ -74,13 +103,39 @@
         color: #2e7d32;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | REQUIRED
+    |--------------------------------------------------------------------------
+    */
+
     .required {
         color: #dc3545;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | CURRENT VALUE
+    |--------------------------------------------------------------------------
+    */
+
     .current-value {
         font-size: 12px;
         color: #6c757d;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | READONLY AUDIT FIELDS
+    |--------------------------------------------------------------------------
+    */
+
+    .audit-field {
+        background-color: #f8f9fa !important;
+        cursor: not-allowed;
     }
 
 </style>
@@ -103,6 +158,8 @@
 
             <div class="row">
 
+
+                {{-- PAGE TITLE --}}
                 <div class="col-md-8 col-sm-12">
 
                     <div class="title">
@@ -112,6 +169,7 @@
                         </h4>
 
                     </div>
+
 
                     <nav aria-label="breadcrumb">
 
@@ -125,6 +183,7 @@
 
                             </li>
 
+
                             <li class="breadcrumb-item">
 
                                 <a href="{{ route('working-sheets.index') }}">
@@ -132,6 +191,7 @@
                                 </a>
 
                             </li>
+
 
                             <li class="breadcrumb-item active">
 
@@ -146,6 +206,7 @@
                 </div>
 
 
+                {{-- HEADER ACTIONS --}}
                 <div class="col-md-4 col-sm-12 text-right">
 
                     <a
@@ -157,6 +218,7 @@
                         View
 
                     </a>
+
 
                     <a
                         href="{{ route('working-sheets.index') }}"
@@ -207,13 +269,14 @@
 
                     </h5>
 
+
                     <hr>
 
 
                     <div class="row">
 
 
-                        {{-- Sheet Number --}}
+                        {{-- SHEET NUMBER --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -230,6 +293,7 @@
 
                                 </label>
 
+
                                 <input
                                     type="text"
                                     name="sheet_no"
@@ -239,6 +303,7 @@
                                     placeholder="Enter Working Sheet No."
                                     maxlength="100"
                                     autocomplete="off">
+
 
                                 @error('sheet_no')
 
@@ -257,7 +322,8 @@
                         </div>
 
 
-                        {{-- Work Date --}}
+
+                        {{-- WORK DATE --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -274,6 +340,7 @@
 
                                 </label>
 
+
                                 <input
                                     type="date"
                                     name="work_date"
@@ -283,6 +350,7 @@
                                         'work_date',
                                         optional($workingSheet->work_date)->format('Y-m-d')
                                     ) }}">
+
 
                                 @error('work_date')
 
@@ -301,7 +369,8 @@
                         </div>
 
 
-                        {{-- Status --}}
+
+                        {{-- STATUS --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -318,6 +387,7 @@
 
                                 </label>
 
+
                                 <select
                                     name="status"
                                     id="status"
@@ -326,6 +396,7 @@
                                     <option value="">
                                         Select Status
                                     </option>
+
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_DRAFT }}"
@@ -338,6 +409,7 @@
 
                                     </option>
 
+
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_SUBMITTED }}"
                                         {{ old(
@@ -348,6 +420,7 @@
                                         Submitted
 
                                     </option>
+
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_APPROVED }}"
@@ -360,6 +433,7 @@
 
                                     </option>
 
+
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_REJECTED }}"
                                         {{ old(
@@ -370,6 +444,7 @@
                                         Rejected
 
                                     </option>
+
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_COMPLETED }}"
@@ -383,6 +458,7 @@
                                     </option>
 
                                 </select>
+
 
                                 @error('status')
 
@@ -400,7 +476,6 @@
 
                         </div>
 
-
                     </div>
 
                 </div>
@@ -408,7 +483,7 @@
 
 
                 {{-- ===================================================== --}}
-                {{-- DUTY SLIP --}}
+                {{-- DUTY SLIP INFORMATION --}}
                 {{-- ===================================================== --}}
 
                 <div class="form-section">
@@ -421,13 +496,14 @@
 
                     </h5>
 
+
                     <hr>
 
 
                     <div class="row">
 
 
-                        {{-- Duty Slip --}}
+                        {{-- DUTY SLIP --}}
                         <div class="col-md-6">
 
                             <div class="form-group">
@@ -444,6 +520,7 @@
 
                                 </label>
 
+
                                 <select
                                     name="duty_slip_id"
                                     id="duty_slip_id"
@@ -452,6 +529,7 @@
                                     <option value="">
                                         Select Duty Slip
                                     </option>
+
 
                                     @foreach($dutySlips as $dutySlip)
 
@@ -469,13 +547,45 @@
                                             $vehicle =
                                                 optional($assignment)->vehicle;
 
+
                                             $selectedDutySlip =
                                                 old(
                                                     'duty_slip_id',
                                                     $workingSheet->duty_slip_id
                                                 ) == $dutySlip->id;
 
+
+                                            $driverName =
+                                                $driver
+                                                    ? trim(
+                                                        ($driver->first_name ?? '') .
+                                                        ' ' .
+                                                        ($driver->last_name ?? '')
+                                                    )
+                                                    : '';
+
+
+                                            $vehicleNumber =
+                                                $vehicle
+                                                    ? (
+                                                        $vehicle->registration_number ??
+                                                        $vehicle->vehicle_number ??
+                                                        $vehicle->vehicle_code ??
+                                                        ''
+                                                    )
+                                                    : '';
+
+
+                                            $travelRequestNumber =
+                                                $travelRequest
+                                                    ? (
+                                                        $travelRequest->request_no ??
+                                                        $travelRequest->id
+                                                    )
+                                                    : '';
+
                                         @endphp
+
 
                                         <option
                                             value="{{ $dutySlip->id }}"
@@ -484,57 +594,30 @@
 
                                             data-status="{{ $dutySlip->status ?? '' }}"
 
-                                            data-driver="{{ $driver
-                                                ? trim(
-                                                    ($driver->first_name ?? '') .
-                                                    ' ' .
-                                                    ($driver->last_name ?? '')
-                                                )
-                                                : ''
-                                            }}"
+                                            data-driver="{{ $driverName }}"
 
-                                            data-vehicle="{{ $vehicle
-                                                ? (
-                                                    $vehicle->registration_number ??
-                                                    $vehicle->vehicle_number ??
-                                                    $vehicle->vehicle_code ??
-                                                    ''
-                                                )
-                                                : ''
-                                            }}"
+                                            data-vehicle="{{ $vehicleNumber }}"
 
-                                            data-travel-request="{{ $travelRequest
-                                                ? (
-                                                    $travelRequest->request_no ??
-                                                    $travelRequest->id
-                                                )
-                                                : ''
-                                            }}"
+                                            data-travel-request="{{ $travelRequestNumber }}"
 
                                             {{ $selectedDutySlip ? 'selected' : '' }}>
 
+
                                             {{ $dutySlip->slip_no ?? 'Duty Slip #' . $dutySlip->id }}
 
-                                            @if($driver)
+
+                                            @if($driverName)
 
                                                 -
-                                                {{ trim(
-                                                    ($driver->first_name ?? '') .
-                                                    ' ' .
-                                                    ($driver->last_name ?? '')
-                                                ) }}
+                                                {{ $driverName }}
 
                                             @endif
 
-                                            @if($vehicle)
+
+                                            @if($vehicleNumber)
 
                                                 -
-                                                {{
-                                                    $vehicle->registration_number ??
-                                                    $vehicle->vehicle_number ??
-                                                    $vehicle->vehicle_code ??
-                                                    ''
-                                                }}
+                                                {{ $vehicleNumber }}
 
                                             @endif
 
@@ -543,6 +626,7 @@
                                     @endforeach
 
                                 </select>
+
 
                                 @error('duty_slip_id')
 
@@ -560,11 +644,11 @@
 
                         </div>
 
-
                     </div>
 
 
-                    {{-- Duty Slip Details --}}
+
+                    {{-- DUTY SLIP DETAILS --}}
                     <div
                         id="duty-slip-info"
                         class="duty-slip-info">
@@ -572,80 +656,103 @@
                         <div class="row">
 
 
+                            {{-- SLIP NO --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
                                     Duty Slip
                                 </div>
 
+
                                 <div
                                     class="info-value"
                                     id="info-slip-no">
+
                                     -
+
                                 </div>
 
                             </div>
 
 
+
+                            {{-- STATUS --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
                                     Status
                                 </div>
 
+
                                 <div
                                     class="info-value"
                                     id="info-status">
+
                                     -
+
                                 </div>
 
                             </div>
 
 
+
+                            {{-- DRIVER --}}
                             <div class="col-md-3">
 
                                 <div class="info-label">
                                     Driver
                                 </div>
 
+
                                 <div
                                     class="info-value"
                                     id="info-driver">
+
                                     -
+
                                 </div>
 
                             </div>
 
 
+
+                            {{-- VEHICLE --}}
                             <div class="col-md-3">
 
                                 <div class="info-label">
                                     Vehicle
                                 </div>
 
+
                                 <div
                                     class="info-value"
                                     id="info-vehicle">
+
                                     -
+
                                 </div>
 
                             </div>
 
 
+
+                            {{-- TRAVEL REQUEST --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
                                     Travel Request
                                 </div>
 
+
                                 <div
                                     class="info-value"
                                     id="info-travel-request">
+
                                     -
+
                                 </div>
 
                             </div>
-
 
                         </div>
 
@@ -656,7 +763,7 @@
 
 
                 {{-- ===================================================== --}}
-                {{-- METER INFORMATION --}}
+                {{-- METER & WORKING DETAILS --}}
                 {{-- ===================================================== --}}
 
                 <div class="form-section">
@@ -669,13 +776,14 @@
 
                     </h5>
 
+
                     <hr>
 
 
                     <div class="row">
 
 
-                        {{-- Opening Meter --}}
+                        {{-- OPENING METER --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -687,6 +795,7 @@
                                     </b>
 
                                 </label>
+
 
                                 <input
                                     type="number"
@@ -700,6 +809,7 @@
                                     placeholder="Enter Opening Meter"
                                     min="0"
                                     step="0.01">
+
 
                                 @error('opening_meter')
 
@@ -718,7 +828,8 @@
                         </div>
 
 
-                        {{-- Closing Meter --}}
+
+                        {{-- CLOSING METER --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -730,6 +841,7 @@
                                     </b>
 
                                 </label>
+
 
                                 <input
                                     type="number"
@@ -743,6 +855,7 @@
                                     placeholder="Enter Closing Meter"
                                     min="0"
                                     step="0.01">
+
 
                                 @error('closing_meter')
 
@@ -761,7 +874,8 @@
                         </div>
 
 
-                        {{-- Total KM --}}
+
+                        {{-- TOTAL KM --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -773,6 +887,7 @@
                                     </b>
 
                                 </label>
+
 
                                 <input
                                     type="number"
@@ -787,11 +902,13 @@
                                     min="0"
                                     step="0.01">
 
+
                                 <small class="text-muted">
 
                                     Closing Meter - Opening Meter
 
                                 </small>
+
 
                                 @error('total_km')
 
@@ -810,7 +927,8 @@
                         </div>
 
 
-                        {{-- Total Hours --}}
+
+                        {{-- TOTAL HOURS --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -822,6 +940,7 @@
                                     </b>
 
                                 </label>
+
 
                                 <input
                                     type="number"
@@ -835,6 +954,7 @@
                                     placeholder="Enter Total Hours"
                                     min="0"
                                     step="0.01">
+
 
                                 @error('total_hours')
 
@@ -853,7 +973,8 @@
                         </div>
 
 
-                        {{-- Overtime Hours --}}
+
+                        {{-- OVERTIME HOURS --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
@@ -865,6 +986,7 @@
                                     </b>
 
                                 </label>
+
 
                                 <input
                                     type="number"
@@ -878,6 +1000,7 @@
                                     placeholder="Enter Overtime Hours"
                                     min="0"
                                     step="0.01">
+
 
                                 @error('overtime_hours')
 
@@ -894,7 +1017,6 @@
                             </div>
 
                         </div>
-
 
                     </div>
 
@@ -916,6 +1038,7 @@
 
                     </h5>
 
+
                     <hr>
 
 
@@ -924,7 +1047,7 @@
                         <div class="row">
 
 
-                            {{-- Base Amount --}}
+                            {{-- BASE AMOUNT --}}
                             <div class="col-md-4">
 
                                 <div class="form-group">
@@ -936,6 +1059,7 @@
                                         </b>
 
                                     </label>
+
 
                                     <input
                                         type="number"
@@ -949,6 +1073,7 @@
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
+
 
                                     @error('base_amount')
 
@@ -967,7 +1092,8 @@
                             </div>
 
 
-                            {{-- Extra KM Amount --}}
+
+                            {{-- EXTRA KM AMOUNT --}}
                             <div class="col-md-4">
 
                                 <div class="form-group">
@@ -979,6 +1105,7 @@
                                         </b>
 
                                     </label>
+
 
                                     <input
                                         type="number"
@@ -992,6 +1119,7 @@
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
+
 
                                     @error('extra_km_amount')
 
@@ -1010,7 +1138,8 @@
                             </div>
 
 
-                            {{-- Overtime Amount --}}
+
+                            {{-- OVERTIME AMOUNT --}}
                             <div class="col-md-4">
 
                                 <div class="form-group">
@@ -1022,6 +1151,7 @@
                                         </b>
 
                                     </label>
+
 
                                     <input
                                         type="number"
@@ -1035,6 +1165,7 @@
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
+
 
                                     @error('overtime_amount')
 
@@ -1053,7 +1184,8 @@
                             </div>
 
 
-                            {{-- Other Amount --}}
+
+                            {{-- OTHER AMOUNT --}}
                             <div class="col-md-4">
 
                                 <div class="form-group">
@@ -1065,6 +1197,7 @@
                                         </b>
 
                                     </label>
+
 
                                     <input
                                         type="number"
@@ -1078,6 +1211,7 @@
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
+
 
                                     @error('other_amount')
 
@@ -1096,7 +1230,8 @@
                             </div>
 
 
-                            {{-- Total Amount --}}
+
+                            {{-- TOTAL AMOUNT --}}
                             <div class="col-md-8">
 
                                 <div class="form-group total-amount-box">
@@ -1108,6 +1243,7 @@
                                         </b>
 
                                     </label>
+
 
                                     <input
                                         type="number"
@@ -1122,11 +1258,13 @@
                                         min="0"
                                         step="0.01">
 
+
                                     <small class="text-muted">
 
                                         Base + Extra KM + Overtime + Other
 
                                     </small>
+
 
                                     @error('total_amount')
 
@@ -1143,7 +1281,6 @@
                                 </div>
 
                             </div>
-
 
                         </div>
 
@@ -1167,6 +1304,7 @@
 
                     </h5>
 
+
                     <hr>
 
 
@@ -1184,6 +1322,7 @@
 
                                 </label>
 
+
                                 <textarea
                                     name="remarks"
                                     id="remarks"
@@ -1195,11 +1334,13 @@
                                         $workingSheet->remarks
                                     ) }}</textarea>
 
+
                                 <small class="text-muted">
 
                                     Maximum 2000 characters.
 
                                 </small>
+
 
                                 @error('remarks')
 
@@ -1224,7 +1365,7 @@
 
 
                 {{-- ===================================================== --}}
-                {{-- AUDIT INFORMATION --}}
+                {{-- RECORD INFORMATION --}}
                 {{-- ===================================================== --}}
 
                 <div class="form-section">
@@ -1237,24 +1378,30 @@
 
                     </h5>
 
+
                     <hr>
 
 
                     <div class="row">
 
+
+                        {{-- CREATED --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label>
+
                                     <b>
                                         Created At
                                     </b>
+
                                 </label>
+
 
                                 <input
                                     type="text"
-                                    class="form-control"
+                                    class="form-control audit-field"
                                     value="{{ optional($workingSheet->created_at)->format('d-m-Y H:i:s') }}"
                                     readonly>
 
@@ -1263,19 +1410,24 @@
                         </div>
 
 
+
+                        {{-- UPDATED --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label>
+
                                     <b>
                                         Last Updated
                                     </b>
+
                                 </label>
+
 
                                 <input
                                     type="text"
-                                    class="form-control"
+                                    class="form-control audit-field"
                                     value="{{ optional($workingSheet->updated_at)->format('d-m-Y H:i:s') }}"
                                     readonly>
 
@@ -1284,19 +1436,24 @@
                         </div>
 
 
+
+                        {{-- ID --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label>
+
                                     <b>
                                         Working Sheet ID
                                     </b>
+
                                 </label>
+
 
                                 <input
                                     type="text"
-                                    class="form-control"
+                                    class="form-control audit-field"
                                     value="{{ $workingSheet->id }}"
                                     readonly>
 
@@ -1320,6 +1477,8 @@
 
                         <div class="text-right mt-3">
 
+
+                            {{-- CANCEL --}}
                             <a
                                 href="{{ route('working-sheets.index') }}"
                                 class="btn btn-danger">
@@ -1331,6 +1490,8 @@
                             </a>
 
 
+
+                            {{-- VIEW --}}
                             <a
                                 href="{{ route('working-sheets.show', $workingSheet->id) }}"
                                 class="btn btn-info">
@@ -1342,6 +1503,8 @@
                             </a>
 
 
+
+                            {{-- UPDATE --}}
                             <button
                                 type="submit"
                                 id="update-working-sheet"
@@ -1374,16 +1537,16 @@
 @endsection
 
 
+
 @push('scripts')
 
 <script>
 
 $(document).ready(function () {
 
-
     /*
     |--------------------------------------------------------------------------
-    | Duty Slip Information
+    | DUTY SLIP INFORMATION
     |--------------------------------------------------------------------------
     */
 
@@ -1396,42 +1559,88 @@ $(document).ready(function () {
             $('#duty_slip_id').val();
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | NO DUTY SLIP SELECTED
+        |--------------------------------------------------------------------------
+        */
+
         if (!dutySlipId) {
 
             $('#duty-slip-info').hide();
+
+            $('#info-slip-no').text('-');
+            $('#info-status').text('-');
+            $('#info-driver').text('-');
+            $('#info-vehicle').text('-');
+            $('#info-travel-request').text('-');
 
             return;
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | GET DATA FROM SELECTED OPTION
+        |--------------------------------------------------------------------------
+        */
+
+        const slipNo =
+            selected.attr('data-slip-no') || '-';
+
+        const status =
+            selected.attr('data-status') || '-';
+
+        const driver =
+            selected.attr('data-driver') || '';
+
+        const vehicle =
+            selected.attr('data-vehicle') || '';
+
+        const travelRequest =
+            selected.attr('data-travel-request') || '-';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISPLAY INFORMATION
+        |--------------------------------------------------------------------------
+        */
+
         $('#info-slip-no').text(
-            selected.data('slip-no') || '-'
+            slipNo
         );
 
 
         $('#info-status').text(
-            selected.data('status') || '-'
+            status
         );
 
 
         $('#info-driver').text(
-            selected.data('driver') || '-'
+            driver || 'Not Assigned'
         );
 
 
         $('#info-vehicle').text(
-            selected.data('vehicle') || '-'
+            vehicle || 'Not Assigned'
         );
 
 
         $('#info-travel-request').text(
-            selected.data('travel-request') || '-'
+            travelRequest
         );
 
 
-        $('#duty-slip-info').slideDown(150);
+        $('#duty-slip-info').stop(true, true).slideDown(150);
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | DUTY SLIP CHANGE
+    |--------------------------------------------------------------------------
+    */
 
     $('#duty_slip_id').on(
         'change',
@@ -1441,7 +1650,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Load Existing Duty Slip Information
+    | INITIAL DUTY SLIP LOAD
     |--------------------------------------------------------------------------
     */
 
@@ -1451,11 +1660,99 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Total KM
+    | TOTAL KM CALCULATION
     |--------------------------------------------------------------------------
     */
 
     function calculateTotalKm()
+    {
+        const openingValue =
+            $('#opening_meter').val();
+
+        const closingValue =
+            $('#closing_meter').val();
+
+
+        const opening =
+            parseFloat(openingValue);
+
+        const closing =
+            parseFloat(closingValue);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BOTH VALUES MUST EXIST
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            openingValue !== '' &&
+            closingValue !== '' &&
+            !isNaN(opening) &&
+            !isNaN(closing)
+        ) {
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLOSING LESS THAN OPENING
+            |--------------------------------------------------------------------------
+            */
+
+            if (closing < opening) {
+
+                $('#total_km').val('');
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CALCULATE KM
+            |--------------------------------------------------------------------------
+            */
+
+            const total =
+                closing - opening;
+
+
+            $('#total_km').val(
+                total.toFixed(2)
+            );
+
+        }
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | METER CHANGE EVENTS
+    |--------------------------------------------------------------------------
+    */
+
+    $('#opening_meter, #closing_meter').on(
+        'input change',
+        function () {
+
+            calculateTotalKm();
+
+            validateClosingMeter();
+
+        }
+    );
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSING METER VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    function validateClosingMeter()
     {
         const opening =
             parseFloat(
@@ -1471,95 +1768,31 @@ $(document).ready(function () {
 
         if (
             !isNaN(opening) &&
-            !isNaN(closing)
+            !isNaN(closing) &&
+            closing < opening
         ) {
 
+            $('#closing_meter')
+                .addClass('is-invalid');
 
-            if (closing < opening) {
+        } else {
 
-                $('#total_km').val('');
-
-                return;
-
-            }
-
-
-            const total =
-                closing - opening;
-
-
-            $('#total_km').val(
-                total.toFixed(2)
-            );
+            $('#closing_meter')
+                .removeClass('is-invalid');
 
         }
-
     }
 
 
-    $('#opening_meter, #closing_meter')
-        .on(
-            'input change',
-            calculateTotalKm
-        );
-
-
 
     /*
     |--------------------------------------------------------------------------
-    | Closing Meter Validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#closing_meter').on(
-        'input change',
-        function () {
-
-
-            const opening =
-                parseFloat(
-                    $('#opening_meter').val()
-                );
-
-
-            const closing =
-                parseFloat(
-                    $(this).val()
-                );
-
-
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing < opening
-            ) {
-
-                $(this).addClass(
-                    'is-invalid'
-                );
-
-            } else {
-
-                $(this).removeClass(
-                    'is-invalid'
-                );
-
-            }
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calculate Total Amount
+    | TOTAL AMOUNT CALCULATION
     |--------------------------------------------------------------------------
     */
 
     function calculateTotalAmount()
     {
-
         const base =
             parseFloat(
                 $('#base_amount').val()
@@ -1594,9 +1827,15 @@ $(document).ready(function () {
         $('#total_amount').val(
             total.toFixed(2)
         );
-
     }
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AMOUNT CHANGE EVENTS
+    |--------------------------------------------------------------------------
+    */
 
     $('#base_amount, #extra_km_amount, #overtime_amount, #other_amount')
         .on(
@@ -1608,17 +1847,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Total Amount on Page Load
-    |--------------------------------------------------------------------------
-    */
-
-    calculateTotalAmount();
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Numeric Input Cleanup
+    | NUMERIC INPUT CLEANUP
     |--------------------------------------------------------------------------
     */
 
@@ -1626,10 +1855,15 @@ $(document).ready(function () {
         'input',
         function () {
 
-
             let value =
                 $(this).val();
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | REMOVE INVALID CHARACTERS
+            |--------------------------------------------------------------------------
+            */
 
             value =
                 value.replace(
@@ -1638,15 +1872,15 @@ $(document).ready(function () {
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | ONLY ONE DECIMAL POINT
+            |--------------------------------------------------------------------------
+            */
+
             const parts =
                 value.split('.');
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Only One Decimal Point
-            |--------------------------------------------------------------------------
-            */
 
             if (parts.length > 2) {
 
@@ -1667,7 +1901,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Sheet Number Formatting
+    | SHEET NUMBER FORMATTING
     |--------------------------------------------------------------------------
     */
 
@@ -1689,7 +1923,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Remarks Formatting
+    | REMARKS FORMATTING
     |--------------------------------------------------------------------------
     */
 
@@ -1710,7 +1944,21 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Form Submit
+    | INITIAL CALCULATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    calculateTotalKm();
+
+    calculateTotalAmount();
+
+    validateClosingMeter();
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORM SUBMIT
     |--------------------------------------------------------------------------
     */
 
@@ -1721,7 +1969,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Clean Sheet Number
+            | CLEAN SHEET NUMBER
             |--------------------------------------------------------------------------
             */
 
@@ -1735,7 +1983,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Clean Remarks
+            | CLEAN REMARKS
             |--------------------------------------------------------------------------
             */
 
@@ -1748,7 +1996,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Meter Validation
+            | METER VALIDATION
             |--------------------------------------------------------------------------
             */
 
@@ -1774,9 +2022,7 @@ $(document).ready(function () {
 
 
                 $('#closing_meter')
-                    .addClass(
-                        'is-invalid'
-                    )
+                    .addClass('is-invalid')
                     .focus();
 
 
@@ -1786,13 +2032,12 @@ $(document).ready(function () {
 
 
                 return false;
-
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | Recalculate Total KM
+            | RECALCULATE TOTAL KM
             |--------------------------------------------------------------------------
             */
 
@@ -1814,17 +2059,16 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Recalculate Total Amount
+            | RECALCULATE TOTAL AMOUNT
             |--------------------------------------------------------------------------
             */
 
             calculateTotalAmount();
 
 
-
             /*
             |--------------------------------------------------------------------------
-            | Prevent Double Submission
+            | PREVENT DOUBLE SUBMISSION
             |--------------------------------------------------------------------------
             */
 

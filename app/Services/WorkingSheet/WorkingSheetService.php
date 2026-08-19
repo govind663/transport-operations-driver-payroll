@@ -22,12 +22,14 @@ class WorkingSheetService
         return WorkingSheet::query()
             ->with([
                 'dutySlip',
+                'driver',
                 'createdBy',
                 'updatedBy',
             ])
             ->latest('id')
             ->paginate($perPage);
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -42,11 +44,13 @@ class WorkingSheetService
         return WorkingSheet::query()
             ->with([
                 'dutySlip',
+                'driver',
                 'createdBy',
                 'updatedBy',
             ])
             ->findOrFail($id);
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +64,14 @@ class WorkingSheetService
 
         return DB::transaction(function () use ($data) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Created By
+            |--------------------------------------------------------------------------
+            */
+
             $data['created_by'] = Auth::id();
+
 
             /*
             |--------------------------------------------------------------------------
@@ -72,54 +83,208 @@ class WorkingSheetService
                 $data['status']
                 ?? WorkingSheet::STATUS_DRAFT;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            |
+            | Driver is stored directly for:
+            | - Driver Dashboard
+            | - Driver-wise reports
+            | - Driver-wise KM
+            | - Driver-wise earnings
+            |
+            */
+
+            if (
+                isset($data['driver_id']) &&
+                $data['driver_id'] !== ''
+            ) {
+
+                $data['driver_id'] =
+                    (int) $data['driver_id'];
+
+            } else {
+
+                $data['driver_id'] = null;
+            }
+
+
             /*
             |--------------------------------------------------------------------------
             | Calculate Total KM
             |--------------------------------------------------------------------------
             */
 
+            $openingMeter =
+                $data['opening_meter'] ?? null;
+
+            $closingMeter =
+                $data['closing_meter'] ?? null;
+
+
             if (
-                isset($data['opening_meter']) &&
-                isset($data['closing_meter']) &&
-                $data['opening_meter'] !== null &&
-                $data['closing_meter'] !== null
+                $openingMeter !== null &&
+                $closingMeter !== null &&
+                $openingMeter !== '' &&
+                $closingMeter !== ''
             ) {
 
                 $data['total_km'] =
                     max(
                         0,
-                        (float) $data['closing_meter']
-                        - (float) $data['opening_meter']
+                        round(
+                            (float) $closingMeter
+                            - (float) $openingMeter,
+                            2
+                        )
                     );
+
+            } else {
+
+                $data['total_km'] = null;
             }
+
 
             /*
             |--------------------------------------------------------------------------
-            | Calculate Total Amount
+            | Normalize Hours
+            |--------------------------------------------------------------------------
+            */
+
+            $data['total_hours'] =
+                isset($data['total_hours']) &&
+                $data['total_hours'] !== ''
+                    ? round(
+                        max(
+                            0,
+                            (float) $data['total_hours']
+                        ),
+                        2
+                    )
+                    : null;
+
+
+            $data['overtime_hours'] =
+                round(
+                    max(
+                        0,
+                        (float) (
+                            $data['overtime_hours']
+                            ?? 0
+                        )
+                    ),
+                    2
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Calculate Financial Amounts
             |--------------------------------------------------------------------------
             */
 
             $baseAmount =
-                (float) ($data['base_amount'] ?? 0);
+                max(
+                    0,
+                    (float) (
+                        $data['base_amount']
+                        ?? 0
+                    )
+                );
+
 
             $extraKmAmount =
-                (float) ($data['extra_km_amount'] ?? 0);
+                max(
+                    0,
+                    (float) (
+                        $data['extra_km_amount']
+                        ?? 0
+                    )
+                );
+
 
             $overtimeAmount =
-                (float) ($data['overtime_amount'] ?? 0);
+                max(
+                    0,
+                    (float) (
+                        $data['overtime_amount']
+                        ?? 0
+                    )
+                );
+
 
             $otherAmount =
-                (float) ($data['other_amount'] ?? 0);
+                max(
+                    0,
+                    (float) (
+                        $data['other_amount']
+                        ?? 0
+                    )
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Store Normalized Amounts
+            |--------------------------------------------------------------------------
+            */
+
+            $data['base_amount'] =
+                round($baseAmount, 2);
+
+            $data['extra_km_amount'] =
+                round($extraKmAmount, 2);
+
+            $data['overtime_amount'] =
+                round($overtimeAmount, 2);
+
+            $data['other_amount'] =
+                round($otherAmount, 2);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Total Amount
+            |--------------------------------------------------------------------------
+            */
 
             $data['total_amount'] =
-                $baseAmount
-                + $extraKmAmount
-                + $overtimeAmount
-                + $otherAmount;
+                round(
+                    $baseAmount
+                    + $extraKmAmount
+                    + $overtimeAmount
+                    + $otherAmount,
+                    2
+                );
 
-            return WorkingSheet::create($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Working Sheet
+            |--------------------------------------------------------------------------
+            */
+
+            $workingSheet =
+                WorkingSheet::create($data);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return With Relationships
+            |--------------------------------------------------------------------------
+            */
+
+            return $workingSheet->load([
+                'dutySlip',
+                'driver',
+                'createdBy',
+                'updatedBy',
+            ]);
         });
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -137,7 +302,64 @@ class WorkingSheetService
             $data
         ) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Updated By
+            |--------------------------------------------------------------------------
+            */
+
             $data['updated_by'] = Auth::id();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                array_key_exists(
+                    'driver_id',
+                    $data
+                )
+            ) {
+
+                $data['driver_id'] =
+                    $data['driver_id'] !== ''
+                        ? (int) $data['driver_id']
+                        : null;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Opening Meter
+            |--------------------------------------------------------------------------
+            */
+
+            $openingMeter =
+                array_key_exists(
+                    'opening_meter',
+                    $data
+                )
+                    ? $data['opening_meter']
+                    : $workingSheet->opening_meter;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Closing Meter
+            |--------------------------------------------------------------------------
+            */
+
+            $closingMeter =
+                array_key_exists(
+                    'closing_meter',
+                    $data
+                )
+                    ? $data['closing_meter']
+                    : $workingSheet->closing_meter;
+
 
             /*
             |--------------------------------------------------------------------------
@@ -145,76 +367,214 @@ class WorkingSheetService
             |--------------------------------------------------------------------------
             */
 
-            $openingMeter =
-                $data['opening_meter']
-                ?? $workingSheet->opening_meter;
-
-            $closingMeter =
-                $data['closing_meter']
-                ?? $workingSheet->closing_meter;
-
             if (
                 $openingMeter !== null &&
-                $closingMeter !== null
+                $closingMeter !== null &&
+                $openingMeter !== '' &&
+                $closingMeter !== ''
             ) {
 
                 $data['total_km'] =
                     max(
                         0,
-                        (float) $closingMeter
-                        - (float) $openingMeter
+                        round(
+                            (float) $closingMeter
+                            - (float) $openingMeter,
+                            2
+                        )
                     );
+
+            } else {
+
+                $data['total_km'] = null;
             }
+
 
             /*
             |--------------------------------------------------------------------------
-            | Calculate Total Amount
+            | Total Hours
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                array_key_exists(
+                    'total_hours',
+                    $data
+                )
+            ) {
+
+                $data['total_hours'] =
+                    $data['total_hours'] !== ''
+                        ? round(
+                            max(
+                                0,
+                                (float) $data['total_hours']
+                            ),
+                            2
+                        )
+                        : null;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Overtime Hours
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                array_key_exists(
+                    'overtime_hours',
+                    $data
+                )
+            ) {
+
+                $data['overtime_hours'] =
+                    round(
+                        max(
+                            0,
+                            (float) (
+                                $data['overtime_hours']
+                                ?? 0
+                            )
+                        ),
+                        2
+                    );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Financial Amounts
             |--------------------------------------------------------------------------
             */
 
             $baseAmount =
-                (float) (
-                    $data['base_amount']
-                    ?? $workingSheet->base_amount
-                    ?? 0
-                );
+                array_key_exists(
+                    'base_amount',
+                    $data
+                )
+                    ? (float) $data['base_amount']
+                    : (float) (
+                        $workingSheet->base_amount
+                        ?? 0
+                    );
+
 
             $extraKmAmount =
-                (float) (
-                    $data['extra_km_amount']
-                    ?? $workingSheet->extra_km_amount
-                    ?? 0
-                );
+                array_key_exists(
+                    'extra_km_amount',
+                    $data
+                )
+                    ? (float) $data['extra_km_amount']
+                    : (float) (
+                        $workingSheet->extra_km_amount
+                        ?? 0
+                    );
+
 
             $overtimeAmount =
-                (float) (
-                    $data['overtime_amount']
-                    ?? $workingSheet->overtime_amount
-                    ?? 0
-                );
+                array_key_exists(
+                    'overtime_amount',
+                    $data
+                )
+                    ? (float) $data['overtime_amount']
+                    : (float) (
+                        $workingSheet->overtime_amount
+                        ?? 0
+                    );
+
 
             $otherAmount =
-                (float) (
-                    $data['other_amount']
-                    ?? $workingSheet->other_amount
-                    ?? 0
-                );
+                array_key_exists(
+                    'other_amount',
+                    $data
+                )
+                    ? (float) $data['other_amount']
+                    : (float) (
+                        $workingSheet->other_amount
+                        ?? 0
+                    );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Prevent Negative Amounts
+            |--------------------------------------------------------------------------
+            */
+
+            $baseAmount =
+                max(0, $baseAmount);
+
+            $extraKmAmount =
+                max(0, $extraKmAmount);
+
+            $overtimeAmount =
+                max(0, $overtimeAmount);
+
+            $otherAmount =
+                max(0, $otherAmount);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Individual Amounts
+            |--------------------------------------------------------------------------
+            */
+
+            $data['base_amount'] =
+                round($baseAmount, 2);
+
+            $data['extra_km_amount'] =
+                round($extraKmAmount, 2);
+
+            $data['overtime_amount'] =
+                round($overtimeAmount, 2);
+
+            $data['other_amount'] =
+                round($otherAmount, 2);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recalculate Total Amount
+            |--------------------------------------------------------------------------
+            */
 
             $data['total_amount'] =
-                $baseAmount
-                + $extraKmAmount
-                + $overtimeAmount
-                + $otherAmount;
+                round(
+                    $baseAmount
+                    + $extraKmAmount
+                    + $overtimeAmount
+                    + $otherAmount,
+                    2
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Working Sheet
+            |--------------------------------------------------------------------------
+            */
 
             $workingSheet->update($data);
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Fresh Model With Relationships
+            |--------------------------------------------------------------------------
+            */
+
             return $workingSheet->fresh([
                 'dutySlip',
+                'driver',
                 'createdBy',
                 'updatedBy',
             ]);
         });
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -230,9 +590,15 @@ class WorkingSheetService
             $workingSheet
         ) {
 
-            $workingSheet->deleted_by = Auth::id();
-
-            $workingSheet->save();
+            /*
+            |--------------------------------------------------------------------------
+            | Soft Delete
+            |--------------------------------------------------------------------------
+            |
+            | WorkingSheet uses SoftDeletes.
+            | No deleted_by column exists in current table.
+            |
+            */
 
             return $workingSheet->delete();
         });

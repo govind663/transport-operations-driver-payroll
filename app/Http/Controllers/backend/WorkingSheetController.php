@@ -5,6 +5,7 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\WorkingSheet\StoreWorkingSheetRequest;
 use App\Http\Requests\Backend\WorkingSheet\UpdateWorkingSheetRequest;
+use App\Models\Driver;
 use App\Models\DutySlip;
 use App\Models\WorkingSheet;
 use App\Services\WorkingSheet\WorkingSheetService;
@@ -57,6 +58,25 @@ class WorkingSheetController extends Controller
      */
     public function create(): View
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Drivers
+        |--------------------------------------------------------------------------
+        */
+
+        $drivers = Driver::query()
+            ->latest('id')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Slips
+        |--------------------------------------------------------------------------
+        |
+        | Only duty slips which can have a working sheet are loaded.
+        |
+        */
+
         $dutySlips = DutySlip::query()
             ->with([
                 'dutyAssignment',
@@ -73,7 +93,10 @@ class WorkingSheetController extends Controller
             ->get();
 
         return view('backend.working-sheets.create',
-            compact('dutySlips')
+            compact(
+                'drivers',
+                'dutySlips'
+            )
         );
     }
 
@@ -138,10 +161,37 @@ class WorkingSheetController extends Controller
         WorkingSheet $workingSheet
     ): View {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Load Working Sheet
+        |--------------------------------------------------------------------------
+        */
+
         $workingSheet =
             $this->workingSheetService->findById(
                 $workingSheet->id
             );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Drivers
+        |--------------------------------------------------------------------------
+        */
+
+        $drivers = Driver::query()
+            ->latest('id')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Slips
+        |--------------------------------------------------------------------------
+        |
+        | Load all relevant duty slips for edit.
+        | This also ensures that the currently selected duty slip
+        | remains available in the dropdown.
+        |
+        */
 
         $dutySlips = DutySlip::query()
             ->with([
@@ -150,12 +200,18 @@ class WorkingSheetController extends Controller
                 'dutyAssignment.driver',
                 'dutyAssignment.vehicle',
             ])
+            ->whereIn('status', [
+                DutySlip::STATUS_OPEN,
+                DutySlip::STATUS_STARTED,
+                DutySlip::STATUS_COMPLETED,
+            ])
             ->latest('id')
             ->get();
 
         return view('backend.working-sheets.edit',
             compact(
                 'workingSheet',
+                'drivers',
                 'dutySlips'
             )
         );

@@ -93,11 +93,9 @@
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -148,58 +146,38 @@
 
         </div>
 
-
-
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
-
-        <form
-            action="{{ route('working-sheets.store') }}"
+        <form action="{{ route('working-sheets.store') }}"
             method="POST"
             id="working-sheet-form">
 
             @csrf
 
-
             <div class="card-box pd-20 mb-30">
-
 
                 {{-- ===================================================== --}}
                 {{-- BASIC INFORMATION --}}
                 {{-- ===================================================== --}}
-
                 <div class="form-section">
 
                     <h5 class="section-title">
-
-                        <b>
-                            Working Sheet Information
-                        </b>
-
+                        <b>Working Sheet Information</b>
                     </h5>
 
                     <hr>
 
-
                     <div class="row">
 
-
-                        {{-- Sheet Number --}}
+                        {{-- Working Sheet Number --}}
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label for="sheet_no">
-
-                                    <b>
-                                        Working Sheet No.
-                                    </b>
-
-                                    <span class="required">
-                                        *
-                                    </span>
-
+                                    <b>Working Sheet No.</b>
+                                    <span class="required">*</span>
                                 </label>
 
                                 <input
@@ -213,15 +191,9 @@
                                     autocomplete="off">
 
                                 @error('sheet_no')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -235,15 +207,8 @@
                             <div class="form-group">
 
                                 <label for="work_date">
-
-                                    <b>
-                                        Work Date
-                                    </b>
-
-                                    <span class="required">
-                                        *
-                                    </span>
-
+                                    <b>Work Date</b>
+                                    <span class="required">*</span>
                                 </label>
 
                                 <input
@@ -254,15 +219,9 @@
                                     value="{{ old('work_date', now()->format('Y-m-d')) }}">
 
                                 @error('work_date')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -276,15 +235,8 @@
                             <div class="form-group">
 
                                 <label for="status">
-
-                                    <b>
-                                        Status
-                                    </b>
-
-                                    <span class="required">
-                                        *
-                                    </span>
-
+                                    <b>Status</b>
+                                    <span class="required">*</span>
                                 </label>
 
                                 <select
@@ -292,94 +244,67 @@
                                     id="status"
                                     class="form-control custom-select2 @error('status') is-invalid @enderror">
 
-                                    <option value="">
-                                        Select Status
-                                    </option>
+                                    <option value="">Select Status</option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_DRAFT }}"
                                         {{ old('status', 'draft') === \App\Models\WorkingSheet::STATUS_DRAFT ? 'selected' : '' }}>
-
                                         Draft
-
                                     </option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_SUBMITTED }}"
                                         {{ old('status') === \App\Models\WorkingSheet::STATUS_SUBMITTED ? 'selected' : '' }}>
-
                                         Submitted
-
                                     </option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_APPROVED }}"
                                         {{ old('status') === \App\Models\WorkingSheet::STATUS_APPROVED ? 'selected' : '' }}>
-
                                         Approved
-
                                     </option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_REJECTED }}"
                                         {{ old('status') === \App\Models\WorkingSheet::STATUS_REJECTED ? 'selected' : '' }}>
-
                                         Rejected
-
                                     </option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_COMPLETED }}"
                                         {{ old('status') === \App\Models\WorkingSheet::STATUS_COMPLETED ? 'selected' : '' }}>
-
                                         Completed
-
                                     </option>
 
                                 </select>
 
                                 @error('status')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                     </div>
 
                 </div>
 
 
-
                 {{-- ===================================================== --}}
-                {{-- DUTY SLIP --}}
+                {{-- DUTY SLIP INFORMATION --}}
                 {{-- ===================================================== --}}
-
                 <div class="form-section">
 
                     <h5 class="section-title">
-
-                        <b>
-                            Duty Slip Information
-                        </b>
-
+                        <b>Duty Slip Information</b>
                     </h5>
 
                     <hr>
 
-
                     <div class="row">
-
 
                         {{-- Duty Slip --}}
                         <div class="col-md-6">
@@ -387,15 +312,8 @@
                             <div class="form-group">
 
                                 <label for="duty_slip_id">
-
-                                    <b>
-                                        Duty Slip
-                                    </b>
-
-                                    <span class="required">
-                                        *
-                                    </span>
-
+                                    <b>Duty Slip</b>
+                                    <span class="required">*</span>
                                 </label>
 
                                 <select
@@ -423,6 +341,23 @@
                                             $vehicle =
                                                 optional($assignment)->vehicle;
 
+                                            $driverName = $driver
+                                                ? trim(
+                                                    ($driver->first_name ?? '') .
+                                                    ' ' .
+                                                    ($driver->last_name ?? '')
+                                                )
+                                                : '';
+
+                                            $vehicleNumber = $vehicle
+                                                ? (
+                                                    $vehicle->registration_number ??
+                                                    $vehicle->vehicle_number ??
+                                                    $vehicle->vehicle_code ??
+                                                    ''
+                                                )
+                                                : '';
+
                                             $selectedDutySlip =
                                                 old('duty_slip_id') == $dutySlip->id;
 
@@ -430,24 +365,33 @@
 
                                         <option
                                             value="{{ $dutySlip->id }}"
+
                                             data-slip-no="{{ $dutySlip->slip_no ?? $dutySlip->id }}"
+
                                             data-status="{{ $dutySlip->status ?? '' }}"
-                                            data-driver="{{ $driver ? trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? '')) : '' }}"
-                                            data-vehicle="{{ $vehicle ? ($vehicle->registration_number ?? $vehicle->vehicle_number ?? $vehicle->vehicle_code ?? '') : '' }}"
+
+                                            data-driver-id="{{ $driver?->id ?? '' }}"
+
+                                            data-driver="{{ $driverName }}"
+
+                                            data-vehicle="{{ $vehicleNumber }}"
+
                                             data-travel-request="{{ $travelRequest ? ($travelRequest->request_no ?? $travelRequest->id) : '' }}"
+
                                             data-date="{{ optional($dutySlip->created_at)->format('d-m-Y') }}"
+
                                             {{ $selectedDutySlip ? 'selected' : '' }}>
 
                                             {{ $dutySlip->slip_no ?? 'Duty Slip #' . $dutySlip->id }}
 
                                             @if($driver)
                                                 -
-                                                {{ trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? '')) }}
+                                                {{ $driverName }}
                                             @endif
 
                                             @if($vehicle)
                                                 -
-                                                {{ $vehicle->registration_number ?? $vehicle->vehicle_number ?? $vehicle->vehicle_code ?? '' }}
+                                                {{ $vehicleNumber }}
                                             @endif
 
                                         </option>
@@ -457,15 +401,9 @@
                                 </select>
 
                                 @error('duty_slip_id')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -473,17 +411,57 @@
                         </div>
 
 
+                        {{-- Driver --}}
+                        <div class="col-md-6">
+
+                            <div class="form-group">
+
+                                <label for="driver_id">
+                                    <b>Driver</b>
+                                    <span class="required">*</span>
+                                </label>
+
+                                {{-- Driver is automatically derived from Duty Slip --}}
+                                <input
+                                    type="hidden"
+                                    name="driver_id"
+                                    id="driver_id"
+                                    value="{{ old('driver_id') }}">
+
+                                <input
+                                    type="text"
+                                    id="driver_name"
+                                    class="form-control"
+                                    value=""
+                                    placeholder="Driver will be selected from Duty Slip"
+                                    readonly>
+
+                                <small class="text-muted">
+                                    Driver is automatically linked from the selected Duty Slip.
+                                </small>
+
+                                @error('driver_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
                     </div>
 
 
                     {{-- Duty Slip Details --}}
                     <div
                         id="duty-slip-info"
-                        class="duty-slip-info">
+                        class="duty-slip-info"
+                        style="display:none;">
 
                         <div class="row">
 
-
+                            {{-- Duty Slip --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
@@ -499,6 +477,7 @@
                             </div>
 
 
+                            {{-- Status --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
@@ -514,6 +493,7 @@
                             </div>
 
 
+                            {{-- Driver --}}
                             <div class="col-md-3">
 
                                 <div class="info-label">
@@ -529,6 +509,7 @@
                             </div>
 
 
+                            {{-- Vehicle --}}
                             <div class="col-md-3">
 
                                 <div class="info-label">
@@ -544,6 +525,7 @@
                             </div>
 
 
+                            {{-- Travel Request --}}
                             <div class="col-md-2">
 
                                 <div class="info-label">
@@ -558,7 +540,6 @@
 
                             </div>
 
-
                         </div>
 
                     </div>
@@ -566,26 +547,18 @@
                 </div>
 
 
-
                 {{-- ===================================================== --}}
-                {{-- METER INFORMATION --}}
+                {{-- METER & WORKING DETAILS --}}
                 {{-- ===================================================== --}}
-
                 <div class="form-section">
 
                     <h5 class="section-title">
-
-                        <b>
-                            Meter & Working Details
-                        </b>
-
+                        <b>Meter & Working Details</b>
                     </h5>
 
                     <hr>
 
-
                     <div class="row">
-
 
                         {{-- Opening Meter --}}
                         <div class="col-md-4">
@@ -593,11 +566,7 @@
                             <div class="form-group">
 
                                 <label for="opening_meter">
-
-                                    <b>
-                                        Opening Meter
-                                    </b>
-
+                                    <b>Opening Meter</b>
                                 </label>
 
                                 <input
@@ -611,15 +580,9 @@
                                     step="0.01">
 
                                 @error('opening_meter')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -633,11 +596,7 @@
                             <div class="form-group">
 
                                 <label for="closing_meter">
-
-                                    <b>
-                                        Closing Meter
-                                    </b>
-
+                                    <b>Closing Meter</b>
                                 </label>
 
                                 <input
@@ -651,15 +610,9 @@
                                     step="0.01">
 
                                 @error('closing_meter')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -673,11 +626,7 @@
                             <div class="form-group">
 
                                 <label for="total_km">
-
-                                    <b>
-                                        Total KM
-                                    </b>
-
+                                    <b>Total KM</b>
                                 </label>
 
                                 <input
@@ -688,24 +637,17 @@
                                     value="{{ old('total_km') }}"
                                     placeholder="Auto calculated from meter"
                                     min="0"
-                                    step="0.01">
+                                    step="0.01"
+                                    readonly>
 
                                 <small class="text-muted">
-
                                     Closing Meter - Opening Meter
-
                                 </small>
 
                                 @error('total_km')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -719,11 +661,7 @@
                             <div class="form-group">
 
                                 <label for="total_hours">
-
-                                    <b>
-                                        Total Hours
-                                    </b>
-
+                                    <b>Total Hours</b>
                                 </label>
 
                                 <input
@@ -737,15 +675,9 @@
                                     step="0.01">
 
                                 @error('total_hours')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -759,11 +691,7 @@
                             <div class="form-group">
 
                                 <label for="overtime_hours">
-
-                                    <b>
-                                        Overtime Hours
-                                    </b>
-
+                                    <b>Overtime Hours</b>
                                 </label>
 
                                 <input
@@ -771,55 +699,40 @@
                                     name="overtime_hours"
                                     id="overtime_hours"
                                     class="form-control decimal-input @error('overtime_hours') is-invalid @enderror"
-                                    value="{{ old('overtime_hours') }}"
+                                    value="{{ old('overtime_hours', 0) }}"
                                     placeholder="Enter Overtime Hours"
                                     min="0"
                                     step="0.01">
 
                                 @error('overtime_hours')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                     </div>
 
                 </div>
 
 
-
                 {{-- ===================================================== --}}
-                {{-- AMOUNT INFORMATION --}}
+                {{-- AMOUNT DETAILS --}}
                 {{-- ===================================================== --}}
-
                 <div class="form-section">
 
                     <h5 class="section-title">
-
-                        <b>
-                            Amount Details
-                        </b>
-
+                        <b>Amount Details</b>
                     </h5>
 
                     <hr>
 
-
                     <div class="calculation-box">
 
                         <div class="row">
-
 
                             {{-- Base Amount --}}
                             <div class="col-md-4">
@@ -827,11 +740,7 @@
                                 <div class="form-group">
 
                                     <label for="base_amount">
-
-                                        <b>
-                                            Base Amount
-                                        </b>
-
+                                        <b>Base Amount</b>
                                     </label>
 
                                     <input
@@ -839,21 +748,15 @@
                                         name="base_amount"
                                         id="base_amount"
                                         class="form-control amount-input @error('base_amount') is-invalid @enderror"
-                                        value="{{ old('base_amount') }}"
+                                        value="{{ old('base_amount', 0) }}"
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
 
                                     @error('base_amount')
-
                                         <span class="invalid-feedback d-block">
-
-                                            <strong>
-                                                {{ $message }}
-                                            </strong>
-
+                                            <strong>{{ $message }}</strong>
                                         </span>
-
                                     @enderror
 
                                 </div>
@@ -867,11 +770,7 @@
                                 <div class="form-group">
 
                                     <label for="extra_km_amount">
-
-                                        <b>
-                                            Extra KM Amount
-                                        </b>
-
+                                        <b>Extra KM Amount</b>
                                     </label>
 
                                     <input
@@ -879,21 +778,15 @@
                                         name="extra_km_amount"
                                         id="extra_km_amount"
                                         class="form-control amount-input @error('extra_km_amount') is-invalid @enderror"
-                                        value="{{ old('extra_km_amount') }}"
+                                        value="{{ old('extra_km_amount', 0) }}"
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
 
                                     @error('extra_km_amount')
-
                                         <span class="invalid-feedback d-block">
-
-                                            <strong>
-                                                {{ $message }}
-                                            </strong>
-
+                                            <strong>{{ $message }}</strong>
                                         </span>
-
                                     @enderror
 
                                 </div>
@@ -907,11 +800,7 @@
                                 <div class="form-group">
 
                                     <label for="overtime_amount">
-
-                                        <b>
-                                            Overtime Amount
-                                        </b>
-
+                                        <b>Overtime Amount</b>
                                     </label>
 
                                     <input
@@ -919,21 +808,15 @@
                                         name="overtime_amount"
                                         id="overtime_amount"
                                         class="form-control amount-input @error('overtime_amount') is-invalid @enderror"
-                                        value="{{ old('overtime_amount') }}"
+                                        value="{{ old('overtime_amount', 0) }}"
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
 
                                     @error('overtime_amount')
-
                                         <span class="invalid-feedback d-block">
-
-                                            <strong>
-                                                {{ $message }}
-                                            </strong>
-
+                                            <strong>{{ $message }}</strong>
                                         </span>
-
                                     @enderror
 
                                 </div>
@@ -947,11 +830,7 @@
                                 <div class="form-group">
 
                                     <label for="other_amount">
-
-                                        <b>
-                                            Other Amount
-                                        </b>
-
+                                        <b>Other Amount</b>
                                     </label>
 
                                     <input
@@ -959,21 +838,15 @@
                                         name="other_amount"
                                         id="other_amount"
                                         class="form-control amount-input @error('other_amount') is-invalid @enderror"
-                                        value="{{ old('other_amount') }}"
+                                        value="{{ old('other_amount', 0) }}"
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01">
 
                                     @error('other_amount')
-
                                         <span class="invalid-feedback d-block">
-
-                                            <strong>
-                                                {{ $message }}
-                                            </strong>
-
+                                            <strong>{{ $message }}</strong>
                                         </span>
-
                                     @enderror
 
                                 </div>
@@ -987,11 +860,7 @@
                                 <div class="form-group total-amount-box">
 
                                     <label for="total_amount">
-
-                                        <b>
-                                            Total Amount
-                                        </b>
-
+                                        <b>Total Amount</b>
                                     </label>
 
                                     <input
@@ -999,33 +868,25 @@
                                         name="total_amount"
                                         id="total_amount"
                                         class="form-control @error('total_amount') is-invalid @enderror"
-                                        value="{{ old('total_amount') }}"
+                                        value="{{ old('total_amount', 0) }}"
                                         placeholder="0.00"
                                         min="0"
-                                        step="0.01">
+                                        step="0.01"
+                                        readonly>
 
                                     <small class="text-muted">
-
                                         Base + Extra KM + Overtime + Other
-
                                     </small>
 
                                     @error('total_amount')
-
                                         <span class="invalid-feedback d-block">
-
-                                            <strong>
-                                                {{ $message }}
-                                            </strong>
-
+                                            <strong>{{ $message }}</strong>
                                         </span>
-
                                     @enderror
 
                                 </div>
 
                             </div>
-
 
                         </div>
 
@@ -1034,23 +895,16 @@
                 </div>
 
 
-
                 {{-- ===================================================== --}}
                 {{-- REMARKS --}}
                 {{-- ===================================================== --}}
-
                 <div class="form-section">
 
                     <h5 class="section-title">
-
-                        <b>
-                            Remarks
-                        </b>
-
+                        <b>Remarks</b>
                     </h5>
 
                     <hr>
-
 
                     <div class="row">
 
@@ -1059,11 +913,7 @@
                             <div class="form-group">
 
                                 <label for="remarks">
-
-                                    <b>
-                                        Remarks
-                                    </b>
-
+                                    <b>Remarks</b>
                                 </label>
 
                                 <textarea
@@ -1075,21 +925,13 @@
                                     placeholder="Enter remarks if required">{{ old('remarks') }}</textarea>
 
                                 <small class="text-muted">
-
                                     Maximum 2000 characters.
-
                                 </small>
 
                                 @error('remarks')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
@@ -1101,11 +943,9 @@
                 </div>
 
 
-
                 {{-- ===================================================== --}}
                 {{-- ACTION BUTTONS --}}
                 {{-- ===================================================== --}}
-
                 <div class="row">
 
                     <div class="col-12">
@@ -1117,11 +957,9 @@
                                 class="btn btn-danger">
 
                                 <i class="fa fa-times"></i>
-
                                 Cancel
 
                             </a>
-
 
                             <button
                                 type="submit"
@@ -1129,7 +967,6 @@
                                 class="btn btn-success">
 
                                 <i class="fa fa-save"></i>
-
                                 Save Working Sheet
 
                             </button>
@@ -1139,7 +976,6 @@
                     </div>
 
                 </div>
-
 
             </div>
 
@@ -1157,177 +993,420 @@
 
 @push('scripts')
 
+{{-- ===================================================== --}}
+{{-- WORKING SHEET JAVASCRIPT --}}
+{{-- ===================================================== --}}
 <script>
 
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | ELEMENTS
+    |--------------------------------------------------------------------------
+    */
+
+    const dutySlipSelect = document.getElementById('duty_slip_id');
+
+    const driverIdInput = document.getElementById('driver_id');
+    const driverNameInput = document.getElementById('driver_name');
+
+    const dutySlipInfo = document.getElementById('duty-slip-info');
+
+    const infoSlipNo = document.getElementById('info-slip-no');
+    const infoStatus = document.getElementById('info-status');
+    const infoDriver = document.getElementById('info-driver');
+    const infoVehicle = document.getElementById('info-vehicle');
+    const infoTravelRequest = document.getElementById('info-travel-request');
+
+    const openingMeter = document.getElementById('opening_meter');
+    const closingMeter = document.getElementById('closing_meter');
+    const totalKm = document.getElementById('total_km');
+
+    const baseAmount = document.getElementById('base_amount');
+    const extraKmAmount = document.getElementById('extra_km_amount');
+    const overtimeAmount = document.getElementById('overtime_amount');
+    const otherAmount = document.getElementById('other_amount');
+    const totalAmount = document.getElementById('total_amount');
+
+    const sheetNo = document.getElementById('sheet_no');
+    const remarks = document.getElementById('remarks');
+
+    const form = document.getElementById('working-sheet-form');
+    const submitButton = document.getElementById('save-working-sheet');
 
 
     /*
     |--------------------------------------------------------------------------
-    | Duty Slip Information
+    | DUTY SLIP INFORMATION
     |--------------------------------------------------------------------------
     */
 
-    function loadDutySlipInfo()
-    {
-        const selected =
-            $('#duty_slip_id option:selected');
+    function updateDutySlipDetails() {
 
-        const dutySlipId =
-            $('#duty_slip_id').val();
+        if (!dutySlipSelect) {
+            return;
+        }
 
-        if (!dutySlipId) {
+        const selectedOption =
+            dutySlipSelect.options[
+                dutySlipSelect.selectedIndex
+            ];
 
-            $('#duty-slip-info').hide();
+
+        /*
+        |--------------------------------------------------------------------------
+        | No Duty Slip Selected
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !selectedOption ||
+            !selectedOption.value
+        ) {
+
+            if (driverIdInput) {
+                driverIdInput.value = '';
+            }
+
+            if (driverNameInput) {
+                driverNameInput.value = '';
+            }
+
+            if (dutySlipInfo) {
+                dutySlipInfo.style.display = 'none';
+            }
+
+            if (infoSlipNo) {
+                infoSlipNo.textContent = '-';
+            }
+
+            if (infoStatus) {
+                infoStatus.textContent = '-';
+            }
+
+            if (infoDriver) {
+                infoDriver.textContent = '-';
+            }
+
+            if (infoVehicle) {
+                infoVehicle.textContent = '-';
+            }
+
+            if (infoTravelRequest) {
+                infoTravelRequest.textContent = '-';
+            }
 
             return;
         }
 
 
-        $('#info-slip-no').text(
-            selected.data('slip-no') || '-'
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | GET DUTY SLIP DATA
+        |--------------------------------------------------------------------------
+        */
 
-        $('#info-status').text(
-            selected.data('status') || '-'
-        );
+        const driverId =
+            selectedOption.dataset.driverId || '';
 
-        $('#info-driver').text(
-            selected.data('driver') || '-'
-        );
+        const driver =
+            selectedOption.dataset.driver || '';
 
-        $('#info-vehicle').text(
-            selected.data('vehicle') || '-'
-        );
+        const slipNo =
+            selectedOption.dataset.slipNo || '-';
 
-        $('#info-travel-request').text(
-            selected.data('travel-request') || '-'
-        );
+        const status =
+            selectedOption.dataset.status || '-';
 
+        const vehicle =
+            selectedOption.dataset.vehicle || '';
 
-        $('#duty-slip-info').slideDown(150);
-    }
-
-
-    $('#duty_slip_id').on(
-        'change',
-        loadDutySlipInfo
-    );
+        const travelRequest =
+            selectedOption.dataset.travelRequest || '-';
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Load Existing Selected Duty Slip
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | SET DRIVER
+        |--------------------------------------------------------------------------
+        */
 
-    loadDutySlipInfo();
+        if (driverIdInput) {
 
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calculate Total KM
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateTotalKm()
-    {
-        const opening =
-            parseFloat($('#opening_meter').val());
-
-        const closing =
-            parseFloat($('#closing_meter').val());
-
-
-        if (
-            !isNaN(opening) &&
-            !isNaN(closing)
-        ) {
-
-            if (closing < opening) {
-
-                $('#total_km').val('');
-
-                return;
-            }
-
-
-            const total =
-                closing - opening;
-
-
-            $('#total_km').val(
-                total.toFixed(2)
-            );
+            driverIdInput.value =
+                driverId;
 
         }
+
+
+        if (driverNameInput) {
+
+            driverNameInput.value =
+                driver || 'Driver not assigned';
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DISPLAY DUTY SLIP DETAILS
+        |--------------------------------------------------------------------------
+        */
+
+        if (infoSlipNo) {
+
+            infoSlipNo.textContent =
+                slipNo;
+
+        }
+
+
+        if (infoStatus) {
+
+            infoStatus.textContent =
+                status;
+
+        }
+
+
+        if (infoDriver) {
+
+            infoDriver.textContent =
+                driver || 'Not Assigned';
+
+        }
+
+
+        if (infoVehicle) {
+
+            infoVehicle.textContent =
+                vehicle || 'Not Assigned';
+
+        }
+
+
+        if (infoTravelRequest) {
+
+            infoTravelRequest.textContent =
+                travelRequest;
+
+        }
+
+
+        if (dutySlipInfo) {
+
+            dutySlipInfo.style.display =
+                'block';
+
+        }
+
     }
 
 
-    $('#opening_meter, #closing_meter')
-        .on(
-            'input change',
+    if (dutySlipSelect) {
+
+        dutySlipSelect.addEventListener(
+            'change',
+            updateDutySlipDetails
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL KM CALCULATION
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateTotalKm() {
+
+        if (
+            !openingMeter ||
+            !closingMeter ||
+            !totalKm
+        ) {
+            return;
+        }
+
+
+        const opening =
+            parseFloat(
+                openingMeter.value
+            );
+
+        const closing =
+            parseFloat(
+                closingMeter.value
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Both Values Required
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            isNaN(opening) ||
+            isNaN(closing)
+        ) {
+
+            totalKm.value = '';
+
+            return;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Closing Meter Cannot Be Less
+        |--------------------------------------------------------------------------
+        */
+
+        if (closing < opening) {
+
+            totalKm.value = '';
+
+            closingMeter.classList.add(
+                'is-invalid'
+            );
+
+            return;
+
+        }
+
+
+        closingMeter.classList.remove(
+            'is-invalid'
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate KM
+        |--------------------------------------------------------------------------
+        */
+
+        totalKm.value =
+            (
+                closing - opening
+            ).toFixed(2);
+
+    }
+
+
+    if (openingMeter) {
+
+        openingMeter.addEventListener(
+            'input',
             calculateTotalKm
         );
 
+        openingMeter.addEventListener(
+            'change',
+            calculateTotalKm
+        );
+
+    }
+
+
+    if (closingMeter) {
+
+        closingMeter.addEventListener(
+            'input',
+            calculateTotalKm
+        );
+
+        closingMeter.addEventListener(
+            'change',
+            calculateTotalKm
+        );
+
+    }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Closing Meter Validation
+    | CLOSING METER VALIDATION
     |--------------------------------------------------------------------------
     */
 
-    $('#closing_meter').on(
-        'input change',
-        function () {
+    if (closingMeter) {
 
-            const opening =
-                parseFloat($('#opening_meter').val());
+        closingMeter.addEventListener(
+            'input',
+            function () {
 
-            const closing =
-                parseFloat($(this).val());
+                const opening =
+                    parseFloat(
+                        openingMeter.value
+                    );
+
+                const closing =
+                    parseFloat(
+                        closingMeter.value
+                    );
 
 
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing < opening
-            ) {
+                if (
+                    !isNaN(opening) &&
+                    !isNaN(closing) &&
+                    closing < opening
+                ) {
 
-                $(this).addClass('is-invalid');
+                    closingMeter.classList.add(
+                        'is-invalid'
+                    );
 
-            } else {
+                } else {
 
-                $(this).removeClass('is-invalid');
+                    closingMeter.classList.remove(
+                        'is-invalid'
+                    );
+
+                }
 
             }
+        );
 
-        }
-    );
-
+    }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Calculate Total Amount
+    | TOTAL AMOUNT CALCULATION
     |--------------------------------------------------------------------------
     */
 
-    function calculateTotalAmount()
-    {
+    function calculateTotalAmount() {
+
+        if (!totalAmount) {
+            return;
+        }
+
+
         const base =
-            parseFloat($('#base_amount').val()) || 0;
+            parseFloat(
+                baseAmount?.value
+            ) || 0;
 
         const extraKm =
-            parseFloat($('#extra_km_amount').val()) || 0;
+            parseFloat(
+                extraKmAmount?.value
+            ) || 0;
 
         const overtime =
-            parseFloat($('#overtime_amount').val()) || 0;
+            parseFloat(
+                overtimeAmount?.value
+            ) || 0;
 
         const other =
-            parseFloat($('#other_amount').val()) || 0;
+            parseFloat(
+                otherAmount?.value
+            ) || 0;
 
 
         const total =
@@ -1337,277 +1416,341 @@ $(document).ready(function () {
             other;
 
 
-        $('#total_amount').val(
-            total.toFixed(2)
-        );
-    }
-
-
-    $('#base_amount, #extra_km_amount, #overtime_amount, #other_amount')
-        .on(
-            'input change',
-            calculateTotalAmount
-        );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Calculate Total Amount on Page Load
-    |--------------------------------------------------------------------------
-    */
-
-    if (
-        $('#base_amount').val() ||
-        $('#extra_km_amount').val() ||
-        $('#overtime_amount').val() ||
-        $('#other_amount').val()
-    ) {
-
-        calculateTotalAmount();
+        totalAmount.value =
+            total.toFixed(2);
 
     }
 
 
+    [
+        baseAmount,
+        extraKmAmount,
+        overtimeAmount,
+        otherAmount
+    ].forEach(function (input) {
+
+        if (input) {
+
+            input.addEventListener(
+                'input',
+                calculateTotalAmount
+            );
+
+            input.addEventListener(
+                'change',
+                calculateTotalAmount
+            );
+
+        }
+
+    });
+
 
     /*
     |--------------------------------------------------------------------------
-    | Numeric Input Cleanup
+    | NUMERIC INPUT CLEANUP
     |--------------------------------------------------------------------------
     */
 
-    $('.decimal-input, .amount-input').on(
-        'input',
-        function () {
+    document
+        .querySelectorAll(
+            '.decimal-input, .amount-input'
+        )
+        .forEach(function (input) {
 
-            let value = $(this).val();
+            input.addEventListener(
+                'input',
+                function () {
 
-            value = value.replace(
-                /[^0-9.]/g,
-                ''
+                    let value =
+                        this.value;
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Remove Invalid Characters
+                    |--------------------------------------------------------------------------
+                    */
+
+                    value =
+                        value.replace(
+                            /[^0-9.]/g,
+                            ''
+                        );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Allow Only One Decimal Point
+                    |--------------------------------------------------------------------------
+                    */
+
+                    const parts =
+                        value.split('.');
+
+
+                    if (parts.length > 2) {
+
+                        value =
+                            parts[0] +
+                            '.' +
+                            parts
+                                .slice(1)
+                                .join('');
+
+                    }
+
+
+                    this.value =
+                        value;
+
+                }
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Allow only one decimal point
-            |--------------------------------------------------------------------------
-            */
-
-            const parts =
-                value.split('.');
+        });
 
 
-            if (parts.length > 2) {
+    /*
+    |--------------------------------------------------------------------------
+    | SHEET NUMBER FORMATTING
+    |--------------------------------------------------------------------------
+    */
 
-                value =
-                    parts[0] +
-                    '.' +
-                    parts.slice(1).join('');
+    if (sheetNo) {
+
+        sheetNo.addEventListener(
+            'blur',
+            function () {
+
+                this.value =
+                    this.value
+                        .trim()
+                        .toUpperCase();
 
             }
+        );
 
-
-            $(this).val(value);
-
-        }
-    );
-
+    }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Sheet Number Formatting
+    | REMARKS FORMATTING
     |--------------------------------------------------------------------------
     */
 
-    $('#sheet_no').on(
-        'blur',
-        function () {
+    if (remarks) {
 
-            $(this).val(
-                $(this)
-                    .val()
-                    .trim()
-                    .toUpperCase()
-            );
+        remarks.addEventListener(
+            'blur',
+            function () {
 
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Remarks Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#remarks').on(
-        'blur',
-        function () {
-
-            $(this).val(
-                $(this)
-                    .val()
-                    .trim()
-            );
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Work Date
-    |--------------------------------------------------------------------------
-    */
-
-    $('#work_date').on(
-        'change',
-        function () {
-
-            if (!this.value) {
-                return;
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Date input already guarantees valid date format.
-            |--------------------------------------------------------------------------
-            */
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Form Submit
-    |--------------------------------------------------------------------------
-    */
-
-    $('#working-sheet-form').on(
-        'submit',
-        function (e) {
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Clean Sheet Number
-            |--------------------------------------------------------------------------
-            */
-
-            $('#sheet_no').val(
-                $('#sheet_no')
-                    .val()
-                    .trim()
-                    .toUpperCase()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Clean Remarks
-            |--------------------------------------------------------------------------
-            */
-
-            $('#remarks').val(
-                $('#remarks')
-                    .val()
-                    .trim()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Validate Meter
-            |--------------------------------------------------------------------------
-            */
-
-            const opening =
-                parseFloat(
-                    $('#opening_meter').val()
-                );
-
-            const closing =
-                parseFloat(
-                    $('#closing_meter').val()
-                );
-
-
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing < opening
-            ) {
-
-                e.preventDefault();
-
-
-                $('#closing_meter')
-                    .addClass('is-invalid')
-                    .focus();
-
-
-                alert(
-                    'Closing meter must be greater than or equal to opening meter.'
-                );
-
-
-                return false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Recalculate Total KM
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing >= opening
-            ) {
-
-                $('#total_km').val(
-                    (closing - opening).toFixed(2)
-                );
+                this.value =
+                    this.value.trim();
 
             }
+        );
+
+    }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Recalculate Total Amount
-            |--------------------------------------------------------------------------
-            */
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL LOAD
+    |--------------------------------------------------------------------------
+    */
 
-            calculateTotalAmount();
+    updateDutySlipDetails();
 
+    calculateTotalKm();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Prevent Double Submission
-            |--------------------------------------------------------------------------
-            */
-
-            const submitButton =
-                $('#save-working-sheet');
+    calculateTotalAmount();
 
 
-            submitButton
-                .prop('disabled', true)
-                .html(
-                    '<i class="fa fa-spinner fa-spin"></i> Saving Working Sheet...'
-                );
+    /*
+    |--------------------------------------------------------------------------
+    | FORM SUBMIT VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if (form) {
+
+        form.addEventListener(
+            'submit',
+            function (event) {
 
 
-        }
-    );
+                /*
+                |--------------------------------------------------------------------------
+                | Clean Sheet Number
+                |--------------------------------------------------------------------------
+                */
 
+                if (sheetNo) {
+
+                    sheetNo.value =
+                        sheetNo.value
+                            .trim()
+                            .toUpperCase();
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Clean Remarks
+                |--------------------------------------------------------------------------
+                */
+
+                if (remarks) {
+
+                    remarks.value =
+                        remarks.value.trim();
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Validate Duty Slip
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    dutySlipSelect &&
+                    !dutySlipSelect.value
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        'Please select a duty slip.'
+                    );
+
+                    dutySlipSelect.focus();
+
+                    return false;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Validate Driver
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    driverIdInput &&
+                    !driverIdInput.value
+                ) {
+
+                    event.preventDefault();
+
+                    alert(
+                        'Selected Duty Slip does not have an assigned driver.'
+                    );
+
+                    dutySlipSelect.focus();
+
+                    return false;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Validate Meter
+                |--------------------------------------------------------------------------
+                */
+
+                const opening =
+                    parseFloat(
+                        openingMeter?.value
+                    );
+
+                const closing =
+                    parseFloat(
+                        closingMeter?.value
+                    );
+
+
+                if (
+                    !isNaN(opening) &&
+                    !isNaN(closing) &&
+                    closing < opening
+                ) {
+
+                    event.preventDefault();
+
+
+                    closingMeter.classList.add(
+                        'is-invalid'
+                    );
+
+
+                    closingMeter.focus();
+
+
+                    alert(
+                        'Closing meter must be greater than or equal to opening meter.'
+                    );
+
+
+                    return false;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Recalculate Total KM
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !isNaN(opening) &&
+                    !isNaN(closing) &&
+                    closing >= opening
+                ) {
+
+                    totalKm.value =
+                        (
+                            closing - opening
+                        ).toFixed(2);
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Recalculate Total Amount
+                |--------------------------------------------------------------------------
+                */
+
+                calculateTotalAmount();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Prevent Double Submission
+                |--------------------------------------------------------------------------
+                */
+
+                if (submitButton) {
+
+                    submitButton
+                        .disabled = true;
+
+                    submitButton.innerHTML =
+                        '<i class="fa fa-spinner fa-spin"></i> Saving Working Sheet...';
+
+                }
+
+            }
+        );
+
+    }
 
 });
 

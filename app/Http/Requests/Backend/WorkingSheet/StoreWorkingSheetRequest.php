@@ -40,6 +40,18 @@ class StoreWorkingSheetRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_id' => [
+                'required',
+                'integer',
+                'exists:drivers,id',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
             | Duty Slip
             |--------------------------------------------------------------------------
             */
@@ -237,6 +249,22 @@ class StoreWorkingSheetRequest extends FormRequest
 
             'sheet_no.unique' =>
                 'This working sheet number already exists.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_id.required' =>
+                'Please select a driver.',
+
+            'driver_id.integer' =>
+                'Invalid driver selected.',
+
+            'driver_id.exists' =>
+                'Selected driver does not exist.',
 
 
             /*
