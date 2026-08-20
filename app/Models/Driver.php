@@ -374,6 +374,14 @@ class Driver extends Model
         );
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(
+            DriverAttendance::class,
+            'driver_id'
+        );
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Accessors

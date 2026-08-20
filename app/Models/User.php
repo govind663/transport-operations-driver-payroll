@@ -27,6 +27,7 @@ class User extends Authenticatable
         'deleted_by',
     ];
 
+
     /**
      * Hidden Attributes
      */
@@ -34,6 +35,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
 
     /**
      * Attribute Casting
@@ -50,6 +52,7 @@ class User extends Authenticatable
         ];
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | Role Constants
@@ -57,9 +60,13 @@ class User extends Authenticatable
     */
 
     public const ROLE_ADMIN = 'admin';
+
     public const ROLE_OPERATIONS = 'operations';
+
     public const ROLE_ACCOUNTANT = 'accountant';
+
     public const ROLE_DRIVER = 'driver';
+
 
     /*
     |--------------------------------------------------------------------------
@@ -68,7 +75,31 @@ class User extends Authenticatable
     */
 
     public const STATUS_ACTIVE = true;
+
     public const STATUS_INACTIVE = false;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the Driver record mapped with this User.
+     *
+     * Only Driver role users are expected to have
+     * a corresponding Driver record.
+     */
+    public function driver()
+    {
+        return $this->hasOne(
+            Driver::class,
+            'user_id',
+            'id'
+        );
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -79,13 +110,18 @@ class User extends Authenticatable
     public function getProfileImageUrlAttribute(): string
     {
         return $this->profile_image
-            ? asset('storage/' . $this->profile_image)
-            : asset('backend/assets/img/logo/trade_bo_icon.webp');
+            ? asset(
+                'storage/' . $this->profile_image
+            )
+            : asset(
+                'backend/assets/img/logo/trade_bo_icon.webp'
+            );
     }
+
 
     /*
     |--------------------------------------------------------------------------
-    | Helpers
+    | Role Helpers
     |--------------------------------------------------------------------------
     */
 
@@ -94,25 +130,42 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADMIN;
     }
 
+
     public function isOperations(): bool
     {
         return $this->role === self::ROLE_OPERATIONS;
     }
+
 
     public function isAccountant(): bool
     {
         return $this->role === self::ROLE_ACCOUNTANT;
     }
 
+
     public function isDriver(): bool
     {
         return $this->role === self::ROLE_DRIVER;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Status Helpers
+    |--------------------------------------------------------------------------
+    */
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
     }
+
+
+    public function isInactive(): bool
+    {
+        return $this->status === self::STATUS_INACTIVE;
+    }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -122,36 +175,65 @@ class User extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('status', self::STATUS_ACTIVE);
+        return $query->where(
+            'status',
+            self::STATUS_ACTIVE
+        );
     }
+
 
     public function scopeInactive($query)
     {
-        return $query->where('status', self::STATUS_INACTIVE);
+        return $query->where(
+            'status',
+            self::STATUS_INACTIVE
+        );
     }
 
-    public function scopeRole($query, string $role)
-    {
-        return $query->where('role', $role);
+
+    public function scopeRole(
+        $query,
+        string $role
+    ) {
+        return $query->where(
+            'role',
+            $role
+        );
     }
+
 
     public function scopeAdmin($query)
     {
-        return $query->where('role', self::ROLE_ADMIN);
+        return $query->where(
+            'role',
+            self::ROLE_ADMIN
+        );
     }
+
 
     public function scopeOperations($query)
     {
-        return $query->where('role', self::ROLE_OPERATIONS);
+        return $query->where(
+            'role',
+            self::ROLE_OPERATIONS
+        );
     }
+
 
     public function scopeAccountant($query)
     {
-        return $query->where('role', self::ROLE_ACCOUNTANT);
+        return $query->where(
+            'role',
+            self::ROLE_ACCOUNTANT
+        );
     }
+
 
     public function scopeDriver($query)
     {
-        return $query->where('role', self::ROLE_DRIVER);
+        return $query->where(
+            'role',
+            self::ROLE_DRIVER
+        );
     }
 }

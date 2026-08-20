@@ -1,11 +1,13 @@
 <ul id="accordion-menu">
 
     @php
+
         /*
         |--------------------------------------------------------------------------
         | Current User Role
         |--------------------------------------------------------------------------
         */
+
         $userRole = auth()->user()->role ?? null;
 
         $isAdmin = $userRole === 'admin';
@@ -19,6 +21,7 @@
         | Module Access
         |--------------------------------------------------------------------------
         */
+
         $canAccessMasters =
             $isAdmin ||
             $isOperations ||
@@ -48,7 +51,9 @@
         | Master Active Routes
         |--------------------------------------------------------------------------
         */
+
         $masterRoutes = [
+
             'client-management.*',
             'driver-management.*',
             'vehicle-categories.*',
@@ -56,7 +61,9 @@
             'vehicle-management.*',
             'allowances.*',
             'expenses.*',
+
         ];
+
 
         $isMasterActive = collect($masterRoutes)
             ->contains(
@@ -69,12 +76,17 @@
         | Operations Active Routes
         |--------------------------------------------------------------------------
         */
+
         $operationRoutes = [
+
             'travel-requests.*',
             'duty-assignments.*',
             'duty-slips.*',
             'working-sheets.*',
+            'driver-attendances.*',
+
         ];
+
 
         $isOperationActive = collect($operationRoutes)
             ->contains(
@@ -87,10 +99,14 @@
         | Payroll Active Routes
         |--------------------------------------------------------------------------
         */
+
         $payrollRoutes = [
+
             'salary-processing.*',
             'salary-slips.*',
+
         ];
+
 
         $isPayrollActive = collect($payrollRoutes)
             ->contains(
@@ -103,39 +119,53 @@
         | Reports Active Routes
         |--------------------------------------------------------------------------
         */
+
         $reportRoutes = [
+
             'driver-reports.*',
             'vehicle-reports.*',
             'duty-reports.*',
             'working-sheet-reports.*',
             'payroll-reports.*',
+
         ];
+
 
         $isReportActive = collect($reportRoutes)
             ->contains(
                 fn ($route) => request()->routeIs($route)
             );
+
     @endphp
+
 
 
     {{-- ================================================================ --}}
     {{-- DASHBOARD --}}
     {{-- ================================================================ --}}
+
     <li>
+
         <a href="{{ route('admin.dashboard') }}"
             class="dropdown-toggle no-arrow {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
 
             <span class="micon bi bi-house-door"></span>
-            <span class="mtext">Dashboard</span>
+
+            <span class="mtext">
+                Dashboard
+            </span>
 
         </a>
+
     </li>
+
 
 
     {{-- ================================================================ --}}
     {{-- USER MANAGEMENT --}}
     {{-- ADMIN ONLY --}}
     {{-- ================================================================ --}}
+
     @if($isAdmin)
 
         <li class="dropdown">
@@ -143,9 +173,13 @@
             <a href="javascript:;" class="dropdown-toggle">
 
                 <span class="micon bi bi-people"></span>
-                <span class="mtext">User Management</span>
+
+                <span class="mtext">
+                    User Management
+                </span>
 
             </a>
+
 
             <ul class="submenu {{ request()->routeIs('users.*') ? 'show' : '' }}">
 
@@ -167,9 +201,11 @@
     @endif
 
 
+
     {{-- ================================================================ --}}
     {{-- MASTERS --}}
     {{-- ================================================================ --}}
+
     @if($canAccessMasters)
 
         <li class="dropdown">
@@ -177,7 +213,10 @@
             <a href="javascript:;" class="dropdown-toggle">
 
                 <span class="micon bi bi-collection"></span>
-                <span class="mtext">Masters</span>
+
+                <span class="mtext">
+                    Masters
+                </span>
 
             </a>
 
@@ -185,7 +224,11 @@
             <ul class="submenu {{ $isMasterActive ? 'show' : '' }}">
 
 
-                {{-- Client Management --}}
+                {{-- ================================================== --}}
+                {{-- CLIENT MANAGEMENT --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -202,7 +245,12 @@
                 @endif
 
 
-                {{-- Driver Management --}}
+
+                {{-- ================================================== --}}
+                {{-- DRIVER MANAGEMENT --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -219,7 +267,12 @@
                 @endif
 
 
-                {{-- Vehicle Categories --}}
+
+                {{-- ================================================== --}}
+                {{-- VEHICLE CATEGORIES --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -236,7 +289,12 @@
                 @endif
 
 
-                {{-- Vehicle Types --}}
+
+                {{-- ================================================== --}}
+                {{-- VEHICLE TYPES --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -253,7 +311,12 @@
                 @endif
 
 
-                {{-- Vehicle Management --}}
+
+                {{-- ================================================== --}}
+                {{-- VEHICLE MANAGEMENT --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -270,7 +333,12 @@
                 @endif
 
 
-                {{-- Allowances --}}
+
+                {{-- ================================================== --}}
+                {{-- ALLOWANCES --}}
+                {{-- ADMIN / ACCOUNTANT --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isAccountant)
 
                     <li>
@@ -287,7 +355,12 @@
                 @endif
 
 
-                {{-- Expenses --}}
+
+                {{-- ================================================== --}}
+                {{-- EXPENSES --}}
+                {{-- ADMIN / ACCOUNTANT --}}
+                {{-- ================================================== --}}
+
                 @if($isAdmin || $isAccountant)
 
                     <li>
@@ -303,6 +376,7 @@
 
                 @endif
 
+
             </ul>
 
         </li>
@@ -310,9 +384,11 @@
     @endif
 
 
+
     {{-- ================================================================ --}}
     {{-- OPERATIONS --}}
     {{-- ================================================================ --}}
+
     @if($canAccessOperations)
 
         <li class="dropdown">
@@ -320,12 +396,16 @@
             <a href="javascript:;" class="dropdown-toggle">
 
                 <span class="micon bi bi-diagram-3"></span>
-                <span class="mtext">Operations</span>
+
+                <span class="mtext">
+                    Operations
+                </span>
 
             </a>
 
 
             <ul class="submenu {{ $isOperationActive ? 'show' : '' }}">
+
 
 
                 {{-- ================================================== --}}
@@ -349,6 +429,7 @@
                 @endif
 
 
+
                 {{-- ================================================== --}}
                 {{-- DUTY ASSIGNMENTS --}}
                 {{-- ADMIN / OPERATIONS --}}
@@ -370,12 +451,11 @@
                 @endif
 
 
+
                 {{-- ================================================== --}}
                 {{-- DUTY SLIPS --}}
-                {{-- ALL OPERATION ROLES --}}
-                {{-- DRIVER CAN FILL & SUBMIT --}}
+                {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations || $isAccountant || $isDriver)
 
                     <li>
@@ -384,9 +464,13 @@
                             class="{{ request()->routeIs('duty-slips.*') ? 'active' : '' }}">
 
                             @if($isDriver)
+
                                 My Duty Slips
+
                             @else
+
                                 Duty Slips
+
                             @endif
 
                         </a>
@@ -396,12 +480,11 @@
                 @endif
 
 
+
                 {{-- ================================================== --}}
                 {{-- WORKING SHEETS --}}
-                {{-- ALL OPERATION ROLES --}}
-                {{-- DRIVER CAN FILL & SUBMIT --}}
+                {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations || $isAccountant || $isDriver)
 
                     <li>
@@ -410,9 +493,13 @@
                             class="{{ request()->routeIs('working-sheets.*') ? 'active' : '' }}">
 
                             @if($isDriver)
+
                                 My Working Sheets
+
                             @else
+
                                 Working Sheets
+
                             @endif
 
                         </a>
@@ -422,11 +509,40 @@
                 @endif
 
 
+
                 {{-- ================================================== --}}
-                {{-- DRIVER MY DUTIES --}}
+                {{-- DRIVER ATTENDANCE --}}
+                {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
+                {{-- ================================================== --}}
+                @if($isAdmin || $isOperations || $isAccountant || $isDriver)
+
+                    <li>
+
+                        <a href="{{ route('driver-attendances.index') }}"
+                            class="{{ request()->routeIs('driver-attendances.*') ? 'active' : '' }}">
+
+                            @if($isDriver)
+
+                                My Attendance
+
+                            @else
+
+                                Driver Attendance
+
+                            @endif
+
+                        </a>
+
+                    </li>
+
+                @endif
+
+
+
+                {{-- ================================================== --}}
+                {{-- MY DUTIES --}}
                 {{-- DRIVER ONLY --}}
                 {{-- ================================================== --}}
-
                 @if($isDriver)
 
                     <li>
@@ -442,6 +558,7 @@
 
                 @endif
 
+
             </ul>
 
         </li>
@@ -449,10 +566,12 @@
     @endif
 
 
+
     {{-- ================================================================ --}}
     {{-- PAYROLL --}}
     {{-- ADMIN / ACCOUNTANT ONLY --}}
     {{-- ================================================================ --}}
+
     @if($canAccessPayroll)
 
         <li class="dropdown">
@@ -460,7 +579,10 @@
             <a href="javascript:;" class="dropdown-toggle">
 
                 <span class="micon bi bi-cash-stack"></span>
-                <span class="mtext">Payroll</span>
+
+                <span class="mtext">
+                    Payroll
+                </span>
 
             </a>
 
@@ -469,41 +591,41 @@
 
 
                 {{-- Salary Processing --}}
-                <li>
 
-                    {{-- <a href="{{ route('salary-processing.index') }}"
+                {{-- <li>
+
+                    <a href="{{ route('salary-processing.index') }}"
                         class="{{ request()->routeIs('salary-processing.*') ? 'active' : '' }}">
 
                         Salary Processing
 
-                    </a> --}}
-
-                    <a href="javascript:void(0);">
-
-                        Salary Processing
-
                     </a>
 
+                </li> --}}
+
+                <li>
+                    <a href="javascript:void(0);">Salary Processing</a>
                 </li>
 
 
-                {{-- Salary Slips --}}
-                <li>
 
-                    {{-- <a href="{{ route('salary-slips.index') }}"
+                {{-- Salary Slips --}}
+
+                {{-- <li>
+
+                    <a href="{{ route('salary-slips.index') }}"
                         class="{{ request()->routeIs('salary-slips.*') ? 'active' : '' }}">
 
                         Salary Slips
 
-                    </a> --}}
-
-                    <a href="javascript:void(0);">
-
-                        Salary Slips
-
                     </a>
 
+                </li> --}}
+
+                <li>
+                    <a href="javascript:void(0);">Salary Slips</a>
                 </li>
+
 
             </ul>
 
@@ -512,9 +634,11 @@
     @endif
 
 
+
     {{-- ================================================================ --}}
     {{-- REPORTS --}}
     {{-- ================================================================ --}}
+
     @if($canAccessReports)
 
         <li class="dropdown">
@@ -522,7 +646,10 @@
             <a href="javascript:;" class="dropdown-toggle">
 
                 <span class="micon bi bi-bar-chart"></span>
-                <span class="mtext">Reports</span>
+
+                <span class="mtext">
+                    Reports
+                </span>
 
             </a>
 
@@ -531,16 +658,10 @@
 
 
                 {{-- Driver Reports --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
-
-                        {{-- <a href="{{ route('driver-reports.index') }}"
-                            class="{{ request()->routeIs('driver-reports.*') ? 'active' : '' }}">
-
-                            Driver Reports
-
-                        </a> --}}
 
                         <a href="javascript:void(0);">
 
@@ -551,20 +672,15 @@
                     </li>
 
                 @endif
+
 
 
                 {{-- Vehicle Reports --}}
+
                 @if($isAdmin || $isOperations)
 
                     <li>
 
-                        {{-- <a href="{{ route('vehicle-reports.index') }}"
-                            class="{{ request()->routeIs('vehicle-reports.*') ? 'active' : '' }}">
-
-                            Vehicle Reports
-
-                        </a> --}}
-
                         <a href="javascript:void(0);">
 
                             Vehicle Reports
@@ -574,19 +690,14 @@
                     </li>
 
                 @endif
+
 
 
                 {{-- Duty Reports --}}
+
                 @if($isAdmin || $isOperations || $isAccountant)
 
                     <li>
-
-                        {{-- <a href="{{ route('duty-reports.index') }}"
-                            class="{{ request()->routeIs('duty-reports.*') ? 'active' : '' }}">
-
-                            Duty Reports
-
-                        </a> --}}
 
                         <a href="javascript:void(0);">
 
@@ -597,19 +708,14 @@
                     </li>
 
                 @endif
+
 
 
                 {{-- Working Sheet Reports --}}
+
                 @if($isAdmin || $isOperations || $isAccountant)
 
                     <li>
-
-                        {{-- <a href="{{ route('working-sheet-reports.index') }}"
-                            class="{{ request()->routeIs('working-sheet-reports.*') ? 'active' : '' }}">
-
-                            Working Sheet Reports
-
-                        </a> --}}
 
                         <a href="javascript:void(0);">
 
@@ -622,18 +728,13 @@
                 @endif
 
 
+
                 {{-- Payroll Reports --}}
+
                 @if($isAdmin || $isAccountant)
 
                     <li>
 
-                        {{-- <a href="{{ route('payroll-reports.index') }}"
-                            class="{{ request()->routeIs('payroll-reports.*') ? 'active' : '' }}">
-
-                            Payroll Reports
-
-                        </a> --}}
-
                         <a href="javascript:void(0);">
 
                             Payroll Reports
@@ -643,6 +744,7 @@
                     </li>
 
                 @endif
+
 
             </ul>
 
@@ -651,24 +753,36 @@
     @endif
 
 
+
     {{-- ================================================================ --}}
     {{-- SETTINGS --}}
     {{-- ALL LOGGED-IN USERS --}}
     {{-- ================================================================ --}}
+
     <li class="dropdown">
 
         <a href="javascript:;" class="dropdown-toggle">
 
             <span class="micon bi bi-gear"></span>
-            <span class="mtext">Settings</span>
+
+            <span class="mtext">
+                Settings
+            </span>
 
         </a>
 
 
-        <ul class="submenu {{ request()->routeIs('admin.change-password') || request()->routeIs('admin.profile') ? 'show' : '' }}">
+        <ul class="submenu
+            {{
+                request()->routeIs('admin.change-password') ||
+                request()->routeIs('admin.profile')
+                    ? 'show'
+                    : ''
+            }}">
 
 
             {{-- Profile --}}
+
             <li>
 
                 <a href="{{ route('admin.profile') }}"
@@ -681,7 +795,9 @@
             </li>
 
 
+
             {{-- Change Password --}}
+
             <li>
 
                 <a href="{{ route('admin.change-password') }}"
@@ -693,8 +809,10 @@
 
             </li>
 
+
         </ul>
 
     </li>
+
 
 </ul>

@@ -17,6 +17,7 @@ use App\Http\Controllers\backend\Auth\ResetPasswordController;
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\ClientManagementController;
+use App\Http\Controllers\backend\DriverAttendanceController;
 use App\Http\Controllers\backend\DriverManagementController;
 use App\Http\Controllers\backend\DutyAssignmentController;
 use App\Http\Controllers\backend\DutySlipController;
@@ -300,6 +301,17 @@ Route::prefix('admin')
         Route::resource(
             'working-sheets',
             WorkingSheetController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Attendances
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'driver-attendances',
+            DriverAttendanceController::class
         );
 
         /*

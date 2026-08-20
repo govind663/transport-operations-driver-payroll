@@ -3,12 +3,36 @@
 namespace App\Services\WorkingSheet;
 
 use App\Models\WorkingSheet;
+use App\Services\DriverAttendance\DriverAttendanceService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class WorkingSheetService
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Driver Attendance Service
+    |--------------------------------------------------------------------------
+    */
+
+    protected DriverAttendanceService $driverAttendanceService;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Constructor
+    |--------------------------------------------------------------------------
+    */
+
+    public function __construct(
+        DriverAttendanceService $driverAttendanceService
+    ) {
+        $this->driverAttendanceService =
+            $driverAttendanceService;
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | GET WORKING SHEETS
@@ -88,13 +112,6 @@ class WorkingSheetService
             |--------------------------------------------------------------------------
             | Driver
             |--------------------------------------------------------------------------
-            |
-            | Driver is stored directly for:
-            | - Driver Dashboard
-            | - Driver-wise reports
-            | - Driver-wise KM
-            | - Driver-wise earnings
-            |
             */
 
             if (
@@ -149,7 +166,7 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
-            | Normalize Hours
+            | Normalize Total Hours
             |--------------------------------------------------------------------------
             */
 
@@ -166,6 +183,12 @@ class WorkingSheetService
                     : null;
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Normalize Overtime Hours
+            |--------------------------------------------------------------------------
+            */
+
             $data['overtime_hours'] =
                 round(
                     max(
@@ -181,7 +204,7 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
-            | Calculate Financial Amounts
+            | Financial Amounts
             |--------------------------------------------------------------------------
             */
 
@@ -272,11 +295,26 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
+            | Driver Attendance Sync
+            |--------------------------------------------------------------------------
+            */
+
+            $workingSheet->load([
+                'dutySlip',
+            ]);
+
+            $this->syncDriverAttendance(
+                $workingSheet
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Return With Relationships
             |--------------------------------------------------------------------------
             */
 
-            return $workingSheet->load([
+            return $workingSheet->fresh([
                 'dutySlip',
                 'driver',
                 'createdBy',
@@ -562,7 +600,38 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
-            | Return Fresh Model With Relationships
+            | Refresh Working Sheet
+            |--------------------------------------------------------------------------
+            */
+
+            $workingSheet->refresh();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Load Duty Slip
+            |--------------------------------------------------------------------------
+            */
+
+            $workingSheet->load([
+                'dutySlip',
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Attendance Sync
+            |--------------------------------------------------------------------------
+            */
+
+            $this->syncDriverAttendance(
+                $workingSheet
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Fresh Model
             |--------------------------------------------------------------------------
             */
 
@@ -573,6 +642,79 @@ class WorkingSheetService
                 'updatedBy',
             ]);
         });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SYNC DRIVER ATTENDANCE
+    |--------------------------------------------------------------------------
+    |
+    | Attendance is generated only when the working sheet
+    | reaches a valid attendance state.
+    |
+    */
+
+    protected function syncDriverAttendance(
+        WorkingSheet $workingSheet
+    ): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Valid Working Sheet Statuses
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !in_array(
+                $workingSheet->status,
+                [
+                    WorkingSheet::STATUS_SUBMITTED,
+                    WorkingSheet::STATUS_APPROVED,
+                    WorkingSheet::STATUS_COMPLETED,
+                ],
+                true
+            )
+        ) {
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Required
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$workingSheet->driver_id) {
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Work Date Required
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$workingSheet->work_date) {
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sync Driver Attendance
+        |--------------------------------------------------------------------------
+        */
+
+        $this->driverAttendanceService
+            ->syncFromWorkingSheet(
+                $workingSheet
+            );
     }
 
 
