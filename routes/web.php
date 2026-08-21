@@ -27,6 +27,8 @@ use App\Http\Controllers\backend\VehicleCategoryController;
 use App\Http\Controllers\backend\VehicleManagementController;
 use App\Http\Controllers\backend\VehicleTypeController;
 use App\Http\Controllers\backend\WorkingSheetController;
+use App\Http\Controllers\backend\SalaryProcessingController;
+use App\Http\Controllers\backend\SalarySlipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -312,6 +314,28 @@ Route::prefix('admin')
         Route::resource(
             'driver-attendances',
             DriverAttendanceController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Processing
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'salary-processing',
+            SalaryProcessingController::class
+        );
+        
+
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Slips
+        |--------------------------------------------------------------------------
+        */
+        Route::resource(
+            'salary-slips',
+            SalarySlipController::class
         );
 
         /*

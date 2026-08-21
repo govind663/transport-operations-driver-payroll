@@ -7,7 +7,6 @@
         | Current User Role
         |--------------------------------------------------------------------------
         */
-
         $userRole = auth()->user()->role ?? null;
 
         $isAdmin = $userRole === 'admin';
@@ -21,7 +20,6 @@
         | Module Access
         |--------------------------------------------------------------------------
         */
-
         $canAccessMasters =
             $isAdmin ||
             $isOperations ||
@@ -51,7 +49,6 @@
         | Master Active Routes
         |--------------------------------------------------------------------------
         */
-
         $masterRoutes = [
 
             'client-management.*',
@@ -76,7 +73,6 @@
         | Operations Active Routes
         |--------------------------------------------------------------------------
         */
-
         $operationRoutes = [
 
             'travel-requests.*',
@@ -99,7 +95,6 @@
         | Payroll Active Routes
         |--------------------------------------------------------------------------
         */
-
         $payrollRoutes = [
 
             'salary-processing.*',
@@ -119,7 +114,6 @@
         | Reports Active Routes
         |--------------------------------------------------------------------------
         */
-
         $reportRoutes = [
 
             'driver-reports.*',
@@ -138,14 +132,10 @@
 
     @endphp
 
-
-
     {{-- ================================================================ --}}
     {{-- DASHBOARD --}}
     {{-- ================================================================ --}}
-
     <li>
-
         <a href="{{ route('admin.dashboard') }}"
             class="dropdown-toggle no-arrow {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
 
@@ -156,18 +146,13 @@
             </span>
 
         </a>
-
     </li>
-
-
 
     {{-- ================================================================ --}}
     {{-- USER MANAGEMENT --}}
     {{-- ADMIN ONLY --}}
     {{-- ================================================================ --}}
-
     @if($isAdmin)
-
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -197,17 +182,12 @@
             </ul>
 
         </li>
-
     @endif
-
-
 
     {{-- ================================================================ --}}
     {{-- MASTERS --}}
     {{-- ================================================================ --}}
-
     @if($canAccessMasters)
-
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -228,7 +208,6 @@
                 {{-- CLIENT MANAGEMENT --}}
                 {{-- ADMIN / OPERATIONS --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -272,7 +251,6 @@
                 {{-- VEHICLE CATEGORIES --}}
                 {{-- ADMIN / OPERATIONS --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -294,7 +272,6 @@
                 {{-- VEHICLE TYPES --}}
                 {{-- ADMIN / OPERATIONS --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -310,13 +287,10 @@
 
                 @endif
 
-
-
                 {{-- ================================================== --}}
                 {{-- VEHICLE MANAGEMENT --}}
                 {{-- ADMIN / OPERATIONS --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
@@ -332,37 +306,25 @@
 
                 @endif
 
-
-
                 {{-- ================================================== --}}
                 {{-- ALLOWANCES --}}
                 {{-- ADMIN / ACCOUNTANT --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isAccountant)
-
                     <li>
-
                         <a href="{{ route('allowances.index') }}"
                             class="{{ request()->routeIs('allowances.*') ? 'active' : '' }}">
 
                             Allowances Management
-
                         </a>
-
                     </li>
-
                 @endif
-
-
 
                 {{-- ================================================== --}}
                 {{-- EXPENSES --}}
                 {{-- ADMIN / ACCOUNTANT --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isAccountant)
-
                     <li>
 
                         <a href="{{ route('expenses.index') }}"
@@ -373,24 +335,16 @@
                         </a>
 
                     </li>
-
                 @endif
-
-
             </ul>
 
         </li>
-
     @endif
-
-
 
     {{-- ================================================================ --}}
     {{-- OPERATIONS --}}
     {{-- ================================================================ --}}
-
     @if($canAccessOperations)
-
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -562,18 +516,13 @@
             </ul>
 
         </li>
-
     @endif
-
-
 
     {{-- ================================================================ --}}
     {{-- PAYROLL --}}
     {{-- ADMIN / ACCOUNTANT ONLY --}}
     {{-- ================================================================ --}}
-
     @if($canAccessPayroll)
-
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -589,10 +538,8 @@
 
             <ul class="submenu {{ $isPayrollActive ? 'show' : '' }}">
 
-
                 {{-- Salary Processing --}}
-
-                {{-- <li>
+                <li>
 
                     <a href="{{ route('salary-processing.index') }}"
                         class="{{ request()->routeIs('salary-processing.*') ? 'active' : '' }}">
@@ -601,17 +548,10 @@
 
                     </a>
 
-                </li> --}}
-
-                <li>
-                    <a href="javascript:void(0);">Salary Processing</a>
                 </li>
 
-
-
                 {{-- Salary Slips --}}
-
-                {{-- <li>
+                <li>
 
                     <a href="{{ route('salary-slips.index') }}"
                         class="{{ request()->routeIs('salary-slips.*') ? 'active' : '' }}">
@@ -620,27 +560,17 @@
 
                     </a>
 
-                </li> --}}
-
-                <li>
-                    <a href="javascript:void(0);">Salary Slips</a>
                 </li>
-
 
             </ul>
 
         </li>
-
     @endif
-
-
 
     {{-- ================================================================ --}}
     {{-- REPORTS --}}
     {{-- ================================================================ --}}
-
     @if($canAccessReports)
-
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -749,16 +679,12 @@
             </ul>
 
         </li>
-
     @endif
-
-
 
     {{-- ================================================================ --}}
     {{-- SETTINGS --}}
     {{-- ALL LOGGED-IN USERS --}}
     {{-- ================================================================ --}}
-
     <li class="dropdown">
 
         <a href="javascript:;" class="dropdown-toggle">
@@ -813,6 +739,5 @@
         </ul>
 
     </li>
-
 
 </ul>
