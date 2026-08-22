@@ -143,7 +143,7 @@ class DriverWelcomeMail extends Mailable
             rtrim(
                 config(
                     'app.url',
-                    'https://mastermindtravels.net'
+                    'https://transport.mastermindtravels.net'
                 ),
                 '/'
             ) . '/login';

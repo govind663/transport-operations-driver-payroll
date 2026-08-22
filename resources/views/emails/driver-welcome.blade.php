@@ -401,13 +401,15 @@
                                                 valign="top"
                                                 align="center"
                                                 class="profile-image-cell"
-                                                style="padding-right:20px;"
+                                                style="
+                                                    padding-right:20px;
+                                                "
                                             >
 
                                                 @if(!empty($driver->driver_photo))
 
                                                     <img
-                                                        src="{{ asset('storage/' . $driver->driver_photo) }}"
+                                                        src="{{ url('storage/' . ltrim($driver->driver_photo, '/')) }}"
                                                         alt="Driver Photo"
                                                         width="100"
                                                         height="100"
@@ -417,7 +419,7 @@
                                                             object-fit:cover;
                                                             border-radius:50%;
                                                             border:4px solid #ffffff;
-                                                            box-shadow:0 3px 12px rgba(0,0,0,.12);
+                                                            display:block;
                                                         "
                                                     >
 
@@ -1249,7 +1251,7 @@
 
 
                 <!-- =========================================================
-                     CORPORATE FOOTER
+                    CORPORATE FOOTER
                 ========================================================== -->
 
                 <tr>
@@ -1259,26 +1261,10 @@
                         class="footer-section"
                         style="
                             background:#0b2a5b;
-                            padding:38px 30px 30px;
+                            padding:28px 25px 22px;
                             border-radius:0 0 18px 18px;
                         "
                     >
-
-                        <!-- FOOTER LOGO -->
-
-                        <img
-                            src="https://mastermindtravels.net/wp-content/uploads/2025/07/logo-300x88.png"
-                            alt="Mastermind Travels"
-                            width="175"
-                            style="
-                                width:175px;
-                                max-width:175px;
-                                height:auto;
-                                display:block;
-                                margin:0 auto 18px;
-                            "
-                        >
-
 
                         <!-- COMPANY NAME -->
 
@@ -1286,8 +1272,8 @@
                             style="
                                 color:#ffffff;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:22px;
-                                line-height:30px;
+                                font-size:19px;
+                                line-height:26px;
                                 font-weight:700;
                                 letter-spacing:.2px;
                             "
@@ -1300,11 +1286,11 @@
 
                         <div
                             style="
-                                margin-top:7px;
-                                color:#cbd8e8;
+                                margin-top:5px;
+                                color:#b9c9dc;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:13px;
-                                line-height:22px;
+                                font-size:11px;
+                                line-height:18px;
                             "
                         >
                             Car &amp; Bus Rentals
@@ -1317,16 +1303,17 @@
                         </div>
 
 
-                        <!-- FOOTER DIVIDER -->
+                        <!-- DIVIDER -->
 
                         <table
-                            width="100%"
+                            width="90%"
                             cellpadding="0"
                             cellspacing="0"
                             border="0"
-                            style="margin:25px 0 22px;"
+                            style="
+                                margin:18px auto 15px;
+                            "
                         >
-
                             <tr>
 
                                 <td
@@ -1340,7 +1327,6 @@
                                 </td>
 
                             </tr>
-
                         </table>
 
 
@@ -1351,12 +1337,11 @@
                                 margin:0;
                                 color:#dbe5f1;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:12px;
-                                line-height:22px;
+                                font-size:11px;
+                                line-height:19px;
                                 text-align:center;
                             "
                         >
-
                             Copyright &copy; {{ date('Y') }}
 
                             <strong style="color:#ffffff;">
@@ -1364,7 +1349,6 @@
                             </strong>.
 
                             All Rights Reserved.
-
                         </p>
 
 
@@ -1372,11 +1356,11 @@
 
                         <p
                             style="
-                                margin:9px 0 0;
+                                margin:6px 0 0;
                                 color:#aebed3;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:12px;
-                                line-height:22px;
+                                font-size:11px;
+                                line-height:19px;
                                 text-align:center;
                             "
                         >
@@ -1384,14 +1368,11 @@
                             Designed &amp; Developed with
 
                             <span
-                                class="heart"
                                 style="
                                     color:#ff3b3b;
-                                    display:inline-block;
-                                    font-size:17px;
-                                    line-height:17px;
+                                    font-size:15px;
                                     font-weight:bold;
-                                    margin:0 4px;
+                                    margin:0 3px;
                                 "
                             >
                                 ♥
@@ -1399,12 +1380,7 @@
 
                             by
 
-                            <strong
-                                style="
-                                    color:#ffffff;
-                                    font-weight:700;
-                                "
-                            >
+                            <strong style="color:#ffffff;">
                                 PixelPearl Technologies LLP
                             </strong>
 
@@ -1415,10 +1391,10 @@
 
                         <p
                             style="
-                                margin:14px 0 0;
+                                margin:7px 0 0;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:11px;
-                                line-height:20px;
+                                font-size:10px;
+                                line-height:17px;
                                 text-align:center;
                             "
                         >
@@ -1427,7 +1403,7 @@
                                 href="https://mastermindtravels.net/"
                                 target="_blank"
                                 style="
-                                    color:#dbe5f1;
+                                    color:#cbd8e8;
                                     text-decoration:none;
                                     font-weight:600;
                                 "
@@ -1442,30 +1418,28 @@
 
                         <p
                             style="
-                                margin:12px 0 0;
+                                margin:6px 0 0;
                                 color:#8fa4bd;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:11px;
-                                line-height:19px;
+                                font-size:10px;
+                                line-height:16px;
                                 text-align:center;
                             "
                         >
-
                             OM Niwas, Plot No. 396, Sector 4,
                             Ghansoli, Navi Mumbai – 400 701
-
                         </p>
 
 
-                        <!-- FINAL COPYRIGHT LINE -->
+                        <!-- SERVICE LINE -->
 
                         <p
                             style="
-                                margin:18px 0 0;
+                                margin:8px 0 0;
                                 color:#71859e;
                                 font-family:Arial, Helvetica, sans-serif;
-                                font-size:10px;
-                                line-height:18px;
+                                font-size:9px;
+                                line-height:15px;
                                 text-align:center;
                             "
                         >

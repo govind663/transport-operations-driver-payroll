@@ -92,7 +92,7 @@ class ClientWelcomeMail extends Mailable implements ShouldQueue
         */
 
         $this->loginUrl =
-            'https://mastermindtravels.net/login';
+            'https://transport.mastermindtravels.net';
     }
 
 
