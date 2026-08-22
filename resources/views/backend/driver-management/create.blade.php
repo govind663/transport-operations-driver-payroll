@@ -119,17 +119,10 @@
                         <div class="form-group">
 
                             <label>
-
                                 <b>
-
                                     Driver Code
-
-                                    <span class="text-danger">
-                                        *
-                                    </span>
-
+                                    <span class="text-danger">*</span>
                                 </b>
-
                             </label>
 
                             <input
@@ -138,26 +131,19 @@
                                 id="driver_code"
                                 class="form-control @error('driver_code') is-invalid @enderror"
                                 value="{{ old('driver_code') }}"
-                                placeholder="Enter Driver Code (e.g. DRV001)">
+                                placeholder="Generating..."
+                                readonly
+                            >
 
                             <small class="text-muted">
-
-                                Unique Driver Code
-
-                                (Example: DRV001, DRV002)
-
+                                Driver Code will be generated automatically.
+                                Example: DRV001, DRV002
                             </small>
 
                             @error('driver_code')
-
                                 <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
+                                    <strong>{{ $message }}</strong>
                                 </span>
-
                             @enderror
 
                         </div>
@@ -5522,6 +5508,51 @@
             );
 
     })(jQuery);
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const driverCodeInput = document.getElementById('driver_code');
+
+    if (!driverCodeInput) {
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE DRIVER CODE
+    |--------------------------------------------------------------------------
+    */
+
+    function generateDriverCode() {
+
+        const prefix = 'DRV';
+
+        /*
+        | Random 6 digit number
+        */
+        const randomNumber =
+            Math.floor(100000 + Math.random() * 900000);
+
+        const driverCode =
+            prefix + randomNumber;
+
+        driverCodeInput.value = driverCode;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE ONLY IF EMPTY
+    |--------------------------------------------------------------------------
+    */
+
+    if (!driverCodeInput.value.trim()) {
+        generateDriverCode();
+    }
+
+});
 </script>
 
 @endpush

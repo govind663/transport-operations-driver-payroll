@@ -571,6 +571,7 @@
     {{-- REPORTS --}}
     {{-- ================================================================ --}}
     @if($canAccessReports)
+
         <li class="dropdown">
 
             <a href="javascript:;" class="dropdown-toggle">
@@ -583,17 +584,15 @@
 
             </a>
 
-
             <ul class="submenu {{ $isReportActive ? 'show' : '' }}">
 
-
                 {{-- Driver Reports --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
 
-                        <a href="javascript:void(0);">
+                        <a href="{{ route('reports.drivers.index') }}"
+                        class="{{ request()->routeIs('reports.drivers.*') ? 'active' : '' }}">
 
                             Driver Reports
 
@@ -604,14 +603,13 @@
                 @endif
 
 
-
                 {{-- Vehicle Reports --}}
-
                 @if($isAdmin || $isOperations)
 
                     <li>
 
-                        <a href="javascript:void(0);">
+                        <a href="{{ route('reports.vehicles.index') }}"
+                        class="{{ request()->routeIs('reports.vehicles.*') ? 'active' : '' }}">
 
                             Vehicle Reports
 
@@ -622,14 +620,13 @@
                 @endif
 
 
-
                 {{-- Duty Reports --}}
-
                 @if($isAdmin || $isOperations || $isAccountant)
 
                     <li>
 
-                        <a href="javascript:void(0);">
+                        <a href="{{ route('reports.duties.index') }}"
+                        class="{{ request()->routeIs('reports.duties.*') ? 'active' : '' }}">
 
                             Duty Reports
 
@@ -640,14 +637,13 @@
                 @endif
 
 
-
                 {{-- Working Sheet Reports --}}
-
                 @if($isAdmin || $isOperations || $isAccountant)
 
                     <li>
 
-                        <a href="javascript:void(0);">
+                        <a href="{{ route('reports.working-sheets.index') }}"
+                        class="{{ request()->routeIs('reports.working-sheets.*') ? 'active' : '' }}">
 
                             Working Sheet Reports
 
@@ -658,14 +654,13 @@
                 @endif
 
 
-
                 {{-- Payroll Reports --}}
-
                 @if($isAdmin || $isAccountant)
 
                     <li>
 
-                        <a href="javascript:void(0);">
+                        <a href="{{ route('reports.payroll.index') }}"
+                        class="{{ request()->routeIs('reports.payroll.*') ? 'active' : '' }}">
 
                             Payroll Reports
 
@@ -675,10 +670,10 @@
 
                 @endif
 
-
             </ul>
 
         </li>
+
     @endif
 
     {{-- ================================================================ --}}

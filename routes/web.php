@@ -29,6 +29,11 @@ use App\Http\Controllers\backend\VehicleTypeController;
 use App\Http\Controllers\backend\WorkingSheetController;
 use App\Http\Controllers\backend\SalaryProcessingController;
 use App\Http\Controllers\backend\SalarySlipController;
+use App\Http\Controllers\backend\Reports\DriverReportController;
+use App\Http\Controllers\backend\Reports\VehicleReportController;
+use App\Http\Controllers\backend\Reports\DutyReportController;
+use App\Http\Controllers\backend\Reports\WorkingSheetReportController;
+use App\Http\Controllers\backend\Reports\PayrollReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -337,6 +342,71 @@ Route::prefix('admin')
             'salary-slips',
             SalarySlipController::class
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Reports
+        |--------------------------------------------------------------------------
+        */
+        Route::prefix('reports')
+            ->name('reports.')
+            ->group(function () {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Driver Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/drivers',
+                    [DriverReportController::class, 'index']
+                )->name('drivers.index');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Vehicle Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/vehicles',
+                    [VehicleReportController::class, 'index']
+                )->name('vehicles.index');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Duty Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/duties',
+                    [DutyReportController::class, 'index']
+                )->name('duties.index');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Working Sheet Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/working-sheets',
+                    [WorkingSheetReportController::class, 'index']
+                )->name('working-sheets.index');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Payroll Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/payroll',
+                    [PayrollReportController::class, 'index']
+                )->name('payroll.index');
+
+            });
 
         /*
         |--------------------------------------------------------------------------
