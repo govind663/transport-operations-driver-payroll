@@ -82,174 +82,180 @@ class DriverManagementService
     public function store(
         array $data
     ): Driver {
-
-        return DB::transaction(function () use ($data) {
-
+    
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER + USER CREATION TRANSACTION
+        |--------------------------------------------------------------------------
+        */
+    
+        $driver = DB::transaction(function () use ($data) {
+    
             /*
             |--------------------------------------------------------------------------
-            | Created By
+            | CREATED BY
             |--------------------------------------------------------------------------
             */
-
+    
             $data['created_by'] = Auth::id();
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | PF & DOCUMENT STATUS DEFAULTS
+            | DEFAULT STATUS
             |--------------------------------------------------------------------------
             */
-
+    
             $data['pf_status'] =
                 $data['pf_status']
                 ?? Driver::PF_NO;
-
+    
             $data['document_status'] =
                 $data['document_status']
                 ?? Driver::DOCUMENT_PENDING;
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | Normalize Basic Values
+            | NORMALIZE DATA
             |--------------------------------------------------------------------------
             */
-
+    
             $this->normalizeDriverData($data);
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
             | DRIVER PHOTO
             |--------------------------------------------------------------------------
             */
-
+    
             if (
                 isset($data['driver_photo']) &&
                 $data['driver_photo']
             ) {
-
+    
                 $data['driver_photo'] =
                     $this->fileUploadService->upload(
                         $data['driver_photo'],
                         'driver'
                     );
             }
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | DRIVING LICENCE DOCUMENT
+            | DRIVING LICENCE
             |--------------------------------------------------------------------------
             */
-
+    
             if (
                 isset($data['driving_license_document']) &&
                 $data['driving_license_document']
             ) {
-
+    
                 $data['driving_license_document'] =
                     $this->fileUploadService->upload(
                         $data['driving_license_document'],
                         'driver/license'
                     );
             }
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | AADHAAR DOCUMENT
+            | AADHAAR
             |--------------------------------------------------------------------------
             */
-
+    
             if (
                 isset($data['aadhar_document']) &&
                 $data['aadhar_document']
             ) {
-
+    
                 $data['aadhar_document'] =
                     $this->fileUploadService->upload(
                         $data['aadhar_document'],
                         'driver/aadhar'
                     );
             }
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | PAN DOCUMENT
+            | PAN
             |--------------------------------------------------------------------------
             */
-
+    
             if (
                 isset($data['pan_document']) &&
                 $data['pan_document']
             ) {
-
+    
                 $data['pan_document'] =
                     $this->fileUploadService->upload(
                         $data['pan_document'],
                         'driver/pan'
                     );
             }
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
             | QUALIFICATIONS
             |--------------------------------------------------------------------------
             */
-
+    
             $qualificationDocuments =
                 $data['qualification_documents'] ?? [];
-
+    
             $qualifications =
                 $data['qualifications'] ?? [];
-
+    
             $data['driver_qualifications'] =
                 $this->processQualifications(
                     $qualifications,
                     $qualificationDocuments
                 );
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
             | NOMINEES
             |--------------------------------------------------------------------------
             */
-
+    
             $nominees =
                 $data['nominees'] ?? [];
-
+    
             $nomineeProfileImages =
                 $data['nominee_profile_images'] ?? [];
-
+    
             $data['driver_nominees'] =
                 $this->processNominees(
                     $nominees,
                     $nomineeProfileImages
                 );
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
             | BANK DETAILS
             |--------------------------------------------------------------------------
             */
-
+    
             $data['driver_bank_details'] =
                 $this->processBankDetails(
                     $data['bank_details'] ?? []
                 );
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | REMOVE FORM-ONLY FIELDS
+            | REMOVE FORM FIELDS
             |--------------------------------------------------------------------------
             */
-
+    
             unset(
                 $data['qualifications'],
                 $data['qualification_documents'],
@@ -257,36 +263,52 @@ class DriverManagementService
                 $data['nominee_profile_images'],
                 $data['bank_details']
             );
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
             | CREATE DRIVER
             |--------------------------------------------------------------------------
             */
-
-            $driver = Driver::create($data);
-
-
+    
+            $driver =
+                Driver::create($data);
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | CREATE DRIVER LOGIN CREDENTIAL
+            | CREATE DRIVER LOGIN
             |--------------------------------------------------------------------------
             */
-
+    
             $this->userService->createDriverCredential(
                 $driver
             );
-
-
+    
+    
             /*
             |--------------------------------------------------------------------------
-            | RETURN FRESH DRIVER
+            | RETURN DRIVER
             |--------------------------------------------------------------------------
             */
-
-            return $driver->fresh();
+    
+            return $driver->fresh([
+                'user',
+            ]);
         });
+    
+    
+        /*
+        |--------------------------------------------------------------------------
+        | SEND EMAIL AFTER SUCCESSFUL TRANSACTION
+        |--------------------------------------------------------------------------
+        |
+        | If transaction fails, email is never attempted.
+        |
+        |--------------------------------------------------------------------------
+        */
+    
+        return $driver;
     }
 
     /*
