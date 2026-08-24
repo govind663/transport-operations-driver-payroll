@@ -62,34 +62,37 @@ class DriverManagementController extends Controller
     | STORE
     |--------------------------------------------------------------------------
     */
-
     public function store(
         StoreDriverRequest $request
     ): RedirectResponse {
-
+    
         try {
-
+    
             $this->driverService->store(
                 $request->validated()
             );
-
+    
             return redirect()
                 ->route('driver-management.index')
                 ->with(
                     'message',
                     'Driver created successfully.'
                 );
-
+    
         } catch (\Throwable $e) {
-
+    
             Log::error(
                 'Driver creation failed.',
                 [
                     'user_id' => Auth::id(),
-                    'exception' => $e,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'code' => $e->getCode(),
+                    'trace' => $e->getTraceAsString(),
                 ]
             );
-
+    
             return back()
                 ->withInput()
                 ->with(
