@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class UserService
@@ -121,199 +120,306 @@ class UserService
     |
     |--------------------------------------------------------------------------
     */
+
     public function createDriverCredential(
         Driver $driver
     ): User {
-    
-        if (!empty($driver->user_id)) {
-    
-            $user = User::findOrFail(
-                $driver->user_id
+
+        return DB::transaction(function () use ($driver) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXISTING DRIVER USER
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !empty($driver->user_id)
+            ) {
+
+                $user = User::findOrFail(
+                    $driver->user_id
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SYNC DRIVER PHOTO
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty($driver->driver_photo)
+                ) {
+
+                    $user->update([
+                        'profile_image' =>
+                            $driver->driver_photo,
+                    ]);
+                }
+
+
+                return $user;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FIND EXISTING USER
+            |--------------------------------------------------------------------------
+            */
+
+            $user = null;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK EMAIL
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !empty($driver->email)
+            ) {
+
+                $user = User::query()
+                    ->where(
+                        'email',
+                        $driver->email
+                    )
+                    ->first();
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CHECK PHONE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !$user &&
+                !empty($driver->mobile)
+            ) {
+
+                $user = User::query()
+                    ->where(
+                        'phone',
+                        $driver->mobile
+                    )
+                    ->first();
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER NAME
+            |--------------------------------------------------------------------------
+            */
+
+            $name = trim(
+                $driver->first_name .
+                ' ' .
+                ($driver->last_name ?? '')
             );
-    
-            if (!empty($driver->driver_photo)) {
-    
-                $user->update([
-                    'profile_image' => $driver->driver_photo,
-                    'updated_by'    => Auth::id(),
-                ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXISTING USER FOUND
+            |--------------------------------------------------------------------------
+            */
+
+            if ($user) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | SYNC DRIVER PROFILE IMAGE
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty($driver->driver_photo)
+                ) {
+
+                    $user->profile_image =
+                        $driver->driver_photo;
+                }
+
+
+                $user->save();
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPDATE DRIVER USER ID
+                |--------------------------------------------------------------------------
+                */
+
+                $driver->user_id =
+                    $user->id;
+
+                $driver->save();
+
+
+                return $user;
             }
-    
-            return $user;
-        }
-    
-    
-        $user = null;
-    
-    
-        if (!empty($driver->email)) {
-    
-            $user = User::query()
-                ->where('email', $driver->email)
-                ->first();
-        }
-    
-    
-        if (
-            !$user &&
-            !empty($driver->mobile)
-        ) {
-    
-            $user = User::query()
-                ->where('phone', $driver->mobile)
-                ->first();
-        }
-    
-    
-        /*
-        |--------------------------------------------------------------------------
-        | EXISTING USER
-        |--------------------------------------------------------------------------
-        */
-    
-        if ($user) {
-    
-            if (!empty($driver->driver_photo)) {
-    
-                $user->profile_image =
-                    $driver->driver_photo;
-            }
-    
-            $user->updated_by =
-                Auth::id();
-    
-            $user->save();
-    
-    
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | GENERATE STRONG TEMPORARY PASSWORD
+            |--------------------------------------------------------------------------
+            |
+            | Format:
+            |
+            | Mastermind@XXXXXXXXXX
+            |
+            | Example:
+            |
+            | Mastermind@K7x9Pq2Lm4
+            |
+            |--------------------------------------------------------------------------
+            */
+
+            $temporaryPassword =
+                $this->generateDriverPassword();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE DRIVER USER
+            |--------------------------------------------------------------------------
+            */
+
+            $user = User::create([
+
+                /*
+                |--------------------------------------------------------------------------
+                | BASIC INFORMATION
+                |--------------------------------------------------------------------------
+                */
+
+                'name' =>
+                    $name,
+
+                'phone' =>
+                    $driver->mobile,
+
+                'email' =>
+                    $driver->email,
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PROFILE IMAGE
+                |--------------------------------------------------------------------------
+                */
+
+                'profile_image' =>
+                    $driver->driver_photo,
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PASSWORD
+                |--------------------------------------------------------------------------
+                */
+
+                'password' =>
+                    Hash::make(
+                        $temporaryPassword
+                    ),
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | DRIVER ROLE
+                |--------------------------------------------------------------------------
+                */
+
+                'role' =>
+                    User::ROLE_DRIVER,
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ACTIVE
+                |--------------------------------------------------------------------------
+                */
+
+                'status' =>
+                    User::STATUS_ACTIVE,
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | CREATED BY
+                |--------------------------------------------------------------------------
+                */
+
+                'created_by' =>
+                    Auth::id(),
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE DRIVER USER ID
+            |--------------------------------------------------------------------------
+            */
+
             $driver->user_id =
                 $user->id;
-    
+
             $driver->save();
-    
-    
-            return $user;
-        }
-    
-    
-        /*
-        |--------------------------------------------------------------------------
-        | CREATE NEW USER
-        |--------------------------------------------------------------------------
-        */
-    
-        $temporaryPassword =
-            $this->generateDriverPassword();
-    
-    
-        $name = trim(
-            $driver->first_name .
-            ' ' .
-            ($driver->last_name ?? '')
-        );
-    
-    
-        $user = User::create([
-    
-            'name' =>
-                $name,
-    
-            'phone' =>
-                $driver->mobile,
-    
-            'email' =>
-                $driver->email,
-    
-            'profile_image' =>
-                $driver->driver_photo,
-    
-            'password' =>
-                Hash::make(
-                    $temporaryPassword
-                ),
-    
-            'role' =>
-                User::ROLE_DRIVER,
-    
-            'status' =>
-                User::STATUS_ACTIVE,
-    
-            'created_by' =>
-                Auth::id(),
-    
-        ]);
-    
-    
-        /*
-        |--------------------------------------------------------------------------
-        | LINK DRIVER
-        |--------------------------------------------------------------------------
-        */
-    
-        $driver->user_id =
-            $user->id;
-    
-        $driver->save();
-    
-    
-        /*
-        |--------------------------------------------------------------------------
-        | STORE TEMPORARY PASSWORD FOR EMAIL
-        |--------------------------------------------------------------------------
-        */
-    
-        $this->sendDriverWelcomeEmail(
-            $driver,
-            $user,
-            $temporaryPassword
-        );
-    
-    
-        return $user;
-    }
-    
-    protected function sendDriverWelcomeEmail(
-        Driver $driver,
-        User $user,
-        string $temporaryPassword
-    ): void {
-    
-        if (empty($driver->email)) {
-            return;
-        }
-    
-        try {
-    
-            Mail::to($driver->email)->send(
-                new DriverWelcomeMail(
-                    $driver->fresh([
-                        'user',
-                    ]),
-                    $driver->email,
-                    $temporaryPassword,
-                    User::ROLE_DRIVER
-                )
-            );
-    
-        } catch (\Throwable $e) {
-    
-            Log::error(
-                'Driver welcome email failed.',
-                [
-                    'driver_id' =>
-                        $driver->id,
-    
-                    'user_id' =>
-                        $user->id,
-    
-                    'email' =>
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SEND DRIVER WELCOME EMAIL
+            |--------------------------------------------------------------------------
+            |
+            | Email contains:
+            |
+            | - Driver profile
+            | - Driver basic information
+            | - Driver role
+            | - Login email
+            | - Temporary password
+            | - Mastermind Travels login URL
+            |
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !empty($driver->email)
+            ) {
+
+                Mail::to($driver->email)->send(
+                    new DriverWelcomeMail(
+                        $driver->fresh([
+                            'user',
+                        ]),
                         $driver->email,
-    
-                    'exception' =>
-                        $e,
-                ]
-            );
-        }
+                        $temporaryPassword,
+                        User::ROLE_DRIVER
+                    )
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | RETURN USER
+            |--------------------------------------------------------------------------
+            */
+
+            return $user;
+        });
     }
+
 
     /*
     |--------------------------------------------------------------------------
