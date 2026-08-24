@@ -425,7 +425,7 @@
 
                                         <strong class="driver-name text-dark">
 
-                                            {{ $driver->name ?? '-' }}
+                                            {{ $driver->first_name . ' ' . $driver->last_name ?? '-' }}
 
                                         </strong>
 
@@ -705,21 +705,6 @@
                     </table>
 
                 </div>
-
-
-                {{-- ===================================================== --}}
-                {{-- PAGINATION --}}
-                {{-- ===================================================== --}}
-
-                @if($drivers->hasPages())
-
-                    <div class="pd-20">
-
-                        {{ $drivers->links() }}
-
-                    </div>
-
-                @endif
 
             </div>
 
