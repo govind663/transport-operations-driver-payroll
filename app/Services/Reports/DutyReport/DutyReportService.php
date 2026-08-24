@@ -1,75 +1,172 @@
-    <?php
+<?php
 
-    namespace App\Services\Reports\DutyReport;
+namespace App\Services\Reports\DutyReport;
 
-    use Illuminate\Support\Facades\DB;
-    use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\DutyAssignment;
 
-    class DutyReportService
+class DutyReportService
+{
+    /**
+     * Get Duty Report Listing
+     */
+    public function getReport(array $filters = [], int $perPage = 15)
     {
-        public function store(array $data)
-        {
-            DB::beginTransaction();
+        $query = $this->buildQuery($filters);
 
-            try {
-
-                // TODO: Implement store logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DutyReportService Store Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
-
-        public function update($model, array $data)
-        {
-            DB::beginTransaction();
-
-            try {
-
-                // TODO: Implement update logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DutyReportService Update Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
-
-        public function delete($model)
-        {
-            DB::beginTransaction();
-
-            try {
-
-                // TODO: Implement delete logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DutyReportService Delete Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
+        return $query
+            ->paginate($perPage)
+            ->withQueryString();
     }
+
+
+    /**
+     * Build Duty Report Query
+     */
+    protected function buildQuery(array $filters = []): Builder
+    {
+        $query = DutyAssignment::query();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['search'])) {
+
+            $search = trim($filters['search']);
+
+            $query->where(function (Builder $q) use ($search) {
+
+                /*
+                 * Actual searchable columns will be added
+                 * according to DutyAssignment model.
+                 */
+
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Filter
+        |--------------------------------------------------------------------------
+        */
+        if (
+            isset($filters['driver_id']) &&
+            $filters['driver_id'] !== ''
+        ) {
+
+            // Actual driver foreign key will be added
+            // after checking DutyAssignment model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Filter
+        |--------------------------------------------------------------------------
+        */
+        if (
+            isset($filters['vehicle_id']) &&
+            $filters['vehicle_id'] !== ''
+        ) {
+
+            // Actual vehicle foreign key will be added
+            // after checking DutyAssignment model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Client Filter
+        |--------------------------------------------------------------------------
+        */
+        if (
+            isset($filters['client_id']) &&
+            $filters['client_id'] !== ''
+        ) {
+
+            // Actual client foreign key will be added
+            // after checking DutyAssignment model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+        if (
+            isset($filters['status']) &&
+            $filters['status'] !== ''
+        ) {
+
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date From
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['date_from'])) {
+
+            // Actual duty date column will be added
+            // after checking DutyAssignment model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date To
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['date_to'])) {
+
+            // Actual duty date column will be added
+            // after checking DutyAssignment model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Latest First
+        |--------------------------------------------------------------------------
+        */
+        $query->latest();
+
+        return $query;
+    }
+
+
+    /**
+     * Get Duty Report Filter Options
+     */
+    public function getFilterOptions(): array
+    {
+        return [
+            'statuses' => $this->getStatuses(),
+        ];
+    }
+
+
+    /**
+     * Get Available Duty Statuses
+     */
+    protected function getStatuses(): array
+    {
+        return [
+            'pending',
+            'assigned',
+            'in_progress',
+            'completed',
+            'cancelled',
+        ];
+    }
+}

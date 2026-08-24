@@ -1,75 +1,131 @@
-    <?php
+<?php
 
-    namespace App\Services\Reports\DriverReport;
+namespace App\Services\Reports\DriverReport;
 
-    use Illuminate\Support\Facades\DB;
-    use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Builder;
 
-    class DriverReportService
+class DriverReportService
+{
+    /**
+     * Get Driver Report Listing
+     */
+    public function getReport(array $filters = [], int $perPage = 15)
     {
-        public function store(array $data)
-        {
-            DB::beginTransaction();
+        $query = $this->buildQuery($filters);
 
-            try {
-
-                // TODO: Implement store logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DriverReportService Store Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
-
-        public function update($model, array $data)
-        {
-            DB::beginTransaction();
-
-            try {
-
-                // TODO: Implement update logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DriverReportService Update Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
-
-        public function delete($model)
-        {
-            DB::beginTransaction();
-
-            try {
-
-                // TODO: Implement delete logic
-
-                DB::commit();
-                return true;
-
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                Log::error('DriverReportService Delete Failed', [
-                    'error' => $e->getMessage()
-                ]);
-
-                throw $e;
-            }
-        }
+        return $query
+            ->paginate($perPage)
+            ->withQueryString();
     }
+
+
+    /**
+     * Build Driver Report Query
+     */
+    protected function buildQuery(array $filters = []): Builder
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Model Query
+        |--------------------------------------------------------------------------
+        |
+        | Driver model and its actual relationships/columns will be added
+        | here once the Driver model structure is confirmed.
+        |
+        */
+
+        $query = \App\Models\Driver::query();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['search'])) {
+
+            $search = trim($filters['search']);
+
+            $query->where(function (Builder $q) use ($search) {
+
+                // Actual searchable columns will be added
+                // according to Driver model.
+
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+        if (
+            isset($filters['status']) &&
+            $filters['status'] !== ''
+        ) {
+
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date From
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['date_from'])) {
+
+            // Actual date column will be added
+            // after checking Driver model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date To
+        |--------------------------------------------------------------------------
+        */
+        if (!empty($filters['date_to'])) {
+
+            // Actual date column will be added
+            // after checking Driver model.
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Latest First
+        |--------------------------------------------------------------------------
+        */
+        $query->latest();
+
+        return $query;
+    }
+
+
+    /**
+     * Get Driver Report Filter Options
+     */
+    public function getFilterOptions(): array
+    {
+        return [
+            'statuses' => $this->getStatuses(),
+        ];
+    }
+
+
+    /**
+     * Get Available Driver Statuses
+     */
+    protected function getStatuses(): array
+    {
+        return [
+            'active',
+            'inactive',
+        ];
+    }
+}
