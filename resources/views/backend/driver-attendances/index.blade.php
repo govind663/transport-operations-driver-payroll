@@ -1047,7 +1047,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1106,7 +1105,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
-
 
 <script src="{{ asset('backend/assets/datatable/js/datatable-init.js') }}"></script>
 
