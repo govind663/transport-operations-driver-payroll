@@ -100,6 +100,17 @@ class User extends Authenticatable
         );
     }
 
+    /**
+     * Get all activity histories of this user.
+     */
+    public function histories()
+    {
+        return $this->hasMany(
+            UserHistory::class,
+            'user_id',
+            'id'
+        );
+    }
 
     /*
     |--------------------------------------------------------------------------
