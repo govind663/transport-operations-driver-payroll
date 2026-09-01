@@ -2,16 +2,25 @@
 
 namespace App\Services\Reports\PayrollReport;
 
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Driver;
 use App\Models\SalaryProcessing;
+use Illuminate\Database\Eloquent\Builder;
 
 class PayrollReportService
 {
+    /*
+    |--------------------------------------------------------------------------
+    | GET PAYROLL REPORT
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Payroll Report Listing
+     * Get Payroll Report Listing.
      */
-    public function getReport(array $filters = [], int $perPage = 15)
-    {
+    public function getReport(
+        array $filters = [],
+        int $perPage = 15
+    ) {
         $query = $this->buildQuery($filters);
 
         return $query
@@ -20,84 +29,185 @@ class PayrollReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | BUILD QUERY
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Build Payroll Report Query
+     * Build Payroll Report Query.
      */
-    protected function buildQuery(array $filters = []): Builder
-    {
-        $query = SalaryProcessing::query();
+    protected function buildQuery(
+        array $filters = []
+    ): Builder {
+
+        $query = SalaryProcessing::query()
+            ->with([
+                'driver',
+                'processedBy',
+                'approvedBy',
+                'paidBy',
+            ]);
 
 
         /*
         |--------------------------------------------------------------------------
-        | Search
+        | SEARCH
         |--------------------------------------------------------------------------
         */
+
         if (!empty($filters['search'])) {
 
-            $search = trim($filters['search']);
+            $search = trim(
+                $filters['search']
+            );
 
             $query->where(function (Builder $q) use ($search) {
 
                 /*
-                 * Actual searchable columns will be added
-                 * according to SalaryProcessing model.
-                 */
+                |--------------------------------------------------------------------------
+                | Salary Processing Search
+                |--------------------------------------------------------------------------
+                */
 
+                $q->where(
+                    'role',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'status',
+                    'like',
+                    "%{$search}%"
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Driver Search
+                |--------------------------------------------------------------------------
+                */
+
+                $q->orWhereHas(
+                    'driver',
+                    function (Builder $driverQuery) use ($search) {
+
+                        $driverQuery
+                            ->where(
+                                'driver_code',
+                                'like',
+                                "%{$search}%"
+                            )
+
+                            ->orWhere(
+                                'first_name',
+                                'like',
+                                "%{$search}%"
+                            )
+
+                            ->orWhere(
+                                'last_name',
+                                'like',
+                                "%{$search}%"
+                            )
+
+                            ->orWhere(
+                                'mobile',
+                                'like',
+                                "%{$search}%"
+                            )
+
+                            ->orWhere(
+                                'email',
+                                'like',
+                                "%{$search}%"
+                            );
+                    }
+                );
             });
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Driver Filter
+        | DRIVER FILTER
         |--------------------------------------------------------------------------
         */
+
         if (
             isset($filters['driver_id']) &&
             $filters['driver_id'] !== ''
         ) {
 
-            // Actual driver foreign key will be added
-            // after checking SalaryProcessing model.
+            $query->where(
+                'driver_id',
+                $filters['driver_id']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Month Filter
+        | ROLE FILTER
         |--------------------------------------------------------------------------
         */
+
+        if (
+            isset($filters['role']) &&
+            $filters['role'] !== ''
+        ) {
+
+            $query->where(
+                'role',
+                $filters['role']
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MONTH FILTER
+        |--------------------------------------------------------------------------
+        */
+
         if (
             isset($filters['month']) &&
             $filters['month'] !== ''
         ) {
 
-            // Actual month column will be added
-            // after checking SalaryProcessing model.
+            $query->where(
+                'salary_month',
+                $filters['month']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Year Filter
+        | YEAR FILTER
         |--------------------------------------------------------------------------
         */
+
         if (
             isset($filters['year']) &&
             $filters['year'] !== ''
         ) {
 
-            // Actual year column will be added
-            // after checking SalaryProcessing model.
+            $query->where(
+                'salary_year',
+                $filters['year']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Payment Status Filter
+        | STATUS FILTER
         |--------------------------------------------------------------------------
         */
+
         if (
             isset($filters['status']) &&
             $filters['status'] !== ''
@@ -112,67 +222,148 @@ class PayrollReportService
 
         /*
         |--------------------------------------------------------------------------
-        | Date From
+        | PAYMENT DATE FROM
         |--------------------------------------------------------------------------
         */
+
         if (!empty($filters['date_from'])) {
 
-            // Actual payroll date column will be added
-            // after checking SalaryProcessing model.
+            $query->whereDate(
+                'payment_date',
+                '>=',
+                $filters['date_from']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Date To
+        | PAYMENT DATE TO
         |--------------------------------------------------------------------------
         */
+
         if (!empty($filters['date_to'])) {
 
-            // Actual payroll date column will be added
-            // after checking SalaryProcessing model.
+            $query->whereDate(
+                'payment_date',
+                '<=',
+                $filters['date_to']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Latest First
+        | LATEST FIRST
         |--------------------------------------------------------------------------
         */
-        $query->latest();
+
+        $query
+            ->orderByDesc('salary_year')
+            ->orderByDesc('salary_month')
+            ->orderByDesc('id');
+
 
         return $query;
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Payroll Report Filter Options
+     * Get Payroll Report Filter Options.
      */
     public function getFilterOptions(): array
     {
         return [
+            'drivers'  => $this->getDrivers(),
             'statuses' => $this->getStatuses(),
+            'roles'    => $this->getRoles(),
             'months'   => $this->getMonths(),
             'years'    => $this->getYears(),
         ];
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | DRIVER OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Available Payroll Statuses
+     * Get Available Drivers.
+     *
+     * Only active drivers are displayed in the filter.
+     */
+    protected function getDrivers()
+    {
+        return Driver::query()
+            ->select([
+                'id',
+                'driver_code',
+                'first_name',
+                'last_name',
+                'mobile',
+            ])
+            ->where(
+                'status',
+                'active'
+            )
+            ->orderBy(
+                'first_name'
+            )
+            ->orderBy(
+                'last_name'
+            )
+            ->get();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get Available Payroll Statuses.
      */
     protected function getStatuses(): array
     {
+        return SalaryProcessing::STATUSES;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get Available Payroll Roles.
+     */
+    protected function getRoles(): array
+    {
         return [
-            'pending',
-            'paid',
-            'cancelled',
+            SalaryProcessing::ROLE_DRIVER,
         ];
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | MONTH OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Month Options
+     * Get Month Options.
      */
     protected function getMonths(): array
     {
@@ -193,8 +384,14 @@ class PayrollReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | YEAR OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Year Options
+     * Get Year Options.
      */
     protected function getYears(): array
     {

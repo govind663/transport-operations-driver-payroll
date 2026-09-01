@@ -8,6 +8,7 @@ use App\Http\Requests\Backend\SalaryProcessing\UpdateSalaryProcessingRequest;
 use App\Models\Driver;
 use App\Models\SalaryProcessing;
 use App\Models\User;
+use App\Services\Reports\PayrollReport\PayrollReportService;
 use App\Services\SalaryProcessing\SalaryProcessingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,11 +19,13 @@ class SalaryProcessingController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Service
+    | Services
     |--------------------------------------------------------------------------
     */
 
     protected SalaryProcessingService $salaryProcessingService;
+
+    protected PayrollReportService $payrollReportService;
 
 
     /*
@@ -32,9 +35,12 @@ class SalaryProcessingController extends Controller
     */
 
     public function __construct(
-        SalaryProcessingService $salaryProcessingService
+        SalaryProcessingService $salaryProcessingService,
+        PayrollReportService $payrollReportService
     ) {
         $this->salaryProcessingService = $salaryProcessingService;
+
+        $this->payrollReportService = $payrollReportService;
     }
 
 
@@ -51,6 +57,7 @@ class SalaryProcessingController extends Controller
         if (!$user instanceof User) {
             abort(403);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -75,32 +82,77 @@ class SalaryProcessingController extends Controller
 
         $filters = [
 
+            'search' =>
+                $request->input('search'),
+
             'driver_id' =>
                 $request->input('driver_id'),
 
-            'salary_month' =>
-                $request->input('salary_month'),
+            'role' =>
+                $request->input('role'),
 
-            'salary_year' =>
-                $request->input('salary_year'),
+            'month' =>
+                $request->input('month'),
+
+            'year' =>
+                $request->input('year'),
 
             'status' =>
                 $request->input('status'),
 
-            'search' =>
-                $request->input('search'),
+            'date_from' =>
+                $request->input('date_from'),
+
+            'date_to' =>
+                $request->input('date_to'),
 
         ];
 
 
         /*
         |--------------------------------------------------------------------------
-        | Salary Processings
+        | Driver Restriction
+        |--------------------------------------------------------------------------
+        |
+        | Driver users can only see their own payroll records.
+        |
+        */
+
+        if ($isDriver) {
+
+            $driver = Driver::query()
+                ->where(
+                    'user_id',
+                    $user->id
+                )
+                ->first();
+
+            if ($driver) {
+
+                $filters['driver_id'] =
+                    $driver->id;
+
+            } else {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Driver profile does not exist
+                |--------------------------------------------------------------------------
+                */
+
+                $filters['driver_id'] = 0;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Report
         |--------------------------------------------------------------------------
         */
 
-        $salaryProcessings =
-            $this->salaryProcessingService->getPaginated(
+        $payrollReport =
+            $this->payrollReportService->getReport(
                 $filters,
                 20
             );
@@ -108,28 +160,78 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Drivers
+        | Filter Options
         |--------------------------------------------------------------------------
         */
 
-        $drivers = collect();
+        $filterOptions =
+            $this->payrollReportService->getFilterOptions();
 
-        if (!$isDriver) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Dropdown
+        |--------------------------------------------------------------------------
+        |
+        | Driver users should not see the complete driver list.
+        |
+        */
+
+        if ($isDriver) {
+
+            $driver = Driver::query()
+                ->select([
+                    'id',
+                    'driver_code',
+                    'first_name',
+                    'last_name',
+                    'mobile',
+                ])
+                ->where(
+                    'user_id',
+                    $user->id
+                )
+                ->first();
+
+            $drivers = $driver
+                ? collect([$driver])
+                : collect();
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | All Active Drivers
+            |--------------------------------------------------------------------------
+            */
 
             $drivers = Driver::query()
+                ->select([
+                    'id',
+                    'driver_code',
+                    'first_name',
+                    'last_name',
+                    'mobile',
+                ])
+                ->where(
+                    'status',
+                    'active'
+                )
                 ->orderBy('driver_code')
+                ->orderBy('first_name')
+                ->orderBy('last_name')
                 ->get();
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Statuses
+        | Add Drivers To Filter Options
         |--------------------------------------------------------------------------
         */
 
-        $statuses =
-            SalaryProcessing::STATUSES;
+        $filterOptions['drivers'] =
+            $drivers;
 
 
         /*
@@ -138,11 +240,11 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('backend.salary-processings.index',
+        return view(
+            'backend.reports.payroll.index',
             compact(
-                'salaryProcessings',
-                'drivers',
-                'statuses',
+                'payrollReport',
+                'filterOptions',
                 'isAdmin',
                 'isOperations',
                 'isAccountant',
@@ -165,6 +267,13 @@ class SalaryProcessingController extends Controller
         if (!$user instanceof User) {
             abort(403);
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Role
+        |--------------------------------------------------------------------------
+        */
 
         $isDriver = $user->isDriver();
 
@@ -199,8 +308,6 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $salaryProcessings = collect();
-
         if ($isDriver) {
 
             $driver = $drivers->first();
@@ -213,18 +320,33 @@ class SalaryProcessingController extends Controller
                             'driver_id',
                             $driver->id
                         )
-                        ->with('driver')
+                        ->with([
+                            'driver',
+                            'processedBy',
+                            'approvedBy',
+                            'paidBy',
+                        ])
                         ->latest('salary_year')
                         ->latest('salary_month')
                         ->latest('id')
                         ->get();
+
+            } else {
+
+                $salaryProcessings =
+                    collect();
             }
 
         } else {
 
             $salaryProcessings =
                 SalaryProcessing::query()
-                    ->with('driver')
+                    ->with([
+                        'driver',
+                        'processedBy',
+                        'approvedBy',
+                        'paidBy',
+                    ])
                     ->latest('salary_year')
                     ->latest('salary_month')
                     ->latest('id')
@@ -248,7 +370,8 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('backend.salary-processings.create',
+        return view(
+            'backend.salary-processings.create',
             compact(
                 'drivers',
                 'salaryProcessings',
@@ -303,6 +426,7 @@ class SalaryProcessingController extends Controller
 
             if (
                 !$driver ||
+                !isset($data['driver_id']) ||
                 (int) $data['driver_id'] !==
                 (int) $driver->id
             ) {
@@ -353,7 +477,7 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Create Through Service
+        | Create
         |--------------------------------------------------------------------------
         */
 
@@ -430,6 +554,7 @@ class SalaryProcessingController extends Controller
             'driver',
             'processedBy',
             'approvedBy',
+            'paidBy',
         ]);
 
 
@@ -439,8 +564,11 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('backend.salary-processings.show',
-            compact('salaryProcessing')
+        return view(
+            'backend.salary-processings.show',
+            compact(
+                'salaryProcessing'
+            )
         );
     }
 
@@ -526,7 +654,12 @@ class SalaryProcessingController extends Controller
                         'driver_id',
                         $salaryProcessing->driver_id
                     )
-                    ->with('driver')
+                    ->with([
+                        'driver',
+                        'processedBy',
+                        'approvedBy',
+                        'paidBy',
+                    ])
                     ->latest('salary_year')
                     ->latest('salary_month')
                     ->latest('id')
@@ -536,7 +669,12 @@ class SalaryProcessingController extends Controller
 
             $salaryProcessings =
                 SalaryProcessing::query()
-                    ->with('driver')
+                    ->with([
+                        'driver',
+                        'processedBy',
+                        'approvedBy',
+                        'paidBy',
+                    ])
                     ->latest('salary_year')
                     ->latest('salary_month')
                     ->latest('id')
@@ -560,7 +698,8 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view('backend.salary-processings.edit',
+        return view(
+            'backend.salary-processings.edit',
             compact(
                 'salaryProcessing',
                 'drivers',
@@ -591,7 +730,7 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Driver Security
+        | Existing Salary Driver Security
         |--------------------------------------------------------------------------
         */
 
@@ -642,6 +781,7 @@ class SalaryProcessingController extends Controller
 
             if (
                 !$driver ||
+                !isset($data['driver_id']) ||
                 (int) $data['driver_id'] !==
                 (int) $driver->id
             ) {
@@ -671,7 +811,7 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Update Through Service
+        | Update
         |--------------------------------------------------------------------------
         */
 
@@ -741,7 +881,7 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Delete Through Service
+        | Delete
         |--------------------------------------------------------------------------
         */
 
