@@ -299,9 +299,9 @@
                                     Duty Assignment
                                 </b>
 
-                                <span class="required">
+                                {{-- <span class="required">
                                     *
-                                </span>
+                                </span> --}}
 
                             </label>
 
