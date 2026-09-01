@@ -2,7 +2,11 @@
 
 namespace App\Services\Reports\VehicleReport;
 
+use App\Models\Client;
+use App\Models\Driver;
+use App\Models\VehicleCategory;
 use App\Models\VehicleManagement;
+use App\Models\VehicleType;
 use Illuminate\Database\Eloquent\Builder;
 
 class VehicleReportService
@@ -10,8 +14,10 @@ class VehicleReportService
     /**
      * Get Vehicle Report Listing
      */
-    public function getReport(array $filters = [], int $perPage = 15)
-    {
+    public function getReport(
+        array $filters = [],
+        int $perPage = 15
+    ) {
         $query = $this->buildQuery($filters);
 
         return $query
@@ -23,96 +29,163 @@ class VehicleReportService
     /**
      * Build Vehicle Report Query
      */
-    protected function buildQuery(array $filters = []): Builder
-    {
+    protected function buildQuery(
+        array $filters = []
+    ): Builder {
+
         $query = VehicleManagement::query();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Search
+        | EAGER LOAD RELATIONSHIPS
         |--------------------------------------------------------------------------
         */
+
+        $query->with([
+            'vehicleCategory',
+            'vehicleType',
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------------------------
+        |
+        | Search by vehicle number, registration number,
+        | chassis number, engine number, manufacturer,
+        | model, color and remarks.
+        |
+        */
+
         if (!empty($filters['search'])) {
 
             $search = trim($filters['search']);
 
             $query->where(function (Builder $q) use ($search) {
 
-                /*
-                 * Actual searchable columns will be added
-                 * according to VehicleManagement model.
-                 */
+                $q->where(
+                    'vehicle_number',
+                    'like',
+                    "%{$search}%"
+                )
 
+                ->orWhere(
+                    'registration_number',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'chassis_number',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'engine_number',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'manufacturer',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'model',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'color',
+                    'like',
+                    "%{$search}%"
+                )
+
+                ->orWhere(
+                    'remarks',
+                    'like',
+                    "%{$search}%"
+                );
             });
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Vehicle Category Filter
+        | VEHICLE CATEGORY FILTER
         |--------------------------------------------------------------------------
         */
+
         if (
             isset($filters['vehicle_category_id']) &&
             $filters['vehicle_category_id'] !== ''
         ) {
 
-            // Actual category foreign key will be added
-            // after checking VehicleManagement model.
+            $query->where(
+                'vehicle_category_id',
+                $filters['vehicle_category_id']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Vehicle Type Filter
+        | VEHICLE TYPE FILTER
         |--------------------------------------------------------------------------
         */
+
         if (
             isset($filters['vehicle_type_id']) &&
             $filters['vehicle_type_id'] !== ''
         ) {
 
-            // Actual type foreign key will be added
-            // after checking VehicleManagement model.
+            $query->where(
+                'vehicle_type_id',
+                $filters['vehicle_type_id']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Driver Filter
+        | DRIVER FILTER
         |--------------------------------------------------------------------------
+        |
+        | NOTE:
+        | vehicle_management table does NOT contain driver_id.
+        |
+        | Driver filtering will be implemented through
+        | DutyAssignment once the complete DutyAssignment /
+        | TravelRequest relationship structure is available.
+        |
         */
-        if (
-            isset($filters['driver_id']) &&
-            $filters['driver_id'] !== ''
-        ) {
 
-            // Actual driver foreign key will be added
-            // after checking VehicleManagement model.
-        }
+        /*
+        |--------------------------------------------------------------------------
+        | CLIENT FILTER
+        |--------------------------------------------------------------------------
+        |
+        | NOTE:
+        | vehicle_management table does NOT contain client_id.
+        |
+        | Client filtering will be implemented through
+        | DutyAssignment / TravelRequest relationship.
+        |
+        */
 
 
         /*
         |--------------------------------------------------------------------------
-        | Client Filter
+        | VEHICLE STATUS FILTER
         |--------------------------------------------------------------------------
         */
-        if (
-            isset($filters['client_id']) &&
-            $filters['client_id'] !== ''
-        ) {
 
-            // Actual client foreign key will be added
-            // after checking VehicleManagement model.
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Status Filter
-        |--------------------------------------------------------------------------
-        */
         if (
             isset($filters['status']) &&
             $filters['status'] !== ''
@@ -127,34 +200,50 @@ class VehicleReportService
 
         /*
         |--------------------------------------------------------------------------
-        | Date From
+        | DATE FROM FILTER
         |--------------------------------------------------------------------------
+        |
+        | vehicle_management does not have a dedicated
+        | vehicle date column.
+        |
+        | created_at is therefore used.
+        |
         */
+
         if (!empty($filters['date_from'])) {
 
-            // Actual vehicle date column will be added
-            // after checking VehicleManagement model.
+            $query->whereDate(
+                'created_at',
+                '>=',
+                $filters['date_from']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Date To
+        | DATE TO FILTER
         |--------------------------------------------------------------------------
         */
+
         if (!empty($filters['date_to'])) {
 
-            // Actual vehicle date column will be added
-            // after checking VehicleManagement model.
+            $query->whereDate(
+                'created_at',
+                '<=',
+                $filters['date_to']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Latest First
+        | LATEST FIRST
         |--------------------------------------------------------------------------
         */
-        $query->latest();
+
+        $query->latest('id');
+
 
         return $query;
     }
@@ -166,8 +255,120 @@ class VehicleReportService
     public function getFilterOptions(): array
     {
         return [
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE CATEGORIES
+            |--------------------------------------------------------------------------
+            */
+
+            'categories' => $this->getCategories(),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE TYPES
+            |--------------------------------------------------------------------------
+            */
+
+            'types' => $this->getTypes(),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVERS
+            |--------------------------------------------------------------------------
+            */
+
+            'drivers' => $this->getDrivers(),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CLIENTS
+            |--------------------------------------------------------------------------
+            */
+
+            'clients' => $this->getClients(),
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE STATUSES
+            |--------------------------------------------------------------------------
+            */
+
             'statuses' => $this->getStatuses(),
+
         ];
+    }
+
+
+    /**
+     * Get Active Vehicle Categories
+     */
+    protected function getCategories()
+    {
+        return VehicleCategory::query()
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'code',
+            ]);
+    }
+
+
+    /**
+     * Get Active Vehicle Types
+     */
+    protected function getTypes()
+    {
+        return VehicleType::query()
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get([
+                'id',
+                'vehicle_category_id',
+                'name',
+                'code',
+            ]);
+    }
+
+
+    /**
+     * Get Active Drivers
+     */
+    protected function getDrivers()
+    {
+        return Driver::query()
+            ->where('status', 'active')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get([
+                'id',
+                'driver_code',
+                'first_name',
+                'last_name',
+            ]);
+    }
+
+
+    /**
+     * Get Active Clients
+     */
+    protected function getClients()
+    {
+        return Client::query()
+            ->where('status', 1)
+            ->orderBy('company_name')
+            ->get([
+                'id',
+                'client_code',
+                'company_name',
+                'contact_person',
+            ]);
     }
 
 
@@ -179,6 +380,8 @@ class VehicleReportService
         return [
             'active',
             'inactive',
+            'maintenance',
+            'sold',
         ];
     }
 }

@@ -254,7 +254,7 @@
                                         {{ request('driver_id') == $driver->id ? 'selected' : '' }}
                                     >
 
-                                        {{ $driver->name ?? '-' }}
+                                        {{ $driver->first_name ?? '-' }} {{ $driver->last_name ?? '-' }}
 
                                         @if(!empty($driver->driver_code))
 

@@ -79,4 +79,4 @@ class VehicleReportController extends Controller
             )
         );
     }
-}
+} 
