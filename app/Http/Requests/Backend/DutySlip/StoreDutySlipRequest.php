@@ -40,7 +40,7 @@ class StoreDutySlipRequest extends FormRequest
             ],
 
             'duty_assignment_id' => [
-                'required',
+                'nullable',
                 'integer',
                 'exists:duty_assignments,id',
             ],
