@@ -215,7 +215,6 @@
                 {{-- ===================================================== --}}
                 {{-- PART 1 : REQUEST INFORMATION --}}
                 {{-- ===================================================== --}}
-
                 <div class="mb-4">
 
                     <h5 class="form-section-title">
@@ -233,11 +232,9 @@
 
                 <div class="row">
 
-
                     {{-- ================================================= --}}
                     {{-- Request Number --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -288,21 +285,18 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
-                    {{-- Client --}}
+                    {{-- Company Name --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="client_id">
+                            <label for="company_name">
 
                                 <b>
 
-                                    Client / Company Name
+                                    Company Name
 
                                     <span class="required-star">
                                         *
@@ -313,38 +307,18 @@
                             </label>
 
 
-                            <select
-                                name="client_id"
-                                id="client_id"
-                                class="form-control custom-select2 @error('client_id') is-invalid @enderror">
-
-                                <option value="">
-                                    Select Client
-                                </option>
-
-
-                                @foreach($clients as $client)
-
-                                    <option
-                                        value="{{ $client->id }}"
-                                        {{ (string) old(
-                                            'client_id',
-                                            $travelRequest->client_id
-                                        ) === (string) $client->id
-                                            ? 'selected'
-                                            : '' }}>
-
-                                        {{ $client->company_name }}
-                                        ({{ $client->client_code }})
-
-                                    </option>
-
-                                @endforeach
-
-                            </select>
+                            <input
+                                type="text"
+                                name="company_name"
+                                id="company_name"
+                                value="{{ old('company_name', $travelRequest->company_name) }}"
+                                class="form-control @error('company_name') is-invalid @enderror"
+                                placeholder="Enter Client / Company Name"
+                                maxlength="255"
+                            >
 
 
-                            @error('client_id')
+                            @error('company_name')
 
                                 <span class="invalid-feedback d-block">
 
@@ -360,12 +334,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Requested By --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -415,12 +386,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Employee Email --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -463,12 +431,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Travel ID --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -511,12 +476,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Trip ID --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -559,12 +521,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Vendor Name --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -607,12 +566,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Vehicle Type --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -663,12 +619,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Employee ID --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -711,12 +664,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Cost Center --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -759,15 +709,11 @@
 
                     </div>
 
-
                 </div>
-
-
 
                 {{-- ===================================================== --}}
                 {{-- PART 2 : TRAVEL DATES & LOCATION --}}
                 {{-- ===================================================== --}}
-
                 <div class="col-12 mt-4">
 
                     <h5 class="form-section-title">
@@ -782,14 +728,11 @@
 
                 </div>
 
-
                 <div class="row">
-
 
                     {{-- ================================================= --}}
                     {{-- Travel From Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -831,12 +774,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Travel To Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -878,12 +818,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Pickup Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -931,12 +868,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- From City --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -979,12 +913,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Pickup Location --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1033,12 +964,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Drop Location --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1068,7 +996,8 @@
                                     $travelRequest->drop_location
                                 ) }}"
                                 maxlength="255"
-                                placeholder="Enter Drop Location">
+                                placeholder="Enter Drop Location"
+                            >
 
 
                             @error('drop_location')
@@ -1087,12 +1016,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Release Location --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1116,7 +1042,8 @@
                                     $travelRequest->release_location
                                 ) }}"
                                 maxlength="255"
-                                placeholder="Enter Release Location">
+                                placeholder="Enter Release Location"
+                            >
 
 
                             @error('release_location')
@@ -1135,12 +1062,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Reporting Address --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -1181,12 +1105,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Release Address --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -1227,12 +1148,9 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
                     {{-- Release Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1280,15 +1198,11 @@
 
                     </div>
 
-
                 </div>
-
-
 
                 {{-- ===================================================== --}}
                 {{-- PART 3 : PASSENGER INFORMATION --}}
                 {{-- ===================================================== --}}
-
                 <div class="col-12 mt-4">
 
                     <h5 class="form-section-title">
@@ -1305,7 +1219,6 @@
 
 
                 <div class="row">
-
 
                     {{-- ================================================= --}}
                     {{-- Passenger Name --}}

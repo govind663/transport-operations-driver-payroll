@@ -19,9 +19,10 @@ class TravelRequest extends Model
     */
 
     protected $fillable = [
+
         // Request Information
         'request_no',
-        'client_id',
+        'company_name',
         'requested_by',
 
         // Employee / Travel Information
@@ -88,21 +89,26 @@ class TravelRequest extends Model
     */
 
     protected $casts = [
+
         'id' => 'integer',
 
-        'client_id' => 'integer',
+        'company_name' => 'string',
         'requested_by' => 'string',
+        'employee_email' => 'string',
+        'travel_id' => 'string',
+        'trip_id' => 'string',
+        'vendor_name' => 'string',
+        'vehicle_type' => 'string',
+
+        'travel_from_date' => 'date',
+        'travel_to_date' => 'date',
+        'travel_date_time' => 'datetime',
 
         'passenger_count' => 'integer',
 
         'created_by' => 'integer',
         'updated_by' => 'integer',
         'deleted_by' => 'integer',
-
-        'travel_from_date' => 'date',
-        'travel_to_date' => 'date',
-
-        'travel_date_time' => 'datetime',
     ];
 
     /*
@@ -130,19 +136,14 @@ class TravelRequest extends Model
     */
 
     /**
-     * Client associated with the travel request.
-     */
-    public function client()
-    {
-        return $this->belongsTo(Client::class, 'client_id');
-    }
-
-    /**
      * User who created the travel request.
      */
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(
+            User::class,
+            'created_by'
+        );
     }
 
     /**
@@ -150,7 +151,10 @@ class TravelRequest extends Model
      */
     public function updatedBy()
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(
+            User::class,
+            'updated_by'
+        );
     }
 
     /**
@@ -158,7 +162,10 @@ class TravelRequest extends Model
      */
     public function deletedBy()
     {
-        return $this->belongsTo(User::class, 'deleted_by');
+        return $this->belongsTo(
+            User::class,
+            'deleted_by'
+        );
     }
 
     /**
@@ -166,6 +173,9 @@ class TravelRequest extends Model
      */
     public function dutyAssignment()
     {
-        return $this->hasOne(DutyAssignment::class, 'travel_request_id');
+        return $this->hasOne(
+            DutyAssignment::class,
+            'travel_request_id'
+        );
     }
 }

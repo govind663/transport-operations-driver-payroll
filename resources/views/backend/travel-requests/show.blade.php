@@ -413,34 +413,23 @@
 
 
                 {{-- ================================================= --}}
-                {{-- Client --}}
+                {{-- Company Name --}}
                 {{-- ================================================= --}}
-
                 <div class="col-md-4">
 
                     <div class="detail-item">
 
                         <span class="detail-label">
-                            Client
+                            Company Name
                         </span>
 
                         <div class="detail-value">
 
-                            @if($travelRequest->client)
+                            @if($travelRequest->company_name)
 
                                 <strong>
-                                    {{ $travelRequest->client->company_name }}
+                                    {{ $travelRequest->company_name }}
                                 </strong>
-
-                                @if($travelRequest->client->client_code)
-
-                                    <small class="text-muted">
-
-                                        ({{ $travelRequest->client->client_code }})
-
-                                    </small>
-
-                                @endif
 
                             @else
 

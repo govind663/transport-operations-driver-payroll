@@ -29,11 +29,9 @@
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -74,8 +72,6 @@
             </div>
 
         </div>
-
-
 
         {{-- ========================================================= --}}
         {{-- TRAVEL REQUEST LIST CARD --}}
@@ -123,7 +119,7 @@
                             <th class="text-wrap">Sr. No.</th>
                             <th class="text-wrap">Request No.</th>
                             <th class="text-wrap">Request Date</th>
-                            <th class="text-wrap">Client/Company Name</th>
+                            <th class="text-wrap">Company Name</th>
                             <th class="text-wrap">Requested By</th>
                             <th class="text-wrap">Passenger Name</th>
                             <th class="text-wrap">Passenger Phone</th>
@@ -175,21 +171,16 @@
 
                                 </td>
 
-
-
+                                
                                 {{-- ========================================= --}}
-                                {{-- Client --}}
-                                {{-- ========================================= --}}
-
+                                {{-- Request Date --}}
                                 <td>
 
-                                    @if($travelRequest->client)
+                                    @if($travelRequest->travel_date_time)
 
-                                        <strong class="text-dark">
+                                        <strong>
 
-                                            {{ $travelRequest->client->name
-                                                ?? $travelRequest->client->client_name
-                                                ?? '-' }}
+                                            {{ $travelRequest->travel_date_time->format('d-m-Y') }}
 
                                         </strong>
 
@@ -201,8 +192,20 @@
 
                                 </td>
 
+                                
+                                {{-- ========================================= --}}
+                                {{-- Company Name --}}
+                                <td>
 
+                                    <strong class="text-dark">
 
+                                        {{ $travelRequest->company_name ?? '-' }}
+
+                                    </strong>
+
+                                </td>
+
+                                
                                 {{-- ========================================= --}}
                                 {{-- Requested By --}}
                                 {{-- ========================================= --}}

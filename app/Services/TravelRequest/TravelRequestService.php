@@ -16,8 +16,6 @@ class TravelRequestService
     */
 
     protected array $relations = [
-        'client',
-        'requestedBy',
         'createdBy',
         'updatedBy',
         'deletedBy',
@@ -77,12 +75,34 @@ class TravelRequestService
 
             /*
             |--------------------------------------------------------------------------
-            | Requested By
+            | Company Name
             |--------------------------------------------------------------------------
+            |
+            | company_name is a text field.
+            | No client_id / Client relation is used anymore.
+            |
             */
 
-            if (empty($data['requested_by'])) {
-                $data['requested_by'] = Auth::id();
+            if (isset($data['company_name'])) {
+                $data['company_name'] = $this->cleanText(
+                    $data['company_name']
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Requested By
+            |--------------------------------------------------------------------------
+            |
+            | requested_by is the external requester name/string.
+            | Do NOT replace it with Auth::id().
+            |
+            */
+
+            if (isset($data['requested_by'])) {
+                $data['requested_by'] = $this->cleanText(
+                    $data['requested_by']
+                );
             }
 
             /*
@@ -95,8 +115,12 @@ class TravelRequestService
             */
 
             if (empty($data['request_no'])) {
-                $data['request_no'] = $this->generateRequestNumber();
+
+                $data['request_no'] =
+                    $this->generateRequestNumber();
+
             } else {
+
                 $data['request_no'] = strtoupper(
                     trim($data['request_no'])
                 );
@@ -109,14 +133,14 @@ class TravelRequestService
             |
             | DB requires travel_date_time.
             |
-            | Reference form provides:
-            |
             | travel_from_date + pickup_time
             |
             | Example:
+            |
             | 2026-09-10 + 09:30
             |
             | becomes:
+            |
             | 2026-09-10 09:30:00
             |
             */
@@ -177,6 +201,30 @@ class TravelRequestService
 
             /*
             |--------------------------------------------------------------------------
+            | Company Name
+            |--------------------------------------------------------------------------
+            */
+
+            if (array_key_exists('company_name', $data)) {
+                $data['company_name'] = $this->cleanText(
+                    $data['company_name']
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Requested By
+            |--------------------------------------------------------------------------
+            */
+
+            if (array_key_exists('requested_by', $data)) {
+                $data['requested_by'] = $this->cleanText(
+                    $data['requested_by']
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | Request Number
             |--------------------------------------------------------------------------
             */
@@ -185,6 +233,7 @@ class TravelRequestService
                 isset($data['request_no']) &&
                 !empty($data['request_no'])
             ) {
+
                 $data['request_no'] = strtoupper(
                     trim($data['request_no'])
                 );
@@ -262,6 +311,7 @@ class TravelRequestService
     protected function generateRequestNumber(): string
     {
         do {
+
             $requestNo =
                 'TRV-' .
                 now()->format('Ymd') .
@@ -305,11 +355,25 @@ class TravelRequestService
             !empty($data['pickup_time'])
         ) {
 
+            $date = trim(
+                (string) $data['travel_from_date']
+            );
+
+            $time = trim(
+                (string) $data['pickup_time']
+            );
+
+            /*
+            | If time is H:i, add seconds.
+            | If time is already H:i:s, don't add again.
+            */
+
+            if (strlen($time) === 5) {
+                $time .= ':00';
+            }
+
             $data['travel_date_time'] =
-                $data['travel_from_date'] .
-                ' ' .
-                $data['pickup_time'] .
-                ':00';
+                $date . ' ' . $time;
 
             return;
         }
@@ -338,6 +402,7 @@ class TravelRequestService
             $travelRequest &&
             $travelRequest->travel_date_time
         ) {
+
             $data['travel_date_time'] =
                 $travelRequest->travel_date_time
                     ->format('Y-m-d H:i:s');
@@ -347,18 +412,16 @@ class TravelRequestService
 
         /*
         |--------------------------------------------------------------------------
-        | Final Fallback
+        | Fallback Using Travel From Date
         |--------------------------------------------------------------------------
-        |
-        | This prevents NOT NULL database errors.
-        |
         */
 
         if (!empty($data['travel_from_date'])) {
 
             $data['travel_date_time'] =
-                $data['travel_from_date'] .
-                ' 00:00:00';
+                trim(
+                    (string) $data['travel_from_date']
+                ) . ' 00:00:00';
 
             return;
         }
@@ -371,5 +434,26 @@ class TravelRequestService
 
         $data['travel_date_time'] =
             now()->format('Y-m-d H:i:s');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAN TEXT
+    |--------------------------------------------------------------------------
+    */
+
+    protected function cleanText(
+        mixed $value
+    ): ?string {
+
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === ''
+            ? null
+            : $value;
     }
 }

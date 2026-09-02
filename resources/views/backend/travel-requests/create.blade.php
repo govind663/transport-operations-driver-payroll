@@ -243,21 +243,18 @@
 
                     </div>
 
-
-
                     {{-- ================================================= --}}
-                    {{-- Client --}}
+                    {{-- Company Name --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label for="client_id">
+                            <label for="company_name">
 
                                 <b>
 
-                                    Client / Company Name
+                                    Company Name
 
                                     <span class="required-star">
                                         *
@@ -267,34 +264,17 @@
 
                             </label>
 
+                            <input
+                                type="text"
+                                name="company_name"
+                                id="company_name"
+                                value="{{ old('company_name') }}"
+                                class="form-control @error('company_name') is-invalid @enderror"
+                                placeholder="Enter Client / Company Name"
+                                maxlength="255"
+                            >
 
-                            <select
-                                name="client_id"
-                                id="client_id"
-                                class="form-control custom-select2 @error('client_id') is-invalid @enderror">
-
-                                <option value="">
-                                    Select Client / Company Name
-                                </option>
-
-
-                                @foreach($clients as $client)
-
-                                    <option
-                                        value="{{ $client->id }}"
-                                        {{ old('client_id') == $client->id ? 'selected' : '' }}>
-
-                                        {{ $client->company_name }}
-                                        ({{ $client->client_code }})
-
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-
-                            @error('client_id')
+                            @error('company_name')
 
                                 <span class="invalid-feedback d-block">
 
@@ -309,8 +289,6 @@
                         </div>
 
                     </div>
-
-
 
                     {{-- ================================================= --}}
                     {{-- Requested By --}}

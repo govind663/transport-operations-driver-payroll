@@ -53,10 +53,10 @@ class UpdateTravelRequestRequest extends FormRequest
                 )->ignore($travelRequestId),
             ],
 
-            'client_id' => [
+            'company_name' => [
                 'required',
-                'integer',
-                'exists:clients,id',
+                'string',
+                'max:255',
             ],
 
             'requested_by' => [
@@ -334,6 +334,14 @@ class UpdateTravelRequestRequest extends FormRequest
                 ? strtoupper(trim($this->request_no))
                 : null,
 
+            'company_name' => $this->filled('company_name')
+                ? $this->cleanText($this->company_name)
+                : null,
+
+            'requested_by' => $this->filled('requested_by')
+                ? $this->cleanText($this->requested_by)
+                : null,
+
             /*
             |--------------------------------------------------------------------------
             | Employee / Travel Information
@@ -515,7 +523,11 @@ class UpdateTravelRequestRequest extends FormRequest
             return null;
         }
 
-        return preg_replace('/\s+/', ' ', trim($value));
+        return preg_replace(
+            '/\s+/',
+            ' ',
+            trim($value)
+        );
     }
 
     /**
@@ -527,7 +539,11 @@ class UpdateTravelRequestRequest extends FormRequest
             return null;
         }
 
-        return preg_replace('/[^0-9+]/', '', trim($value));
+        return preg_replace(
+            '/[^0-9+]/',
+            '',
+            trim($value)
+        );
     }
 
     /**
@@ -536,6 +552,12 @@ class UpdateTravelRequestRequest extends FormRequest
     public function messages(): array
     {
         return [
+
+            /*
+            |--------------------------------------------------------------------------
+            | Request Information
+            |--------------------------------------------------------------------------
+            */
 
             'request_no.string' =>
                 'Request number must be valid text.',
@@ -546,20 +568,26 @@ class UpdateTravelRequestRequest extends FormRequest
             'request_no.unique' =>
                 'This travel request number already exists.',
 
-            'client_id.required' =>
-                'Please select a client.',
+            'company_name.required' =>
+                'Please enter the company name.',
 
-            'client_id.integer' =>
-                'Selected client is invalid.',
+            'company_name.string' =>
+                'Company name must be valid text.',
 
-            'client_id.exists' =>
-                'Selected client does not exist.',
+            'company_name.max' =>
+                'Company name may not exceed 255 characters.',
 
             'requested_by.string' =>
                 'Requested by must be valid text.',
 
             'requested_by.max' =>
                 'Requested by may not exceed 255 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employee / Travel
+            |--------------------------------------------------------------------------
+            */
 
             'employee_email.email' =>
                 'Please enter a valid employee email address.',
@@ -573,11 +601,23 @@ class UpdateTravelRequestRequest extends FormRequest
             'trip_id.max' =>
                 'Trip ID may not exceed 100 characters.',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Vendor / Vehicle
+            |--------------------------------------------------------------------------
+            */
+
             'vendor_name.max' =>
                 'Vendor name may not exceed 255 characters.',
 
             'vehicle_type.max' =>
                 'Vehicle type may not exceed 100 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Travel Date / Time
+            |--------------------------------------------------------------------------
+            */
 
             'travel_from_date.date' =>
                 'Please enter a valid travel from date.',
@@ -594,35 +634,14 @@ class UpdateTravelRequestRequest extends FormRequest
             'release_time.date_format' =>
                 'Release time must be in HH:MM format.',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Location
+            |--------------------------------------------------------------------------
+            */
+
             'from_city.max' =>
                 'From city may not exceed 255 characters.',
-
-            'passenger_name.required' =>
-                'Passenger name is required.',
-
-            'passenger_name.max' =>
-                'Passenger name may not exceed 255 characters.',
-
-            'passenger_phone.max' =>
-                'Passenger phone may not exceed 255 characters.',
-
-            'traveler_mobile.max' =>
-                'Traveler mobile may not exceed 20 characters.',
-
-            'employee_id.max' =>
-                'Employee ID may not exceed 100 characters.',
-
-            'cost_center.max' =>
-                'Cost center may not exceed 100 characters.',
-
-            'car_hire_type.max' =>
-                'Car hire type may not exceed 50 characters.',
-
-            'for_use.max' =>
-                'For use may not exceed 100 characters.',
-
-            'gst_number.max' =>
-                'GST number may not exceed 20 characters.',
 
             'pickup_location.required' =>
                 'Pickup location is required.',
@@ -639,6 +658,24 @@ class UpdateTravelRequestRequest extends FormRequest
             'release_location.max' =>
                 'Release location may not exceed 255 characters.',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Passenger
+            |--------------------------------------------------------------------------
+            */
+
+            'passenger_name.required' =>
+                'Passenger name is required.',
+
+            'passenger_name.max' =>
+                'Passenger name may not exceed 255 characters.',
+
+            'passenger_phone.max' =>
+                'Passenger phone may not exceed 255 characters.',
+
+            'traveler_mobile.max' =>
+                'Traveler mobile may not exceed 20 characters.',
+
             'passenger_count.required' =>
                 'Passenger count is required.',
 
@@ -651,8 +688,53 @@ class UpdateTravelRequestRequest extends FormRequest
             'passenger_count.max' =>
                 'Passenger count may not exceed 1000.',
 
+            /*
+            |--------------------------------------------------------------------------
+            | Employee Details
+            |--------------------------------------------------------------------------
+            */
+
+            'employee_id.max' =>
+                'Employee ID may not exceed 100 characters.',
+
+            'cost_center.max' =>
+                'Cost center may not exceed 100 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Car Hire / Usage
+            |--------------------------------------------------------------------------
+            */
+
+            'car_hire_type.max' =>
+                'Car hire type may not exceed 50 characters.',
+
+            'for_use.max' =>
+                'For use may not exceed 100 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | GST
+            |--------------------------------------------------------------------------
+            */
+
+            'gst_number.max' =>
+                'GST number may not exceed 20 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Travel Date Time
+            |--------------------------------------------------------------------------
+            */
+
             'travel_date_time.date' =>
                 'Please enter a valid travel date and time.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | Status
+            |--------------------------------------------------------------------------
+            */
 
             'status.required' =>
                 'Travel request status is required.',

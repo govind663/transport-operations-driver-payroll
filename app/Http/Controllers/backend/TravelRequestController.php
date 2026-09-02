@@ -5,7 +5,6 @@ namespace App\Http\Controllers\backend;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\TravelRequest\StoreTravelRequestRequest;
 use App\Http\Requests\Backend\TravelRequest\UpdateTravelRequestRequest;
-use App\Models\Client;
 use App\Models\TravelRequest;
 use App\Services\TravelRequest\TravelRequestService;
 use Illuminate\Http\RedirectResponse;
@@ -57,12 +56,7 @@ class TravelRequestController extends Controller
      */
     public function create(): View
     {
-        $clients = Client::query()
-            ->orderBy('client_code')
-            ->get();
-
-        return view('backend.travel-requests.create',
-            compact('clients')
+        return view('backend.travel-requests.create'
         );
     }
 
@@ -130,15 +124,8 @@ class TravelRequestController extends Controller
             $travelRequest->id
         );
 
-        $clients = Client::query()
-            ->orderBy('client_code')
-            ->get();
-
         return view('backend.travel-requests.edit',
-            compact(
-                'travelRequest',
-                'clients'
-            )
+            compact('travelRequest')
         );
     }
 
