@@ -80,9 +80,7 @@
         {{-- ========================================================= --}}
         {{-- TRAVEL REQUEST LIST CARD --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
-
 
             {{-- Card Header --}}
             <div class="pd-20">
@@ -99,7 +97,6 @@
                     <span class="badge badge-primary">
 
                         Total :
-
                         {{ $travelRequests->count() }}
 
                     </span>
@@ -108,12 +105,9 @@
 
             </div>
 
-
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
-
             <div class="pb-20">
 
                 <table
@@ -128,9 +122,10 @@
                         <tr>
                             <th class="text-wrap">Sr. No.</th>
                             <th class="text-wrap">Request No.</th>
-                            <th class="text-wrap">Client</th>
+                            <th class="text-wrap">Request Date</th>
+                            <th class="text-wrap">Client/Company Name</th>
                             <th class="text-wrap">Requested By</th>
-                            <th class="text-wrap">Passenger</th>
+                            <th class="text-wrap">Passenger Name</th>
                             <th class="text-wrap">Passenger Phone</th>
                             <th class="text-wrap">Pickup Location</th>
                             <th class="text-wrap">Drop Location</th>
@@ -138,6 +133,7 @@
                             <th class="text-wrap">Passengers</th>
                             <th class="text-wrap">Purpose</th>
                             <th class="text-wrap">Status</th>
+                            <th class="text-wrap no-export">View</th>
                             <th class="text-wrap no-export">Edit</th>
                             <th class="text-wrap no-export">Delete</th>
                         </tr>
@@ -458,10 +454,25 @@
 
                                 </td>
 
+                                
+                                {{-- ========================================= --}}
+                                {{-- View --}}
+                                {{-- ======================================== --}}
+                                <td class="no-export">
+                                    <a
+                                        href="{{ route(
+                                            'travel-requests.show',
+                                            $travelRequest->id
+                                        ) }}"
+                                        class="btn btn-info btn-sm">
+                                        <i class="dw dw-eye"></i>
+                                        View
+                                    </a>
+                                </td>
+
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}
                                 {{-- ========================================= --}}
-
                                 <td class="no-export">
 
                                     <a
@@ -479,12 +490,9 @@
 
                                 </td>
 
-
-
                                 {{-- ========================================= --}}
                                 {{-- Delete --}}
                                 {{-- ========================================= --}}
-
                                 <td class="no-export">
 
                                     <form

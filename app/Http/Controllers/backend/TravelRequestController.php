@@ -38,8 +38,8 @@ class TravelRequestController extends Controller
      */
     public function index(): View
     {
-        $travelRequests =
-            $this->travelRequestService->getTravelRequests();
+        $travelRequests = $this->travelRequestService
+            ->getTravelRequests();
 
         return view('backend.travel-requests.index',
             compact('travelRequests')
@@ -79,7 +79,7 @@ class TravelRequestController extends Controller
         StoreTravelRequestRequest $request
     ): RedirectResponse {
 
-        $this->travelRequestService->store(
+        $travelRequest = $this->travelRequestService->store(
             $request->validated()
         );
 
@@ -87,7 +87,7 @@ class TravelRequestController extends Controller
             ->route('travel-requests.index')
             ->with(
                 'success',
-                'Travel request created successfully.'
+                "Travel request {$travelRequest->request_no} created successfully."
             );
     }
 
@@ -104,10 +104,9 @@ class TravelRequestController extends Controller
         TravelRequest $travelRequest
     ): View {
 
-        $travelRequest =
-            $this->travelRequestService->findById(
-                $travelRequest->id
-            );
+        $travelRequest = $this->travelRequestService->findById(
+            $travelRequest->id
+        );
 
         return view('backend.travel-requests.show',
             compact('travelRequest')
@@ -127,10 +126,9 @@ class TravelRequestController extends Controller
         TravelRequest $travelRequest
     ): View {
 
-        $travelRequest =
-            $this->travelRequestService->findById(
-                $travelRequest->id
-            );
+        $travelRequest = $this->travelRequestService->findById(
+            $travelRequest->id
+        );
 
         $clients = Client::query()
             ->orderBy('client_code')
@@ -158,7 +156,7 @@ class TravelRequestController extends Controller
         TravelRequest $travelRequest
     ): RedirectResponse {
 
-        $this->travelRequestService->update(
+        $travelRequest = $this->travelRequestService->update(
             $travelRequest,
             $request->validated()
         );
@@ -167,7 +165,7 @@ class TravelRequestController extends Controller
             ->route('travel-requests.index')
             ->with(
                 'success',
-                'Travel request updated successfully.'
+                "Travel request {$travelRequest->request_no} updated successfully."
             );
     }
 
@@ -178,11 +176,13 @@ class TravelRequestController extends Controller
     */
 
     /**
-     * Remove the specified travel request.
+     * Soft delete the specified travel request.
      */
     public function destroy(
         TravelRequest $travelRequest
     ): RedirectResponse {
+
+        $requestNo = $travelRequest->request_no;
 
         $this->travelRequestService->delete(
             $travelRequest
@@ -192,7 +192,7 @@ class TravelRequestController extends Controller
             ->route('travel-requests.index')
             ->with(
                 'success',
-                'Travel request deleted successfully.'
+                "Travel request {$requestNo} deleted successfully."
             );
     }
 }

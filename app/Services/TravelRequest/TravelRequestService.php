@@ -11,6 +11,21 @@ class TravelRequestService
 {
     /*
     |--------------------------------------------------------------------------
+    | Eager Loaded Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    protected array $relations = [
+        'client',
+        'requestedBy',
+        'createdBy',
+        'updatedBy',
+        'deletedBy',
+        'dutyAssignment',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
     | GET TRAVEL REQUESTS
     |--------------------------------------------------------------------------
     */
@@ -20,13 +35,7 @@ class TravelRequestService
     ): LengthAwarePaginator {
 
         return TravelRequest::query()
-            ->with([
-                'client',
-                'requestedBy',
-                'createdBy',
-                'updatedBy',
-                'dutyAssignment',
-            ])
+            ->with($this->relations)
             ->latest('id')
             ->paginate($perPage);
     }
@@ -42,13 +51,7 @@ class TravelRequestService
     ): TravelRequest {
 
         return TravelRequest::query()
-            ->with([
-                'client',
-                'requestedBy',
-                'createdBy',
-                'updatedBy',
-                'dutyAssignment',
-            ])
+            ->with($this->relations)
             ->findOrFail($id);
     }
 
@@ -64,6 +67,12 @@ class TravelRequestService
 
         return DB::transaction(function () use ($data) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Created By
+            |--------------------------------------------------------------------------
+            */
+
             $data['created_by'] = Auth::id();
 
             /*
@@ -78,7 +87,45 @@ class TravelRequestService
 
             /*
             |--------------------------------------------------------------------------
-            | Status
+            | Request Number
+            |--------------------------------------------------------------------------
+            |
+            | Generate automatically when request_no is not provided.
+            |
+            */
+
+            if (empty($data['request_no'])) {
+                $data['request_no'] = $this->generateRequestNumber();
+            } else {
+                $data['request_no'] = strtoupper(
+                    trim($data['request_no'])
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Travel Date & Time
+            |--------------------------------------------------------------------------
+            |
+            | DB requires travel_date_time.
+            |
+            | Reference form provides:
+            |
+            | travel_from_date + pickup_time
+            |
+            | Example:
+            | 2026-09-10 + 09:30
+            |
+            | becomes:
+            | 2026-09-10 09:30:00
+            |
+            */
+
+            $this->prepareTravelDateTime($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Default Status
             |--------------------------------------------------------------------------
             */
 
@@ -86,7 +133,21 @@ class TravelRequestService
                 $data['status']
                 ?? TravelRequest::STATUS_PENDING;
 
-            return TravelRequest::create($data);
+            /*
+            |--------------------------------------------------------------------------
+            | Create Travel Request
+            |--------------------------------------------------------------------------
+            */
+
+            $travelRequest = TravelRequest::create($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Fresh Model With Relationships
+            |--------------------------------------------------------------------------
+            */
+
+            return $travelRequest->fresh($this->relations);
         });
     }
 
@@ -106,17 +167,55 @@ class TravelRequestService
             $data
         ) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Updated By
+            |--------------------------------------------------------------------------
+            */
+
             $data['updated_by'] = Auth::id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Request Number
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                isset($data['request_no']) &&
+                !empty($data['request_no'])
+            ) {
+                $data['request_no'] = strtoupper(
+                    trim($data['request_no'])
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Travel Date & Time
+            |--------------------------------------------------------------------------
+            */
+
+            $this->prepareTravelDateTime(
+                $data,
+                $travelRequest
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update
+            |--------------------------------------------------------------------------
+            */
 
             $travelRequest->update($data);
 
-            return $travelRequest->fresh([
-                'client',
-                'requestedBy',
-                'createdBy',
-                'updatedBy',
-                'dutyAssignment',
-            ]);
+            /*
+            |--------------------------------------------------------------------------
+            | Return Fresh Model
+            |--------------------------------------------------------------------------
+            */
+
+            return $travelRequest->fresh($this->relations);
         });
     }
 
@@ -134,11 +233,143 @@ class TravelRequestService
             $travelRequest
         ) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Deleted By
+            |--------------------------------------------------------------------------
+            */
+
             $travelRequest->deleted_by = Auth::id();
 
             $travelRequest->save();
 
+            /*
+            |--------------------------------------------------------------------------
+            | Soft Delete
+            |--------------------------------------------------------------------------
+            */
+
             return $travelRequest->delete();
         });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE REQUEST NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function generateRequestNumber(): string
+    {
+        do {
+            $requestNo =
+                'TRV-' .
+                now()->format('Ymd') .
+                '-' .
+                strtoupper(
+                    substr(
+                        bin2hex(random_bytes(4)),
+                        0,
+                        6
+                    )
+                );
+
+        } while (
+            TravelRequest::withTrashed()
+                ->where('request_no', $requestNo)
+                ->exists()
+        );
+
+        return $requestNo;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREPARE TRAVEL DATE & TIME
+    |--------------------------------------------------------------------------
+    */
+
+    protected function prepareTravelDateTime(
+        array &$data,
+        ?TravelRequest $travelRequest = null
+    ): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | From Date + Pickup Time
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !empty($data['travel_from_date']) &&
+            !empty($data['pickup_time'])
+        ) {
+
+            $data['travel_date_time'] =
+                $data['travel_from_date'] .
+                ' ' .
+                $data['pickup_time'] .
+                ':00';
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing travel_date_time Supplied
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($data['travel_date_time'])) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Case
+        |--------------------------------------------------------------------------
+        |
+        | If user edits the request without changing date/time,
+        | preserve existing travel_date_time.
+        |
+        */
+
+        if (
+            $travelRequest &&
+            $travelRequest->travel_date_time
+        ) {
+            $data['travel_date_time'] =
+                $travelRequest->travel_date_time
+                    ->format('Y-m-d H:i:s');
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Final Fallback
+        |--------------------------------------------------------------------------
+        |
+        | This prevents NOT NULL database errors.
+        |
+        */
+
+        if (!empty($data['travel_from_date'])) {
+
+            $data['travel_date_time'] =
+                $data['travel_from_date'] .
+                ' 00:00:00';
+
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Last Fallback
+        |--------------------------------------------------------------------------
+        */
+
+        $data['travel_date_time'] =
+            now()->format('Y-m-d H:i:s');
     }
 }

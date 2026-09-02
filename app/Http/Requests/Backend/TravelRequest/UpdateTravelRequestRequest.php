@@ -39,25 +39,19 @@ class UpdateTravelRequestRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Request Number
+            | Request Information
             |--------------------------------------------------------------------------
             */
 
             'request_no' => [
                 'nullable',
                 'string',
-                'max:100',
+                'max:255',
                 Rule::unique(
                     'travel_requests',
                     'request_no'
                 )->ignore($travelRequestId),
             ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Client
-            |--------------------------------------------------------------------------
-            */
 
             'client_id' => [
                 'required',
@@ -65,47 +59,92 @@ class UpdateTravelRequestRequest extends FormRequest
                 'exists:clients,id',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Requested By
-            |--------------------------------------------------------------------------
-            */
-
             'requested_by' => [
                 'nullable',
-                'integer',
-                'exists:users,id',
-            ],
-
-            /*
-            |--------------------------------------------------------------------------
-            | Passenger Name
-            |--------------------------------------------------------------------------
-            */
-
-            'passenger_name' => [
-                'required',
                 'string',
-                'max:150',
+                'max:255',
             ],
 
             /*
             |--------------------------------------------------------------------------
-            | Passenger Phone
+            | Employee / Travel Information
             |--------------------------------------------------------------------------
             */
 
-            'passenger_phone' => [
-                'required',
+            'employee_email' => [
+                'nullable',
+                'email',
+                'max:255',
+            ],
+
+            'travel_id' => [
+                'nullable',
                 'string',
-                'max:20',
+                'max:100',
+            ],
+
+            'trip_id' => [
+                'nullable',
+                'string',
+                'max:100',
             ],
 
             /*
             |--------------------------------------------------------------------------
-            | Pickup Location
+            | Vendor / Vehicle
             |--------------------------------------------------------------------------
             */
+
+            'vendor_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'vehicle_type' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Travel Date / Time
+            |--------------------------------------------------------------------------
+            */
+
+            'travel_from_date' => [
+                'nullable',
+                'date',
+            ],
+
+            'travel_to_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:travel_from_date',
+            ],
+
+            'pickup_time' => [
+                'nullable',
+                'date_format:H:i',
+            ],
+
+            'release_time' => [
+                'nullable',
+                'date_format:H:i',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Location
+            |--------------------------------------------------------------------------
+            */
+
+            'from_city' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
             'pickup_location' => [
                 'required',
@@ -113,34 +152,57 @@ class UpdateTravelRequestRequest extends FormRequest
                 'max:255',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Drop Location
-            |--------------------------------------------------------------------------
-            */
-
             'drop_location' => [
                 'required',
                 'string',
                 'max:255',
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | Travel Date & Time
-            |--------------------------------------------------------------------------
-            */
-
-            'travel_date_time' => [
-                'required',
-                'date',
+            'release_location' => [
+                'nullable',
+                'string',
+                'max:255',
             ],
 
             /*
             |--------------------------------------------------------------------------
-            | Passenger Count
+            | Address
             |--------------------------------------------------------------------------
             */
+
+            'reporting_address' => [
+                'nullable',
+                'string',
+            ],
+
+            'release_address' => [
+                'nullable',
+                'string',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Passenger Information
+            |--------------------------------------------------------------------------
+            */
+
+            'passenger_name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'passenger_phone' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'traveler_mobile' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
 
             'passenger_count' => [
                 'required',
@@ -151,14 +213,77 @@ class UpdateTravelRequestRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Purpose
+            | Employee Details
+            |--------------------------------------------------------------------------
+            */
+
+            'employee_id' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'cost_center' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Car Hire / Usage
+            |--------------------------------------------------------------------------
+            */
+
+            'car_hire_type' => [
+                'nullable',
+                'string',
+                'max:50',
+            ],
+
+            'for_use' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | GST
+            |--------------------------------------------------------------------------
+            */
+
+            'gst_number' => [
+                'nullable',
+                'string',
+                'max:20',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Travel Date Time
+            |--------------------------------------------------------------------------
+            */
+
+            'travel_date_time' => [
+                'nullable',
+                'date',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purpose / Instructions
             |--------------------------------------------------------------------------
             */
 
             'purpose' => [
                 'nullable',
                 'string',
-                'max:500',
+            ],
+
+            'specific_instruction' => [
+                'nullable',
+                'string',
             ],
 
             /*
@@ -188,7 +313,6 @@ class UpdateTravelRequestRequest extends FormRequest
             'remarks' => [
                 'nullable',
                 'string',
-                'max:2000',
             ],
         ];
     }
@@ -202,7 +326,7 @@ class UpdateTravelRequestRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Request Number
+            | Request Information
             |--------------------------------------------------------------------------
             */
 
@@ -212,72 +336,162 @@ class UpdateTravelRequestRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Passenger Name
+            | Employee / Travel Information
             |--------------------------------------------------------------------------
             */
 
-            'passenger_name' => $this->filled('passenger_name')
-                ? preg_replace(
-                    '/\s+/',
-                    ' ',
-                    trim($this->passenger_name)
-                )
+            'employee_email' => $this->filled('employee_email')
+                ? strtolower(trim($this->employee_email))
+                : null,
+
+            'travel_id' => $this->filled('travel_id')
+                ? trim($this->travel_id)
+                : null,
+
+            'trip_id' => $this->filled('trip_id')
+                ? trim($this->trip_id)
                 : null,
 
             /*
             |--------------------------------------------------------------------------
-            | Passenger Phone
+            | Vendor / Vehicle
             |--------------------------------------------------------------------------
             */
 
-            'passenger_phone' => $this->filled('passenger_phone')
-                ? preg_replace(
-                    '/[^0-9+]/',
-                    '',
-                    $this->passenger_phone
-                )
+            'vendor_name' => $this->filled('vendor_name')
+                ? $this->cleanText($this->vendor_name)
+                : null,
+
+            'vehicle_type' => $this->filled('vehicle_type')
+                ? $this->cleanText($this->vehicle_type)
                 : null,
 
             /*
             |--------------------------------------------------------------------------
-            | Pickup Location
+            | Travel Information
+            |--------------------------------------------------------------------------
+            */
+
+            'travel_from_date' => $this->filled('travel_from_date')
+                ? trim($this->travel_from_date)
+                : null,
+
+            'travel_to_date' => $this->filled('travel_to_date')
+                ? trim($this->travel_to_date)
+                : null,
+
+            'pickup_time' => $this->filled('pickup_time')
+                ? trim($this->pickup_time)
+                : null,
+
+            'release_time' => $this->filled('release_time')
+                ? trim($this->release_time)
+                : null,
+
+            'from_city' => $this->filled('from_city')
+                ? $this->cleanText($this->from_city)
+                : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Locations
             |--------------------------------------------------------------------------
             */
 
             'pickup_location' => $this->filled('pickup_location')
-                ? preg_replace(
-                    '/\s+/',
-                    ' ',
-                    trim($this->pickup_location)
-                )
+                ? $this->cleanText($this->pickup_location)
+                : null,
+
+            'drop_location' => $this->filled('drop_location')
+                ? $this->cleanText($this->drop_location)
+                : null,
+
+            'release_location' => $this->filled('release_location')
+                ? $this->cleanText($this->release_location)
                 : null,
 
             /*
             |--------------------------------------------------------------------------
-            | Drop Location
+            | Addresses
             |--------------------------------------------------------------------------
             */
 
-            'drop_location' => $this->filled('drop_location')
-                ? preg_replace(
-                    '/\s+/',
-                    ' ',
-                    trim($this->drop_location)
-                )
+            'reporting_address' => $this->filled('reporting_address')
+                ? trim($this->reporting_address)
+                : null,
+
+            'release_address' => $this->filled('release_address')
+                ? trim($this->release_address)
                 : null,
 
             /*
             |--------------------------------------------------------------------------
-            | Purpose
+            | Passenger
+            |--------------------------------------------------------------------------
+            */
+
+            'passenger_name' => $this->filled('passenger_name')
+                ? $this->cleanText($this->passenger_name)
+                : null,
+
+            'passenger_phone' => $this->filled('passenger_phone')
+                ? $this->cleanPhone($this->passenger_phone)
+                : null,
+
+            'traveler_mobile' => $this->filled('traveler_mobile')
+                ? $this->cleanPhone($this->traveler_mobile)
+                : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employee
+            |--------------------------------------------------------------------------
+            */
+
+            'employee_id' => $this->filled('employee_id')
+                ? trim($this->employee_id)
+                : null,
+
+            'cost_center' => $this->filled('cost_center')
+                ? trim($this->cost_center)
+                : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Car Hire / Usage
+            |--------------------------------------------------------------------------
+            */
+
+            'car_hire_type' => $this->filled('car_hire_type')
+                ? trim($this->car_hire_type)
+                : null,
+
+            'for_use' => $this->filled('for_use')
+                ? trim($this->for_use)
+                : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | GST
+            |--------------------------------------------------------------------------
+            */
+
+            'gst_number' => $this->filled('gst_number')
+                ? strtoupper(trim($this->gst_number))
+                : null,
+
+            /*
+            |--------------------------------------------------------------------------
+            | Purpose / Instructions
             |--------------------------------------------------------------------------
             */
 
             'purpose' => $this->filled('purpose')
-                ? preg_replace(
-                    '/\s+/',
-                    ' ',
-                    trim($this->purpose)
-                )
+                ? trim($this->purpose)
+                : null,
+
+            'specific_instruction' => $this->filled('specific_instruction')
+                ? trim($this->specific_instruction)
                 : null,
 
             /*
@@ -293,32 +507,44 @@ class UpdateTravelRequestRequest extends FormRequest
     }
 
     /**
+     * Clean normal text fields.
+     */
+    private function cleanText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return preg_replace('/\s+/', ' ', trim($value));
+    }
+
+    /**
+     * Clean phone number.
+     */
+    private function cleanPhone(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return preg_replace('/[^0-9+]/', '', trim($value));
+    }
+
+    /**
      * Custom validation messages.
      */
     public function messages(): array
     {
         return [
 
-            /*
-            |--------------------------------------------------------------------------
-            | Request Number
-            |--------------------------------------------------------------------------
-            */
-
             'request_no.string' =>
                 'Request number must be valid text.',
 
             'request_no.max' =>
-                'Request number may not exceed 100 characters.',
+                'Request number may not exceed 255 characters.',
 
             'request_no.unique' =>
                 'This travel request number already exists.',
-
-            /*
-            |--------------------------------------------------------------------------
-            | Client
-            |--------------------------------------------------------------------------
-            */
 
             'client_id.required' =>
                 'Please select a client.',
@@ -329,53 +555,77 @@ class UpdateTravelRequestRequest extends FormRequest
             'client_id.exists' =>
                 'Selected client does not exist.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Requested By
-            |--------------------------------------------------------------------------
-            */
+            'requested_by.string' =>
+                'Requested by must be valid text.',
 
-            'requested_by.integer' =>
-                'Selected requester is invalid.',
+            'requested_by.max' =>
+                'Requested by may not exceed 255 characters.',
 
-            'requested_by.exists' =>
-                'Selected requester does not exist.',
+            'employee_email.email' =>
+                'Please enter a valid employee email address.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Passenger
-            |--------------------------------------------------------------------------
-            */
+            'employee_email.max' =>
+                'Employee email may not exceed 255 characters.',
+
+            'travel_id.max' =>
+                'Travel ID may not exceed 100 characters.',
+
+            'trip_id.max' =>
+                'Trip ID may not exceed 100 characters.',
+
+            'vendor_name.max' =>
+                'Vendor name may not exceed 255 characters.',
+
+            'vehicle_type.max' =>
+                'Vehicle type may not exceed 100 characters.',
+
+            'travel_from_date.date' =>
+                'Please enter a valid travel from date.',
+
+            'travel_to_date.date' =>
+                'Please enter a valid travel to date.',
+
+            'travel_to_date.after_or_equal' =>
+                'Travel to date must be equal to or after the travel from date.',
+
+            'pickup_time.date_format' =>
+                'Pickup time must be in HH:MM format.',
+
+            'release_time.date_format' =>
+                'Release time must be in HH:MM format.',
+
+            'from_city.max' =>
+                'From city may not exceed 255 characters.',
 
             'passenger_name.required' =>
                 'Passenger name is required.',
 
-            'passenger_name.string' =>
-                'Passenger name must be valid text.',
-
             'passenger_name.max' =>
-                'Passenger name may not exceed 150 characters.',
-
-            'passenger_phone.required' =>
-                'Passenger phone number is required.',
-
-            'passenger_phone.string' =>
-                'Passenger phone number must be valid.',
+                'Passenger name may not exceed 255 characters.',
 
             'passenger_phone.max' =>
-                'Passenger phone number may not exceed 20 characters.',
+                'Passenger phone may not exceed 255 characters.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Locations
-            |--------------------------------------------------------------------------
-            */
+            'traveler_mobile.max' =>
+                'Traveler mobile may not exceed 20 characters.',
+
+            'employee_id.max' =>
+                'Employee ID may not exceed 100 characters.',
+
+            'cost_center.max' =>
+                'Cost center may not exceed 100 characters.',
+
+            'car_hire_type.max' =>
+                'Car hire type may not exceed 50 characters.',
+
+            'for_use.max' =>
+                'For use may not exceed 100 characters.',
+
+            'gst_number.max' =>
+                'GST number may not exceed 20 characters.',
 
             'pickup_location.required' =>
                 'Pickup location is required.',
-
-            'pickup_location.string' =>
-                'Pickup location must be valid text.',
 
             'pickup_location.max' =>
                 'Pickup location may not exceed 255 characters.',
@@ -383,29 +633,11 @@ class UpdateTravelRequestRequest extends FormRequest
             'drop_location.required' =>
                 'Drop location is required.',
 
-            'drop_location.string' =>
-                'Drop location must be valid text.',
-
             'drop_location.max' =>
                 'Drop location may not exceed 255 characters.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Travel Date & Time
-            |--------------------------------------------------------------------------
-            */
-
-            'travel_date_time.required' =>
-                'Travel date and time is required.',
-
-            'travel_date_time.date' =>
-                'Please enter a valid travel date and time.',
-
-            /*
-            |--------------------------------------------------------------------------
-            | Passenger Count
-            |--------------------------------------------------------------------------
-            */
+            'release_location.max' =>
+                'Release location may not exceed 255 characters.',
 
             'passenger_count.required' =>
                 'Passenger count is required.',
@@ -419,41 +651,14 @@ class UpdateTravelRequestRequest extends FormRequest
             'passenger_count.max' =>
                 'Passenger count may not exceed 1000.',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Purpose
-            |--------------------------------------------------------------------------
-            */
-
-            'purpose.string' =>
-                'Purpose must be valid text.',
-
-            'purpose.max' =>
-                'Purpose may not exceed 500 characters.',
-
-            /*
-            |--------------------------------------------------------------------------
-            | Status
-            |--------------------------------------------------------------------------
-            */
+            'travel_date_time.date' =>
+                'Please enter a valid travel date and time.',
 
             'status.required' =>
                 'Travel request status is required.',
 
             'status.in' =>
                 'Selected travel request status is invalid.',
-
-            /*
-            |--------------------------------------------------------------------------
-            | Remarks
-            |--------------------------------------------------------------------------
-            */
-
-            'remarks.string' =>
-                'Remarks must be valid text.',
-
-            'remarks.max' =>
-                'Remarks may not exceed 2000 characters.',
         ];
     }
 }

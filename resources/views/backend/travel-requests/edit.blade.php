@@ -10,14 +10,25 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Section Heading
+    | Form Section
     |--------------------------------------------------------------------------
     */
 
     .form-section-title {
-        color: #023a85;
-        font-weight: 700;
-        font-size: 17px;
+        color: #023a85 !important;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Required Star
+    |--------------------------------------------------------------------------
+    */
+
+    .required-star {
+        color: #dc3545;
     }
 
 
@@ -28,29 +39,41 @@
     */
 
     .form-group label {
-        font-weight: 600;
+        margin-bottom: 6px;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Required
+    | Card
     |--------------------------------------------------------------------------
     */
 
-    .required {
-        color: #dc3545;
+    .card-box {
+        border-radius: 4px;
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Status Badge
+    | Textarea
     |--------------------------------------------------------------------------
     */
 
-    .status-preview {
-        margin-top: 8px;
+    textarea.form-control {
+        resize: vertical;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Readonly Field
+    |--------------------------------------------------------------------------
+    */
+
+    .readonly-field {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
     }
 
 </style>
@@ -83,6 +106,9 @@
 
                     </div>
 
+
+                    {{-- Breadcrumb --}}
+
                     <nav aria-label="breadcrumb">
 
                         <ol class="breadcrumb">
@@ -95,6 +121,7 @@
 
                             </li>
 
+
                             <li class="breadcrumb-item">
 
                                 <a href="{{ route('travel-requests.index') }}">
@@ -102,6 +129,7 @@
                                 </a>
 
                             </li>
+
 
                             <li class="breadcrumb-item active">
 
@@ -117,6 +145,7 @@
 
 
                 {{-- Request Number --}}
+
                 <div class="col-md-4 col-sm-12 text-right">
 
                     <span class="badge badge-primary px-3 py-2">
@@ -172,7 +201,8 @@
                 'travel-requests.update',
                 $travelRequest->id
             ) }}"
-            method="POST">
+            method="POST"
+            id="travelRequestForm">
 
             @csrf
 
@@ -182,17 +212,17 @@
             <div class="card-box pd-20 mb-30">
 
 
-                {{-- ================================================= --}}
-                {{-- TRAVEL REQUEST INFORMATION --}}
-                {{-- ================================================= --}}
+                {{-- ===================================================== --}}
+                {{-- PART 1 : REQUEST INFORMATION --}}
+                {{-- ===================================================== --}}
 
                 <div class="mb-4">
 
                     <h5 class="form-section-title">
 
-                        <i class="fa fa-plane mr-2"></i>
-
-                        Travel Request Information
+                        <b>
+                            1. Travel Request Information
+                        </b>
 
                     </h5>
 
@@ -205,22 +235,21 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- REQUEST NUMBER --}}
+                    {{-- Request Number --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="request_no">
 
-                                Request Number
-
-                                <span class="required">
-                                    *
-                                </span>
+                                <b>
+                                    Request Number
+                                </b>
 
                             </label>
+
 
                             <input
                                 type="text"
@@ -231,7 +260,17 @@
                                     'request_no',
                                     $travelRequest->request_no
                                 ) }}"
+                                maxlength="255"
                                 placeholder="Enter Request Number">
+
+
+                            <small class="text-muted">
+
+                                Example:
+                                TRV-20260902-ABC123
+
+                            </small>
+
 
                             @error('request_no')
 
@@ -252,22 +291,27 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- CLIENT --}}
+                    {{-- Client --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="client_id">
 
-                                Client
+                                <b>
 
-                                <span class="required">
-                                    *
-                                </span>
+                                    Client / Company Name
+
+                                    <span class="required-star">
+                                        *
+                                    </span>
+
+                                </b>
 
                             </label>
+
 
                             <select
                                 name="client_id"
@@ -277,6 +321,7 @@
                                 <option value="">
                                     Select Client
                                 </option>
+
 
                                 @foreach($clients as $client)
 
@@ -289,13 +334,15 @@
                                             ? 'selected'
                                             : '' }}>
 
-                                        {{ $client->company_name }} ({{ $client->client_code }})
+                                        {{ $client->company_name }}
+                                        ({{ $client->client_code }})
 
                                     </option>
 
                                 @endforeach
 
                             </select>
+
 
                             @error('client_id')
 
@@ -316,35 +363,43 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- TRAVEL DATE --}}
+                    {{-- Requested By --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="requested_by">
 
-                                Travel Date
-
-                                <span class="required">
-                                    *
-                                </span>
+                                <b>
+                                    Requested By
+                                </b>
 
                             </label>
 
-                            <input
-                                type="date"
-                                name="travel_date"
-                                id="travel_date"
-                                class="form-control @error('travel_date') is-invalid @enderror"
-                                value="{{ old(
-                                    'travel_date',
-                                    optional($travelRequest->travel_date)
-                                        ->format('Y-m-d')
-                                ) }}">
 
-                            @error('travel_date')
+                            <input
+                                type="text"
+                                name="requested_by"
+                                id="requested_by"
+                                class="form-control @error('requested_by') is-invalid @enderror"
+                                value="{{ old(
+                                    'requested_by',
+                                    $travelRequest->requested_by
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter Requester Name">
+
+
+                            <small class="text-muted">
+
+                                Example: John Doe
+
+                            </small>
+
+
+                            @error('requested_by')
 
                                 <span class="invalid-feedback d-block">
 
@@ -363,22 +418,591 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- PICKUP LOCATION --}}
+                    {{-- Employee Email --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="employee_email">
 
-                                Pickup Location
-
-                                <span class="required">
-                                    *
-                                </span>
+                                <b>
+                                    Employee Email
+                                </b>
 
                             </label>
+
+
+                            <input
+                                type="email"
+                                name="employee_email"
+                                id="employee_email"
+                                class="form-control @error('employee_email') is-invalid @enderror"
+                                value="{{ old(
+                                    'employee_email',
+                                    $travelRequest->employee_email
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter Employee Email">
+
+
+                            @error('employee_email')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Travel ID --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="travel_id">
+
+                                <b>
+                                    Travel ID
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="travel_id"
+                                id="travel_id"
+                                class="form-control @error('travel_id') is-invalid @enderror"
+                                value="{{ old(
+                                    'travel_id',
+                                    $travelRequest->travel_id
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Travel ID">
+
+
+                            @error('travel_id')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Trip ID --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="trip_id">
+
+                                <b>
+                                    Trip ID
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="trip_id"
+                                id="trip_id"
+                                class="form-control @error('trip_id') is-invalid @enderror"
+                                value="{{ old(
+                                    'trip_id',
+                                    $travelRequest->trip_id
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Trip ID">
+
+
+                            @error('trip_id')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Vendor Name --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="vendor_name">
+
+                                <b>
+                                    Vendor Name
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="vendor_name"
+                                id="vendor_name"
+                                class="form-control @error('vendor_name') is-invalid @enderror"
+                                value="{{ old(
+                                    'vendor_name',
+                                    $travelRequest->vendor_name
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter Vendor Name">
+
+
+                            @error('vendor_name')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Vehicle Type --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="vehicle_type">
+
+                                <b>
+                                    Vehicle Type
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="vehicle_type"
+                                id="vehicle_type"
+                                class="form-control @error('vehicle_type') is-invalid @enderror"
+                                value="{{ old(
+                                    'vehicle_type',
+                                    $travelRequest->vehicle_type
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Vehicle Type">
+
+
+                            <small class="text-muted">
+
+                                Example:
+                                Sedan, SUV, Innova, Bus
+
+                            </small>
+
+
+                            @error('vehicle_type')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Employee ID --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="employee_id">
+
+                                <b>
+                                    Employee ID
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="employee_id"
+                                id="employee_id"
+                                class="form-control @error('employee_id') is-invalid @enderror"
+                                value="{{ old(
+                                    'employee_id',
+                                    $travelRequest->employee_id
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Employee ID">
+
+
+                            @error('employee_id')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Cost Center --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="cost_center">
+
+                                <b>
+                                    Cost Center
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="cost_center"
+                                id="cost_center"
+                                class="form-control @error('cost_center') is-invalid @enderror"
+                                value="{{ old(
+                                    'cost_center',
+                                    $travelRequest->cost_center
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Cost Center">
+
+
+                            @error('cost_center')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                {{-- ===================================================== --}}
+                {{-- PART 2 : TRAVEL DATES & LOCATION --}}
+                {{-- ===================================================== --}}
+
+                <div class="col-12 mt-4">
+
+                    <h5 class="form-section-title">
+
+                        <b>
+                            2. Travel Dates &amp; Location
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+
+                <div class="row">
+
+
+                    {{-- ================================================= --}}
+                    {{-- Travel From Date --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="travel_from_date">
+
+                                <b>
+                                    From Date
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="date"
+                                name="travel_from_date"
+                                id="travel_from_date"
+                                class="form-control @error('travel_from_date') is-invalid @enderror"
+                                value="{{ old(
+                                    'travel_from_date',
+                                    optional($travelRequest->travel_from_date)
+                                        ->format('Y-m-d')
+                                ) }}">
+
+
+                            @error('travel_from_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Travel To Date --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="travel_to_date">
+
+                                <b>
+                                    To Date
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="date"
+                                name="travel_to_date"
+                                id="travel_to_date"
+                                class="form-control @error('travel_to_date') is-invalid @enderror"
+                                value="{{ old(
+                                    'travel_to_date',
+                                    optional($travelRequest->travel_to_date)
+                                        ->format('Y-m-d')
+                                ) }}">
+
+
+                            @error('travel_to_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Pickup Time --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="pickup_time">
+
+                                <b>
+                                    Pick-up Time
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="time"
+                                name="pickup_time"
+                                id="pickup_time"
+                                class="form-control @error('pickup_time') is-invalid @enderror"
+                                value="{{ old(
+                                    'pickup_time',
+                                    $travelRequest->pickup_time
+                                ) }}">
+
+
+                            <small class="text-muted">
+
+                                Format: HH:MM
+
+                            </small>
+
+
+                            @error('pickup_time')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- From City --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="from_city">
+
+                                <b>
+                                    From City
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="from_city"
+                                id="from_city"
+                                class="form-control @error('from_city') is-invalid @enderror"
+                                value="{{ old(
+                                    'from_city',
+                                    $travelRequest->from_city
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter From City">
+
+
+                            @error('from_city')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Pickup Location --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="pickup_location">
+
+                                <b>
+
+                                    Pick-up Location
+
+                                    <span class="required-star">
+                                        *
+                                    </span>
+
+                                </b>
+
+                            </label>
+
 
                             <input
                                 type="text"
@@ -389,7 +1013,9 @@
                                     'pickup_location',
                                     $travelRequest->pickup_location
                                 ) }}"
-                                placeholder="Enter Pickup Location">
+                                maxlength="255"
+                                placeholder="Enter Pick-up Location">
+
 
                             @error('pickup_location')
 
@@ -410,22 +1036,27 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- DROP LOCATION --}}
+                    {{-- Drop Location --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="drop_location">
 
-                                Drop Location
+                                <b>
 
-                                <span class="required">
-                                    *
-                                </span>
+                                    Drop Location
+
+                                    <span class="required-star">
+                                        *
+                                    </span>
+
+                                </b>
 
                             </label>
+
 
                             <input
                                 type="text"
@@ -436,7 +1067,9 @@
                                     'drop_location',
                                     $travelRequest->drop_location
                                 ) }}"
+                                maxlength="255"
                                 placeholder="Enter Drop Location">
+
 
                             @error('drop_location')
 
@@ -457,30 +1090,260 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- REPORTING TIME --}}
+                    {{-- Release Location --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="release_location">
 
-                                Reporting Time
+                                <b>
+                                    Release Location
+                                </b>
 
                             </label>
+
+
+                            <input
+                                type="text"
+                                name="release_location"
+                                id="release_location"
+                                class="form-control @error('release_location') is-invalid @enderror"
+                                value="{{ old(
+                                    'release_location',
+                                    $travelRequest->release_location
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter Release Location">
+
+
+                            @error('release_location')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Reporting Address --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="reporting_address">
+
+                                <b>
+                                    Reporting Address
+                                </b>
+
+                            </label>
+
+
+                            <textarea
+                                name="reporting_address"
+                                id="reporting_address"
+                                rows="3"
+                                class="form-control @error('reporting_address') is-invalid @enderror"
+                                placeholder="Enter Reporting Address">{{ old(
+                                    'reporting_address',
+                                    $travelRequest->reporting_address
+                                ) }}</textarea>
+
+
+                            @error('reporting_address')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Release Address --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="release_address">
+
+                                <b>
+                                    Release Address
+                                </b>
+
+                            </label>
+
+
+                            <textarea
+                                name="release_address"
+                                id="release_address"
+                                rows="3"
+                                class="form-control @error('release_address') is-invalid @enderror"
+                                placeholder="Enter Release Address">{{ old(
+                                    'release_address',
+                                    $travelRequest->release_address
+                                ) }}</textarea>
+
+
+                            @error('release_address')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Release Time --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="release_time">
+
+                                <b>
+                                    Release Time
+                                </b>
+
+                            </label>
+
 
                             <input
                                 type="time"
-                                name="reporting_time"
-                                id="reporting_time"
-                                class="form-control @error('reporting_time') is-invalid @enderror"
+                                name="release_time"
+                                id="release_time"
+                                class="form-control @error('release_time') is-invalid @enderror"
                                 value="{{ old(
-                                    'reporting_time',
-                                    $travelRequest->reporting_time
+                                    'release_time',
+                                    $travelRequest->release_time
                                 ) }}">
 
-                            @error('reporting_time')
+
+                            <small class="text-muted">
+
+                                Format: HH:MM
+
+                            </small>
+
+
+                            @error('release_time')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                {{-- ===================================================== --}}
+                {{-- PART 3 : PASSENGER INFORMATION --}}
+                {{-- ===================================================== --}}
+
+                <div class="col-12 mt-4">
+
+                    <h5 class="form-section-title">
+
+                        <b>
+                            3. Passenger Information
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+
+                <div class="row">
+
+
+                    {{-- ================================================= --}}
+                    {{-- Passenger Name --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="passenger_name">
+
+                                <b>
+
+                                    Passenger Name
+
+                                    <span class="required-star">
+                                        *
+                                    </span>
+
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="passenger_name"
+                                id="passenger_name"
+                                class="form-control @error('passenger_name') is-invalid @enderror"
+                                value="{{ old(
+                                    'passenger_name',
+                                    $travelRequest->passenger_name
+                                ) }}"
+                                maxlength="255"
+                                placeholder="Enter Passenger Name">
+
+
+                            @error('passenger_name')
 
                                 <span class="invalid-feedback d-block">
 
@@ -499,36 +1362,142 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- NUMBER OF PASSENGERS --}}
+                    {{-- Passenger Phone --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="passenger_phone">
 
-                                Number Of Passengers
-
-                                <span class="required">
-                                    *
-                                </span>
+                                <b>
+                                    Passenger Phone
+                                </b>
 
                             </label>
+
+
+                            <input
+                                type="text"
+                                name="passenger_phone"
+                                id="passenger_phone"
+                                class="form-control @error('passenger_phone') is-invalid @enderror"
+                                value="{{ old(
+                                    'passenger_phone',
+                                    $travelRequest->passenger_phone
+                                ) }}"
+                                maxlength="255"
+                                inputmode="tel"
+                                placeholder="Enter Passenger Phone">
+
+
+                            @error('passenger_phone')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Traveler Mobile --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="traveler_mobile">
+
+                                <b>
+                                    Traveler's Mobile
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="traveler_mobile"
+                                id="traveler_mobile"
+                                class="form-control @error('traveler_mobile') is-invalid @enderror"
+                                value="{{ old(
+                                    'traveler_mobile',
+                                    $travelRequest->traveler_mobile
+                                ) }}"
+                                maxlength="20"
+                                inputmode="tel"
+                                placeholder="Enter Traveler Mobile">
+
+
+                            @error('traveler_mobile')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Passenger Count --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="passenger_count">
+
+                                <b>
+
+                                    Number of Passengers
+
+                                    <span class="required-star">
+                                        *
+                                    </span>
+
+                                </b>
+
+                            </label>
+
 
                             <input
                                 type="number"
-                                name="number_of_passengers"
-                                id="number_of_passengers"
-                                min="1"
-                                class="form-control @error('number_of_passengers') is-invalid @enderror"
+                                name="passenger_count"
+                                id="passenger_count"
+                                class="form-control @error('passenger_count') is-invalid @enderror"
                                 value="{{ old(
-                                    'number_of_passengers',
-                                    $travelRequest->number_of_passengers
+                                    'passenger_count',
+                                    $travelRequest->passenger_count ?? 1
                                 ) }}"
-                                placeholder="Enter Number Of Passengers">
+                                min="1"
+                                max="1000"
+                                step="1"
+                                placeholder="Enter Number of Passengers">
 
-                            @error('number_of_passengers')
+
+                            @error('passenger_count')
 
                                 <span class="invalid-feedback d-block">
 
@@ -547,31 +1516,287 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- STATUS --}}
+                    {{-- Car Hire Type --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
 
                         <div class="form-group">
 
-                            <label>
+                            <label for="car_hire_type">
 
-                                Status
-
-                                <span class="required">
-                                    *
-                                </span>
+                                <b>
+                                    Car Hire Type
+                                </b>
 
                             </label>
+
+
+                            <input
+                                type="text"
+                                name="car_hire_type"
+                                id="car_hire_type"
+                                class="form-control @error('car_hire_type') is-invalid @enderror"
+                                value="{{ old(
+                                    'car_hire_type',
+                                    $travelRequest->car_hire_type
+                                ) }}"
+                                maxlength="50"
+                                placeholder="Enter Car Hire Type">
+
+
+                            @error('car_hire_type')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- For Use --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="for_use">
+
+                                <b>
+                                    For Use
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="for_use"
+                                id="for_use"
+                                class="form-control @error('for_use') is-invalid @enderror"
+                                value="{{ old(
+                                    'for_use',
+                                    $travelRequest->for_use
+                                ) }}"
+                                maxlength="100"
+                                placeholder="Enter Usage Details">
+
+
+                            @error('for_use')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- GST Number --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="gst_number">
+
+                                <b>
+                                    GST Number
+                                </b>
+
+                            </label>
+
+
+                            <input
+                                type="text"
+                                name="gst_number"
+                                id="gst_number"
+                                class="form-control @error('gst_number') is-invalid @enderror"
+                                value="{{ old(
+                                    'gst_number',
+                                    $travelRequest->gst_number
+                                ) }}"
+                                maxlength="20"
+                                placeholder="Enter GST Number">
+
+
+                            @error('gst_number')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+
+                {{-- ===================================================== --}}
+                {{-- PART 4 : INSTRUCTIONS, STATUS & ACTION --}}
+                {{-- ===================================================== --}}
+
+                <div class="col-12 mt-4">
+
+                    <h5 class="form-section-title">
+
+                        <b>
+                            4. Instructions &amp; Request Status
+                        </b>
+
+                    </h5>
+
+                    <hr>
+
+                </div>
+
+
+                <div class="row">
+
+
+                    {{-- ================================================= --}}
+                    {{-- Purpose --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="purpose">
+
+                                <b>
+                                    Purpose
+                                </b>
+
+                            </label>
+
+
+                            <textarea
+                                name="purpose"
+                                id="purpose"
+                                rows="4"
+                                class="form-control @error('purpose') is-invalid @enderror"
+                                placeholder="Enter Travel Purpose">{{ old(
+                                    'purpose',
+                                    $travelRequest->purpose
+                                ) }}</textarea>
+
+
+                            @error('purpose')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Specific Instruction --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="specific_instruction">
+
+                                <b>
+                                    Specific Instruction
+                                </b>
+
+                            </label>
+
+
+                            <textarea
+                                name="specific_instruction"
+                                id="specific_instruction"
+                                rows="4"
+                                class="form-control @error('specific_instruction') is-invalid @enderror"
+                                placeholder="Enter Specific Instruction">{{ old(
+                                    'specific_instruction',
+                                    $travelRequest->specific_instruction
+                                ) }}</textarea>
+
+
+                            @error('specific_instruction')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+
+
+                    {{-- ================================================= --}}
+                    {{-- Status --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-4">
+
+                        <div class="form-group">
+
+                            <label for="status">
+
+                                <b>
+                                    Status
+                                </b>
+
+                            </label>
+
 
                             <select
                                 name="status"
                                 id="status"
                                 class="form-control custom-select2 @error('status') is-invalid @enderror">
-
-                                <option value="">
-                                    Select Status
-                                </option>
 
                                 <option
                                     value="pending"
@@ -586,6 +1811,7 @@
 
                                 </option>
 
+
                                 <option
                                     value="approved"
                                     {{ old(
@@ -598,6 +1824,7 @@
                                     Approved
 
                                 </option>
+
 
                                 <option
                                     value="rejected"
@@ -612,6 +1839,7 @@
 
                                 </option>
 
+
                                 <option
                                     value="assigned"
                                     {{ old(
@@ -625,18 +1853,6 @@
 
                                 </option>
 
-                                <option
-                                    value="in_progress"
-                                    {{ old(
-                                        'status',
-                                        $travelRequest->status
-                                    ) === 'in_progress'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    In Progress
-
-                                </option>
 
                                 <option
                                     value="completed"
@@ -650,6 +1866,7 @@
                                     Completed
 
                                 </option>
+
 
                                 <option
                                     value="cancelled"
@@ -665,6 +1882,14 @@
                                 </option>
 
                             </select>
+
+
+                            <small class="text-muted">
+
+                                Current status can be updated.
+
+                            </small>
+
 
                             @error('status')
 
@@ -685,236 +1910,32 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- PASSENGER DETAILS --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-3">
-
-                        <h5 class="form-section-title">
-
-                            <i class="fa fa-users mr-2"></i>
-
-                            Passenger Details
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-
-
-                    {{-- Passenger Name --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Passenger Name
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="passenger_name"
-                                id="passenger_name"
-                                class="form-control @error('passenger_name') is-invalid @enderror"
-                                value="{{ old(
-                                    'passenger_name',
-                                    $travelRequest->passenger_name
-                                ) }}"
-                                placeholder="Enter Passenger Name">
-
-                            @error('passenger_name')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- Passenger Mobile --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Passenger Mobile
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="passenger_mobile"
-                                id="passenger_mobile"
-                                maxlength="10"
-                                inputmode="numeric"
-                                class="form-control @error('passenger_mobile') is-invalid @enderror"
-                                value="{{ old(
-                                    'passenger_mobile',
-                                    $travelRequest->passenger_mobile
-                                ) }}"
-                                placeholder="Enter 10 Digit Mobile Number">
-
-                            @error('passenger_mobile')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- Passenger Email --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-                                Passenger Email
-                            </label>
-
-                            <input
-                                type="email"
-                                name="passenger_email"
-                                id="passenger_email"
-                                class="form-control @error('passenger_email') is-invalid @enderror"
-                                value="{{ old(
-                                    'passenger_email',
-                                    $travelRequest->passenger_email
-                                ) }}"
-                                placeholder="Enter Passenger Email">
-
-                            @error('passenger_email')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PURPOSE --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-3">
-
-                        <h5 class="form-section-title">
-
-                            <i class="fa fa-info-circle mr-2"></i>
-
-                            Travel Purpose & Remarks
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-
-
-                    {{-- Purpose --}}
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>
-                                Purpose
-                            </label>
-
-                            <textarea
-                                name="purpose"
-                                id="purpose"
-                                rows="5"
-                                maxlength="1000"
-                                class="form-control @error('purpose') is-invalid @enderror"
-                                placeholder="Enter Travel Purpose">{{ old(
-                                    'purpose',
-                                    $travelRequest->purpose
-                                ) }}</textarea>
-
-                            @error('purpose')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                            <small class="text-muted">
-
-                                Maximum 1000 characters.
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
-
-
                     {{-- Remarks --}}
-                    <div class="col-md-6">
+                    {{-- ================================================= --}}
+
+                    <div class="col-md-8">
 
                         <div class="form-group">
 
-                            <label>
-                                Remarks
+                            <label for="remarks">
+
+                                <b>
+                                    Remarks
+                                </b>
+
                             </label>
+
 
                             <textarea
                                 name="remarks"
                                 id="remarks"
-                                rows="5"
-                                maxlength="2000"
+                                rows="3"
                                 class="form-control @error('remarks') is-invalid @enderror"
                                 placeholder="Enter Remarks">{{ old(
                                     'remarks',
                                     $travelRequest->remarks
                                 ) }}</textarea>
+
 
                             @error('remarks')
 
@@ -927,12 +1948,6 @@
                                 </span>
 
                             @enderror
-
-                            <small class="text-muted">
-
-                                Maximum 2000 characters.
-
-                            </small>
 
                         </div>
 
@@ -948,6 +1963,7 @@
 
                         <div class="text-right mt-4">
 
+
                             <a
                                 href="{{ route('travel-requests.index') }}"
                                 class="btn btn-danger">
@@ -961,8 +1977,8 @@
 
                             <button
                                 type="submit"
-                                class="btn btn-success"
-                                id="updateTravelRequestBtn">
+                                id="updateTravelRequestBtn"
+                                class="btn btn-success">
 
                                 <i class="fa fa-save"></i>
 
@@ -973,6 +1989,7 @@
                         </div>
 
                     </div>
+
 
                 </div>
 
@@ -1004,42 +2021,6 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Passenger Mobile
-    |--------------------------------------------------------------------------
-    */
-
-    $('#passenger_mobile').on('input', function () {
-
-        this.value = this.value
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10);
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Number Of Passengers
-    |--------------------------------------------------------------------------
-    */
-
-    $('#number_of_passengers').on('input', function () {
-
-        let value = parseInt(this.value);
-
-        if (isNaN(value) || value < 1) {
-
-            this.value = 1;
-
-        }
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Request Number
     |--------------------------------------------------------------------------
     */
@@ -1057,11 +2038,11 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Passenger Name
+    | Requested By
     |--------------------------------------------------------------------------
     */
 
-    $('#passenger_name').on('blur', function () {
+    $('#requested_by').on('blur', function () {
 
         this.value = this.value
             .replace(/\s+/g, ' ')
@@ -1073,11 +2054,11 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Passenger Email
+    | Employee Email
     |--------------------------------------------------------------------------
     */
 
-    $('#passenger_email').on('blur', function () {
+    $('#employee_email').on('blur', function () {
 
         this.value = this.value
             .trim()
@@ -1089,15 +2070,15 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Pickup Location
+    | Travel ID
     |--------------------------------------------------------------------------
     */
 
-    $('#pickup_location').on('blur', function () {
+    $('#travel_id').on('blur', function () {
 
         this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
+            .trim()
+            .toUpperCase();
 
     });
 
@@ -1105,14 +2086,187 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Drop Location
+    | Trip ID
     |--------------------------------------------------------------------------
     */
 
-    $('#drop_location').on('blur', function () {
+    $('#trip_id').on('blur', function () {
 
         this.value = this.value
-            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Text Fields
+    |--------------------------------------------------------------------------
+    */
+
+    const textFields = [
+        '#vendor_name',
+        '#vehicle_type',
+        '#employee_id',
+        '#cost_center',
+        '#from_city',
+        '#pickup_location',
+        '#drop_location',
+        '#release_location',
+        '#passenger_name',
+        '#car_hire_type',
+        '#for_use'
+    ];
+
+
+    textFields.forEach(function (selector) {
+
+        $(selector).on('blur', function () {
+
+            this.value = this.value
+                .replace(/\s+/g, ' ')
+                .trim();
+
+        });
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passenger Phone
+    |--------------------------------------------------------------------------
+    */
+
+    $('#passenger_phone').on('input', function () {
+
+        this.value = this.value
+            .replace(/[^0-9+\-\s()]/g, '')
+            .slice(0, 255);
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Traveler Mobile
+    |--------------------------------------------------------------------------
+    */
+
+    $('#traveler_mobile').on('input', function () {
+
+        this.value = this.value
+            .replace(/[^0-9+\-\s()]/g, '')
+            .slice(0, 20);
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Passenger Count
+    |--------------------------------------------------------------------------
+    */
+
+    $('#passenger_count').on('input', function () {
+
+        let value = this.value
+            .replace(/[^0-9]/g, '');
+
+
+        if (value === '') {
+
+            this.value = '';
+
+            return;
+
+        }
+
+
+        value = parseInt(value, 10);
+
+
+        if (value < 1) {
+
+            value = 1;
+
+        }
+
+
+        if (value > 1000) {
+
+            value = 1000;
+
+        }
+
+
+        this.value = value;
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GST Number
+    |--------------------------------------------------------------------------
+    */
+
+    $('#gst_number').on('blur', function () {
+
+        this.value = this.value
+            .trim()
+            .toUpperCase();
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Date Validation
+    |--------------------------------------------------------------------------
+    */
+
+    $('#travel_from_date, #travel_to_date').on('change', function () {
+
+        const fromDate = $('#travel_from_date').val();
+        const toDate = $('#travel_to_date').val();
+
+
+        if (fromDate && toDate) {
+
+            if (toDate < fromDate) {
+
+                alert(
+                    'To Date cannot be before From Date.'
+                );
+
+                $('#travel_to_date').val('');
+
+            }
+
+        }
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporting / Release Address
+    |--------------------------------------------------------------------------
+    */
+
+    $('#reporting_address, #release_address').on('blur', function () {
+
+        this.value = this.value
+            .replace(/[ \t]+/g, ' ')
             .trim();
 
     });
@@ -1128,7 +2282,21 @@ $(document).ready(function () {
     $('#purpose').on('blur', function () {
 
         this.value = this.value
-            .replace(/\s+/g, ' ')
+            .trim();
+
+    });
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Specific Instruction
+    |--------------------------------------------------------------------------
+    */
+
+    $('#specific_instruction').on('blur', function () {
+
+        this.value = this.value
             .trim();
 
     });
@@ -1144,23 +2312,9 @@ $(document).ready(function () {
     $('#remarks').on('blur', function () {
 
         this.value = this.value
-            .replace(/\s+/g, ' ')
             .trim();
 
     });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Prevent Past Travel Date
-    |--------------------------------------------------------------------------
-    |
-    | NOTE:
-    | Existing travel date ko edit karne ke liye automatically block
-    | nahi kiya gaya hai. Server-side validation final authority rahegi.
-    |--------------------------------------------------------------------------
-    */
 
 
 
@@ -1170,7 +2324,8 @@ $(document).ready(function () {
     |--------------------------------------------------------------------------
     */
 
-    $('form').on('submit', function () {
+    $('#travelRequestForm').on('submit', function () {
+
 
         /*
         |--------------------------------------------------------------------------
@@ -1188,25 +2343,12 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Passenger Mobile
+        | Requested By
         |--------------------------------------------------------------------------
         */
 
-        $('#passenger_mobile').val(
-            $('#passenger_mobile').val()
-                .replace(/[^0-9]/g, '')
-                .slice(0, 10)
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Passenger Name
-        |--------------------------------------------------------------------------
-        */
-
-        $('#passenger_name').val(
-            $('#passenger_name').val()
+        $('#requested_by').val(
+            $('#requested_by').val()
                 .replace(/\s+/g, ' ')
                 .trim()
         );
@@ -1214,12 +2356,12 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Passenger Email
+        | Employee Email
         |--------------------------------------------------------------------------
         */
 
-        $('#passenger_email').val(
-            $('#passenger_email').val()
+        $('#employee_email').val(
+            $('#employee_email').val()
                 .trim()
                 .toLowerCase()
         );
@@ -1227,28 +2369,119 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Pickup Location
+        | Travel ID
         |--------------------------------------------------------------------------
         */
 
-        $('#pickup_location').val(
-            $('#pickup_location').val()
-                .replace(/\s+/g, ' ')
+        $('#travel_id').val(
+            $('#travel_id').val()
                 .trim()
+                .toUpperCase()
         );
 
 
         /*
         |--------------------------------------------------------------------------
-        | Drop Location
+        | Trip ID
         |--------------------------------------------------------------------------
         */
 
-        $('#drop_location').val(
-            $('#drop_location').val()
-                .replace(/\s+/g, ' ')
+        $('#trip_id').val(
+            $('#trip_id').val()
                 .trim()
+                .toUpperCase()
         );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Text Fields
+        |--------------------------------------------------------------------------
+        */
+
+        const textFields = [
+            '#vendor_name',
+            '#vehicle_type',
+            '#employee_id',
+            '#cost_center',
+            '#from_city',
+            '#pickup_location',
+            '#drop_location',
+            '#release_location',
+            '#passenger_name',
+            '#car_hire_type',
+            '#for_use'
+        ];
+
+
+        textFields.forEach(function (selector) {
+
+            $(selector).val(
+                $(selector).val()
+                    .replace(/\s+/g, ' ')
+                    .trim()
+            );
+
+        });
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Passenger Phone
+        |--------------------------------------------------------------------------
+        */
+
+        $('#passenger_phone').val(
+            $('#passenger_phone').val()
+                .replace(/[^0-9+\-\s()]/g, '')
+                .slice(0, 255)
+        );
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Traveler Mobile
+        |--------------------------------------------------------------------------
+        */
+
+        $('#traveler_mobile').val(
+            $('#traveler_mobile').val()
+                .replace(/[^0-9+\-\s()]/g, '')
+                .slice(0, 20)
+        );
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GST
+        |--------------------------------------------------------------------------
+        */
+
+        $('#gst_number').val(
+            $('#gst_number').val()
+                .trim()
+                .toUpperCase()
+        );
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Reporting / Release Address
+        |--------------------------------------------------------------------------
+        */
+
+        $('#reporting_address, #release_address').each(function () {
+
+            this.value = this.value
+                .replace(/[ \t]+/g, ' ')
+                .trim();
+
+        });
+
 
 
         /*
@@ -1259,9 +2492,22 @@ $(document).ready(function () {
 
         $('#purpose').val(
             $('#purpose').val()
-                .replace(/\s+/g, ' ')
                 .trim()
         );
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Specific Instruction
+        |--------------------------------------------------------------------------
+        */
+
+        $('#specific_instruction').val(
+            $('#specific_instruction').val()
+                .trim()
+        );
+
 
 
         /*
@@ -1272,9 +2518,9 @@ $(document).ready(function () {
 
         $('#remarks').val(
             $('#remarks').val()
-                .replace(/\s+/g, ' ')
                 .trim()
         );
+
 
 
         /*
@@ -1283,13 +2529,18 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        const button = $('#updateTravelRequestBtn');
+        const submitButton = $('#updateTravelRequestBtn');
 
-        button
-            .prop('disabled', true)
-            .html(
-                '<i class="fa fa-spinner fa-spin"></i> Updating...'
-            );
+
+        if (submitButton.length) {
+
+            submitButton
+                .prop('disabled', true)
+                .html(
+                    '<i class="fa fa-spinner fa-spin"></i> Updating Travel Request...'
+                );
+
+        }
 
     });
 
