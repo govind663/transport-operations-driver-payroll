@@ -271,7 +271,22 @@ Route::prefix('admin')
         |--------------------------------------------------------------------------
         | Travel Requests
         |--------------------------------------------------------------------------
+        |
+        | Excel Import Routes MUST come before Resource Routes
+        |
         */
+
+        // Excel Import
+        Route::get(
+            'travel-requests/import/template',
+            [TravelRequestController::class, 'importTemplate']
+        )->name('travel-requests.import.template');
+
+        Route::post(
+            'travel-requests/import',
+            [TravelRequestController::class, 'import']
+        )->name('travel-requests.import');
+        
         Route::resource(
             'travel-requests',
             TravelRequestController::class
