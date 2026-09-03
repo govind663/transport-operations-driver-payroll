@@ -1558,10 +1558,7 @@
                                     <td class="no-export">
 
                                         <form
-                                            action="{{ route(
-                                                'travel-requests.destroy',
-                                                $travelRequest->id
-                                            ) }}"
+                                            action="{{ route('travel-requests.destroy', $travelRequest->id) }}"
                                             method="POST"
                                             class="delete-form">
 
@@ -1569,12 +1566,11 @@
 
                                             @method('DELETE')
 
-
                                             <button
                                                 type="submit"
                                                 class="btn btn-danger btn-sm">
 
-                                                <i class="dw dw-trash mr-1"></i>
+                                                <i class="dw dw-trash"></i>
 
                                                 Delete
 
@@ -1654,17 +1650,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Delete Confirmation
-    |--------------------------------------------------------------------------
-    */
 
     document.querySelectorAll('.delete-form').forEach(function (form) {
 
@@ -1672,12 +1659,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             e.preventDefault();
 
-
             Swal.fire({
 
                 title: 'Are you sure?',
 
-                text: 'This travel request will be moved to trash.',
+                text: 'This travel request will be moved to trash!',
 
                 icon: 'warning',
 
@@ -1707,12 +1693,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-
 });
-
 </script>
-
-
 
 <script>
 
@@ -1755,7 +1737,6 @@ $(document).ready(function () {
 });
 
 </script>
-
 
 
 {{-- ========================================================= --}}
