@@ -46,8 +46,7 @@ class TravelRequestController extends Controller
         $travelRequests = $this->travelRequestService
             ->getTravelRequests();
 
-        return view(
-            'backend.travel-requests.index',
+        return view('backend.travel-requests.index',
             compact('travelRequests')
         );
     }
@@ -64,9 +63,7 @@ class TravelRequestController extends Controller
      */
     public function create(): View
     {
-        return view(
-            'backend.travel-requests.create'
-        );
+        return view('backend.travel-requests.create');
     }
 
 
@@ -90,7 +87,7 @@ class TravelRequestController extends Controller
         return redirect()
             ->route('travel-requests.index')
             ->with(
-                'success',
+                'message',
                 "Travel request {$travelRequest->request_no} created successfully."
             );
     }
@@ -113,8 +110,7 @@ class TravelRequestController extends Controller
             $travelRequest->id
         );
 
-        return view(
-            'backend.travel-requests.show',
+        return view('backend.travel-requests.show',
             compact('travelRequest')
         );
     }
@@ -137,8 +133,7 @@ class TravelRequestController extends Controller
             $travelRequest->id
         );
 
-        return view(
-            'backend.travel-requests.edit',
+        return view('backend.travel-requests.edit',
             compact('travelRequest')
         );
     }
@@ -166,7 +161,7 @@ class TravelRequestController extends Controller
         return redirect()
             ->route('travel-requests.index')
             ->with(
-                'success',
+                'message',
                 "Travel request {$travelRequest->request_no} updated successfully."
             );
     }
@@ -259,7 +254,7 @@ class TravelRequestController extends Controller
             return redirect()
                 ->route('travel-requests.index')
                 ->with(
-                    'success',
+                    'message',
                     'Travel requests imported successfully.'
                 );
 
@@ -435,7 +430,7 @@ class TravelRequestController extends Controller
         return redirect()
             ->route('travel-requests.index')
             ->with(
-                'success',
+                'message',
                 "Travel request {$requestNo} deleted successfully."
             );
     }
