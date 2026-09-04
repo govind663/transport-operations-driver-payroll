@@ -34,6 +34,7 @@ use App\Http\Controllers\backend\Reports\VehicleReportController;
 use App\Http\Controllers\backend\Reports\DutyReportController;
 use App\Http\Controllers\backend\Reports\WorkingSheetReportController;
 use App\Http\Controllers\backend\Reports\PayrollReportController;
+use App\Http\Controllers\backend\VehiclePriceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -250,6 +251,17 @@ Route::prefix('admin')
         Route::resource(
             'vehicle-management',
             VehicleManagementController::class
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Price Management
+        |--------------------------------------------------------------------------
+        */
+
+        Route::resource(
+            'vehicle-price',
+            VehiclePriceController::class
         );
 
         /*

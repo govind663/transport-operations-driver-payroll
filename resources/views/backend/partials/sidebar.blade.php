@@ -365,7 +365,25 @@
 
                 @endif
 
+                {{-- ================================================== --}}
+                {{-- VEHICLE PRICE MANAGEMENT --}}
+                {{-- ADMIN / OPERATIONS --}}
+                {{-- ================================================== --}}
 
+                @if($isAdmin || $isOperations)
+
+                    <li>
+
+                        <a href="{{ route('vehicle-price.index') }}"
+                        class="{{ request()->routeIs('vehicle-price.*') ? 'active' : '' }}">
+
+                            Vehicle Price Management
+
+                        </a>
+
+                    </li>
+
+                @endif
 
                 {{-- ================================================== --}}
                 {{-- ALLOWANCES --}}

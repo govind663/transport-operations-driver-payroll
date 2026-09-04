@@ -41,9 +41,11 @@ class VehicleManagement extends Model
     protected $casts = [
         'manufacturing_year' => 'integer',
         'capacity' => 'decimal:2',
+
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
+
         'deleted_by' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
@@ -74,6 +76,20 @@ class VehicleManagement extends Model
         return $this->belongsTo(
             VehicleType::class,
             'vehicle_type_id'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRICES
+    |--------------------------------------------------------------------------
+    */
+
+    public function vehiclePrices()
+    {
+        return $this->hasMany(
+            VehiclePrice::class,
+            'vehicle_id'
         );
     }
 

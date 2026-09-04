@@ -13,12 +13,12 @@ class VehicleManagementService
     | Get All Vehicles
     |--------------------------------------------------------------------------
     */
-
     public function getVehicles(): Collection
     {
         return VehicleManagement::with([
             'vehicleCategory',
             'vehicleType',
+            'vehiclePrices',
             'createdBy',
             'updatedBy',
         ])
@@ -32,7 +32,6 @@ class VehicleManagementService
     | Find Vehicle
     |--------------------------------------------------------------------------
     */
-
     public function findById(
         int|string $id
     ): VehicleManagement {
@@ -40,6 +39,7 @@ class VehicleManagementService
         return VehicleManagement::with([
             'vehicleCategory',
             'vehicleType',
+            'vehiclePrices',
         ])->findOrFail($id);
     }
 
@@ -49,7 +49,6 @@ class VehicleManagementService
     | Store Vehicle
     |--------------------------------------------------------------------------
     */
-
     public function store(array $data): VehicleManagement
     {
         /*
@@ -57,9 +56,7 @@ class VehicleManagementService
         | Audit
         |--------------------------------------------------------------------------
         */
-
         $data['created_by'] = Auth::id();
-
 
         return VehicleManagement::create($data);
     }
@@ -70,7 +67,6 @@ class VehicleManagementService
     | Update Vehicle
     |--------------------------------------------------------------------------
     */
-
     public function update(
         VehicleManagement $vehicle,
         array $data
@@ -81,12 +77,9 @@ class VehicleManagementService
         | Audit
         |--------------------------------------------------------------------------
         */
-
         $data['updated_by'] = Auth::id();
 
-
         $vehicle->update($data);
-
 
         return $vehicle->refresh();
     }
@@ -97,7 +90,6 @@ class VehicleManagementService
     | Delete Vehicle
     |--------------------------------------------------------------------------
     */
-
     public function delete(
         VehicleManagement $vehicle
     ): bool {
@@ -111,13 +103,13 @@ class VehicleManagementService
     | Active Vehicles
     |--------------------------------------------------------------------------
     */
-
     public function getActiveVehicles(): Collection
     {
         return VehicleManagement::active()
             ->with([
                 'vehicleCategory',
                 'vehicleType',
+                'vehiclePrices',
             ])
             ->orderBy('vehicle_number')
             ->get();
@@ -129,13 +121,13 @@ class VehicleManagementService
     | Maintenance Vehicles
     |--------------------------------------------------------------------------
     */
-
     public function getMaintenanceVehicles(): Collection
     {
         return VehicleManagement::maintenance()
             ->with([
                 'vehicleCategory',
                 'vehicleType',
+                'vehiclePrices',
             ])
             ->orderBy('vehicle_number')
             ->get();
@@ -147,7 +139,6 @@ class VehicleManagementService
     | Vehicles By Category
     |--------------------------------------------------------------------------
     */
-
     public function getByCategory(
         int|string $vehicleCategoryId
     ): Collection {
@@ -160,6 +151,7 @@ class VehicleManagementService
             ->with([
                 'vehicleCategory',
                 'vehicleType',
+                'vehiclePrices',
             ])
             ->orderBy('vehicle_number')
             ->get();
@@ -171,7 +163,6 @@ class VehicleManagementService
     | Vehicles By Type
     |--------------------------------------------------------------------------
     */
-
     public function getByType(
         int|string $vehicleTypeId
     ): Collection {
@@ -184,6 +175,7 @@ class VehicleManagementService
             ->with([
                 'vehicleCategory',
                 'vehicleType',
+                'vehiclePrices',
             ])
             ->orderBy('vehicle_number')
             ->get();
@@ -195,7 +187,6 @@ class VehicleManagementService
     | Search Vehicles
     |--------------------------------------------------------------------------
     */
-
     public function search(?string $keyword): Collection
     {
         return VehicleManagement::query()
@@ -203,6 +194,7 @@ class VehicleManagementService
             ->with([
                 'vehicleCategory',
                 'vehicleType',
+                'vehiclePrices',
             ])
 
             ->when($keyword, function ($query) use ($keyword) {
