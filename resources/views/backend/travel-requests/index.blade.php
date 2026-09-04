@@ -1650,51 +1650,105 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    document.querySelectorAll('.delete-form').forEach(function (form) {
+    /*
+    |--------------------------------------------------------------------------
+    | Travel Request Delete Confirmation
+    |--------------------------------------------------------------------------
+    */
 
-        form.addEventListener('submit', function (e) {
+    document.addEventListener('submit', function (e) {
 
-            e.preventDefault();
+        const form = e.target.closest('.delete-form');
 
-            Swal.fire({
+        /*
+        |--------------------------------------------------------------------------
+        | Ignore other forms
+        |--------------------------------------------------------------------------
+        */
 
-                title: 'Are you sure?',
+        if (!form) {
+            return;
+        }
 
-                text: 'This travel request will be moved to trash!',
 
-                icon: 'warning',
+        /*
+        |--------------------------------------------------------------------------
+        | Stop normal form submission
+        |--------------------------------------------------------------------------
+        */
 
-                showCancelButton: true,
+        e.preventDefault();
 
-                confirmButtonColor: '#d33',
+        e.stopPropagation();
 
-                cancelButtonColor: '#6c757d',
 
-                confirmButtonText: 'Yes, Delete',
+        /*
+        |--------------------------------------------------------------------------
+        | SweetAlert Confirmation
+        |--------------------------------------------------------------------------
+        */
 
-                cancelButtonText: 'Cancel',
+        Swal.fire({
 
-                reverseButtons: true
+            title: 'Are you sure?',
 
-            }).then(function (result) {
+            text: 'This travel request will be moved to trash!',
 
-                if (result.isConfirmed) {
+            icon: 'warning',
 
-                    form.submit();
+            showCancelButton: true,
 
-                }
+            confirmButtonColor: '#d33',
 
-            });
+            cancelButtonColor: '#6c757d',
+
+            confirmButtonText: 'Yes, Delete',
+
+            cancelButtonText: 'Cancel',
+
+            reverseButtons: true,
+
+            allowOutsideClick: false,
+
+            allowEscapeKey: true
+
+        }).then(function (result) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Confirmed
+            |--------------------------------------------------------------------------
+            */
+
+            if (result.isConfirmed) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Remove submit listener temporarily
+                |--------------------------------------------------------------------------
+                | form.submit() bypasses submit events and directly submits
+                |--------------------------------------------------------------------------
+                */
+
+                HTMLFormElement.prototype.submit.call(form);
+
+            }
 
         });
 
-    });
+    }, true);
 
 });
 </script>
+
+
+{{-- ========================================================= --}}
+{{-- EXCEL IMPORT --}}
+{{-- ========================================================= --}}
 
 <script>
 
