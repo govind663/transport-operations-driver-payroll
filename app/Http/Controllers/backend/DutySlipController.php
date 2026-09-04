@@ -151,7 +151,7 @@ class DutySlipController extends Controller
         return redirect()
             ->route('duty-slips.index')
             ->with(
-                'success',
+                'message',
                 'Duty slip created successfully.'
             );
     }
@@ -176,8 +176,7 @@ class DutySlipController extends Controller
             );
 
 
-        return view(
-            'backend.duty-slips.show',
+        return view('backend.duty-slips.show',
             compact('dutySlip')
         );
     }
@@ -284,7 +283,7 @@ class DutySlipController extends Controller
         return redirect()
             ->route('duty-slips.index')
             ->with(
-                'success',
+                'message',
                 'Duty slip updated successfully.'
             );
     }

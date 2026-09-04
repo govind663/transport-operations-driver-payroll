@@ -168,18 +168,12 @@
         {{-- FORM --}}
         {{-- ========================================================= --}}
 
-        <form
-            action="{{ route('duty-slips.update', $dutySlip->id) }}"
-            method="POST"
-            id="duty-slip-form">
+        <form action="{{ route('duty-slips.update', $dutySlip->id) }}" method="POST" enctype="multipart/form-data" id="duty-slip-form">
 
             @csrf
-
             @method('PUT')
 
-
             <div class="card-box pd-20 mb-30">
-
 
                 {{-- ================================================= --}}
                 {{-- DUTY SLIP INFORMATION --}}
@@ -365,6 +359,171 @@
                                 </span>
 
                             @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- ================================================= --}}
+                    {{-- DUTY SLIP DOCUMENT --}}
+                    {{-- ================================================= --}}
+                    <div class="col-12 mt-3">
+
+                        <h5 class="form-section-title">
+
+                            Duty Slip Document
+
+                        </h5>
+
+                        <hr>
+
+                    </div>
+
+                    {{-- Duty Slip File --}}
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label>
+
+                                <b>
+                                    Upload Duty Slip
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="file"
+                                name="duty_slip_file"
+                                id="duty_slip_file"
+                                class="form-control @error('duty_slip_file') is-invalid @enderror"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="previewDutySlipFile('duty_slip_file','duty-slip-file-preview')"
+                            >
+
+                            <small class="text-muted">
+                                Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                            </small>
+
+                            @error('duty_slip_file')
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+
+
+                            {{-- ================================================= --}}
+                            {{-- EXISTING / NEW FILE PREVIEW --}}
+                            {{-- ================================================= --}}
+
+                            <div
+                                id="duty-slip-file-preview"
+                                class="mt-3">
+
+                                @if(!empty($dutySlip->duty_slip_file))
+
+                                    @php
+                                        $filePath = $dutySlip->duty_slip_file;
+                                        $fileUrl = asset('storage/' . ltrim($filePath, '/'));
+                                        $fileExtension = strtolower(
+                                            pathinfo($filePath, PATHINFO_EXTENSION)
+                                        );
+                                    @endphp
+
+
+                                    @if(
+                                        in_array(
+                                            $fileExtension,
+                                            ['jpg', 'jpeg', 'png']
+                                        )
+                                    )
+
+                                        <div>
+
+                                            <img
+                                                src="{{ $fileUrl }}"
+                                                alt="Duty Slip"
+                                                class="img-thumbnail"
+                                                style="
+                                                    width:220px;
+                                                    max-height:220px;
+                                                    object-fit:contain;
+                                                    border-radius:10px;
+                                                    border:2px solid #dee2e6;
+                                                    box-shadow:0 2px 10px rgba(0,0,0,.15);
+                                                    background:#fff;
+                                                "
+                                            >
+
+                                            <div class="mt-2">
+
+                                                <a
+                                                    href="{{ $fileUrl }}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-primary"
+                                                >
+
+                                                    <i class="fa fa-eye"></i>
+
+                                                    View Duty Slip
+
+                                                </a>
+
+                                            </div>
+
+                                        </div>
+
+                                    @elseif($fileExtension === 'pdf')
+
+                                        <div
+                                            class="alert alert-light border d-flex align-items-center"
+                                            style="
+                                                border-radius:10px;
+                                                padding:12px 15px;
+                                                max-width:450px;
+                                            "
+                                        >
+
+                                            <div
+                                                class="mr-3"
+                                                style="min-width:45px;"
+                                            >
+
+                                                <i
+                                                    class="fa fa-file-pdf-o text-danger"
+                                                    style="font-size:36px;"
+                                                ></i>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <strong class="d-block">
+                                                    Duty Slip PDF
+                                                </strong>
+
+                                                <a
+                                                    href="{{ $fileUrl }}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-primary mt-2"
+                                                >
+
+                                                    <i class="fa fa-eye"></i>
+
+                                                    View PDF
+
+                                                </a>
+
+                                            </div>
+
+                                        </div>
+
+                                    @endif
+
+                                @endif
+
+                            </div>
 
                         </div>
 
@@ -2188,6 +2347,278 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | DUTY SLIP FILE PREVIEW
+    |--------------------------------------------------------------------------
+    */
+
+    window.previewDutySlipFile = function (
+        inputId,
+        previewId
+    ) {
+
+        const input =
+            document.getElementById(inputId);
+
+        const preview =
+            document.getElementById(previewId);
+
+
+        if (!input || !preview) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | No New File Selected
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !input.files ||
+            !input.files[0]
+        ) {
+            return;
+        }
+
+
+        const file =
+            input.files[0];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allowed MIME Types
+        |--------------------------------------------------------------------------
+        */
+
+        const allowedTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png'
+        ];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | File Type Validation
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !allowedTypes.includes(file.type)
+        ) {
+
+            alert(
+                'Please upload a valid PDF, JPG, JPEG, or PNG file.'
+            );
+
+            input.value = '';
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | File Size Validation - 5 MB
+        |--------------------------------------------------------------------------
+        */
+
+        const maxSize =
+            5 * 1024 * 1024;
+
+
+        if (
+            file.size > maxSize
+        ) {
+
+            alert(
+                'Duty slip file size must not exceed 5 MB.'
+            );
+
+            input.value = '';
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Clear Existing Preview
+        |--------------------------------------------------------------------------
+        |
+        | New file selected hone par old file preview replace hoga.
+        |
+        */
+
+        preview.innerHTML = '';
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | File Size
+        |--------------------------------------------------------------------------
+        */
+
+        const fileSize =
+            (
+                file.size /
+                1024 /
+                1024
+            ).toFixed(2);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF Preview
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            file.type ===
+            'application/pdf'
+        ) {
+
+            const fileUrl =
+                URL.createObjectURL(file);
+
+
+            preview.innerHTML = `
+
+                <div
+                    class="alert alert-light border d-flex align-items-center"
+                    style="
+                        border-radius:10px;
+                        padding:12px 15px;
+                        max-width:450px;
+                    "
+                >
+
+                    <div
+                        class="mr-3"
+                        style="min-width:45px;"
+                    >
+
+                        <i
+                            class="fa fa-file-pdf-o text-danger"
+                            style="
+                                font-size:36px;
+                            "
+                        ></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong
+                            class="d-block"
+                            style="
+                                word-break:break-word;
+                            "
+                        >
+                            ${file.name}
+                        </strong>
+
+
+                        <small class="text-muted d-block">
+
+                            PDF Document
+                            &nbsp;•&nbsp;
+                            ${fileSize} MB
+
+                        </small>
+
+
+                        <a
+                            href="${fileUrl}"
+                            target="_blank"
+                            class="btn btn-sm btn-primary mt-2"
+                        >
+
+                            <i class="fa fa-eye"></i>
+
+                            Preview PDF
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            `;
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | IMAGE PREVIEW
+        |--------------------------------------------------------------------------
+        */
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload = function (e) {
+
+            preview.innerHTML = `
+
+                <div>
+
+                    <img
+                        src="${e.target.result}"
+                        alt="Duty Slip Preview"
+                        class="img-thumbnail"
+                        style="
+                            width:220px;
+                            max-height:220px;
+                            object-fit:contain;
+                            border-radius:10px;
+                            border:2px solid #dee2e6;
+                            box-shadow:0 2px 10px rgba(0,0,0,.15);
+                            background:#fff;
+                        "
+                    >
+
+
+                    <div class="mt-2">
+
+                        <strong
+                            class="d-block"
+                            style="
+                                word-break:break-word;
+                            "
+                        >
+                            ${file.name}
+                        </strong>
+
+
+                        <small class="text-muted d-block">
+
+                            Image Document
+                            &nbsp;•&nbsp;
+                            ${fileSize} MB
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+            `;
+        };
+
+
+        reader.readAsDataURL(file);
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
     | SLIP NUMBER
     |--------------------------------------------------------------------------
     */
@@ -2228,18 +2659,29 @@ $(document).ready(function () {
     function calculateTotalKm()
     {
         const opening =
-            numberValue($('#opening_km').val());
+            numberValue(
+                $('#opening_km').val()
+            );
+
 
         const closing =
-            numberValue($('#closing_km').val());
+            numberValue(
+                $('#closing_km').val()
+            );
+
 
         let totalKm = 0;
 
-        if (closing >= opening) {
 
-            totalKm = closing - opening;
+        if (
+            closing >= opening
+        ) {
+
+            totalKm =
+                closing - opening;
 
         }
+
 
         $('#total_km').val(
             formatAmount(totalKm)
@@ -2255,12 +2697,15 @@ $(document).ready(function () {
         $('#allowance-wrapper .allowance-row')
             .each(function () {
 
-                const row = $(this);
+                const row =
+                    $(this);
+
 
                 const option =
                     row.find(
                         '.allowance-select option:selected'
                     );
+
 
                 const calculationType =
                     option.attr(
@@ -2268,12 +2713,20 @@ $(document).ready(function () {
                     );
 
 
-                if (calculationType === 'per_km') {
+                if (
+                    calculationType === 'per_km'
+                ) {
 
-                    row.find('.allowance-quantity')
-                        .val(formatAmount(totalKm));
+                    row.find(
+                        '.allowance-quantity'
+                    ).val(
+                        formatAmount(totalKm)
+                    );
 
-                    calculateAllowanceRow(row);
+
+                    calculateAllowanceRow(
+                        row
+                    );
 
                 }
 
@@ -2283,6 +2736,12 @@ $(document).ready(function () {
         calculateFinancialSummary();
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | OPENING / CLOSING KM
+    |--------------------------------------------------------------------------
+    */
 
     $('#opening_km, #closing_km').on(
         'input',
@@ -2305,10 +2764,15 @@ $(document).ready(function () {
         function () {
 
             const opening =
-                numberValue($('#opening_km').val());
+                numberValue(
+                    $('#opening_km').val()
+                );
+
 
             const closing =
-                numberValue($('#closing_km').val());
+                numberValue(
+                    $('#closing_km').val()
+                );
 
 
             if (
@@ -2320,7 +2784,9 @@ $(document).ready(function () {
                     'Closing KM cannot be less than Opening KM.'
                 );
 
+
                 $(this).val('');
+
 
                 calculateTotalKm();
 
@@ -2338,6 +2804,7 @@ $(document).ready(function () {
 
     function setAllowanceRate(row)
     {
+
         const option =
             row.find(
                 '.allowance-select option:selected'
@@ -2346,7 +2813,9 @@ $(document).ready(function () {
 
         const rate =
             numberValue(
-                option.attr('data-rate')
+                option.attr(
+                    'data-rate'
+                )
             );
 
 
@@ -2356,28 +2825,47 @@ $(document).ready(function () {
             );
 
 
-        row.find('.allowance-rate')
-            .val(
-                formatAmount(rate)
-            );
+        row.find(
+            '.allowance-rate'
+        ).val(
+            formatAmount(rate)
+        );
 
 
-        if (calculationType === 'per_km') {
+        /*
+        |--------------------------------------------------------------------------
+        | PER KM
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            calculationType === 'per_km'
+        ) {
 
             const totalKm =
                 numberValue(
                     $('#total_km').val()
                 );
 
-            row.find('.allowance-quantity')
-                .val(
-                    formatAmount(totalKm)
-                );
+
+            row.find(
+                '.allowance-quantity'
+            ).val(
+                formatAmount(totalKm)
+            );
 
         }
 
 
-        if (calculationType === 'fixed') {
+        /*
+        |--------------------------------------------------------------------------
+        | FIXED
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            calculationType === 'fixed'
+        ) {
 
             const quantity =
                 row.find(
@@ -2400,6 +2888,7 @@ $(document).ready(function () {
 
 
         calculateAllowanceRow(row);
+
     }
 
 
@@ -2411,6 +2900,7 @@ $(document).ready(function () {
 
     function calculateAllowanceRow(row)
     {
+
         const quantity =
             numberValue(
                 row.find(
@@ -2439,6 +2929,7 @@ $(document).ready(function () {
 
 
         calculateFinancialSummary();
+
     }
 
 
@@ -2458,11 +2949,18 @@ $(document).ready(function () {
                     '.allowance-row'
                 );
 
+
             setAllowanceRate(row);
 
         }
     );
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALLOWANCE QUANTITY
+    |--------------------------------------------------------------------------
+    */
 
     $(document).on(
         'input',
@@ -2491,6 +2989,7 @@ $(document).ready(function () {
 
             const wrapper =
                 $('#allowance-wrapper');
+
 
             const index =
                 wrapper.find(
@@ -2594,7 +3093,10 @@ $(document).ready(function () {
                             class="form-control custom-select2"
                         >
 
-                            <option value="pending" selected>
+                            <option
+                                value="pending"
+                                selected
+                            >
                                 Pending
                             </option>
 
@@ -2647,6 +3149,8 @@ $(document).ready(function () {
             );
 
 
+            updateAllowanceIndexes();
+
             updateAllowanceRemoveButtons();
 
             calculateFinancialSummary();
@@ -2667,7 +3171,9 @@ $(document).ready(function () {
         function () {
 
             $(this)
-                .closest('.allowance-row')
+                .closest(
+                    '.allowance-row'
+                )
                 .remove();
 
 
@@ -2689,6 +3195,7 @@ $(document).ready(function () {
 
     function updateAllowanceIndexes()
     {
+
         $('#allowance-wrapper .allowance-row')
             .each(function (index) {
 
@@ -2703,11 +3210,15 @@ $(document).ready(function () {
                     .each(function () {
 
                         const name =
-                            $(this).attr('name');
+                            $(this).attr(
+                                'name'
+                            );
+
 
                         if (!name) {
                             return;
                         }
+
 
                         $(this).attr(
                             'name',
@@ -2720,6 +3231,7 @@ $(document).ready(function () {
                     });
 
             });
+
     }
 
 
@@ -2731,16 +3243,20 @@ $(document).ready(function () {
 
     function updateAllowanceRemoveButtons()
     {
+
         const rows =
             $('#allowance-wrapper .allowance-row');
 
 
         rows
-            .find('.remove-allowance')
+            .find(
+                '.remove-allowance'
+            )
             .prop(
                 'disabled',
                 rows.length <= 1
             );
+
     }
 
 
@@ -2752,6 +3268,7 @@ $(document).ready(function () {
 
     function setExpenseRate(row)
     {
+
         const option =
             row.find(
                 '.expense-select option:selected'
@@ -2760,17 +3277,21 @@ $(document).ready(function () {
 
         const rate =
             numberValue(
-                option.attr('data-rate')
+                option.attr(
+                    'data-rate'
+                )
             );
 
 
-        row.find('.expense-rate')
-            .val(
-                formatAmount(rate)
-            );
+        row.find(
+            '.expense-rate'
+        ).val(
+            formatAmount(rate)
+        );
 
 
         calculateExpenseRow(row);
+
     }
 
 
@@ -2782,6 +3303,7 @@ $(document).ready(function () {
 
     function calculateExpenseRow(row)
     {
+
         const quantity =
             numberValue(
                 row.find(
@@ -2810,6 +3332,7 @@ $(document).ready(function () {
 
 
         calculateFinancialSummary();
+
     }
 
 
@@ -2867,6 +3390,7 @@ $(document).ready(function () {
 
             const wrapper =
                 $('#expense-wrapper');
+
 
             const index =
                 wrapper.find(
@@ -2969,7 +3493,10 @@ $(document).ready(function () {
                             class="form-control custom-select2"
                         >
 
-                            <option value="pending" selected>
+                            <option
+                                value="pending"
+                                selected
+                            >
                                 Pending
                             </option>
 
@@ -3022,6 +3549,8 @@ $(document).ready(function () {
             );
 
 
+            updateExpenseIndexes();
+
             updateExpenseRemoveButtons();
 
             calculateFinancialSummary();
@@ -3042,7 +3571,9 @@ $(document).ready(function () {
         function () {
 
             $(this)
-                .closest('.expense-row')
+                .closest(
+                    '.expense-row'
+                )
                 .remove();
 
 
@@ -3064,6 +3595,7 @@ $(document).ready(function () {
 
     function updateExpenseIndexes()
     {
+
         $('#expense-wrapper .expense-row')
             .each(function (index) {
 
@@ -3078,11 +3610,15 @@ $(document).ready(function () {
                     .each(function () {
 
                         const name =
-                            $(this).attr('name');
+                            $(this).attr(
+                                'name'
+                            );
+
 
                         if (!name) {
                             return;
                         }
+
 
                         $(this).attr(
                             'name',
@@ -3095,6 +3631,7 @@ $(document).ready(function () {
                     });
 
             });
+
     }
 
 
@@ -3106,16 +3643,20 @@ $(document).ready(function () {
 
     function updateExpenseRemoveButtons()
     {
+
         const rows =
             $('#expense-wrapper .expense-row');
 
 
         rows
-            .find('.remove-expense')
+            .find(
+                '.remove-expense'
+            )
             .prop(
                 'disabled',
                 rows.length <= 1
             );
+
     }
 
 
@@ -3127,9 +3668,17 @@ $(document).ready(function () {
 
     function calculateFinancialSummary()
     {
+
         let allowanceTotal = 0;
+
         let expenseTotal = 0;
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | ALLOWANCE TOTAL
+        |--------------------------------------------------------------------------
+        */
 
         $('#allowance-wrapper .allowance-row')
             .each(function () {
@@ -3137,12 +3686,20 @@ $(document).ready(function () {
                 allowanceTotal +=
                     numberValue(
                         $(this)
-                            .find('.allowance-amount')
+                            .find(
+                                '.allowance-amount'
+                            )
                             .val()
                     );
 
             });
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE TOTAL
+        |--------------------------------------------------------------------------
+        */
 
         $('#expense-wrapper .expense-row')
             .each(function () {
@@ -3150,42 +3707,79 @@ $(document).ready(function () {
                 expenseTotal +=
                     numberValue(
                         $(this)
-                            .find('.expense-amount')
+                            .find(
+                                '.expense-amount'
+                            )
                             .val()
                     );
 
             });
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | GRAND TOTAL
+        |--------------------------------------------------------------------------
+        */
+
         const grandTotal =
             allowanceTotal +
             expenseTotal;
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | DISPLAY VALUES
+        |--------------------------------------------------------------------------
+        */
+
         $('#total-allowance').val(
-            formatAmount(allowanceTotal)
+            formatAmount(
+                allowanceTotal
+            )
         );
+
 
         $('#total-expense').val(
-            formatAmount(expenseTotal)
+            formatAmount(
+                expenseTotal
+            )
         );
+
 
         $('#grand-total').val(
-            formatAmount(grandTotal)
+            formatAmount(
+                grandTotal
+            )
         );
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | HIDDEN VALUES
+        |--------------------------------------------------------------------------
+        */
 
         $('#total_allowance').val(
-            formatAmount(allowanceTotal)
+            formatAmount(
+                allowanceTotal
+            )
         );
+
 
         $('#total_expense').val(
-            formatAmount(expenseTotal)
+            formatAmount(
+                expenseTotal
+            )
         );
 
+
         $('#grand_total').val(
-            formatAmount(grandTotal)
+            formatAmount(
+                grandTotal
+            )
         );
+
     }
 
 
@@ -3197,6 +3791,7 @@ $(document).ready(function () {
 
     function initializeSelect2(element)
     {
+
         if (
             element &&
             element.length &&
@@ -3204,12 +3799,17 @@ $(document).ready(function () {
         ) {
 
             element.select2({
+
                 width: '100%',
+
                 placeholder: 'Select',
+
                 allowClear: true
+
             });
 
         }
+
     }
 
 
@@ -3242,6 +3842,7 @@ $(document).ready(function () {
             const row =
                 $(this);
 
+
             if (
                 row.find(
                     '.allowance-select'
@@ -3270,6 +3871,7 @@ $(document).ready(function () {
 
             const row =
                 $(this);
+
 
             if (
                 row.find(
@@ -3324,6 +3926,12 @@ $(document).ready(function () {
             calculateTotalKm();
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL ALLOWANCE CALCULATION
+            |--------------------------------------------------------------------------
+            */
+
             $('#allowance-wrapper .allowance-row')
                 .each(function () {
 
@@ -3333,6 +3941,12 @@ $(document).ready(function () {
 
                 });
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL EXPENSE CALCULATION
+            |--------------------------------------------------------------------------
+            */
 
             $('#expense-wrapper .expense-row')
                 .each(function () {
@@ -3344,6 +3958,12 @@ $(document).ready(function () {
                 });
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL SUMMARY
+            |--------------------------------------------------------------------------
+            */
+
             calculateFinancialSummary();
 
 
@@ -3354,11 +3974,16 @@ $(document).ready(function () {
             */
 
             $('#slip_no').val(
+
                 $('#slip_no')
                     .val()
                     .trim()
                     .toUpperCase()
-                    .replace(/\s+/g, '')
+                    .replace(
+                        /\s+/g,
+                        ''
+                    )
+
             );
 
 
@@ -3369,7 +3994,10 @@ $(document).ready(function () {
             */
 
             $('#update-duty-slip-btn')
-                .prop('disabled', true)
+                .prop(
+                    'disabled',
+                    true
+                )
                 .html(
                     '<i class="fa fa-spinner fa-spin"></i> Updating Duty Slip...'
                 );

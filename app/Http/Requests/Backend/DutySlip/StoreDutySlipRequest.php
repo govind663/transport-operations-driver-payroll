@@ -177,16 +177,6 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             | DRIVER ALLOWANCES
             |--------------------------------------------------------------------------
-            |
-            | Example:
-            |
-            | driver_allowances[0][allowance_id]
-            | driver_allowances[0][quantity]
-            | driver_allowances[0][rate]
-            | driver_allowances[0][amount]
-            | driver_allowances[0][remarks]
-            | driver_allowances[0][status]
-            |
             */
 
             'driver_allowances' => [
@@ -241,16 +231,6 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             | DRIVER EXPENSES
             |--------------------------------------------------------------------------
-            |
-            | Example:
-            |
-            | driver_expenses[0][expense_id]
-            | driver_expenses[0][quantity]
-            | driver_expenses[0][rate]
-            | driver_expenses[0][amount]
-            | driver_expenses[0][remarks]
-            | driver_expenses[0][status]
-            |
             */
 
             'driver_expenses' => [
@@ -305,10 +285,6 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             | FUEL INFORMATION
             |--------------------------------------------------------------------------
-            |
-            | These are vehicle/trip related fields.
-            | They are NOT driver expense line items.
-            |
             */
 
             'fuel_quantity' => [
@@ -321,6 +297,20 @@ class StoreDutySlipRequest extends FormRequest
                 'nullable',
                 'numeric',
                 'min:0',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY SLIP FILE
+            |--------------------------------------------------------------------------
+            */
+
+            'duty_slip_file' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
             ],
 
 
@@ -677,6 +667,22 @@ class StoreDutySlipRequest extends FormRequest
 
             'fuel_amount.min' =>
                 'Fuel amount cannot be negative.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY SLIP FILE
+            |--------------------------------------------------------------------------
+            */
+
+            'duty_slip_file.file' =>
+                'Please upload a valid duty slip file.',
+
+            'duty_slip_file.mimes' =>
+                'Duty slip file must be a PDF, JPG, JPEG, or PNG file.',
+
+            'duty_slip_file.max' =>
+                'Duty slip file may not exceed 5 MB.',
 
 
             /*
