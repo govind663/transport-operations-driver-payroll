@@ -64,12 +64,14 @@ class DutySlip extends Model
         */
         'remarks',
 
+
         /*
         |--------------------------------------------------------------------------
-        | Duty Slip File
+        | Duty Slip Documents
         |--------------------------------------------------------------------------
         */
-        'duty_slip_file',
+        'duty_slip_front_file',
+        'duty_slip_back_file',
 
 
         /*

@@ -302,11 +302,25 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DUTY SLIP FILE
+            | DUTY SLIP FRONT FILE
             |--------------------------------------------------------------------------
             */
 
-            'duty_slip_file' => [
+            'duty_slip_front_file' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY SLIP BACK FILE
+            |--------------------------------------------------------------------------
+            */
+
+            'duty_slip_back_file' => [
                 'nullable',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
@@ -671,18 +685,34 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DUTY SLIP FILE
+            | DUTY SLIP FRONT FILE
             |--------------------------------------------------------------------------
             */
 
-            'duty_slip_file.file' =>
-                'Please upload a valid duty slip file.',
+            'duty_slip_front_file.file' =>
+                'Please upload a valid duty slip front file.',
 
-            'duty_slip_file.mimes' =>
-                'Duty slip file must be a PDF, JPG, JPEG, or PNG file.',
+            'duty_slip_front_file.mimes' =>
+                'Duty slip front file must be a PDF, JPG, JPEG, or PNG file.',
 
-            'duty_slip_file.max' =>
-                'Duty slip file may not exceed 5 MB.',
+            'duty_slip_front_file.max' =>
+                'Duty slip front file may not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY SLIP BACK FILE
+            |--------------------------------------------------------------------------
+            */
+
+            'duty_slip_back_file.file' =>
+                'Please upload a valid duty slip back file.',
+
+            'duty_slip_back_file.mimes' =>
+                'Duty slip back file must be a PDF, JPG, JPEG, or PNG file.',
+
+            'duty_slip_back_file.max' =>
+                'Duty slip back file may not exceed 5 MB.',
 
 
             /*

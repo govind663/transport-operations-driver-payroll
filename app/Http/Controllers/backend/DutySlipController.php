@@ -68,16 +68,6 @@ class DutySlipController extends Controller
      */
     public function create(): View
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Duty Assignments
-        |--------------------------------------------------------------------------
-        |
-        | Only valid active duty assignments should be available
-        | while creating a new duty slip.
-        |
-        */
-
         $dutyAssignments = DutyAssignment::query()
             ->whereIn('status', [
                 DutyAssignment::STATUS_ASSIGNED,
@@ -92,36 +82,16 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Allowance Master
-        |--------------------------------------------------------------------------
-        |
-        | Used by Duty Slip > Driver Allowance > Add More.
-        |
-        */
-
         $allowances = Allowance::query()
             ->latest('id')
             ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Expense Master
-        |--------------------------------------------------------------------------
-        |
-        | Used by Duty Slip > Driver Expense > Add More.
-        |
-        */
 
         $expenses = Expense::query()
             ->latest('id')
             ->get();
 
-
-        return view('backend.duty-slips.create',
+        return view(
+            'backend.duty-slips.create',
             compact(
                 'dutyAssignments',
                 'allowances',
@@ -143,7 +113,6 @@ class DutySlipController extends Controller
     public function store(
         StoreDutySlipRequest $request
     ): RedirectResponse {
-
         $this->dutySlipService->store(
             $request->validated()
         );
@@ -169,12 +138,10 @@ class DutySlipController extends Controller
     public function show(
         DutySlip $dutySlip
     ): View {
-
         $dutySlip = $this->dutySlipService
             ->findById(
                 $dutySlip->id
             );
-
 
         return view('backend.duty-slips.show',
             compact('dutySlip')
@@ -194,28 +161,10 @@ class DutySlipController extends Controller
     public function edit(
         DutySlip $dutySlip
     ): View {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Load Duty Slip
-        |--------------------------------------------------------------------------
-        |
-        | Existing allowances and expenses are loaded so that
-        | Add More rows can be populated on the edit page.
-        |
-        */
-
         $dutySlip = $this->dutySlipService
             ->findById(
                 $dutySlip->id
             );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Duty Assignments
-        |--------------------------------------------------------------------------
-        */
 
         $dutyAssignments = DutyAssignment::query()
             ->with([
@@ -226,28 +175,13 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Allowance Master
-        |--------------------------------------------------------------------------
-        */
-
         $allowances = Allowance::query()
             ->latest('id')
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Expense Master
-        |--------------------------------------------------------------------------
-        */
-
         $expenses = Expense::query()
             ->latest('id')
             ->get();
-
 
         return view('backend.duty-slips.edit',
             compact(
@@ -273,12 +207,10 @@ class DutySlipController extends Controller
         UpdateDutySlipRequest $request,
         DutySlip $dutySlip
     ): RedirectResponse {
-
         $this->dutySlipService->update(
             $dutySlip,
             $request->validated()
         );
-
 
         return redirect()
             ->route('duty-slips.index')
@@ -301,16 +233,14 @@ class DutySlipController extends Controller
     public function destroy(
         DutySlip $dutySlip
     ): RedirectResponse {
-
         $this->dutySlipService->delete(
             $dutySlip
         );
 
-
         return redirect()
             ->route('duty-slips.index')
             ->with(
-                'success',
+                'message',
                 'Duty slip deleted successfully.'
             );
     }

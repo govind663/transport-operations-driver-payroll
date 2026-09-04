@@ -102,23 +102,29 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
-            $allowances = $data['allowances'] ?? [];
+            $allowances =
+                $data['allowances'] ?? [];
 
-            $expenses = $data['expenses'] ?? [];
+            $expenses =
+                $data['expenses'] ?? [];
 
 
             /*
             |--------------------------------------------------------------------------
-            | Duty Slip File
+            | Duty Slip Front / Back Files
             |--------------------------------------------------------------------------
             */
 
-            $dutySlipFile = $data['duty_slip_file'] ?? null;
+            $frontFile =
+                $data['duty_slip_front_file'] ?? null;
+
+            $backFile =
+                $data['duty_slip_back_file'] ?? null;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Remove Child / File Data From Duty Slip
+            | Remove Child Data
             |--------------------------------------------------------------------------
             */
 
@@ -134,7 +140,8 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
-            $data['created_by'] = Auth::id();
+            $data['created_by'] =
+                Auth::id();
 
 
             /*
@@ -150,18 +157,36 @@ class DutySlipService
 
             /*
             |--------------------------------------------------------------------------
-            | Upload Duty Slip File
+            | Upload Duty Slip Front
             |--------------------------------------------------------------------------
             */
 
             if (
-                $dutySlipFile instanceof UploadedFile
+                $frontFile instanceof UploadedFile
             ) {
 
-                $data['duty_slip_file'] =
+                $data['duty_slip_front_file'] =
                     $this->fileUploadService->upload(
-                        $dutySlipFile,
-                        'duty-slip'
+                        $frontFile,
+                        'duty-slip/front'
+                    );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Upload Duty Slip Back
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $backFile instanceof UploadedFile
+            ) {
+
+                $data['duty_slip_back_file'] =
+                    $this->fileUploadService->upload(
+                        $backFile,
+                        'duty-slip/back'
                     );
             }
 
@@ -172,7 +197,8 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
-            $dutySlip = DutySlip::create($data);
+            $dutySlip =
+                DutySlip::create($data);
 
 
             /*
@@ -239,19 +265,24 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
-            $allowances = $data['allowances'] ?? [];
+            $allowances =
+                $data['allowances'] ?? [];
 
-            $expenses = $data['expenses'] ?? [];
+            $expenses =
+                $data['expenses'] ?? [];
 
 
             /*
             |--------------------------------------------------------------------------
-            | Duty Slip File
+            | New Duty Slip Front / Back Files
             |--------------------------------------------------------------------------
             */
 
-            $newDutySlipFile =
-                $data['duty_slip_file'] ?? null;
+            $newFrontFile =
+                $data['duty_slip_front_file'] ?? null;
+
+            $newBackFile =
+                $data['duty_slip_back_file'] ?? null;
 
 
             /*
@@ -272,50 +303,99 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
-            $data['updated_by'] = Auth::id();
+            $data['updated_by'] =
+                Auth::id();
 
 
             /*
             |--------------------------------------------------------------------------
-            | Upload New Duty Slip File
+            | Upload New Front File
             |--------------------------------------------------------------------------
             */
 
             if (
-                $newDutySlipFile instanceof UploadedFile
+                $newFrontFile instanceof UploadedFile
             ) {
 
-                $newFile =
+                $newFrontFilePath =
                     $this->fileUploadService->upload(
-                        $newDutySlipFile,
-                        'duty-slip'
+                        $newFrontFile,
+                        'duty-slip/front'
                     );
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | Delete Old Duty Slip File
+                | Delete Old Front File
                 |--------------------------------------------------------------------------
                 */
 
                 if (
-                    !empty($dutySlip->duty_slip_file)
+                    !empty(
+                        $dutySlip->duty_slip_front_file
+                    )
                 ) {
 
                     $this->fileUploadService->delete(
-                        $dutySlip->duty_slip_file
+                        $dutySlip->duty_slip_front_file
                     );
                 }
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | Set New File
+                | Set New Front File
                 |--------------------------------------------------------------------------
                 */
 
-                $data['duty_slip_file'] =
-                    $newFile;
+                $data['duty_slip_front_file'] =
+                    $newFrontFilePath;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Upload New Back File
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $newBackFile instanceof UploadedFile
+            ) {
+
+                $newBackFilePath =
+                    $this->fileUploadService->upload(
+                        $newBackFile,
+                        'duty-slip/back'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Delete Old Back File
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty(
+                        $dutySlip->duty_slip_back_file
+                    )
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $dutySlip->duty_slip_back_file
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Set New Back File
+                |--------------------------------------------------------------------------
+                */
+
+                $data['duty_slip_back_file'] =
+                    $newBackFilePath;
             }
 
 
@@ -386,12 +466,24 @@ class DutySlipService
 
         foreach ($allowances as $allowance) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Ignore Empty Rows
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 empty($allowance['allowance_id'])
             ) {
                 continue;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Quantity
+            |--------------------------------------------------------------------------
+            */
 
             $quantity =
                 isset($allowance['quantity'])
@@ -400,12 +492,24 @@ class DutySlipService
                     : 1;
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Rate
+            |--------------------------------------------------------------------------
+            */
+
             $rate =
                 isset($allowance['rate'])
                 && $allowance['rate'] !== ''
                     ? (float) $allowance['rate']
                     : 0;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Amount
+            |--------------------------------------------------------------------------
+            */
 
             $amount =
                 round(
@@ -414,6 +518,12 @@ class DutySlipService
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            */
+
             $driverId =
                 $allowance['driver_id']
                 ?? $this->getDriverId(
@@ -421,10 +531,18 @@ class DutySlipService
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Record
+            |--------------------------------------------------------------------------
+            */
+
             $record = null;
 
 
-            if (!empty($allowance['id'])) {
+            if (
+                !empty($allowance['id'])
+            ) {
 
                 $record =
                     DriverAllowance::query()
@@ -439,6 +557,12 @@ class DutySlipService
                         ->first();
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Existing
+            |--------------------------------------------------------------------------
+            */
 
             if ($record) {
 
@@ -468,6 +592,7 @@ class DutySlipService
 
                     'updated_by' =>
                         Auth::id(),
+
                 ]);
 
 
@@ -477,6 +602,12 @@ class DutySlipService
                 continue;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create New
+            |--------------------------------------------------------------------------
+            */
 
             $record =
                 DriverAllowance::create([
@@ -511,6 +642,7 @@ class DutySlipService
 
                     'updated_by' =>
                         Auth::id(),
+
                 ]);
 
 
@@ -518,6 +650,12 @@ class DutySlipService
                 $record->id;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Removed Rows
+        |--------------------------------------------------------------------------
+        */
 
         $query =
             DriverAllowance::query()
@@ -527,12 +665,15 @@ class DutySlipService
                 );
 
 
-        if (!empty($existingIds)) {
+        if (
+            !empty($existingIds)
+        ) {
 
             $query->whereNotIn(
                 'id',
                 $existingIds
             );
+
         }
 
 
@@ -556,12 +697,24 @@ class DutySlipService
 
         foreach ($expenses as $expense) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Ignore Empty Rows
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 empty($expense['expense_id'])
             ) {
                 continue;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Quantity
+            |--------------------------------------------------------------------------
+            */
 
             $quantity =
                 isset($expense['quantity'])
@@ -570,12 +723,24 @@ class DutySlipService
                     : 1;
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Rate
+            |--------------------------------------------------------------------------
+            */
+
             $rate =
                 isset($expense['rate'])
                 && $expense['rate'] !== ''
                     ? (float) $expense['rate']
                     : 0;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Amount
+            |--------------------------------------------------------------------------
+            */
 
             $amount =
                 round(
@@ -584,6 +749,12 @@ class DutySlipService
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Driver
+            |--------------------------------------------------------------------------
+            */
+
             $driverId =
                 $expense['driver_id']
                 ?? $this->getDriverId(
@@ -591,10 +762,18 @@ class DutySlipService
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Record
+            |--------------------------------------------------------------------------
+            */
+
             $record = null;
 
 
-            if (!empty($expense['id'])) {
+            if (
+                !empty($expense['id'])
+            ) {
 
                 $record =
                     DriverExpense::query()
@@ -609,6 +788,12 @@ class DutySlipService
                         ->first();
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Existing
+            |--------------------------------------------------------------------------
+            */
 
             if ($record) {
 
@@ -638,6 +823,7 @@ class DutySlipService
 
                     'updated_by' =>
                         Auth::id(),
+
                 ]);
 
 
@@ -647,6 +833,12 @@ class DutySlipService
                 continue;
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create New
+            |--------------------------------------------------------------------------
+            */
 
             $record =
                 DriverExpense::create([
@@ -681,6 +873,7 @@ class DutySlipService
 
                     'updated_by' =>
                         Auth::id(),
+
                 ]);
 
 
@@ -688,6 +881,12 @@ class DutySlipService
                 $record->id;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Removed Rows
+        |--------------------------------------------------------------------------
+        */
 
         $query =
             DriverExpense::query()
@@ -697,12 +896,15 @@ class DutySlipService
                 );
 
 
-        if (!empty($existingIds)) {
+        if (
+            !empty($existingIds)
+        ) {
 
             $query->whereNotIn(
                 'id',
                 $existingIds
             );
+
         }
 
 
@@ -720,9 +922,16 @@ class DutySlipService
         DutySlip $dutySlip
     ): ?int {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Duty Assignment Driver
+        |--------------------------------------------------------------------------
+        */
+
         $dutySlip->loadMissing(
             'dutyAssignment'
         );
+
 
         return $dutySlip
             ->dutyAssignment
@@ -754,6 +963,7 @@ class DutySlipService
                     ->driverAllowances()
                     ->delete();
 
+
                 $dutySlip
                     ->driverExpenses()
                     ->delete();
@@ -761,16 +971,36 @@ class DutySlipService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Delete Duty Slip File
+                | Delete Duty Slip Front File
                 |--------------------------------------------------------------------------
                 */
 
                 if (
-                    !empty($dutySlip->duty_slip_file)
+                    !empty(
+                        $dutySlip->duty_slip_front_file
+                    )
                 ) {
 
                     $this->fileUploadService->delete(
-                        $dutySlip->duty_slip_file
+                        $dutySlip->duty_slip_front_file
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Delete Duty Slip Back File
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty(
+                        $dutySlip->duty_slip_back_file
+                    )
+                ) {
+
+                    $this->fileUploadService->delete(
+                        $dutySlip->duty_slip_back_file
                     );
                 }
 
@@ -782,7 +1012,8 @@ class DutySlipService
                 */
 
                 if (
-                    $dutySlip->getConnection()
+                    $dutySlip
+                        ->getConnection()
                         ->getSchemaBuilder()
                         ->hasColumn(
                             $dutySlip->getTable(),
@@ -799,7 +1030,7 @@ class DutySlipService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Delete Duty Slip
+                | Soft Delete Duty Slip
                 |--------------------------------------------------------------------------
                 */
 

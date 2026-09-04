@@ -196,7 +196,6 @@
                     {{-- ================================================= --}}
                     {{-- Duty Slip Number --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -241,11 +240,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Duty Assignment --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -317,11 +314,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Duty Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -370,42 +365,43 @@
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
                             Duty Slip Document
-
                         </h5>
 
                         <hr>
 
                     </div>
 
-                    {{-- Duty Slip File --}}
+                    {{-- ================================================= --}}
+                    {{-- DUTY SLIP FRONT --}}
+                    {{-- ================================================= --}}
                     <div class="col-md-6">
 
                         <div class="form-group">
 
-                            <label>
-
+                            <label for="duty_slip_front_file">
                                 <b>
-                                    Upload Duty Slip
+                                    Upload Duty Slip Front
                                 </b>
-
                             </label>
 
                             <input
                                 type="file"
-                                name="duty_slip_file"
-                                id="duty_slip_file"
-                                class="form-control @error('duty_slip_file') is-invalid @enderror"
+                                name="duty_slip_front_file"
+                                id="duty_slip_front_file"
+                                class="form-control @error('duty_slip_front_file') is-invalid @enderror"
                                 accept=".pdf,.jpg,.jpeg,.png"
-                                onchange="previewDutySlipFile('duty_slip_file','duty-slip-file-preview')"
+                                onchange="previewDutySlipFile(
+                                    'duty_slip_front_file',
+                                    'duty-slip-front-file-preview'
+                                )"
                             >
 
                             <small class="text-muted">
                                 Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
                             </small>
 
-                            @error('duty_slip_file')
+                            @error('duty_slip_front_file')
                                 <span class="invalid-feedback d-block">
                                     <strong>{{ $message }}</strong>
                                 </span>
@@ -413,27 +409,46 @@
 
 
                             {{-- ================================================= --}}
-                            {{-- EXISTING / NEW FILE PREVIEW --}}
+                            {{-- EXISTING / NEW FRONT FILE PREVIEW --}}
                             {{-- ================================================= --}}
 
                             <div
-                                id="duty-slip-file-preview"
-                                class="mt-3">
+                                id="duty-slip-front-file-preview"
+                                class="mt-3"
+                            >
 
-                                @if(!empty($dutySlip->duty_slip_file))
+                                @if(!empty($dutySlip->duty_slip_front_file))
 
                                     @php
-                                        $filePath = $dutySlip->duty_slip_file;
-                                        $fileUrl = asset('storage/' . ltrim($filePath, '/'));
-                                        $fileExtension = strtolower(
-                                            pathinfo($filePath, PATHINFO_EXTENSION)
-                                        );
+
+                                        $frontFilePath =
+                                            $dutySlip->duty_slip_front_file;
+
+                                        $frontFileUrl =
+                                            asset(
+                                                'storage/' .
+                                                ltrim(
+                                                    $frontFilePath,
+                                                    '/'
+                                                )
+                                            );
+
+                                        $frontFileExtension =
+                                            strtolower(
+                                                pathinfo(
+                                                    $frontFilePath,
+                                                    PATHINFO_EXTENSION
+                                                )
+                                            );
+
                                     @endphp
 
 
+                                    {{-- FRONT IMAGE --}}
+
                                     @if(
                                         in_array(
-                                            $fileExtension,
+                                            $frontFileExtension,
                                             ['jpg', 'jpeg', 'png']
                                         )
                                     )
@@ -441,8 +456,8 @@
                                         <div>
 
                                             <img
-                                                src="{{ $fileUrl }}"
-                                                alt="Duty Slip"
+                                                src="{{ $frontFileUrl }}"
+                                                alt="Duty Slip Front"
                                                 class="img-thumbnail"
                                                 style="
                                                     width:220px;
@@ -450,22 +465,26 @@
                                                     object-fit:contain;
                                                     border-radius:10px;
                                                     border:2px solid #dee2e6;
-                                                    box-shadow:0 2px 10px rgba(0,0,0,.15);
+                                                    box-shadow:
+                                                        0 2px 10px
+                                                        rgba(0,0,0,.15);
                                                     background:#fff;
                                                 "
                                             >
 
+
                                             <div class="mt-2">
 
                                                 <a
-                                                    href="{{ $fileUrl }}"
+                                                    href="{{ $frontFileUrl }}"
                                                     target="_blank"
+                                                    rel="noopener noreferrer"
                                                     class="btn btn-sm btn-primary"
                                                 >
 
                                                     <i class="fa fa-eye"></i>
 
-                                                    View Duty Slip
+                                                    View Duty Slip Front
 
                                                 </a>
 
@@ -473,7 +492,12 @@
 
                                         </div>
 
-                                    @elseif($fileExtension === 'pdf')
+
+                                    {{-- FRONT PDF --}}
+
+                                    @elseif(
+                                        $frontFileExtension === 'pdf'
+                                    )
 
                                         <div
                                             class="alert alert-light border d-flex align-items-center"
@@ -486,12 +510,17 @@
 
                                             <div
                                                 class="mr-3"
-                                                style="min-width:45px;"
+                                                style="
+                                                    min-width:45px;
+                                                    text-align:center;
+                                                "
                                             >
 
                                                 <i
                                                     class="fa fa-file-pdf-o text-danger"
-                                                    style="font-size:36px;"
+                                                    style="
+                                                        font-size:36px;
+                                                    "
                                                 ></i>
 
                                             </div>
@@ -500,18 +529,20 @@
                                             <div>
 
                                                 <strong class="d-block">
-                                                    Duty Slip PDF
+                                                    Duty Slip Front PDF
                                                 </strong>
 
+
                                                 <a
-                                                    href="{{ $fileUrl }}"
+                                                    href="{{ $frontFileUrl }}"
                                                     target="_blank"
+                                                    rel="noopener noreferrer"
                                                     class="btn btn-sm btn-primary mt-2"
                                                 >
 
                                                     <i class="fa fa-eye"></i>
 
-                                                    View PDF
+                                                    View Front PDF
 
                                                 </a>
 
@@ -529,11 +560,197 @@
 
                     </div>
 
+                    {{-- ================================================= --}}
+                    {{-- DUTY SLIP BACK --}}
+                    {{-- ================================================= --}}
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="duty_slip_back_file">
+                                <b>
+                                    Upload Duty Slip Back
+                                </b>
+                            </label>
+
+                            <input
+                                type="file"
+                                name="duty_slip_back_file"
+                                id="duty_slip_back_file"
+                                class="form-control @error('duty_slip_back_file') is-invalid @enderror"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="previewDutySlipFile(
+                                    'duty_slip_back_file',
+                                    'duty-slip-back-file-preview'
+                                )"
+                            >
+
+                            <small class="text-muted">
+                                Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                            </small>
+
+                            @error('duty_slip_back_file')
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+
+
+                            {{-- ================================================= --}}
+                            {{-- EXISTING / NEW BACK FILE PREVIEW --}}
+                            {{-- ================================================= --}}
+
+                            <div
+                                id="duty-slip-back-file-preview"
+                                class="mt-3"
+                            >
+
+                                @if(!empty($dutySlip->duty_slip_back_file))
+
+                                    @php
+
+                                        $backFilePath =
+                                            $dutySlip->duty_slip_back_file;
+
+                                        $backFileUrl =
+                                            asset(
+                                                'storage/' .
+                                                ltrim(
+                                                    $backFilePath,
+                                                    '/'
+                                                )
+                                            );
+
+                                        $backFileExtension =
+                                            strtolower(
+                                                pathinfo(
+                                                    $backFilePath,
+                                                    PATHINFO_EXTENSION
+                                                )
+                                            );
+
+                                    @endphp
+
+
+                                    {{-- BACK IMAGE --}}
+
+                                    @if(
+                                        in_array(
+                                            $backFileExtension,
+                                            ['jpg', 'jpeg', 'png']
+                                        )
+                                    )
+
+                                        <div>
+
+                                            <img
+                                                src="{{ $backFileUrl }}"
+                                                alt="Duty Slip Back"
+                                                class="img-thumbnail"
+                                                style="
+                                                    width:220px;
+                                                    max-height:220px;
+                                                    object-fit:contain;
+                                                    border-radius:10px;
+                                                    border:2px solid #dee2e6;
+                                                    box-shadow:
+                                                        0 2px 10px
+                                                        rgba(0,0,0,.15);
+                                                    background:#fff;
+                                                "
+                                            >
+
+
+                                            <div class="mt-2">
+
+                                                <a
+                                                    href="{{ $backFileUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="btn btn-sm btn-primary"
+                                                >
+
+                                                    <i class="fa fa-eye"></i>
+
+                                                    View Duty Slip Back
+
+                                                </a>
+
+                                            </div>
+
+                                        </div>
+
+
+                                    {{-- BACK PDF --}}
+
+                                    @elseif(
+                                        $backFileExtension === 'pdf'
+                                    )
+
+                                        <div
+                                            class="alert alert-light border d-flex align-items-center"
+                                            style="
+                                                border-radius:10px;
+                                                padding:12px 15px;
+                                                max-width:450px;
+                                            "
+                                        >
+
+                                            <div
+                                                class="mr-3"
+                                                style="
+                                                    min-width:45px;
+                                                    text-align:center;
+                                                "
+                                            >
+
+                                                <i
+                                                    class="fa fa-file-pdf-o text-danger"
+                                                    style="
+                                                        font-size:36px;
+                                                    "
+                                                ></i>
+
+                                            </div>
+
+
+                                            <div>
+
+                                                <strong class="d-block">
+                                                    Duty Slip Back PDF
+                                                </strong>
+
+
+                                                <a
+                                                    href="{{ $backFileUrl }}"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="btn btn-sm btn-primary mt-2"
+                                                >
+
+                                                    <i class="fa fa-eye"></i>
+
+                                                    View Back PDF
+
+                                                </a>
+
+                                            </div>
+
+                                        </div>
+
+                                    @endif
+
+                                @endif
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
                     {{-- ================================================= --}}
                     {{-- DRIVER & VEHICLE INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -544,11 +761,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Driver --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -617,11 +832,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Vehicle --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -684,11 +897,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Vehicle Type --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -728,11 +939,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- TRIP INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -743,11 +952,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Start Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -778,11 +985,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Start Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -812,11 +1017,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- End Date --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -846,11 +1049,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- End Time --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-3">
 
                         <div class="form-group">
@@ -880,11 +1081,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Pickup --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -908,11 +1107,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- Drop --}}
                     {{-- ================================================= --}}
-
                     <div class="col-md-6">
 
                         <div class="form-group">
@@ -936,10 +1133,9 @@
 
                     </div>
 
-                                        {{-- ================================================= --}}
+                    {{-- ================================================= --}}
                     {{-- KM INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -950,9 +1146,7 @@
 
                     </div>
 
-
                     {{-- Opening KM --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -986,9 +1180,7 @@
 
                     </div>
 
-
                     {{-- Closing KM --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1022,9 +1214,7 @@
 
                     </div>
 
-
                     {{-- Total KM --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1050,11 +1240,9 @@
 
                     </div>
 
-
                     {{-- ================================================= --}}
                     {{-- PASSENGER INFORMATION --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -1065,9 +1253,7 @@
 
                     </div>
 
-
                     {{-- Passenger Name --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1091,9 +1277,7 @@
 
                     </div>
 
-
                     {{-- Passenger Mobile --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1118,9 +1302,7 @@
 
                     </div>
 
-
                     {{-- Number Of Passengers --}}
-
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -1145,10 +1327,9 @@
 
                     </div>
 
-                                        {{-- ========================================================= --}}
+                    {{-- ========================================================= --}}
                     {{-- DRIVER ALLOWANCE --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12 mt-4">
 
                         <h5
@@ -1161,7 +1342,6 @@
                         <hr>
 
                     </div>
-
 
                     <div class="col-12">
 
@@ -1577,10 +1757,9 @@
 
                     </div>
 
-                                        {{-- ========================================================= --}}
+                    {{-- ========================================================= --}}
                     {{-- DRIVER EXPENSE --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12 mt-4">
 
                         <h5
@@ -1593,7 +1772,6 @@
                         <hr>
 
                     </div>
-
 
                     <div class="col-12">
 
@@ -2004,10 +2182,9 @@
 
                     </div>
 
-                                        {{-- ========================================================= --}}
+                    {{-- ========================================================= --}}
                     {{-- FINANCIAL SUMMARY --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12 mt-4">
 
                         <div class="card">
@@ -2139,11 +2316,9 @@
 
                     </div>
 
-
                     {{-- ========================================================= --}}
                     {{-- REMARKS --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -2153,7 +2328,6 @@
                         <hr>
 
                     </div>
-
 
                     <div class="col-md-12">
 
@@ -2185,11 +2359,9 @@
 
                     </div>
 
-
                     {{-- ========================================================= --}}
                     {{-- STATUS --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -2199,7 +2371,6 @@
                         <hr>
 
                     </div>
-
 
                     <div class="col-md-4">
 
@@ -2264,11 +2435,9 @@
 
                     </div>
 
-
                     {{-- ========================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ========================================================= --}}
-
                     <div class="col-12">
 
                         <div class="text-right mt-4">
@@ -2300,7 +2469,6 @@
                         </div>
 
                     </div>
-
 
                 </div>
 
@@ -2347,7 +2515,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | DUTY SLIP FILE PREVIEW
+    | DUTY SLIP FRONT / BACK FILE PREVIEW
     |--------------------------------------------------------------------------
     */
 
@@ -2372,6 +2540,9 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         | No New File Selected
         |--------------------------------------------------------------------------
+        |
+        | Existing file preview remains visible.
+        |
         */
 
         if (
@@ -2384,6 +2555,18 @@ $(document).ready(function () {
 
         const file =
             input.files[0];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Document Label
+        |--------------------------------------------------------------------------
+        */
+
+        const documentLabel =
+            inputId === 'duty_slip_front_file'
+                ? 'Duty Slip Front'
+                : 'Duty Slip Back';
 
 
         /*
@@ -2401,16 +2584,18 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | File Type Validation
+        | FILE TYPE VALIDATION
         |--------------------------------------------------------------------------
         */
 
         if (
-            !allowedTypes.includes(file.type)
+            !allowedTypes.includes(
+                file.type
+            )
         ) {
 
             alert(
-                'Please upload a valid PDF, JPG, JPEG, or PNG file.'
+                `${documentLabel} must be a valid PDF, JPG, JPEG, or PNG file.`
             );
 
             input.value = '';
@@ -2421,7 +2606,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | File Size Validation - 5 MB
+        | FILE SIZE VALIDATION - 5 MB
         |--------------------------------------------------------------------------
         */
 
@@ -2434,7 +2619,7 @@ $(document).ready(function () {
         ) {
 
             alert(
-                'Duty slip file size must not exceed 5 MB.'
+                `${documentLabel} size must not exceed 5 MB.`
             );
 
             input.value = '';
@@ -2445,11 +2630,8 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Clear Existing Preview
+        | REPLACE EXISTING PREVIEW
         |--------------------------------------------------------------------------
-        |
-        | New file selected hone par old file preview replace hoga.
-        |
         */
 
         preview.innerHTML = '';
@@ -2457,7 +2639,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | File Size
+        | FILE SIZE
         |--------------------------------------------------------------------------
         */
 
@@ -2471,7 +2653,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | PDF Preview
+        | PDF PREVIEW
         |--------------------------------------------------------------------------
         */
 
@@ -2497,7 +2679,10 @@ $(document).ready(function () {
 
                     <div
                         class="mr-3"
-                        style="min-width:45px;"
+                        style="
+                            min-width:45px;
+                            text-align:center;
+                        "
                     >
 
                         <i
@@ -2524,7 +2709,9 @@ $(document).ready(function () {
 
                         <small class="text-muted d-block">
 
-                            PDF Document
+                            ${documentLabel}
+                            &nbsp;•&nbsp;
+                            PDF
                             &nbsp;•&nbsp;
                             ${fileSize} MB
 
@@ -2534,6 +2721,7 @@ $(document).ready(function () {
                         <a
                             href="${fileUrl}"
                             target="_blank"
+                            rel="noopener noreferrer"
                             class="btn btn-sm btn-primary mt-2"
                         >
 
@@ -2571,7 +2759,7 @@ $(document).ready(function () {
 
                     <img
                         src="${e.target.result}"
-                        alt="Duty Slip Preview"
+                        alt="${documentLabel} Preview"
                         class="img-thumbnail"
                         style="
                             width:220px;
@@ -2579,7 +2767,9 @@ $(document).ready(function () {
                             object-fit:contain;
                             border-radius:10px;
                             border:2px solid #dee2e6;
-                            box-shadow:0 2px 10px rgba(0,0,0,.15);
+                            box-shadow:
+                                0 2px 10px
+                                rgba(0,0,0,.15);
                             background:#fff;
                         "
                     >
@@ -2599,7 +2789,9 @@ $(document).ready(function () {
 
                         <small class="text-muted d-block">
 
-                            Image Document
+                            ${documentLabel}
+                            &nbsp;•&nbsp;
+                            Image
                             &nbsp;•&nbsp;
                             ${fileSize} MB
 
@@ -2623,15 +2815,22 @@ $(document).ready(function () {
     |--------------------------------------------------------------------------
     */
 
-    $('#slip_no').on('blur', function () {
+    $('#slip_no').on(
+        'blur',
+        function () {
 
-        this.value = $(this)
-            .val()
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, '');
+            this.value =
+                $(this)
+                    .val()
+                    .trim()
+                    .toUpperCase()
+                    .replace(
+                        /\s+/g,
+                        ''
+                    );
 
-    });
+        }
+    );
 
 
     /*
@@ -2640,14 +2839,65 @@ $(document).ready(function () {
     |--------------------------------------------------------------------------
     */
 
-    $('#passenger_mobile').on('input', function () {
+    $('#passenger_mobile').on(
+        'input',
+        function () {
 
-        this.value = $(this)
-            .val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10);
+            this.value =
+                $(this)
+                    .val()
+                    .replace(
+                        /[^0-9]/g,
+                        ''
+                    )
+                    .slice(
+                        0,
+                        10
+                    );
 
-    });
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NUMBER VALIDATION - LIVE
+    |--------------------------------------------------------------------------
+    */
+
+    $(document).on(
+        'input',
+        '#opening_km, #closing_km, ' +
+        '.allowance-quantity, .allowance-rate, ' +
+        '.expense-quantity, .expense-rate',
+        function () {
+
+            let value =
+                this.value;
+
+
+            if (
+                value === ''
+            ) {
+                return;
+            }
+
+
+            value =
+                parseFloat(value);
+
+
+            if (
+                isNaN(value) ||
+                value < 0
+            ) {
+
+                this.value = 0;
+
+            }
+
+        }
+    );
 
 
     /*
@@ -2658,6 +2908,7 @@ $(document).ready(function () {
 
     function calculateTotalKm()
     {
+
         const opening =
             numberValue(
                 $('#opening_km').val()
@@ -2678,13 +2929,16 @@ $(document).ready(function () {
         ) {
 
             totalKm =
-                closing - opening;
+                closing -
+                opening;
 
         }
 
 
         $('#total_km').val(
-            formatAmount(totalKm)
+            formatAmount(
+                totalKm
+            )
         );
 
 
@@ -2720,7 +2974,9 @@ $(document).ready(function () {
                     row.find(
                         '.allowance-quantity'
                     ).val(
-                        formatAmount(totalKm)
+                        formatAmount(
+                            totalKm
+                        )
                     );
 
 
@@ -2734,6 +2990,7 @@ $(document).ready(function () {
 
 
         calculateFinancialSummary();
+
     }
 
 
@@ -2743,8 +3000,9 @@ $(document).ready(function () {
     |--------------------------------------------------------------------------
     */
 
-    $('#opening_km, #closing_km').on(
+    $(document).on(
         'input',
+        '#opening_km, #closing_km',
         function () {
 
             calculateTotalKm();
@@ -2828,7 +3086,9 @@ $(document).ready(function () {
         row.find(
             '.allowance-rate'
         ).val(
-            formatAmount(rate)
+            formatAmount(
+                rate
+            )
         );
 
 
@@ -2851,7 +3111,9 @@ $(document).ready(function () {
             row.find(
                 '.allowance-quantity'
             ).val(
-                formatAmount(totalKm)
+                formatAmount(
+                    totalKm
+                )
             );
 
         }
@@ -2887,7 +3149,9 @@ $(document).ready(function () {
         }
 
 
-        calculateAllowanceRow(row);
+        calculateAllowanceRow(
+            row
+        );
 
     }
 
@@ -2918,13 +3182,16 @@ $(document).ready(function () {
 
 
         const amount =
-            quantity * rate;
+            quantity *
+            rate;
 
 
         row.find(
             '.allowance-amount'
         ).val(
-            formatAmount(amount)
+            formatAmount(
+                amount
+            )
         );
 
 
@@ -2950,7 +3217,9 @@ $(document).ready(function () {
                 );
 
 
-            setAllowanceRate(row);
+            setAllowanceRate(
+                row
+            );
 
         }
     );
@@ -2958,13 +3227,13 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ALLOWANCE QUANTITY
+    | ALLOWANCE QUANTITY / RATE
     |--------------------------------------------------------------------------
     */
 
     $(document).on(
         'input',
-        '.allowance-quantity',
+        '.allowance-quantity, .allowance-rate',
         function () {
 
             calculateAllowanceRow(
@@ -3126,6 +3395,7 @@ $(document).ready(function () {
                         <button
                             type="button"
                             class="btn btn-danger btn-sm remove-allowance"
+                            title="Remove"
                         >
 
                             <i class="fa fa-trash"></i>
@@ -3286,11 +3556,15 @@ $(document).ready(function () {
         row.find(
             '.expense-rate'
         ).val(
-            formatAmount(rate)
+            formatAmount(
+                rate
+            )
         );
 
 
-        calculateExpenseRow(row);
+        calculateExpenseRow(
+            row
+        );
 
     }
 
@@ -3321,13 +3595,16 @@ $(document).ready(function () {
 
 
         const amount =
-            quantity * rate;
+            quantity *
+            rate;
 
 
         row.find(
             '.expense-amount'
         ).val(
-            formatAmount(amount)
+            formatAmount(
+                amount
+            )
         );
 
 
@@ -3359,13 +3636,13 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | EXPENSE QUANTITY
+    | EXPENSE QUANTITY / RATE
     |--------------------------------------------------------------------------
     */
 
     $(document).on(
         'input',
-        '.expense-quantity',
+        '.expense-quantity, .expense-rate',
         function () {
 
             calculateExpenseRow(
@@ -3526,6 +3803,7 @@ $(document).ready(function () {
                         <button
                             type="button"
                             class="btn btn-danger btn-sm remove-expense"
+                            title="Remove"
                         >
 
                             <i class="fa fa-trash"></i>
@@ -3849,11 +4127,15 @@ $(document).ready(function () {
                 ).val()
             ) {
 
-                setAllowanceRate(row);
+                setAllowanceRate(
+                    row
+                );
 
             } else {
 
-                calculateAllowanceRow(row);
+                calculateAllowanceRow(
+                    row
+                );
 
             }
 
@@ -3879,11 +4161,15 @@ $(document).ready(function () {
                 ).val()
             ) {
 
-                setExpenseRate(row);
+                setExpenseRate(
+                    row
+                );
 
             } else {
 
-                calculateExpenseRow(row);
+                calculateExpenseRow(
+                    row
+                );
 
             }
 
@@ -3919,9 +4205,26 @@ $(document).ready(function () {
         'submit',
         function () {
 
+            const form =
+                $(this);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE INDEXES
+            |--------------------------------------------------------------------------
+            */
+
             updateAllowanceIndexes();
 
             updateExpenseIndexes();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL TOTAL KM
+            |--------------------------------------------------------------------------
+            */
 
             calculateTotalKm();
 
@@ -3960,7 +4263,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | FINAL SUMMARY
+            | FINAL FINANCIAL SUMMARY
             |--------------------------------------------------------------------------
             */
 
@@ -3989,18 +4292,30 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | PREVENT DOUBLE SUBMIT
+            | PREVENT DUPLICATE SUBMIT
             |--------------------------------------------------------------------------
             */
 
-            $('#update-duty-slip-btn')
-                .prop(
-                    'disabled',
-                    true
-                )
-                .html(
-                    '<i class="fa fa-spinner fa-spin"></i> Updating Duty Slip...'
+            const submitButton =
+                form.find(
+                    'button[type="submit"]'
                 );
+
+
+            if (
+                submitButton.length
+            ) {
+
+                submitButton
+                    .prop(
+                        'disabled',
+                        true
+                    )
+                    .html(
+                        '<i class="fa fa-spinner fa-spin"></i> Updating Duty Slip...'
+                    );
+
+            }
 
         }
     );

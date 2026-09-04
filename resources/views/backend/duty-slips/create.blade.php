@@ -401,57 +401,95 @@
                     {{-- ================================================= --}}
                     {{-- DUTY SLIP DOCUMENT --}}
                     {{-- ================================================= --}}
-
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
-
                             Duty Slip Document
-
                         </h5>
 
                         <hr>
 
                     </div>
 
-
-                    {{-- Duty Slip File --}}
+                    {{-- ================================================= --}}
+                    {{-- DUTY SLIP FRONT --}}
+                    {{-- ================================================= --}}
                     <div class="col-md-6">
 
                         <div class="form-group">
 
-                            <label>
-
-                                <b>
-                                    Upload Duty Slip
-                                </b>
-
+                            <label for="duty_slip_front_file">
+                                <b>Duty Slip Front</b>
                             </label>
 
                             <input
                                 type="file"
-                                name="duty_slip_file"
-                                id="duty_slip_file"
-                                class="form-control @error('duty_slip_file') is-invalid @enderror"
+                                name="duty_slip_front_file"
+                                id="duty_slip_front_file"
+                                class="form-control @error('duty_slip_front_file') is-invalid @enderror"
                                 accept=".pdf,.jpg,.jpeg,.png"
-                                onchange="previewDutySlipFile('duty_slip_file','duty-slip-file-preview')"
+                                onchange="previewDutySlipFile(
+                                    'duty_slip_front_file',
+                                    'duty-slip-front-file-preview'
+                                )"
                             >
 
                             <small class="text-muted">
                                 Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
                             </small>
 
-                            @error('duty_slip_file')
+                            @error('duty_slip_front_file')
                                 <span class="invalid-feedback d-block">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
 
-                            {{-- File Preview --}}
                             <div
-                                id="duty-slip-file-preview"
-                                class="mt-3">
-                            </div>
+                                id="duty-slip-front-file-preview"
+                                class="mt-3"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                    {{-- ================================================= --}}
+                    {{-- DUTY SLIP BACK --}}
+                    {{-- ================================================= --}}
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+
+                            <label for="duty_slip_back_file">
+                                <b>Duty Slip Back</b>
+                            </label>
+
+                            <input
+                                type="file"
+                                name="duty_slip_back_file"
+                                id="duty_slip_back_file"
+                                class="form-control @error('duty_slip_back_file') is-invalid @enderror"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onchange="previewDutySlipFile(
+                                    'duty_slip_back_file',
+                                    'duty-slip-back-file-preview'
+                                )"
+                            >
+
+                            <small class="text-muted">
+                                Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                            </small>
+
+                            @error('duty_slip_back_file')
+                                <span class="invalid-feedback d-block">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+
+                            <div
+                                id="duty-slip-back-file-preview"
+                                class="mt-3"
+                            ></div>
 
                         </div>
 
@@ -1849,7 +1887,6 @@
 
 @endsection
 
-
 @push('scripts')
 <script>
 
@@ -1879,7 +1916,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | DUTY SLIP FILE PREVIEW
+    | DUTY SLIP FRONT / BACK FILE PREVIEW
     |--------------------------------------------------------------------------
     */
 
@@ -1923,18 +1960,29 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
+        | File Label
+        |--------------------------------------------------------------------------
+        */
+
+        const isFront =
+            inputId === 'duty_slip_front_file';
+
+        const documentLabel =
+            isFront
+                ? 'Duty Slip Front'
+                : 'Duty Slip Back';
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Allowed MIME Types
         |--------------------------------------------------------------------------
         */
 
         const allowedTypes = [
-
             'application/pdf',
-
             'image/jpeg',
-
-            'image/png',
-
+            'image/png'
         ];
 
 
@@ -1951,10 +1999,12 @@ $(document).ready(function () {
         ) {
 
             alert(
-                'Please upload a valid PDF, JPG, JPEG, or PNG file.'
+                `${documentLabel} must be a valid PDF, JPG, JPEG, or PNG file.`
             );
 
             input.value = '';
+
+            preview.innerHTML = '';
 
             return;
         }
@@ -1975,10 +2025,12 @@ $(document).ready(function () {
         ) {
 
             alert(
-                'Duty slip file size must not exceed 5 MB.'
+                `${documentLabel} size must not exceed 5 MB.`
             );
 
             input.value = '';
+
+            preview.innerHTML = '';
 
             return;
         }
@@ -2000,7 +2052,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | PDF Preview
+        | PDF PREVIEW
         |--------------------------------------------------------------------------
         */
 
@@ -2008,6 +2060,10 @@ $(document).ready(function () {
             file.type ===
             'application/pdf'
         ) {
+
+            const fileUrl =
+                URL.createObjectURL(file);
+
 
             preview.innerHTML = `
 
@@ -2022,7 +2078,10 @@ $(document).ready(function () {
 
                     <div
                         class="mr-3"
-                        style="min-width:45px;"
+                        style="
+                            min-width:45px;
+                            text-align:center;
+                        "
                     >
 
                         <i
@@ -2046,13 +2105,34 @@ $(document).ready(function () {
                             ${file.name}
                         </strong>
 
+
                         <small class="text-muted">
 
-                            PDF Document
+                            ${documentLabel}
+                            &nbsp;•&nbsp;
+                            PDF
                             &nbsp;•&nbsp;
                             ${fileSize} MB
 
                         </small>
+
+
+                        <div class="mt-2">
+
+                            <a
+                                href="${fileUrl}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-sm btn-primary"
+                            >
+
+                                <i class="fa fa-eye"></i>
+
+                                Preview PDF
+
+                            </a>
+
+                        </div>
 
                     </div>
 
@@ -2082,7 +2162,7 @@ $(document).ready(function () {
 
                     <img
                         src="${e.target.result}"
-                        alt="Duty Slip Preview"
+                        alt="${documentLabel} Preview"
                         class="img-thumbnail"
                         style="
                             width:220px;
@@ -2109,9 +2189,12 @@ $(document).ready(function () {
                             ${file.name}
                         </strong>
 
+
                         <small class="text-muted">
 
-                            Image Document
+                            ${documentLabel}
+                            &nbsp;•&nbsp;
+                            Image
                             &nbsp;•&nbsp;
                             ${fileSize} MB
 
@@ -2178,12 +2261,6 @@ $(document).ready(function () {
             let value = this.value;
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Allow empty field while typing
-            |--------------------------------------------------------------------------
-            */
-
             if (value === '') {
                 return;
             }
@@ -2238,12 +2315,6 @@ $(document).ready(function () {
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE TOTAL KM
-        |--------------------------------------------------------------------------
-        */
-
         $('#total_km').val(
             formatAmount(totalKm)
         );
@@ -2293,12 +2364,6 @@ $(document).ready(function () {
 
             });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE FINANCIAL SUMMARY
-        |--------------------------------------------------------------------------
-        */
 
         calculateFinancialSummary();
     }
@@ -2385,12 +2450,6 @@ $(document).ready(function () {
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | GET RATE / AMOUNT
-        |--------------------------------------------------------------------------
-        */
-
         let rate =
             selectedOption.attr(
                 'data-rate'
@@ -2401,23 +2460,11 @@ $(document).ready(function () {
             numberValue(rate);
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CALCULATION TYPE
-        |--------------------------------------------------------------------------
-        */
-
         const calculationType =
             selectedOption.attr(
                 'data-calculation-type'
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SET RATE
-        |--------------------------------------------------------------------------
-        */
 
         row.find(
             '.allowance-rate'
@@ -2517,24 +2564,12 @@ $(document).ready(function () {
             quantity * rate;
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE ROW AMOUNT
-        |--------------------------------------------------------------------------
-        */
-
         row.find(
             '.allowance-amount'
         ).val(
             formatAmount(amount)
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE SUMMARY
-        |--------------------------------------------------------------------------
-        */
 
         calculateFinancialSummary();
 
@@ -2894,12 +2929,6 @@ $(document).ready(function () {
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | GET AMOUNT FROM DATABASE
-        |--------------------------------------------------------------------------
-        */
-
         let rate =
             selectedOption.attr(
                 'data-rate'
@@ -2909,12 +2938,6 @@ $(document).ready(function () {
         rate =
             numberValue(rate);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SET RATE
-        |--------------------------------------------------------------------------
-        */
 
         row.find(
             '.expense-rate'
@@ -2957,24 +2980,12 @@ $(document).ready(function () {
             quantity * rate;
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE EXPENSE AMOUNT
-        |--------------------------------------------------------------------------
-        */
-
         row.find(
             '.expense-amount'
         ).val(
             formatAmount(amount)
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE SUMMARY
-        |--------------------------------------------------------------------------
-        */
 
         calculateFinancialSummary();
 
@@ -3807,5 +3818,4 @@ $(document).ready(function () {
 });
 
 </script>
-
 @endpush
