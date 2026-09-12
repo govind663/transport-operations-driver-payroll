@@ -42,7 +42,7 @@ class DriverManagementService
     */
 
     public function getDrivers(
-        int $perPage = 20
+        int $perPage = 2000000
     ): LengthAwarePaginator {
 
         return Driver::query()
