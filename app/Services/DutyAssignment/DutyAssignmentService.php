@@ -13,7 +13,7 @@ class DutyAssignmentService
     |--------------------------------------------------------------------------
     | GET DUTY ASSIGNMENTS
     |--------------------------------------------------------------------------
-    */    
+    */
 
     public function getDutyAssignments(): Collection
     {
@@ -70,6 +70,20 @@ class DutyAssignmentService
 
             /*
             |--------------------------------------------------------------------------
+            | Assignment Number
+            |--------------------------------------------------------------------------
+            */
+
+            if (empty($data['assignment_no'])) {
+                $data['assignment_no'] =
+                    $this->generateAssignmentNumber();
+            } else {
+                $data['assignment_no'] =
+                    strtoupper(trim($data['assignment_no']));
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | Assigned By
             |--------------------------------------------------------------------------
             */
@@ -91,8 +105,48 @@ class DutyAssignmentService
                 $data['status']
                 ?? DutyAssignment::STATUS_PENDING;
 
-            return DutyAssignment::create($data);
+            $dutyAssignment = DutyAssignment::create($data);
+
+            return $dutyAssignment->fresh([
+                'travelRequest',
+                'driver',
+                'vehicle',
+                'assignedBy',
+                'createdBy',
+                'updatedBy',
+                'dutySlip',
+            ]);
         });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE ASSIGNMENT NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function generateAssignmentNumber(): string
+    {
+        do {
+            $assignmentNo =
+                'DUTY-' .
+                now()->format('Ymd') .
+                '-' .
+                strtoupper(
+                    substr(
+                        bin2hex(random_bytes(4)),
+                        0,
+                        6
+                    )
+                );
+
+        } while (
+            DutyAssignment::withTrashed()
+                ->where('assignment_no', $assignmentNo)
+                ->exists()
+        );
+
+        return $assignmentNo;
     }
 
     /*

@@ -12,6 +12,12 @@ class DutyAssignment extends Model
 
     protected $table = 'duty_assignments';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fillable
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
         'assignment_no',
         'travel_request_id',
@@ -27,37 +33,71 @@ class DutyAssignment extends Model
         'updated_by',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Casts
+    |--------------------------------------------------------------------------
+    */
+
     protected $casts = [
         'id' => 'integer',
+
         'travel_request_id' => 'integer',
         'driver_id' => 'integer',
         'vehicle_id' => 'integer',
+
         'assigned_by' => 'integer',
         'created_by' => 'integer',
         'updated_by' => 'integer',
+
+        // Database: DATETIME
         'assigned_at' => 'datetime',
-        'reporting_time' => 'datetime',
+
+        // Database: TIME
+        'reporting_time' => 'string',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Status Constants
+    |--------------------------------------------------------------------------
+    */
+
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_ASSIGNED = 'assigned';
+
     public const STATUS_ACCEPTED = 'accepted';
+
     public const STATUS_REJECTED = 'rejected';
+
     public const STATUS_STARTED = 'started';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function travelRequest()
     {
         return $this->belongsTo(
-            TravelRequest::class
+            TravelRequest::class,
+            'travel_request_id',
+            'id'
         );
     }
 
     public function driver()
     {
         return $this->belongsTo(
-            Driver::class
+            Driver::class,
+            'driver_id',
+            'id'
         );
     }
 
@@ -74,7 +114,8 @@ class DutyAssignment extends Model
     {
         return $this->belongsTo(
             User::class,
-            'assigned_by'
+            'assigned_by',
+            'id'
         );
     }
 
@@ -82,7 +123,8 @@ class DutyAssignment extends Model
     {
         return $this->belongsTo(
             User::class,
-            'created_by'
+            'created_by',
+            'id'
         );
     }
 
@@ -90,14 +132,17 @@ class DutyAssignment extends Model
     {
         return $this->belongsTo(
             User::class,
-            'updated_by'
+            'updated_by',
+            'id'
         );
     }
 
     public function dutySlip()
     {
         return $this->hasOne(
-            DutySlip::class
+            DutySlip::class,
+            'duty_assignment_id',
+            'id'
         );
     }
 }

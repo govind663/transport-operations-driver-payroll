@@ -2,56 +2,21 @@
 
 namespace App\Http\Requests\Backend\DutyAssignment;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\DutyAssignment;
+use App\Models\VehicleManagement;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateDutyAssignmentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Current Duty Assignment
-        |--------------------------------------------------------------------------
-        */
-
-        $dutyAssignment = $this->route('duty_assignment');
-
-        $dutyAssignmentId = is_object($dutyAssignment)
-            ? $dutyAssignment->id
-            : $dutyAssignment;
-
         return [
-
-            /*
-            |--------------------------------------------------------------------------
-            | Assignment Number
-            |--------------------------------------------------------------------------
-            */
-
-            'assignment_no' => [
-                'required',
-                'string',
-                'max:100',
-                Rule::unique(
-                    'duty_assignments',
-                    'assignment_no'
-                )->ignore($dutyAssignmentId),
-            ],
 
             /*
             |--------------------------------------------------------------------------
@@ -65,6 +30,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
                 'exists:travel_requests,id',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Driver
@@ -77,6 +43,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
                 'exists:drivers,id',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Vehicle
@@ -86,8 +53,12 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'vehicle_id' => [
                 'nullable',
                 'integer',
-                'exists:vehicle_managements,id',
+                Rule::exists(
+                    (new VehicleManagement)->getTable(),
+                    'id'
+                ),
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -97,8 +68,9 @@ class UpdateDutyAssignmentRequest extends FormRequest
 
             'assigned_at' => [
                 'nullable',
-                'date',
+                'date_format:Y-m-d',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -108,8 +80,9 @@ class UpdateDutyAssignmentRequest extends FormRequest
 
             'reporting_time' => [
                 'nullable',
-                'date',
+                'date_format:H:i',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -123,6 +96,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
                 'max:255',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | Status
@@ -132,15 +106,16 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'status' => [
                 'required',
                 Rule::in([
-                    'pending',
-                    'assigned',
-                    'accepted',
-                    'rejected',
-                    'started',
-                    'completed',
-                    'cancelled',
+                    DutyAssignment::STATUS_PENDING,
+                    DutyAssignment::STATUS_ASSIGNED,
+                    DutyAssignment::STATUS_ACCEPTED,
+                    DutyAssignment::STATUS_REJECTED,
+                    DutyAssignment::STATUS_STARTED,
+                    DutyAssignment::STATUS_COMPLETED,
+                    DutyAssignment::STATUS_CANCELLED,
                 ]),
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -153,33 +128,14 @@ class UpdateDutyAssignmentRequest extends FormRequest
                 'string',
                 'max:2000',
             ],
+
         ];
     }
 
-    /**
-     * Custom validation messages.
-     */
+
     public function messages(): array
     {
         return [
-
-            /*
-            |--------------------------------------------------------------------------
-            | Assignment Number
-            |--------------------------------------------------------------------------
-            */
-
-            'assignment_no.required' =>
-                'Assignment number is required.',
-
-            'assignment_no.string' =>
-                'Assignment number must be valid text.',
-
-            'assignment_no.max' =>
-                'Assignment number may not exceed 100 characters.',
-
-            'assignment_no.unique' =>
-                'This assignment number already exists.',
 
             /*
             |--------------------------------------------------------------------------
@@ -196,6 +152,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'travel_request_id.exists' =>
                 'Selected travel request does not exist.',
 
+
             /*
             |--------------------------------------------------------------------------
             | Driver
@@ -207,6 +164,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
 
             'driver_id.exists' =>
                 'Selected driver does not exist.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -220,14 +178,16 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'vehicle_id.exists' =>
                 'Selected vehicle does not exist.',
 
+
             /*
             |--------------------------------------------------------------------------
             | Assigned At
             |--------------------------------------------------------------------------
             */
 
-            'assigned_at.date' =>
-                'Please enter a valid assignment date and time.',
+            'assigned_at.date_format' =>
+                'Please enter a valid assignment date.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -235,8 +195,9 @@ class UpdateDutyAssignmentRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'reporting_time.date' =>
-                'Please enter a valid reporting date and time.',
+            'reporting_time.date_format' =>
+                'Please enter a valid reporting time.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -250,6 +211,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'reporting_location.max' =>
                 'Reporting location may not exceed 255 characters.',
 
+
             /*
             |--------------------------------------------------------------------------
             | Status
@@ -262,6 +224,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
             'status.in' =>
                 'Selected assignment status is invalid.',
 
+
             /*
             |--------------------------------------------------------------------------
             | Remarks
@@ -273,6 +236,7 @@ class UpdateDutyAssignmentRequest extends FormRequest
 
             'remarks.max' =>
                 'Remarks may not exceed 2000 characters.',
+
         ];
     }
 }

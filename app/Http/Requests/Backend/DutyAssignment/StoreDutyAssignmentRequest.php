@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Backend\DutyAssignment;
 
 use App\Models\DutyAssignment;
+use App\Models\VehicleManagement;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,19 +26,6 @@ class StoreDutyAssignmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-
-            /*
-            |--------------------------------------------------------------------------
-            | Assignment Number
-            |--------------------------------------------------------------------------
-            */
-
-            'assignment_no' => [
-                'required',
-                'string',
-                'max:100',
-                'unique:duty_assignments,assignment_no',
-            ],
 
             /*
             |--------------------------------------------------------------------------
@@ -72,29 +60,38 @@ class StoreDutyAssignmentRequest extends FormRequest
             'vehicle_id' => [
                 'nullable',
                 'integer',
-                'exists:vehicle_managements,id',
+                Rule::exists(
+                    (new VehicleManagement)->getTable(),
+                    'id'
+                ),
             ],
 
             /*
             |--------------------------------------------------------------------------
             | Assigned At
             |--------------------------------------------------------------------------
+            | Blade: <input type="date">
+            | Expected: YYYY-MM-DD
+            |--------------------------------------------------------------------------
             */
 
             'assigned_at' => [
                 'nullable',
-                'date',
+                'date_format:Y-m-d',
             ],
 
             /*
             |--------------------------------------------------------------------------
             | Reporting Time
             |--------------------------------------------------------------------------
+            | Blade: <input type="time">
+            | Expected: HH:MM
+            |--------------------------------------------------------------------------
             */
 
             'reporting_time' => [
                 'nullable',
-                'date',
+                'date_format:H:i',
             ],
 
             /*
@@ -151,24 +148,6 @@ class StoreDutyAssignmentRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | Assignment Number
-            |--------------------------------------------------------------------------
-            */
-
-            'assignment_no.required' =>
-                'Assignment number is required.',
-
-            'assignment_no.string' =>
-                'Assignment number must be a valid text.',
-
-            'assignment_no.max' =>
-                'Assignment number may not exceed 100 characters.',
-
-            'assignment_no.unique' =>
-                'This assignment number already exists.',
-
-            /*
-            |--------------------------------------------------------------------------
             | Travel Request
             |--------------------------------------------------------------------------
             */
@@ -212,8 +191,8 @@ class StoreDutyAssignmentRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'assigned_at.date' =>
-                'Please enter a valid assignment date and time.',
+            'assigned_at.date_format' =>
+                'Please enter a valid assignment date.',
 
             /*
             |--------------------------------------------------------------------------
@@ -221,8 +200,8 @@ class StoreDutyAssignmentRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'reporting_time.date' =>
-                'Please enter a valid reporting date and time.',
+            'reporting_time.date_format' =>
+                'Please enter a valid reporting time.',
 
             /*
             |--------------------------------------------------------------------------

@@ -6,18 +6,87 @@
 
 @push('styles')
 
-<link rel="stylesheet" href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}">
+<link
+    rel="stylesheet"
+    href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}">
 
 <style>
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table Alignment
+    |--------------------------------------------------------------------------
+    */
+
     .table td,
     .table th {
+
         vertical-align: middle;
+
     }
 
-    .vehicle-type-code {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Assignment Number
+    |--------------------------------------------------------------------------
+    */
+
+    .assignment-code {
+
         font-weight: 600;
+
         letter-spacing: 0.5px;
+
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Location
+    |--------------------------------------------------------------------------
+    */
+
+    .location-text {
+
+        max-width: 250px;
+
+        white-space: normal;
+
+        word-break: break-word;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remarks
+    |--------------------------------------------------------------------------
+    */
+
+    .remarks-text {
+
+        max-width: 250px;
+
+        white-space: normal;
+
+        word-break: break-word;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Status Badge
+    |--------------------------------------------------------------------------
+    */
+
+    .status-badge {
+
+        white-space: nowrap;
+
+    }
+
 </style>
 
 @endpush
@@ -39,6 +108,7 @@
             <div class="row">
 
                 {{-- Page Title --}}
+
                 <div class="col-md-6 col-sm-12">
 
                     <h4 class="text-blue">
@@ -49,7 +119,8 @@
 
                     <p class="mb-0">
 
-                        Manage driver and vehicle assignments for travel requests.
+                        Manage driver and vehicle assignments
+                        for travel requests.
 
                     </p>
 
@@ -57,6 +128,7 @@
 
 
                 {{-- Add Duty Assignment --}}
+
                 <div class="col-md-6 col-sm-12 text-right">
 
                     <a
@@ -76,6 +148,57 @@
         </div>
 
 
+        {{-- ========================================================= --}}
+        {{-- SUCCESS MESSAGE --}}
+        {{-- ========================================================= --}}
+
+        @if(session('message'))
+
+            <div class="alert alert-success alert-dismissible fade show">
+
+                <i class="fa fa-check-circle mr-1"></i>
+
+                {{ session('message') }}
+
+                <button
+                    type="button"
+                    class="close"
+                    data-dismiss="alert">
+
+                    <span>&times;</span>
+
+                </button>
+
+            </div>
+
+        @endif
+
+
+        {{-- ========================================================= --}}
+        {{-- ERROR MESSAGE --}}
+        {{-- ========================================================= --}}
+
+        @if(session('error'))
+
+            <div class="alert alert-danger alert-dismissible fade show">
+
+                <i class="fa fa-exclamation-circle mr-1"></i>
+
+                {{ session('error') }}
+
+                <button
+                    type="button"
+                    class="close"
+                    data-dismiss="alert">
+
+                    <span>&times;</span>
+
+                </button>
+
+            </div>
+
+        @endif
+
 
         {{-- ========================================================= --}}
         {{-- DUTY ASSIGNMENT LIST CARD --}}
@@ -88,7 +211,8 @@
 
             <div class="pd-20">
 
-                <div class="d-flex justify-content-between align-items-center">
+                <div
+                    class="d-flex justify-content-between align-items-center">
 
                     <h4 class="text-blue h4 mb-0">
 
@@ -108,7 +232,6 @@
                 </div>
 
             </div>
-
 
 
             {{-- ===================================================== --}}
@@ -151,7 +274,7 @@
                             </th>
 
                             <th>
-                                Assigned At
+                                Assigned Date
                             </th>
 
                             <th>
@@ -183,7 +306,6 @@
                     </thead>
 
 
-
                     {{-- ================================================= --}}
                     {{-- TABLE BODY --}}
                     {{-- ================================================= --}}
@@ -206,21 +328,27 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Assignment Number --}}
                                 {{-- ========================================= --}}
 
                                 <td>
 
-                                    <strong class="assignment-code">
+                                    @if(!empty($dutyAssignment->assignment_no))
 
-                                        {{ $dutyAssignment->assignment_no ?? '-' }}
+                                        <strong class="assignment-code">
 
-                                    </strong>
+                                            {{ $dutyAssignment->assignment_no }}
+
+                                        </strong>
+
+                                    @else
+
+                                        -
+
+                                    @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -233,9 +361,11 @@
 
                                         <strong class="text-dark">
 
-                                            {{ $dutyAssignment->travelRequest->request_no ?? '-' }}
+                                            {{ $dutyAssignment->travelRequest->request_no
+                                                ?? 'TR-' . $dutyAssignment->travelRequest->id }}
 
                                         </strong>
+
 
                                         @if(
                                             !empty(
@@ -245,7 +375,8 @@
                                             )
                                         )
 
-                                            <small class="text-muted d-block mt-1">
+                                            <small
+                                                class="text-muted d-block mt-1">
 
                                                 <i class="fa fa-user"></i>
 
@@ -257,12 +388,15 @@
 
                                     @else
 
-                                        -
+                                        <span class="text-muted">
+
+                                            -
+
+                                        </span>
 
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -273,17 +407,24 @@
 
                                     @if($dutyAssignment->driver)
 
+                                        @php
+
+                                            $driverName = trim(
+                                                ($dutyAssignment->driver->first_name ?? '') .
+                                                ' ' .
+                                                ($dutyAssignment->driver->last_name ?? '')
+                                            );
+
+                                        @endphp
+
+
                                         <strong class="text-dark">
 
                                             {{ $dutyAssignment->driver->driver_name
-                                                ?? trim(
-                                                    ($dutyAssignment->driver->first_name ?? '') .
-                                                    ' ' .
-                                                    ($dutyAssignment->driver->last_name ?? '')
-                                                )
-                                                ?: '-' }}
+                                                ?? ($driverName ?: '-') }}
 
                                         </strong>
+
 
                                         @if(
                                             !empty(
@@ -291,7 +432,10 @@
                                             )
                                         )
 
-                                            <small class="text-muted d-block mt-1">
+                                            <small
+                                                class="text-muted d-block mt-1">
+
+                                                <i class="fa fa-id-card-o"></i>
 
                                                 {{ $dutyAssignment->driver->driver_code }}
 
@@ -312,7 +456,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Vehicle --}}
                                 {{-- ========================================= --}}
@@ -329,15 +472,30 @@
 
                                         </strong>
 
+
                                         @if(
                                             !empty(
                                                 $dutyAssignment->vehicle->vehicle_name
                                             )
                                         )
 
-                                            <small class="text-muted d-block mt-1">
+                                            <small
+                                                class="text-muted d-block mt-1">
 
                                                 {{ $dutyAssignment->vehicle->vehicle_name }}
+
+                                            </small>
+
+                                        @elseif(
+                                            !empty(
+                                                $dutyAssignment->vehicle->vehicle_model
+                                            )
+                                        )
+
+                                            <small
+                                                class="text-muted d-block mt-1">
+
+                                                {{ $dutyAssignment->vehicle->vehicle_model }}
 
                                             </small>
 
@@ -356,9 +514,8 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
-                                {{-- Assigned At --}}
+                                {{-- Assigned Date --}}
                                 {{-- ========================================= --}}
 
                                 <td>
@@ -371,14 +528,6 @@
 
                                         </strong>
 
-                                        <small class="text-muted d-block">
-
-                                            <i class="fa fa-clock-o"></i>
-
-                                            {{ $dutyAssignment->assigned_at->format('h:i A') }}
-
-                                        </small>
-
                                     @else
 
                                         -
@@ -386,7 +535,6 @@
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -399,17 +547,11 @@
 
                                         <strong>
 
-                                            {{ $dutyAssignment->reporting_time->format('d-m-Y') }}
+                                            {{ \Carbon\Carbon::parse(
+                                                $dutyAssignment->reporting_time
+                                            )->format('h:i A') }}
 
                                         </strong>
-
-                                        <small class="text-muted d-block">
-
-                                            <i class="fa fa-clock-o"></i>
-
-                                            {{ $dutyAssignment->reporting_time->format('h:i A') }}
-
-                                        </small>
 
                                     @else
 
@@ -420,18 +562,23 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Reporting Location --}}
                                 {{-- ========================================= --}}
 
                                 <td>
 
-                                    @if(!empty($dutyAssignment->reporting_location))
+                                    @if(
+                                        !empty(
+                                            $dutyAssignment->reporting_location
+                                        )
+                                    )
 
                                         <div class="location-text">
 
-                                            <i class="fa fa-map-marker text-danger mr-1"></i>
+                                            <i
+                                                class="fa fa-map-marker text-danger mr-1">
+                                            </i>
 
                                             {{ $dutyAssignment->reporting_location }}
 
@@ -446,7 +593,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Status --}}
                                 {{-- ========================================= --}}
@@ -455,29 +601,30 @@
 
                                     @php
 
-                                        $status = $dutyAssignment->status;
+                                        $status =
+                                            $dutyAssignment->status;
 
                                         $statusClass = match ($status) {
 
-                                            'pending' =>
+                                            \App\Models\DutyAssignment::STATUS_PENDING =>
                                                 'badge-warning',
 
-                                            'assigned' =>
+                                            \App\Models\DutyAssignment::STATUS_ASSIGNED =>
                                                 'badge-primary',
 
-                                            'accepted' =>
+                                            \App\Models\DutyAssignment::STATUS_ACCEPTED =>
                                                 'badge-info',
 
-                                            'rejected' =>
+                                            \App\Models\DutyAssignment::STATUS_REJECTED =>
                                                 'badge-danger',
 
-                                            'started' =>
+                                            \App\Models\DutyAssignment::STATUS_STARTED =>
                                                 'badge-dark',
 
-                                            'completed' =>
+                                            \App\Models\DutyAssignment::STATUS_COMPLETED =>
                                                 'badge-success',
 
-                                            'cancelled' =>
+                                            \App\Models\DutyAssignment::STATUS_CANCELLED =>
                                                 'badge-secondary',
 
                                             default =>
@@ -488,25 +635,25 @@
 
                                         $statusIcon = match ($status) {
 
-                                            'pending' =>
+                                            \App\Models\DutyAssignment::STATUS_PENDING =>
                                                 'fa-clock-o',
 
-                                            'assigned' =>
+                                            \App\Models\DutyAssignment::STATUS_ASSIGNED =>
                                                 'fa-car',
 
-                                            'accepted' =>
+                                            \App\Models\DutyAssignment::STATUS_ACCEPTED =>
                                                 'fa-check',
 
-                                            'rejected' =>
+                                            \App\Models\DutyAssignment::STATUS_REJECTED =>
                                                 'fa-times',
 
-                                            'started' =>
+                                            \App\Models\DutyAssignment::STATUS_STARTED =>
                                                 'fa-play',
 
-                                            'completed' =>
+                                            \App\Models\DutyAssignment::STATUS_COMPLETED =>
                                                 'fa-check-circle',
 
-                                            'cancelled' =>
+                                            \App\Models\DutyAssignment::STATUS_CANCELLED =>
                                                 'fa-ban',
 
                                             default =>
@@ -514,20 +661,39 @@
 
                                         };
 
+
+                                        $statusLabel = $status
+                                            ? ucfirst(
+                                                str_replace(
+                                                    '_',
+                                                    ' ',
+                                                    $status
+                                                )
+                                            )
+                                            : 'Unknown';
+
                                     @endphp
 
 
                                     <span
-                                        class="badge {{ $statusClass }} badge-pill px-3 py-2">
+                                        class="
+                                            badge
+                                            {{ $statusClass }}
+                                            badge-pill
+                                            px-3
+                                            py-2
+                                            status-badge
+                                        ">
 
-                                        <i class="fa {{ $statusIcon }}"></i>
+                                        <i
+                                            class="fa {{ $statusIcon }}">
+                                        </i>
 
-                                        {{ ucfirst($status ?? 'Unknown') }}
+                                        {{ $statusLabel }}
 
                                     </span>
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -539,6 +705,7 @@
                                     @if(!empty($dutyAssignment->remarks))
 
                                         <span
+                                            class="remarks-text"
                                             title="{{ $dutyAssignment->remarks }}">
 
                                             {{ \Illuminate\Support\Str::limit(
@@ -555,6 +722,7 @@
                                     @endif
 
                                 </td>
+
 
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}
@@ -578,7 +746,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Delete --}}
                                 {{-- ========================================= --}}
@@ -586,35 +753,29 @@
                                 <td class="no-export">
 
                                     <form
-                                        action="{{ route(
-                                            'duty-assignments.destroy',
-                                            $dutyAssignment->id
-                                        ) }}"
+                                        action="{{ route('duty-assignments.destroy', $dutyAssignment->id) }}"
                                         method="POST"
-                                        class="delete-form">
-
+                                        class="delete-form"
+                                    >
                                         @csrf
-
                                         @method('DELETE')
-
 
                                         <button
                                             type="submit"
-                                            class="btn btn-danger btn-sm">
-
+                                            class="btn btn-danger btn-sm"
+                                        >
                                             <i class="dw dw-trash"></i>
-
                                             Delete
-
                                         </button>
-
                                     </form>
 
                                 </td>
 
+
                             </tr>
 
                         @empty
+
 
                             {{-- ================================================= --}}
                             {{-- NO DATA --}}
@@ -623,10 +784,18 @@
                             <tr>
 
                                 <td
-                                    colspan="13"
-                                    class="text-center">
+                                    colspan="12"
+                                    class="text-center py-4">
 
-                                    No Duty Assignments Found
+                                    <div class="text-muted">
+
+                                        <i
+                                            class="fa fa-inbox fa-2x mb-2 d-block">
+                                        </i>
+
+                                        No Duty Assignments Found
+
+                                    </div>
 
                                 </td>
 
@@ -645,10 +814,11 @@
     </div>
 
 
-    {{-- Footer --}}
+    {{-- ========================================================= --}}
+    {{-- FOOTER --}}
+    {{-- ========================================================= --}}
 
     <x-backend.footer />
-
 
 </div>
 
@@ -660,62 +830,45 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
 
+    document.addEventListener('submit', function (e) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Duty Assignment Delete Confirmation
-    |--------------------------------------------------------------------------
-    */
+        const form = e.target.closest('.delete-form');
 
-    document.querySelectorAll('.delete-form').forEach(function (form) {
+        if (!form) {
+            return;
+        }
 
-        form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-            e.preventDefault();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This duty assignment will be moved to trash!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            allowOutsideClick: false,
+            allowEscapeKey: true
+        }).then(function (result) {
 
+            if (result.isConfirmed) {
 
-            Swal.fire({
+                HTMLFormElement.prototype.submit.call(form);
 
-                title: 'Are you sure?',
-
-                text: 'This duty assignment will be moved to trash.',
-
-                icon: 'warning',
-
-                showCancelButton: true,
-
-                confirmButtonColor: '#d33',
-
-                cancelButtonColor: '#6c757d',
-
-                confirmButtonText: 'Yes, Delete',
-
-                cancelButtonText: 'Cancel',
-
-                reverseButtons: true
-
-            }).then(function (result) {
-
-                if (result.isConfirmed) {
-
-                    form.submit();
-
-                }
-
-            });
+            }
 
         });
 
-    });
-
+    }, true);
 
 });
-
 </script>
-
 
 <script src="{{ asset('backend/assets/datatable/js/datatable-init.js') }}"></script>
 

@@ -40,11 +40,11 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Existing Document
+    | Travel Request Information
     |--------------------------------------------------------------------------
     */
 
-    .existing-document {
+    .travel-request-info {
 
         background: #f8f9fa;
 
@@ -52,7 +52,31 @@
 
         border-radius: 6px;
 
-        padding: 10px;
+        padding: 15px;
+
+        margin-top: 10px;
+
+    }
+
+
+    .info-label {
+
+        font-size: 12px;
+
+        color: #6c757d;
+
+        display: block;
+
+        margin-bottom: 3px;
+
+    }
+
+
+    .info-value {
+
+        font-weight: 600;
+
+        color: #212529;
 
     }
 
@@ -67,6 +91,19 @@
     .table th {
 
         vertical-align: middle;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Textarea
+    |--------------------------------------------------------------------------
+    */
+
+    textarea.form-control {
+
+        resize: vertical;
 
     }
 
@@ -137,7 +174,6 @@
         </div>
 
 
-
         {{-- ========================================================= --}}
         {{-- VALIDATION ERRORS --}}
         {{-- ========================================================= --}}
@@ -167,14 +203,17 @@
         @endif
 
 
-
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
 
         <form
-            action="{{ route('duty-assignments.update', $dutyAssignment->id) }}"
-            method="POST">
+            action="{{ route(
+                'duty-assignments.update',
+                $dutyAssignment->id
+            ) }}"
+            method="POST"
+            id="dutyAssignmentForm">
 
             @csrf
 
@@ -192,6 +231,8 @@
 
                     <h5 class="form-section-title">
 
+                        <i class="fa fa-tasks mr-2"></i>
+
                         Duty Assignment Information
 
                     </h5>
@@ -205,7 +246,7 @@
 
 
                     {{-- ================================================= --}}
-                    {{-- Assignment Number --}}
+                    {{-- Assignment Number - Read Only --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-4">
@@ -218,36 +259,24 @@
                                     Assignment Number
                                 </b>
 
-                                <span class="required">
-                                    *
-                                </span>
-
                             </label>
 
                             <input
                                 type="text"
-                                name="assignment_no"
-                                id="assignment_no"
-                                class="form-control @error('assignment_no') is-invalid @enderror"
-                                value="{{ old('assignment_no', $dutyAssignment->assignment_no ?? '') }}"
-                                placeholder="Enter Assignment Number">
+                                class="form-control"
+                                value="{{ $dutyAssignment->assignment_no }}"
+                                readonly>
 
-                            @error('assignment_no')
+                            <small class="text-muted">
 
-                                <span class="invalid-feedback d-block">
+                                Assignment number is system generated
+                                and cannot be changed.
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </small>
 
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -283,16 +312,24 @@
 
                                     <option
                                         value="{{ $travelRequest->id }}"
+                                        data-request-no="{{ $travelRequest->request_no ?? 'TR-' . $travelRequest->id }}"
+                                        data-passenger="{{ $travelRequest->passenger_name ?? '' }}"
+                                        data-pickup="{{ $travelRequest->pickup_location ?? '' }}"
+                                        data-drop="{{ $travelRequest->drop_location ?? '' }}"
                                         {{ (string) old(
                                             'travel_request_id',
                                             $dutyAssignment->travel_request_id ?? ''
-                                        ) === (string) $travelRequest->id ? 'selected' : '' }}>
+                                        ) === (string) $travelRequest->id
+                                            ? 'selected'
+                                            : '' }}>
 
                                         {{ $travelRequest->request_no ?? 'TR-' . $travelRequest->id }}
 
                                         @if(!empty($travelRequest->passenger_name))
+
                                             -
                                             {{ $travelRequest->passenger_name }}
+
                                         @endif
 
                                     </option>
@@ -313,10 +350,16 @@
 
                             @enderror
 
+                            <small class="text-muted">
+
+                                Select the travel request for this
+                                duty assignment.
+
+                            </small>
+
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -332,10 +375,6 @@
                                 <b>
                                     Driver
                                 </b>
-
-                                <span class="required">
-                                    *
-                                </span>
 
                             </label>
 
@@ -355,7 +394,9 @@
                                         {{ (string) old(
                                             'driver_id',
                                             $dutyAssignment->driver_id ?? ''
-                                        ) === (string) $driver->id ? 'selected' : '' }}>
+                                        ) === (string) $driver->id
+                                            ? 'selected'
+                                            : '' }}>
 
                                         {{ $driver->driver_code ?? 'DRV-' . $driver->id }}
 
@@ -390,12 +431,90 @@
                     </div>
 
 
+                    {{-- ================================================= --}}
+                    {{-- Travel Request Preview --}}
+                    {{-- ================================================= --}}
+
+                    <div class="col-12">
+
+                        <div
+                            id="travel-request-preview"
+                            class="travel-request-info"
+                            style="display:none;">
+
+                            <div class="row">
+
+                                <div class="col-md-3">
+
+                                    <span class="info-label">
+                                        Request Number
+                                    </span>
+
+                                    <span
+                                        class="info-value"
+                                        id="preview-request-no">
+                                        -
+                                    </span>
+
+                                </div>
+
+
+                                <div class="col-md-3">
+
+                                    <span class="info-label">
+                                        Passenger
+                                    </span>
+
+                                    <span
+                                        class="info-value"
+                                        id="preview-passenger-name">
+                                        -
+                                    </span>
+
+                                </div>
+
+
+                                <div class="col-md-3">
+
+                                    <span class="info-label">
+                                        Pickup
+                                    </span>
+
+                                    <span
+                                        class="info-value"
+                                        id="preview-pickup">
+                                        -
+                                    </span>
+
+                                </div>
+
+
+                                <div class="col-md-3">
+
+                                    <span class="info-label">
+                                        Drop
+                                    </span>
+
+                                    <span
+                                        class="info-value"
+                                        id="preview-drop">
+                                        -
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
 
                     {{-- ================================================= --}}
                     {{-- Vehicle --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
 
                         <div class="form-group">
 
@@ -404,10 +523,6 @@
                                 <b>
                                     Vehicle
                                 </b>
-
-                                <span class="required">
-                                    *
-                                </span>
 
                             </label>
 
@@ -427,9 +542,20 @@
                                         {{ (string) old(
                                             'vehicle_id',
                                             $dutyAssignment->vehicle_id ?? ''
-                                        ) === (string) $vehicle->id ? 'selected' : '' }}>
+                                        ) === (string) $vehicle->id
+                                            ? 'selected'
+                                            : '' }}>
 
-                                        {{ $vehicle->vehicle_number ?? $vehicle->registration_number ?? 'Vehicle-' . $vehicle->id }}
+                                        {{ $vehicle->vehicle_number
+                                            ?? $vehicle->registration_number
+                                            ?? 'Vehicle-' . $vehicle->id }}
+
+                                        @if(!empty($vehicle->vehicle_model))
+
+                                            -
+                                            {{ $vehicle->vehicle_model }}
+
+                                        @endif
 
                                     </option>
 
@@ -454,12 +580,11 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- Assignment Date --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
 
                         <div class="form-group">
 
@@ -477,19 +602,19 @@
 
                             <input
                                 type="date"
-                                name="assignment_date"
-                                id="assignment_date"
-                                class="form-control @error('assignment_date') is-invalid @enderror"
+                                name="assigned_at"
+                                id="assigned_at"
+                                class="form-control @error('assigned_at') is-invalid @enderror"
                                 value="{{ old(
-                                    'assignment_date',
-                                    !empty($dutyAssignment->assignment_date)
+                                    'assigned_at',
+                                    !empty($dutyAssignment->assigned_at)
                                         ? \Carbon\Carbon::parse(
-                                            $dutyAssignment->assignment_date
+                                            $dutyAssignment->assigned_at
                                         )->format('Y-m-d')
                                         : ''
                                 ) }}">
 
-                            @error('assignment_date')
+                            @error('assigned_at')
 
                                 <span class="invalid-feedback d-block">
 
@@ -504,62 +629,13 @@
                         </div>
 
                     </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Reporting Date --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Reporting Date
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="date"
-                                name="reporting_date"
-                                id="reporting_date"
-                                class="form-control @error('reporting_date') is-invalid @enderror"
-                                value="{{ old(
-                                    'reporting_date',
-                                    !empty($dutyAssignment->reporting_date)
-                                        ? \Carbon\Carbon::parse(
-                                            $dutyAssignment->reporting_date
-                                        )->format('Y-m-d')
-                                        : ''
-                                ) }}">
-
-                            @error('reporting_date')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
 
 
                     {{-- ================================================= --}}
                     {{-- Reporting Time --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
 
                         <div class="form-group">
 
@@ -579,11 +655,9 @@
                                 value="{{ old(
                                     'reporting_time',
                                     !empty($dutyAssignment->reporting_time)
-                                        ? substr(
-                                            $dutyAssignment->reporting_time,
-                                            0,
-                                            5
-                                        )
+                                        ? \Carbon\Carbon::parse(
+                                            $dutyAssignment->reporting_time
+                                        )->format('H:i')
                                         : ''
                                 ) }}">
 
@@ -604,35 +678,35 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- Pickup Location --}}
+                    {{-- Reporting Location --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-6">
+                    <div class="col-md-6 mt-3">
 
                         <div class="form-group">
 
                             <label>
 
                                 <b>
-                                    Pickup Location
+                                    Reporting Location
                                 </b>
 
                             </label>
 
                             <input
                                 type="text"
-                                name="pickup_location"
-                                id="pickup_location"
-                                class="form-control @error('pickup_location') is-invalid @enderror"
+                                name="reporting_location"
+                                id="reporting_location"
+                                maxlength="255"
+                                class="form-control @error('reporting_location') is-invalid @enderror"
                                 value="{{ old(
-                                    'pickup_location',
-                                    $dutyAssignment->pickup_location ?? ''
+                                    'reporting_location',
+                                    $dutyAssignment->reporting_location ?? ''
                                 ) }}"
-                                placeholder="Enter Pickup Location">
+                                placeholder="Enter reporting location">
 
-                            @error('pickup_location')
+                            @error('reporting_location')
 
                                 <span class="invalid-feedback d-block">
 
@@ -647,59 +721,13 @@
                         </div>
 
                     </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- Drop Location --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Drop Location
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="drop_location"
-                                id="drop_location"
-                                class="form-control @error('drop_location') is-invalid @enderror"
-                                value="{{ old(
-                                    'drop_location',
-                                    $dutyAssignment->drop_location ?? ''
-                                ) }}"
-                                placeholder="Enter Drop Location">
-
-                            @error('drop_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
 
 
                     {{-- ================================================= --}}
                     {{-- Remarks --}}
                     {{-- ================================================= --}}
 
-                    <div class="col-md-12">
+                    <div class="col-md-6 mt-3">
 
                         <div class="form-group">
 
@@ -715,8 +743,9 @@
                                 name="remarks"
                                 id="remarks"
                                 rows="4"
+                                maxlength="2000"
                                 class="form-control @error('remarks') is-invalid @enderror"
-                                placeholder="Enter Remarks">{{ old(
+                                placeholder="Enter remarks">{{ old(
                                     'remarks',
                                     $dutyAssignment->remarks ?? ''
                                 ) }}</textarea>
@@ -733,10 +762,15 @@
 
                             @enderror
 
+                            <small class="text-muted">
+
+                                Maximum 2000 characters.
+
+                            </small>
+
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -747,14 +781,15 @@
 
                         <h5 class="form-section-title">
 
-                            Status
+                            <i class="fa fa-info-circle mr-2"></i>
+
+                            Assignment Status
 
                         </h5>
 
                         <hr>
 
                     </div>
-
 
 
                     <div class="col-md-4">
@@ -773,43 +808,98 @@
 
                             </label>
 
+                            @php
+
+                                $currentStatus = old(
+                                    'status',
+                                    $dutyAssignment->status
+                                        ?? \App\Models\DutyAssignment::STATUS_PENDING
+                                );
+
+                            @endphp
+
                             <select
                                 name="status"
                                 id="status"
                                 class="form-control custom-select2 @error('status') is-invalid @enderror">
 
-                                @php
-
-                                    $currentStatus = old(
-                                        'status',
-                                        $dutyAssignment->status ?? 'assigned'
-                                    );
-
-                                @endphp
 
                                 <option
-                                    value="assigned"
-                                    {{ $currentStatus === 'assigned' ? 'selected' : '' }}>
+                                    value="{{ \App\Models\DutyAssignment::STATUS_PENDING }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_PENDING
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Pending
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_ASSIGNED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_ASSIGNED
+                                        ? 'selected'
+                                        : '' }}>
+
                                     Assigned
+
                                 </option>
 
-                                <option
-                                    value="in_progress"
-                                    {{ $currentStatus === 'in_progress' ? 'selected' : '' }}>
-                                    In Progress
-                                </option>
 
                                 <option
-                                    value="completed"
-                                    {{ $currentStatus === 'completed' ? 'selected' : '' }}>
+                                    value="{{ \App\Models\DutyAssignment::STATUS_ACCEPTED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_ACCEPTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Accepted
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_REJECTED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_REJECTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Rejected
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_STARTED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_STARTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Started
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_COMPLETED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_COMPLETED
+                                        ? 'selected'
+                                        : '' }}>
+
                                     Completed
+
                                 </option>
 
+
                                 <option
-                                    value="cancelled"
-                                    {{ $currentStatus === 'cancelled' ? 'selected' : '' }}>
+                                    value="{{ \App\Models\DutyAssignment::STATUS_CANCELLED }}"
+                                    {{ $currentStatus === \App\Models\DutyAssignment::STATUS_CANCELLED
+                                        ? 'selected'
+                                        : '' }}>
+
                                     Cancelled
+
                                 </option>
+
 
                             </select>
 
@@ -830,7 +920,6 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ================================================= --}}
@@ -849,9 +938,11 @@
 
                             </a>
 
+
                             <button
                                 type="submit"
-                                class="btn btn-success">
+                                class="btn btn-success"
+                                id="updateDutyAssignmentBtn">
 
                                 <i class="fa fa-save"></i>
 
@@ -875,7 +966,6 @@
 
     <x-backend.footer />
 
-
 </div>
 
 @endsection
@@ -890,35 +980,78 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Assignment Number Formatting
+    | Travel Request Preview
     |--------------------------------------------------------------------------
     */
 
-    $('#assignment_no').on('blur', function () {
+    $('#travel_request_id').on('change', function () {
 
-        this.value = this.value
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, '');
+        const selectedOption =
+            $(this).find('option:selected');
+
+
+        if (!this.value) {
+
+            $('#travel-request-preview').hide();
+
+            $('#preview-request-no').text('-');
+
+            $('#preview-passenger-name').text('-');
+
+            $('#preview-pickup').text('-');
+
+            $('#preview-drop').text('-');
+
+            return;
+
+        }
+
+
+        const requestNo =
+            selectedOption.data('request-no') || '-';
+
+        const passenger =
+            selectedOption.data('passenger') || '-';
+
+        const pickup =
+            selectedOption.data('pickup') || '-';
+
+        const drop =
+            selectedOption.data('drop') || '-';
+
+
+        $('#preview-request-no')
+            .text(requestNo);
+
+        $('#preview-passenger-name')
+            .text(passenger);
+
+        $('#preview-pickup')
+            .text(pickup);
+
+        $('#preview-drop')
+            .text(drop);
+
+
+        $('#travel-request-preview')
+            .show();
 
     });
 
 
-
     /*
     |--------------------------------------------------------------------------
-    | Location Formatting
+    | Reporting Location Formatting
     |--------------------------------------------------------------------------
     */
 
-    $('#pickup_location, #drop_location').on('blur', function () {
+    $('#reporting_location').on('blur', function () {
 
         this.value = this.value
             .replace(/\s+/g, ' ')
             .trim();
 
     });
-
 
 
     /*
@@ -936,105 +1069,13 @@ $(document).ready(function () {
     });
 
 
-
     /*
     |--------------------------------------------------------------------------
-    | Assignment Date Validation
+    | Initial Travel Request Preview
     |--------------------------------------------------------------------------
     */
 
-    $('#assignment_date').on('change', function () {
-
-        const assignmentDate = this.value;
-
-        if (!assignmentDate) {
-            return;
-        }
-
-        const selectedDate = new Date(assignmentDate);
-
-        const today = new Date();
-
-        today.setHours(0, 0, 0, 0);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Reporting Date
-        |--------------------------------------------------------------------------
-        */
-
-        const reportingDate = $('#reporting_date').val();
-
-        if (reportingDate) {
-
-            const selectedReportingDate =
-                new Date(reportingDate);
-
-            if (
-                selectedReportingDate <
-                selectedDate
-            ) {
-
-                alert(
-                    'Reporting date cannot be before assignment date.'
-                );
-
-                $('#reporting_date').val('');
-
-            }
-
-        }
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Reporting Date Validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#reporting_date').on('change', function () {
-
-        const reportingDate = this.value;
-
-        const assignmentDate =
-            $('#assignment_date').val();
-
-        if (
-            !reportingDate ||
-            !assignmentDate
-        ) {
-
-            return;
-
-        }
-
-
-        const selectedReportingDate =
-            new Date(reportingDate);
-
-        const selectedAssignmentDate =
-            new Date(assignmentDate);
-
-
-        if (
-            selectedReportingDate <
-            selectedAssignmentDate
-        ) {
-
-            alert(
-                'Reporting date cannot be before assignment date.'
-            );
-
-            this.value = '';
-
-        }
-
-    });
-
+    $('#travel_request_id').trigger('change');
 
 
     /*
@@ -1043,51 +1084,18 @@ $(document).ready(function () {
     |--------------------------------------------------------------------------
     */
 
-    $('form').on('submit', function () {
+    $('#dutyAssignmentForm').on('submit', function () {
 
 
         /*
         |--------------------------------------------------------------------------
-        | Assignment Number
+        | Reporting Location
         |--------------------------------------------------------------------------
         */
 
-        $('#assignment_no').val(
+        $('#reporting_location').val(
 
-            $('#assignment_no')
-                .val()
-                .trim()
-                .toUpperCase()
-                .replace(/\s+/g, '')
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pickup Location
-        |--------------------------------------------------------------------------
-        */
-
-        $('#pickup_location').val(
-
-            $('#pickup_location')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Drop Location
-        |--------------------------------------------------------------------------
-        */
-
-        $('#drop_location').val(
-
-            $('#drop_location')
+            $('#reporting_location')
                 .val()
                 .replace(/\s+/g, ' ')
                 .trim()
@@ -1118,20 +1126,14 @@ $(document).ready(function () {
         */
 
         const submitButton =
-            $(this).find(
-                'button[type="submit"]'
+            $('#updateDutyAssignmentBtn');
+
+
+        submitButton
+            .prop('disabled', true)
+            .html(
+                '<i class="fa fa-spinner fa-spin"></i> Updating...'
             );
-
-
-        if (submitButton.length) {
-
-            submitButton
-                .prop('disabled', true)
-                .html(
-                    '<i class="fa fa-spinner fa-spin"></i> Updating...'
-                );
-
-        }
 
     });
 

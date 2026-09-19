@@ -16,13 +16,9 @@
     */
 
     .form-section-title {
-
         color: #023a85;
-
         font-weight: 700;
-
         font-size: 17px;
-
     }
 
 
@@ -33,9 +29,7 @@
     */
 
     .form-group label {
-
         font-weight: 600;
-
     }
 
 
@@ -46,9 +40,7 @@
     */
 
     .required {
-
         color: #dc3545;
-
     }
 
 
@@ -59,17 +51,11 @@
     */
 
     .travel-request-info {
-
         background: #f8f9fa;
-
         border: 1px solid #dee2e6;
-
         border-radius: 6px;
-
         padding: 15px;
-
         margin-top: 10px;
-
     }
 
 
@@ -80,15 +66,10 @@
     */
 
     .info-label {
-
         font-size: 12px;
-
         color: #6c757d;
-
         display: block;
-
         margin-bottom: 3px;
-
     }
 
 
@@ -99,11 +80,8 @@
     */
 
     .info-value {
-
         font-weight: 600;
-
         color: #212529;
-
     }
 
 
@@ -114,19 +92,12 @@
     */
 
     .selection-info {
-
         margin-top: 10px;
-
         padding: 10px 12px;
-
         border-radius: 5px;
-
         background: #f8f9fa;
-
         border: 1px solid #e9ecef;
-
         display: none;
-
     }
 
 
@@ -137,15 +108,12 @@
     */
 
     textarea.form-control {
-
         resize: vertical;
-
     }
 
 </style>
 
 @endpush
-
 
 
 @section('content')
@@ -168,9 +136,7 @@
                     <div class="title">
 
                         <h4>
-
                             Create New Duty Assignment
-
                         </h4>
 
                     </div>
@@ -183,9 +149,7 @@
                             <li class="breadcrumb-item">
 
                                 <a href="{{ route('admin.dashboard') }}">
-
                                     Dashboard
-
                                 </a>
 
                             </li>
@@ -194,9 +158,7 @@
                             <li class="breadcrumb-item">
 
                                 <a href="{{ route('duty-assignments.index') }}">
-
                                     Duty Assignments
-
                                 </a>
 
                             </li>
@@ -219,7 +181,6 @@
         </div>
 
 
-
         {{-- ========================================================= --}}
         {{-- VALIDATION ERRORS --}}
         {{-- ========================================================= --}}
@@ -229,9 +190,7 @@
             <div class="alert alert-danger">
 
                 <strong>
-
                     Please correct the following errors:
-
                 </strong>
 
 
@@ -240,9 +199,7 @@
                     @foreach ($errors->all() as $error)
 
                         <li>
-
                             {{ $error }}
-
                         </li>
 
                     @endforeach
@@ -252,7 +209,6 @@
             </div>
 
         @endif
-
 
 
         {{-- ========================================================= --}}
@@ -304,11 +260,7 @@
 
                                 Travel Request
 
-                                <span class="required">
-
-                                    *
-
-                                </span>
+                                <span class="required">*</span>
 
                             </label>
 
@@ -319,9 +271,7 @@
                                 class="form-control custom-select2 @error('travel_request_id') is-invalid @enderror">
 
                                 <option value="">
-
                                     Select Travel Request
-
                                 </option>
 
 
@@ -329,6 +279,10 @@
 
                                     <option
                                         value="{{ $travelRequest->id }}"
+                                        data-request-no="{{ $travelRequest->request_no }}"
+                                        data-passenger="{{ $travelRequest->passenger_name ?? '' }}"
+                                        data-pickup="{{ $travelRequest->pickup_location ?? '' }}"
+                                        data-drop="{{ $travelRequest->drop_location ?? '' }}"
                                         {{ (string) old(
                                             'travel_request_id',
                                             request('travel_request_id')
@@ -357,9 +311,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -369,14 +321,13 @@
 
                             <small class="text-muted">
 
-                                Select the approved travel request for this duty.
+                                Select the travel request for this duty assignment.
 
                             </small>
 
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -391,34 +342,28 @@
 
                                 Assignment Date
 
-                                <span class="required">
-
-                                    *
-
-                                </span>
+                                <span class="required">*</span>
 
                             </label>
 
 
                             <input
                                 type="date"
-                                name="assignment_date"
-                                id="assignment_date"
-                                class="form-control @error('assignment_date') is-invalid @enderror"
+                                name="assigned_at"
+                                id="assigned_at"
+                                class="form-control @error('assigned_at') is-invalid @enderror"
                                 value="{{ old(
-                                    'assignment_date',
+                                    'assigned_at',
                                     now()->format('Y-m-d')
                                 ) }}">
 
 
-                            @error('assignment_date')
+                            @error('assigned_at')
 
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -428,7 +373,6 @@
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -443,11 +387,7 @@
 
                                 Reporting Time
 
-                                <span class="required">
-
-                                    *
-
-                                </span>
+                                <span class="required">*</span>
 
                             </label>
 
@@ -465,9 +405,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -477,7 +415,6 @@
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -496,17 +433,13 @@
                                 <div class="col-md-3">
 
                                     <span class="info-label">
-
                                         Request Number
-
                                     </span>
 
                                     <span
                                         class="info-value"
                                         id="preview-request-no">
-
                                         -
-
                                     </span>
 
                                 </div>
@@ -515,17 +448,13 @@
                                 <div class="col-md-3">
 
                                     <span class="info-label">
-
                                         Passenger
-
                                     </span>
 
                                     <span
                                         class="info-value"
                                         id="preview-passenger-name">
-
                                         -
-
                                     </span>
 
                                 </div>
@@ -534,17 +463,13 @@
                                 <div class="col-md-3">
 
                                     <span class="info-label">
-
                                         Pickup
-
                                     </span>
 
                                     <span
                                         class="info-value"
                                         id="preview-pickup">
-
                                         -
-
                                     </span>
 
                                 </div>
@@ -553,17 +478,13 @@
                                 <div class="col-md-3">
 
                                     <span class="info-label">
-
                                         Drop
-
                                     </span>
 
                                     <span
                                         class="info-value"
                                         id="preview-drop">
-
                                         -
-
                                     </span>
 
                                 </div>
@@ -573,7 +494,6 @@
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -595,7 +515,6 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- DRIVER --}}
                     {{-- ================================================= --}}
@@ -605,15 +524,7 @@
                         <div class="form-group">
 
                             <label>
-
                                 Driver
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
                             </label>
 
 
@@ -623,9 +534,7 @@
                                 class="form-control custom-select2 @error('driver_id') is-invalid @enderror">
 
                                 <option value="">
-
                                     Select Driver
-
                                 </option>
 
 
@@ -661,9 +570,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -676,17 +583,13 @@
                                 class="selection-info">
 
                                 <strong>
-
                                     Selected Driver
-
                                 </strong>
 
                                 <br>
 
                                 <span id="driver-preview-text">
-
                                     -
-
                                 </span>
 
                             </div>
@@ -694,7 +597,6 @@
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -706,15 +608,7 @@
                         <div class="form-group">
 
                             <label>
-
                                 Vehicle
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
                             </label>
 
 
@@ -724,9 +618,7 @@
                                 class="form-control custom-select2 @error('vehicle_id') is-invalid @enderror">
 
                                 <option value="">
-
                                     Select Vehicle
-
                                 </option>
 
 
@@ -761,9 +653,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -776,17 +666,13 @@
                                 class="selection-info">
 
                                 <strong>
-
                                     Selected Vehicle
-
                                 </strong>
 
                                 <br>
 
                                 <span id="vehicle-preview-text">
-
                                     -
-
                                 </span>
 
                             </div>
@@ -794,7 +680,6 @@
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -809,11 +694,7 @@
 
                                 Status
 
-                                <span class="required">
-
-                                    *
-
-                                </span>
+                                <span class="required">*</span>
 
                             </label>
 
@@ -824,24 +705,11 @@
                                 class="form-control custom-select2 @error('status') is-invalid @enderror">
 
                                 <option
-                                    value="assigned"
+                                    value="{{ \App\Models\DutyAssignment::STATUS_PENDING }}"
                                     {{ old(
                                         'status',
-                                        'assigned'
-                                    ) === 'assigned'
-                                        ? 'selected'
-                                        : '' }}>
-
-                                    Assigned
-
-                                </option>
-
-
-                                <option
-                                    value="pending"
-                                    {{ old(
-                                        'status'
-                                    ) === 'pending'
+                                        \App\Models\DutyAssignment::STATUS_PENDING
+                                    ) === \App\Models\DutyAssignment::STATUS_PENDING
                                         ? 'selected'
                                         : '' }}>
 
@@ -851,23 +719,52 @@
 
 
                                 <option
-                                    value="in_progress"
-                                    {{ old(
-                                        'status'
-                                    ) === 'in_progress'
+                                    value="{{ \App\Models\DutyAssignment::STATUS_ASSIGNED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_ASSIGNED
                                         ? 'selected'
                                         : '' }}>
 
-                                    In Progress
+                                    Assigned
 
                                 </option>
 
 
                                 <option
-                                    value="completed"
-                                    {{ old(
-                                        'status'
-                                    ) === 'completed'
+                                    value="{{ \App\Models\DutyAssignment::STATUS_ACCEPTED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_ACCEPTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Accepted
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_REJECTED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_REJECTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Rejected
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_STARTED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_STARTED
+                                        ? 'selected'
+                                        : '' }}>
+
+                                    Started
+
+                                </option>
+
+
+                                <option
+                                    value="{{ \App\Models\DutyAssignment::STATUS_COMPLETED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_COMPLETED
                                         ? 'selected'
                                         : '' }}>
 
@@ -877,10 +774,8 @@
 
 
                                 <option
-                                    value="cancelled"
-                                    {{ old(
-                                        'status'
-                                    ) === 'cancelled'
+                                    value="{{ \App\Models\DutyAssignment::STATUS_CANCELLED }}"
+                                    {{ old('status') === \App\Models\DutyAssignment::STATUS_CANCELLED
                                         ? 'selected'
                                         : '' }}>
 
@@ -896,9 +791,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -910,29 +803,8 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
-                    {{-- TRAVEL LOCATIONS --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-4">
-
-                        <h5 class="form-section-title">
-
-                            <i class="fa fa-map-marker mr-2"></i>
-
-                            Travel Locations
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PICKUP LOCATION --}}
+                    {{-- REPORTING LOCATION --}}
                     {{-- ================================================= --}}
 
                     <div class="col-md-6">
@@ -940,35 +812,26 @@
                         <div class="form-group">
 
                             <label>
-
-                                Pickup Location
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
+                                Reporting Location
                             </label>
 
 
                             <input
                                 type="text"
-                                name="pickup_location"
-                                id="pickup_location"
-                                class="form-control @error('pickup_location') is-invalid @enderror"
-                                value="{{ old('pickup_location') }}"
-                                placeholder="Enter Pickup Location">
+                                name="reporting_location"
+                                id="reporting_location"
+                                maxlength="255"
+                                class="form-control @error('reporting_location') is-invalid @enderror"
+                                value="{{ old('reporting_location') }}"
+                                placeholder="Enter reporting location">
 
 
-                            @error('pickup_location')
+                            @error('reporting_location')
 
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -978,304 +841,6 @@
                         </div>
 
                     </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- DROP LOCATION --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Drop Location
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
-                            </label>
-
-
-                            <input
-                                type="text"
-                                name="drop_location"
-                                id="drop_location"
-                                class="form-control @error('drop_location') is-invalid @enderror"
-                                value="{{ old('drop_location') }}"
-                                placeholder="Enter Drop Location">
-
-
-                            @error('drop_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-
-                                        {{ $message }}
-
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PASSENGER INFORMATION --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-4">
-
-                        <h5 class="form-section-title">
-
-                            <i class="fa fa-users mr-2"></i>
-
-                            Passenger Information
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PASSENGER NAME --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Passenger Name
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
-                            </label>
-
-
-                            <input
-                                type="text"
-                                name="passenger_name"
-                                id="passenger_name"
-                                class="form-control @error('passenger_name') is-invalid @enderror"
-                                value="{{ old('passenger_name') }}"
-                                placeholder="Enter Passenger Name">
-
-
-                            @error('passenger_name')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-
-                                        {{ $message }}
-
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PASSENGER MOBILE --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Passenger Mobile
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
-                            </label>
-
-
-                            <input
-                                type="text"
-                                name="passenger_mobile"
-                                id="passenger_mobile"
-                                maxlength="10"
-                                inputmode="numeric"
-                                class="form-control @error('passenger_mobile') is-invalid @enderror"
-                                value="{{ old('passenger_mobile') }}"
-                                placeholder="Enter 10 Digit Mobile Number">
-
-
-                            @error('passenger_mobile')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-
-                                        {{ $message }}
-
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- PASSENGER COUNT --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Number Of Passengers
-
-                                <span class="required">
-
-                                    *
-
-                                </span>
-
-                            </label>
-
-
-                            <input
-                                type="number"
-                                name="number_of_passengers"
-                                id="number_of_passengers"
-                                min="1"
-                                class="form-control @error('number_of_passengers') is-invalid @enderror"
-                                value="{{ old(
-                                    'number_of_passengers',
-                                    1
-                                ) }}"
-                                placeholder="Enter Number Of Passengers">
-
-
-                            @error('number_of_passengers')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-
-                                        {{ $message }}
-
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                        </div>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- DUTY INSTRUCTIONS --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-12 mt-4">
-
-                        <h5 class="form-section-title">
-
-                            <i class="fa fa-info-circle mr-2"></i>
-
-                            Duty Instructions & Remarks
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-
-
-                    {{-- ================================================= --}}
-                    {{-- INSTRUCTIONS --}}
-                    {{-- ================================================= --}}
-
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                Duty Instructions
-
-                            </label>
-
-
-                            <textarea
-                                name="instructions"
-                                id="instructions"
-                                rows="5"
-                                maxlength="2000"
-                                class="form-control @error('instructions') is-invalid @enderror"
-                                placeholder="Enter duty instructions">{{ old('instructions') }}</textarea>
-
-
-                            @error('instructions')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-
-                                        {{ $message }}
-
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-
-                            <small class="text-muted">
-
-                                Maximum 2000 characters.
-
-                            </small>
-
-                        </div>
-
-                    </div>
-
 
 
                     {{-- ================================================= --}}
@@ -1287,16 +852,14 @@
                         <div class="form-group">
 
                             <label>
-
                                 Remarks
-
                             </label>
 
 
                             <textarea
                                 name="remarks"
                                 id="remarks"
-                                rows="5"
+                                rows="4"
                                 maxlength="2000"
                                 class="form-control @error('remarks') is-invalid @enderror"
                                 placeholder="Enter remarks">{{ old('remarks') }}</textarea>
@@ -1307,9 +870,7 @@
                                 <span class="invalid-feedback d-block">
 
                                     <strong>
-
                                         {{ $message }}
-
                                     </strong>
 
                                 </span>
@@ -1318,15 +879,12 @@
 
 
                             <small class="text-muted">
-
                                 Maximum 2000 characters.
-
                             </small>
 
                         </div>
 
                     </div>
-
 
 
                     {{-- ================================================= --}}
@@ -1336,7 +894,6 @@
                     <div class="col-12">
 
                         <div class="text-right mt-4">
-
 
                             <a
                                 href="{{ route('duty-assignments.index') }}"
@@ -1360,11 +917,9 @@
 
                             </button>
 
-
                         </div>
 
                     </div>
-
 
                 </div>
 
@@ -1386,129 +941,11 @@
 @endsection
 
 
-
 @push('scripts')
 
 <script>
 
 $(document).ready(function () {
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Passenger Mobile Validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#passenger_mobile').on('input', function () {
-
-        this.value = this.value
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10);
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Passenger Count Validation
-    |--------------------------------------------------------------------------
-    */
-
-    $('#number_of_passengers').on('input', function () {
-
-        let value = parseInt(this.value);
-
-        if (isNaN(value) || value < 1) {
-
-            this.value = 1;
-
-        }
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Passenger Name Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#passenger_name').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Pickup Location Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#pickup_location').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Drop Location Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#drop_location').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Instructions Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#instructions').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Remarks Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#remarks').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1518,37 +955,52 @@ $(document).ready(function () {
 
     $('#travel_request_id').on('change', function () {
 
-        const selectedOption = $(this).find('option:selected');
+        const selectedOption =
+            $(this).find('option:selected');
 
         if (!this.value) {
 
-            $('#travel-request-preview')
-                .hide();
+            $('#travel-request-preview').hide();
+
+            $('#preview-request-no').text('-');
+            $('#preview-passenger-name').text('-');
+            $('#preview-pickup').text('-');
+            $('#preview-drop').text('-');
 
             return;
-
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | If server-rendered data attributes are available
-        |--------------------------------------------------------------------------
-        */
-
         const requestNo =
-            selectedOption.data('request-no') || selectedOption.text().trim();
+            selectedOption.data('request-no') || '-';
+
+        const passenger =
+            selectedOption.data('passenger') || '-';
+
+        const pickup =
+            selectedOption.data('pickup') || '-';
+
+        const drop =
+            selectedOption.data('drop') || '-';
 
 
         $('#preview-request-no')
             .text(requestNo);
+
+        $('#preview-passenger-name')
+            .text(passenger);
+
+        $('#preview-pickup')
+            .text(pickup);
+
+        $('#preview-drop')
+            .text(drop);
 
 
         $('#travel-request-preview')
             .show();
 
     });
-
 
 
     /*
@@ -1568,23 +1020,19 @@ $(document).ready(function () {
 
         if (!this.value) {
 
-            $('#driver-preview')
-                .hide();
+            $('#driver-preview').hide();
 
             return;
-
         }
 
 
         $('#driver-preview-text')
             .text(selectedText);
 
-
         $('#driver-preview')
             .show();
 
     });
-
 
 
     /*
@@ -1604,23 +1052,49 @@ $(document).ready(function () {
 
         if (!this.value) {
 
-            $('#vehicle-preview')
-                .hide();
+            $('#vehicle-preview').hide();
 
             return;
-
         }
 
 
         $('#vehicle-preview-text')
             .text(selectedText);
 
-
         $('#vehicle-preview')
             .show();
 
     });
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporting Location Formatting
+    |--------------------------------------------------------------------------
+    */
+
+    $('#reporting_location').on('blur', function () {
+
+        this.value = this.value
+            .replace(/\s+/g, ' ')
+            .trim();
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Remarks Formatting
+    |--------------------------------------------------------------------------
+    */
+
+    $('#remarks').on('blur', function () {
+
+        this.value = this.value
+            .replace(/\s+/g, ' ')
+            .trim();
+
+    });
 
 
     /*
@@ -1636,7 +1110,6 @@ $(document).ready(function () {
     $('#vehicle_id').trigger('change');
 
 
-
     /*
     |--------------------------------------------------------------------------
     | Form Submit
@@ -1645,80 +1118,15 @@ $(document).ready(function () {
 
     $('#dutyAssignmentForm').on('submit', function () {
 
-
         /*
         |--------------------------------------------------------------------------
-        | Passenger Name
+        | Reporting Location
         |--------------------------------------------------------------------------
         */
 
-        $('#passenger_name').val(
+        $('#reporting_location').val(
 
-            $('#passenger_name')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Passenger Mobile
-        |--------------------------------------------------------------------------
-        */
-
-        $('#passenger_mobile').val(
-
-            $('#passenger_mobile')
-                .val()
-                .replace(/[^0-9]/g, '')
-                .slice(0, 10)
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pickup
-        |--------------------------------------------------------------------------
-        */
-
-        $('#pickup_location').val(
-
-            $('#pickup_location')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Drop
-        |--------------------------------------------------------------------------
-        */
-
-        $('#drop_location').val(
-
-            $('#drop_location')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Instructions
-        |--------------------------------------------------------------------------
-        */
-
-        $('#instructions').val(
-
-            $('#instructions')
+            $('#reporting_location')
                 .val()
                 .replace(/\s+/g, ' ')
                 .trim()
