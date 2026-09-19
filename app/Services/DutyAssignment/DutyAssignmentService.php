@@ -3,7 +3,7 @@
 namespace App\Services\DutyAssignment;
 
 use App\Models\DutyAssignment;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -13,12 +13,10 @@ class DutyAssignmentService
     |--------------------------------------------------------------------------
     | GET DUTY ASSIGNMENTS
     |--------------------------------------------------------------------------
-    */
+    */    
 
-    public function getDutyAssignments(
-        int $perPage = 20
-    ): LengthAwarePaginator {
-
+    public function getDutyAssignments(): Collection
+    {
         return DutyAssignment::query()
             ->with([
                 'travelRequest',
@@ -30,7 +28,7 @@ class DutyAssignmentService
                 'dutySlip',
             ])
             ->latest('id')
-            ->paginate($perPage);
+            ->get();
     }
 
     /*

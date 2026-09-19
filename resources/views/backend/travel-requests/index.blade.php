@@ -1226,7 +1226,7 @@
                                     {{-- Sr No --}}
                                     <td>
 
-                                        {{ $travelRequests->firstItem() + $key }}
+                                        {{ $key+1 }}
 
                                     </td>
 

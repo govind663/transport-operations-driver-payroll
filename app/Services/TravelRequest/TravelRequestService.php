@@ -3,7 +3,7 @@
 namespace App\Services\TravelRequest;
 
 use App\Models\TravelRequest;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -28,14 +28,12 @@ class TravelRequestService
     |--------------------------------------------------------------------------
     */
 
-    public function getTravelRequests(
-        int $perPage = 20
-    ): LengthAwarePaginator {
-
+    public function getTravelRequests(): Collection
+    {
         return TravelRequest::query()
             ->with($this->relations)
             ->latest('id')
-            ->paginate($perPage);
+            ->get();
     }
 
     /*
