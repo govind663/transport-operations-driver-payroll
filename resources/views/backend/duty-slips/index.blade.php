@@ -612,28 +612,20 @@
                                 <td class="no-export">
 
                                     <form
-                                        action="{{ route(
-                                            'duty-slips.destroy',
-                                            $dutySlip->id
-                                        ) }}"
+                                        action="{{ route('duty-slips.destroy', $dutySlip->id) }}"
                                         method="POST"
-                                        class="delete-form">
-
+                                        class="delete-form"
+                                    >
                                         @csrf
-
                                         @method('DELETE')
-
 
                                         <button
                                             type="submit"
-                                            class="btn btn-danger btn-sm">
-
+                                            class="btn btn-danger btn-sm"
+                                        >
                                             <i class="dw dw-trash"></i>
-
                                             Delete
-
                                         </button>
-
                                     </form>
 
                                 </td>
@@ -686,62 +678,172 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | DUTY SLIP DELETE CONFIRMATION
+    |--------------------------------------------------------------------------
+    |
+    | Delegated submit handler:
+    | Works for normal rows as well as DataTable-generated/re-drawn rows.
+    |
+    */
+
+    document.addEventListener('submit', function (e) {
+
+        const form = e.target.closest('.delete-form');
+
+        if (!form) {
+            return;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Stop normal form submission
+        |--------------------------------------------------------------------------
+        */
+
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SweetAlert Availability Check
+        |--------------------------------------------------------------------------
+        */
+
+        if (typeof Swal === 'undefined') {
+
+            console.error(
+                'SweetAlert2 is not loaded.'
+            );
+
+            /*
+            | Fallback:
+            | Ask browser confirmation instead of silently submitting.
+            */
+
+            if (
+                window.confirm(
+                    'This duty slip will be moved to trash. Continue?'
+                )
+            ) {
+                HTMLFormElement.prototype.submit.call(form);
+            }
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Confirmation Dialog
+        |--------------------------------------------------------------------------
+        */
+
+        Swal.fire({
+
+            title: 'Are you sure?',
+
+            text: 'This duty slip will be moved to trash.',
+
+            icon: 'warning',
+
+            showCancelButton: true,
+
+            confirmButtonColor: '#d33',
+
+            cancelButtonColor: '#6c757d',
+
+            confirmButtonText: 'Yes, Delete',
+
+            cancelButtonText: 'Cancel',
+
+            reverseButtons: true,
+
+            allowOutsideClick: false,
+
+            allowEscapeKey: true
+
+        }).then(function (result) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Confirmed
+            |--------------------------------------------------------------------------
+            */
+
+            if (result.isConfirmed) {
+
+                HTMLFormElement.prototype.submit.call(form);
+
+            }
+
+        });
+
+    }, true);
 
 
     /*
     |--------------------------------------------------------------------------
-    | Duty Slip Delete Confirmation
+    | SUCCESS MESSAGE
     |--------------------------------------------------------------------------
     */
 
-    document.querySelectorAll('.delete-form').forEach(function (form) {
+    @if(session('message'))
 
-        form.addEventListener('submit', function (e) {
-
-            e.preventDefault();
-
+        if (typeof Swal !== 'undefined') {
 
             Swal.fire({
 
-                title: 'Are you sure?',
+                icon: 'success',
 
-                text: 'This duty slip will be moved to trash.',
+                title: 'Success',
 
-                icon: 'warning',
+                text: @json(session('message')),
 
-                showCancelButton: true,
+                timer: 2200,
 
-                confirmButtonColor: '#d33',
-
-                cancelButtonColor: '#6c757d',
-
-                confirmButtonText: 'Yes, Delete',
-
-                cancelButtonText: 'Cancel',
-
-                reverseButtons: true
-
-            }).then(function (result) {
-
-                if (result.isConfirmed) {
-
-                    form.submit();
-
-                }
+                showConfirmButton: false
 
             });
 
-        });
+        }
 
-    });
+    @endif
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | ERROR MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    @if(session('error'))
+
+        if (typeof Swal !== 'undefined') {
+
+            Swal.fire({
+
+                icon: 'error',
+
+                title: 'Error',
+
+                text: @json(session('error')),
+
+                confirmButtonText: 'OK'
+
+            });
+
+        }
+
+    @endif
 
 });
-
 </script>
-
 
 <script src="{{ asset('backend/assets/datatable/js/datatable-init.js') }}"></script>
 
