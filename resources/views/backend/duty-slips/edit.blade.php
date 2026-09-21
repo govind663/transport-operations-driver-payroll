@@ -651,7 +651,6 @@
                         {{-- ===================================================== --}}
                         {{-- DOCUMENT SECTION                                       --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
@@ -662,33 +661,27 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
-                        {{-- FRONT FILE                                              --}}
+                        {{-- FRONT FILE --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-6">
-
                             <div class="form-group">
 
                                 <label for="duty_slip_front_file">
-
-                                    <b>
-                                        Duty Slip Front
-                                    </b>
-
+                                    <b>Duty Slip Front</b>
                                 </label>
 
-
-                                <input type="file" name="duty_slip_front_file" id="duty_slip_front_file"
+                                <input
+                                    type="file"
+                                    name="duty_slip_front_file"
+                                    id="duty_slip_front_file"
                                     class="form-control @error('duty_slip_front_file') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                >
 
                                 <small class="form-helper-text">
-                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                                    Allowed: PDF, JPG, JPEG, PNG & WEBP (Maximum 5 MB)
                                 </small>
-
 
                                 @error('duty_slip_front_file')
                                     <span class="invalid-feedback d-block">
@@ -697,56 +690,173 @@
                                 @enderror
 
 
-                                <div id="duty-slip-front-file-preview" class="duty-slip-file-preview">
+                                <div
+                                    id="duty-slip-front-file-preview"
+                                    class="duty-slip-file-preview mt-2"
+                                >
 
                                     @if (!empty($dutySlip->duty_slip_front_file))
+
                                         @php
 
-                                            $frontFilePath = $dutySlip->duty_slip_front_file;
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | Existing Front File
+                                            |--------------------------------------------------------------------------
+                                            */
 
-                                            $frontFileUrl = asset('storage/' . ltrim($frontFilePath, '/'));
+                                            $frontFilePath = trim(
+                                                (string) $dutySlip->duty_slip_front_file
+                                            );
+
+                                            $frontFilePath = ltrim(
+                                                $frontFilePath,
+                                                '/'
+                                            );
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | File Extension
+                                            |--------------------------------------------------------------------------
+                                            */
 
                                             $frontFileExtension = strtolower(
-                                                pathinfo($frontFilePath, PATHINFO_EXTENSION),
+                                                pathinfo(
+                                                    $frontFilePath,
+                                                    PATHINFO_EXTENSION
+                                                )
                                             );
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | File URL
+                                            |--------------------------------------------------------------------------
+                                            |
+                                            | Same working logic as Driver Management.
+                                            |
+                                            */
+
+                                            if (
+                                                str_starts_with(
+                                                    $frontFilePath,
+                                                    'duty-slip/'
+                                                )
+                                            ) {
+
+                                                $frontFileUrl = asset(
+                                                    'storage/' . $frontFilePath
+                                                );
+
+                                            } else {
+
+                                                $frontFileUrl = asset(
+                                                    'backend/assets/uploads/duty-slip/' .
+                                                    $frontFilePath
+                                                );
+
+                                            }
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | Image Extensions
+                                            |--------------------------------------------------------------------------
+                                            */
+
+                                            $frontImageExtensions = [
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'webp',
+                                            ];
 
                                         @endphp
 
 
-                                        @if (in_array($frontFileExtension, ['jpg', 'jpeg', 'png'], true))
+                                        {{-- ================================================= --}}
+                                        {{-- IMAGE --}}
+                                        {{-- ================================================= --}}
+                                        @if (
+                                            in_array(
+                                                $frontFileExtension,
+                                                $frontImageExtensions,
+                                                true
+                                            )
+                                        )
+
                                             <div>
 
-                                                <img src="{{ $frontFileUrl }}" alt="Duty Slip Front"
+                                                <img
+                                                    src="{{ $frontFileUrl }}"
+                                                    alt="Duty Slip Front"
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     class="img-thumbnail"
+                                                    data-no-optimize="1"
                                                     style="
-                                                width:220px;
-                                                max-height:220px;
-                                                object-fit:contain;
-                                                border-radius:10px;
-                                                border:2px solid #dee2e6;
-                                                box-shadow:0 2px 10px rgba(0,0,0,.15);
-                                                background:#fff;
-                                            ">
+                                                        width:220px;
+                                                        max-width:100%;
+                                                        max-height:300px;
+                                                        object-fit:contain;
+                                                        display:block;
+                                                        background:#fff;
+                                                        border:2px solid #dee2e6;
+                                                        border-radius:10px;
+                                                        box-shadow:0 2px 10px rgba(0,0,0,.15);
+                                                    "
+                                                    onerror="
+                                                        this.onerror=null;
+                                                        this.src='{{ asset('backend/assets/img/logo/user.png') }}';
+                                                    "
+                                                >
+
 
                                                 <div class="mt-2">
 
-                                                    <a href="{{ $frontFileUrl }}" target="_blank"
-                                                        rel="noopener noreferrer" class="btn btn-sm btn-primary">
-
+                                                    <a
+                                                        href="{{ $frontFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary"
+                                                    >
                                                         <i class="fa fa-eye"></i>
                                                         View Duty Slip Front
-
                                                     </a>
 
                                                 </div>
 
                                             </div>
-                                        @elseif($frontFileExtension === 'pdf')
-                                            <div class="alert alert-light border d-flex align-items-center" style="border-radius:10px; padding:12px 15px; max-width:450px;">
 
-                                                <div class="mr-3" style="min-width:45px; text-align:center;">
 
-                                                    <i class="fa fa-file-pdf-o text-danger" style="font-size:36px;"></i>
+                                        {{-- ================================================= --}}
+                                        {{-- PDF --}}
+                                        {{-- ================================================= --}}
+
+                                        @elseif ($frontFileExtension === 'pdf')
+
+                                            <div
+                                                class="alert alert-light border d-flex align-items-center"
+                                                style="
+                                                    border-radius:10px;
+                                                    padding:12px 15px;
+                                                    max-width:450px;
+                                                "
+                                            >
+
+                                                <div
+                                                    class="mr-3"
+                                                    style="
+                                                        min-width:45px;
+                                                        text-align:center;
+                                                    "
+                                                >
+
+                                                    <i
+                                                        class="fa fa-file-pdf-o text-danger"
+                                                        style="font-size:36px;"
+                                                    ></i>
 
                                                 </div>
 
@@ -757,53 +867,98 @@
                                                         Existing Duty Slip Front PDF
                                                     </strong>
 
-                                                    <a href="{{ $frontFileUrl }}" target="_blank"
-                                                        rel="noopener noreferrer" class="btn btn-sm btn-primary mt-2">
+                                                    <small class="text-muted d-block mt-1">
+                                                        {{ basename($frontFilePath) }}
+                                                    </small>
 
+
+                                                    <a
+                                                        href="{{ $frontFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary mt-2"
+                                                    >
                                                         <i class="fa fa-eye"></i>
                                                         View Front PDF
-
                                                     </a>
 
                                                 </div>
 
                                             </div>
+
+
+                                        {{-- ================================================= --}}
+                                        {{-- OTHER --}}
+                                        {{-- ================================================= --}}
+
+                                        @else
+
+                                            <div
+                                                class="alert alert-light border"
+                                                style="border-radius:10px; max-width:450px;"
+                                            >
+
+                                                <strong>
+                                                    Existing Duty Slip Front
+                                                </strong>
+
+                                                <div class="small text-muted mt-1">
+                                                    {{ basename($frontFilePath) }}
+                                                </div>
+
+
+                                                <div class="mt-2">
+
+                                                    <a
+                                                        href="{{ $frontFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary"
+                                                    >
+                                                        <i class="fa fa-eye"></i>
+                                                        Open File
+                                                    </a>
+
+                                                </div>
+
+                                            </div>
+
                                         @endif
+
+                                    @else
+
+                                        <div class="text-muted small">
+                                            No front file uploaded.
+                                        </div>
+
                                     @endif
 
                                 </div>
 
                             </div>
-
                         </div>
 
-
                         {{-- ===================================================== --}}
-                        {{-- BACK FILE                                               --}}
+                        {{-- BACK FILE --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-6">
-
                             <div class="form-group">
 
                                 <label for="duty_slip_back_file">
-
-                                    <b>
-                                        Duty Slip Back
-                                    </b>
-
+                                    <b>Duty Slip Back</b>
                                 </label>
 
-
-                                <input type="file" name="duty_slip_back_file" id="duty_slip_back_file"
+                                <input
+                                    type="file"
+                                    name="duty_slip_back_file"
+                                    id="duty_slip_back_file"
                                     class="form-control @error('duty_slip_back_file') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
-
+                                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                >
 
                                 <small class="form-helper-text">
-                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                                    Allowed: PDF, JPG, JPEG, PNG & WEBP (Maximum 5 MB)
                                 </small>
-
 
                                 @error('duty_slip_back_file')
                                     <span class="invalid-feedback d-block">
@@ -812,65 +967,174 @@
                                 @enderror
 
 
-                                <div id="duty-slip-back-file-preview" class="duty-slip-file-preview">
+                                <div
+                                    id="duty-slip-back-file-preview"
+                                    class="duty-slip-file-preview mt-2"
+                                >
 
                                     @if (!empty($dutySlip->duty_slip_back_file))
+
                                         @php
 
-                                            $backFilePath = $dutySlip->duty_slip_back_file;
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | Existing Back File
+                                            |--------------------------------------------------------------------------
+                                            */
 
-                                            $backFileUrl = asset('storage/' . ltrim($backFilePath, '/'));
+                                            $backFilePath = trim(
+                                                (string) $dutySlip->duty_slip_back_file
+                                            );
+
+                                            $backFilePath = ltrim(
+                                                $backFilePath,
+                                                '/'
+                                            );
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | File Extension
+                                            |--------------------------------------------------------------------------
+                                            */
 
                                             $backFileExtension = strtolower(
-                                                pathinfo($backFilePath, PATHINFO_EXTENSION),
+                                                pathinfo(
+                                                    $backFilePath,
+                                                    PATHINFO_EXTENSION
+                                                )
                                             );
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | File URL
+                                            |--------------------------------------------------------------------------
+                                            |
+                                            | Same working logic as Driver Management.
+                                            |
+                                            */
+
+                                            if (
+                                                str_starts_with(
+                                                    $backFilePath,
+                                                    'duty-slip/'
+                                                )
+                                            ) {
+
+                                                $backFileUrl = asset(
+                                                    'storage/' . $backFilePath
+                                                );
+
+                                            } else {
+
+                                                $backFileUrl = asset(
+                                                    'backend/assets/uploads/duty-slip/' .
+                                                    $backFilePath
+                                                );
+
+                                            }
+
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | Image Extensions
+                                            |--------------------------------------------------------------------------
+                                            */
+
+                                            $backImageExtensions = [
+                                                'jpg',
+                                                'jpeg',
+                                                'png',
+                                                'webp',
+                                            ];
 
                                         @endphp
 
 
-                                        @if (in_array($backFileExtension, ['jpg', 'jpeg', 'png'], true))
+                                        {{-- ================================================= --}}
+                                        {{-- IMAGE --}}
+                                        {{-- ================================================= --}}
+
+                                        @if (
+                                            in_array(
+                                                $backFileExtension,
+                                                $backImageExtensions,
+                                                true
+                                            )
+                                        )
+
                                             <div>
 
-                                                <img src="{{ $backFileUrl }}" alt="Duty Slip Back"
+                                                <img
+                                                    src="{{ $backFileUrl }}"
+                                                    alt="Duty Slip Back"
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     class="img-thumbnail"
+                                                    data-no-optimize="1"
                                                     style="
-                                                width:220px;
-                                                max-height:220px;
-                                                object-fit:contain;
-                                                border-radius:10px;
-                                                border:2px solid #dee2e6;
-                                                box-shadow:0 2px 10px rgba(0,0,0,.15);
-                                                background:#fff;
-                                            ">
+                                                        width:220px;
+                                                        max-width:100%;
+                                                        max-height:300px;
+                                                        object-fit:contain;
+                                                        display:block;
+                                                        background:#fff;
+                                                        border:2px solid #dee2e6;
+                                                        border-radius:10px;
+                                                        box-shadow:0 2px 10px rgba(0,0,0,.15);
+                                                    "
+                                                    onerror="
+                                                        this.onerror=null;
+                                                        this.src='{{ asset('backend/assets/img/logo/user.png') }}';
+                                                    "
+                                                >
+
 
                                                 <div class="mt-2">
 
-                                                    <a href="{{ $backFileUrl }}" target="_blank"
-                                                        rel="noopener noreferrer" class="btn btn-sm btn-primary">
-
+                                                    <a
+                                                        href="{{ $backFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary"
+                                                    >
                                                         <i class="fa fa-eye"></i>
                                                         View Duty Slip Back
-
                                                     </a>
 
                                                 </div>
 
                                             </div>
-                                        @elseif($backFileExtension === 'pdf')
-                                            <div class="alert alert-light border d-flex align-items-center"
+
+
+                                        {{-- ================================================= --}}
+                                        {{-- PDF --}}
+                                        {{-- ================================================= --}}
+
+                                        @elseif ($backFileExtension === 'pdf')
+
+                                            <div
+                                                class="alert alert-light border d-flex align-items-center"
                                                 style="
-                                            border-radius:10px;
-                                            padding:12px 15px;
-                                            max-width:450px;
-                                        ">
+                                                    border-radius:10px;
+                                                    padding:12px 15px;
+                                                    max-width:450px;
+                                                "
+                                            >
 
-                                                <div class="mr-3"
+                                                <div
+                                                    class="mr-3"
                                                     style="
-                                                min-width:45px;
-                                                text-align:center;
-                                            ">
+                                                        min-width:45px;
+                                                        text-align:center;
+                                                    "
+                                                >
 
-                                                    <i class="fa fa-file-pdf-o text-danger" style="font-size:36px;"></i>
+                                                    <i
+                                                        class="fa fa-file-pdf-o text-danger"
+                                                        style="font-size:36px;"
+                                                    ></i>
 
                                                 </div>
 
@@ -881,31 +1145,80 @@
                                                         Existing Duty Slip Back PDF
                                                     </strong>
 
-                                                    <a href="{{ $backFileUrl }}" target="_blank"
-                                                        rel="noopener noreferrer" class="btn btn-sm btn-primary mt-2">
+                                                    <small class="text-muted d-block mt-1">
+                                                        {{ basename($backFilePath) }}
+                                                    </small>
 
+
+                                                    <a
+                                                        href="{{ $backFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary mt-2"
+                                                    >
                                                         <i class="fa fa-eye"></i>
                                                         View Back PDF
-
                                                     </a>
 
                                                 </div>
 
                                             </div>
+
+
+                                        {{-- ================================================= --}}
+                                        {{-- OTHER --}}
+                                        {{-- ================================================= --}}
+
+                                        @else
+
+                                            <div
+                                                class="alert alert-light border"
+                                                style="border-radius:10px; max-width:450px;"
+                                            >
+
+                                                <strong>
+                                                    Existing Duty Slip Back
+                                                </strong>
+
+                                                <div class="small text-muted mt-1">
+                                                    {{ basename($backFilePath) }}
+                                                </div>
+
+
+                                                <div class="mt-2">
+
+                                                    <a
+                                                        href="{{ $backFileUrl }}"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="btn btn-sm btn-primary"
+                                                    >
+                                                        <i class="fa fa-eye"></i>
+                                                        Open File
+                                                    </a>
+
+                                                </div>
+
+                                            </div>
+
                                         @endif
+
+                                    @else
+
+                                        <div class="text-muted small">
+                                            No back file uploaded.
+                                        </div>
+
                                     @endif
 
                                 </div>
 
                             </div>
-
-                        </div>
-
+                        </div>                        
 
                         {{-- ===================================================== --}}
                         {{-- TRIP INFORMATION                                       --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
@@ -916,11 +1229,9 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
                         {{-- START DATE                                             --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-3">
 
                             <div class="form-group">

@@ -13,7 +13,6 @@ use App\Models\Expense;
 use App\Models\VehicleManagement;
 use App\Models\VehicleType;
 use App\Services\DutySlip\DutySlipService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -28,7 +27,6 @@ class DutySlipController extends Controller
 
     protected DutySlipService $dutySlipService;
 
-
     /*
     |--------------------------------------------------------------------------
     | Constructor
@@ -40,7 +38,6 @@ class DutySlipController extends Controller
     ) {
         $this->dutySlipService = $dutySlipService;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -62,7 +59,6 @@ class DutySlipController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CREATE
@@ -79,8 +75,8 @@ class DutySlipController extends Controller
         | Active Duty Assignments
         |--------------------------------------------------------------------------
         |
-        | Duty Assignment is still required on the Duty Slip, but Driver,
-        | Vehicle and Vehicle Type are selected independently by the user.
+        | Duty Assignment is mandatory on the Duty Slip.
+        | Driver / Vehicle / Vehicle Type remain independent selections.
         |
         */
 
@@ -98,10 +94,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL ALLOWANCES
+        | Allowances
         |--------------------------------------------------------------------------
         */
 
@@ -109,10 +104,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL EXPENSES
+        | Expenses
         |--------------------------------------------------------------------------
         */
 
@@ -120,65 +114,48 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL DRIVERS
+        | Drivers
         |--------------------------------------------------------------------------
-        |
-        | User selects Driver manually.
-        |
         */
 
         $drivers = Driver::query()
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL VEHICLES
+        | Vehicles
         |--------------------------------------------------------------------------
-        |
-        | User selects Vehicle manually.
-        |
         */
 
         $vehicles = VehicleManagement::query()
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL VEHICLE TYPES
+        | Vehicle Types
         |--------------------------------------------------------------------------
-        |
-        | User selects Vehicle Type manually.
-        |
         */
 
         $vehicleTypes = VehicleType::query()
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | NEXT DUTY SLIP NUMBER
+        | Next Duty Slip Number
         |--------------------------------------------------------------------------
-        |
-        | Service should generate the next server-side sequence.
-        |
         */
 
         $nextSlipNo = $this->dutySlipService
             ->generateNextSlipNo();
 
-
         /*
         |--------------------------------------------------------------------------
-        | RETURN VIEW
+        | View
         |--------------------------------------------------------------------------
         */
 
@@ -196,7 +173,6 @@ class DutySlipController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | STORE
@@ -209,37 +185,29 @@ class DutySlipController extends Controller
     public function store(
         StoreDutySlipRequest $request
     ): RedirectResponse {
-
         /*
         |--------------------------------------------------------------------------
-        | Validated Request Data
+        | Validated Data
         |--------------------------------------------------------------------------
         */
 
         $data = $request->validated();
 
-
         /*
         |--------------------------------------------------------------------------
-        | Normalize Duty Slip Data
+        | Prepare Data
         |--------------------------------------------------------------------------
         */
 
-        $data = $this->prepareDutySlipData(
-            $data
-        );
-
+        $data = $this->prepareDutySlipData($data);
 
         /*
         |--------------------------------------------------------------------------
-        | Store Duty Slip
+        | Store
         |--------------------------------------------------------------------------
         */
 
-        $this->dutySlipService->store(
-            $data
-        );
-
+        $this->dutySlipService->store($data);
 
         /*
         |--------------------------------------------------------------------------
@@ -255,7 +223,6 @@ class DutySlipController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SHOW
@@ -268,19 +235,14 @@ class DutySlipController extends Controller
     public function show(
         DutySlip $dutySlip
     ): View {
-
         $dutySlip = $this->dutySlipService
-            ->findById(
-                $dutySlip->id
-            );
-
+            ->findById($dutySlip->id);
 
         return view(
             'backend.duty-slips.show',
             compact('dutySlip')
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -294,7 +256,6 @@ class DutySlipController extends Controller
     public function edit(
         DutySlip $dutySlip
     ): View {
-
         /*
         |--------------------------------------------------------------------------
         | Fresh Duty Slip
@@ -302,14 +263,11 @@ class DutySlipController extends Controller
         */
 
         $dutySlip = $this->dutySlipService
-            ->findById(
-                $dutySlip->id
-            );
-
+            ->findById($dutySlip->id);
 
         /*
         |--------------------------------------------------------------------------
-        | ALL DUTY ASSIGNMENTS
+        | All Duty Assignments
         |--------------------------------------------------------------------------
         */
 
@@ -322,10 +280,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL ALLOWANCES
+        | Allowances
         |--------------------------------------------------------------------------
         */
 
@@ -333,10 +290,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL EXPENSES
+        | Expenses
         |--------------------------------------------------------------------------
         */
 
@@ -344,10 +300,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL DRIVERS
+        | Drivers
         |--------------------------------------------------------------------------
         */
 
@@ -355,10 +310,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL VEHICLES
+        | Vehicles
         |--------------------------------------------------------------------------
         */
 
@@ -366,10 +320,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | ALL VEHICLE TYPES
+        | Vehicle Types
         |--------------------------------------------------------------------------
         */
 
@@ -377,10 +330,9 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-
         /*
         |--------------------------------------------------------------------------
-        | RETURN VIEW
+        | View
         |--------------------------------------------------------------------------
         */
 
@@ -398,7 +350,6 @@ class DutySlipController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | UPDATE
@@ -412,19 +363,17 @@ class DutySlipController extends Controller
         UpdateDutySlipRequest $request,
         DutySlip $dutySlip
     ): RedirectResponse {
-
         /*
         |--------------------------------------------------------------------------
-        | Validated Request Data
+        | Validated Data
         |--------------------------------------------------------------------------
         */
 
         $data = $request->validated();
 
-
         /*
         |--------------------------------------------------------------------------
-        | Normalize Duty Slip Data
+        | Prepare Data
         |--------------------------------------------------------------------------
         */
 
@@ -433,10 +382,9 @@ class DutySlipController extends Controller
             $dutySlip
         );
 
-
         /*
         |--------------------------------------------------------------------------
-        | Update Duty Slip
+        | Update
         |--------------------------------------------------------------------------
         */
 
@@ -444,7 +392,6 @@ class DutySlipController extends Controller
             $dutySlip,
             $data
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -460,7 +407,6 @@ class DutySlipController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DESTROY
@@ -473,11 +419,9 @@ class DutySlipController extends Controller
     public function destroy(
         DutySlip $dutySlip
     ): RedirectResponse {
-
         $this->dutySlipService->delete(
             $dutySlip
         );
-
 
         return redirect()
             ->route('duty-slips.index')
@@ -487,53 +431,44 @@ class DutySlipController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | PREPARE DUTY SLIP DATA
     |--------------------------------------------------------------------------
-    |
-    | Normalizes form fields before passing them to the service.
-    |
-    | Driver, Vehicle and Vehicle Type are user-selected independently.
-    | Only driver_id is currently stored directly in duty_slips.
-    |
     */
 
+    /**
+     * Normalize and validate controller-level Duty Slip data.
+     *
+     * Important:
+     * - Driver is manually selected.
+     * - Vehicle is manually selected.
+     * - Vehicle Type is manually selected.
+     * - Duty Assignment is only a required reference.
+     * - Duty Assignment never overwrites Driver / Vehicle / Vehicle Type.
+     * - Date/time normalization is handled by DutySlipService.
+     */
     protected function prepareDutySlipData(
         array $data,
         ?DutySlip $dutySlip = null
     ): array {
-
         /*
         |--------------------------------------------------------------------------
         | DUTY ASSIGNMENT
         |--------------------------------------------------------------------------
-        |
-        | Duty Assignment remains mandatory because the database requires
-        | duty_assignment_id.
-        |
         */
 
-        $dutyAssignmentId =
-            $data['duty_assignment_id']
-            ?? null;
+        $dutyAssignmentId = $data['duty_assignment_id'] ?? null;
 
-
-        if (empty($dutyAssignmentId)) {
-
+        if (
+            $dutyAssignmentId === null ||
+            $dutyAssignmentId === ''
+        ) {
             throw ValidationException::withMessages([
                 'duty_assignment_id' =>
                     'Please select a duty assignment.',
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFY DUTY ASSIGNMENT EXISTS
-        |--------------------------------------------------------------------------
-        */
 
         $dutyAssignment = DutyAssignment::query()
             ->select([
@@ -543,471 +478,298 @@ class DutySlipController extends Controller
             ])
             ->find($dutyAssignmentId);
 
-
         if (!$dutyAssignment) {
-
             throw ValidationException::withMessages([
                 'duty_assignment_id' =>
                     'Selected duty assignment does not exist.',
             ]);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE DUTY ASSIGNMENT ID
-        |--------------------------------------------------------------------------
-        */
-
-        $data['duty_assignment_id'] =
-            (int) $dutyAssignment->id;
-
+        $data['duty_assignment_id'] = (int) $dutyAssignment->id;
 
         /*
         |--------------------------------------------------------------------------
         | DRIVER
         |--------------------------------------------------------------------------
         |
-        | User selects Driver manually.
-        | Driver is stored directly in duty_slips.driver_id.
+        | Manual selection.
+        | Never replaced by duty assignment driver.
         |
         */
 
-        $driverId =
-            $data['driver_id']
-            ?? null;
-
+        $driverId = $data['driver_id'] ?? null;
 
         if (
             $driverId === null ||
             $driverId === ''
         ) {
-
             throw ValidationException::withMessages([
                 'driver_id' =>
                     'Please select a driver.',
             ]);
         }
 
+        $driverId = (int) $driverId;
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE DRIVER ID
-        |--------------------------------------------------------------------------
-        */
+        if ($driverId <= 0) {
+            throw ValidationException::withMessages([
+                'driver_id' =>
+                    'Please select a valid driver.',
+            ]);
+        }
 
-        $data['driver_id'] =
-            (int) $driverId;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFY DRIVER EXISTS
-        |--------------------------------------------------------------------------
-        */
-
-        $driverExists =
-            Driver::query()
-                ->where(
-                    'id',
-                    $data['driver_id']
-                )
-                ->exists();
-
+        $driverExists = Driver::query()
+            ->where('id', $driverId)
+            ->exists();
 
         if (!$driverExists) {
-
             throw ValidationException::withMessages([
                 'driver_id' =>
                     'Selected driver does not exist.',
             ]);
         }
 
+        $data['driver_id'] = $driverId;
 
         /*
         |--------------------------------------------------------------------------
         | VEHICLE
         |--------------------------------------------------------------------------
         |
-        | User selects Vehicle manually.
-        | Current duty_slips table does not contain vehicle_id,
-        | therefore this remains a form-only field.
+        | Manual selection.
+        | This field MUST remain in $data because duty_slips.vehicle_id
+        | exists in the current database schema.
         |
         */
 
+        $vehicleId = $data['vehicle_id'] ?? null;
+
         if (
-            isset($data['vehicle_id']) &&
-            $data['vehicle_id'] !== ''
+            $vehicleId === null ||
+            $vehicleId === ''
         ) {
-
-            $vehicleId =
-                (int) $data['vehicle_id'];
-
-
-            $vehicleExists =
-                VehicleManagement::query()
-                    ->where(
-                        'id',
-                        $vehicleId
-                    )
-                    ->exists();
-
-
-            if (!$vehicleExists) {
-
-                throw ValidationException::withMessages([
-                    'vehicle_id' =>
-                        'Selected vehicle does not exist.',
-                ]);
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Keep As Form Value
-            |--------------------------------------------------------------------------
-            */
-
-            $data['vehicle_id'] =
-                $vehicleId;
-
-        } else {
-
-            $data['vehicle_id'] =
-                null;
+            throw ValidationException::withMessages([
+                'vehicle_id' =>
+                    'Please select a vehicle.',
+            ]);
         }
 
+        $vehicleId = (int) $vehicleId;
+
+        if ($vehicleId <= 0) {
+            throw ValidationException::withMessages([
+                'vehicle_id' =>
+                    'Please select a valid vehicle.',
+            ]);
+        }
+
+        $vehicleExists = VehicleManagement::query()
+            ->where('id', $vehicleId)
+            ->exists();
+
+        if (!$vehicleExists) {
+            throw ValidationException::withMessages([
+                'vehicle_id' =>
+                    'Selected vehicle does not exist.',
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANT
+        |--------------------------------------------------------------------------
+        |
+        | Do NOT unset vehicle_id.
+        |
+        */
+
+        $data['vehicle_id'] = $vehicleId;
 
         /*
         |--------------------------------------------------------------------------
         | VEHICLE TYPE
         |--------------------------------------------------------------------------
         |
-        | User selects Vehicle Type manually.
-        | Current duty_slips table has no vehicle_type_id column.
+        | Manual selection.
+        | Current field is vehicle_type_id.
         |
         */
 
+        $vehicleTypeId = $data['vehicle_type_id'] ?? null;
+
         if (
-            isset($data['vehicle_type'])
+            $vehicleTypeId === null ||
+            $vehicleTypeId === ''
         ) {
-
-            $data['vehicle_type'] =
-                trim(
-                    (string) $data['vehicle_type']
-                );
-
-            if (
-                $data['vehicle_type'] === ''
-            ) {
-
-                $data['vehicle_type'] =
-                    null;
-            }
+            throw ValidationException::withMessages([
+                'vehicle_type_id' =>
+                    'Please select a vehicle type.',
+            ]);
         }
 
+        $vehicleTypeId = (int) $vehicleTypeId;
+
+        if ($vehicleTypeId <= 0) {
+            throw ValidationException::withMessages([
+                'vehicle_type_id' =>
+                    'Please select a valid vehicle type.',
+            ]);
+        }
+
+        $vehicleTypeExists = VehicleType::query()
+            ->where('id', $vehicleTypeId)
+            ->exists();
+
+        if (!$vehicleTypeExists) {
+            throw ValidationException::withMessages([
+                'vehicle_type_id' =>
+                    'Selected vehicle type does not exist.',
+            ]);
+        }
+
+        $data['vehicle_type_id'] = $vehicleTypeId;
 
         /*
         |--------------------------------------------------------------------------
-        | SLIP NUMBER
+        | LEGACY VEHICLE TYPE
         |--------------------------------------------------------------------------
         |
-        | Current value is normalized.
-        | Actual sequence should still be enforced by Service at save time.
+        | Keep only for backward compatibility.
+        | The actual database field is vehicle_type_id.
         |
         */
 
-        if (
-            isset($data['slip_no'])
-        ) {
+        if (isset($data['vehicle_type'])) {
+            $legacyVehicleType = trim(
+                (string) $data['vehicle_type']
+            );
 
-            $data['slip_no'] =
-                strtoupper(
-                    preg_replace(
-                        '/\s+/',
-                        '',
-                        trim(
-                            (string) $data['slip_no']
-                        )
-                    )
-                );
+            $data['vehicle_type'] = $legacyVehicleType !== ''
+                ? $legacyVehicleType
+                : null;
         }
-
 
         /*
         |--------------------------------------------------------------------------
         | DUTY DATE
         |--------------------------------------------------------------------------
+        |
+        | Form Request already validates this.
+        | Keep the value untouched for Service normalization.
+        |
         */
 
-        if (
-            empty($data['duty_date'])
-        ) {
-
+        if (empty($data['duty_date'])) {
             throw ValidationException::withMessages([
                 'duty_date' =>
                     'Duty date is required.',
             ]);
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | OPENING KM
+        | KILOMETERS
         |--------------------------------------------------------------------------
-        */
-
-        $openingKm =
-            isset($data['opening_km']) &&
-            $data['opening_km'] !== ''
-                ? (float) $data['opening_km']
-                : null;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CLOSING KM
-        |--------------------------------------------------------------------------
-        */
-
-        $closingKm =
-            isset($data['closing_km']) &&
-            $data['closing_km'] !== ''
-                ? (float) $data['closing_km']
-                : null;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | KM VALIDATION
-        |--------------------------------------------------------------------------
+        |
+        | Do not calculate database totals here.
+        | DutySlipService is authoritative for opening/closing/total KM.
+        |
         */
 
         if (
-            $openingKm !== null &&
-            $closingKm !== null &&
-            $closingKm < $openingKm
+            isset($data['opening_km']) &&
+            $data['opening_km'] !== ''
         ) {
+            $data['opening_km'] = (float) $data['opening_km'];
+        }
 
+        if (
+            isset($data['closing_km']) &&
+            $data['closing_km'] !== ''
+        ) {
+            $data['closing_km'] = (float) $data['closing_km'];
+        }
+
+        if (
+            isset($data['opening_km']) &&
+            isset($data['closing_km']) &&
+            $data['opening_km'] !== null &&
+            $data['closing_km'] !== null &&
+            $data['closing_km'] < $data['opening_km']
+        ) {
             throw ValidationException::withMessages([
                 'closing_km' =>
                     'Closing KM must be greater than or equal to Opening KM.',
             ]);
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | DATABASE METER FIELDS
-        |--------------------------------------------------------------------------
-        */
-
-        $data['opening_meter'] =
-            $openingKm;
-
-        $data['closing_meter'] =
-            $closingKm;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOTAL KM
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $openingKm !== null &&
-            $closingKm !== null
-        ) {
-
-            $data['total_km'] =
-                round(
-                    $closingKm - $openingKm,
-                    2
-                );
-
-        } else {
-
-            $data['total_km'] =
-                null;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | START DATE + TIME
-        |--------------------------------------------------------------------------
-        */
-
-        $data['start_time'] =
-            $this->combineDateAndTime(
-                $data['start_date'] ?? null,
-                $data['start_time'] ?? null,
-                $data['duty_date'] ?? null,
-                'start_date'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | END DATE + TIME
-        |--------------------------------------------------------------------------
-        */
-
-        $data['end_time'] =
-            $this->combineDateAndTime(
-                $data['end_date'] ?? null,
-                $data['end_time'] ?? null,
-                $data['duty_date'] ?? null,
-                'end_date'
-            );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | START / END VALIDATION
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $data['start_time'] !== null &&
-            $data['end_time'] !== null
-        ) {
-
-            try {
-
-                $startDateTime =
-                    Carbon::parse(
-                        $data['start_time']
-                    );
-
-                $endDateTime =
-                    Carbon::parse(
-                        $data['end_time']
-                    );
-
-
-                if (
-                    $endDateTime->lessThan(
-                        $startDateTime
-                    )
-                ) {
-
-                    throw ValidationException::withMessages([
-                        'end_time' =>
-                            'End date and time cannot be before start date and time.',
-                    ]);
-                }
-
-            } catch (
-                ValidationException $exception
-            ) {
-
-                throw $exception;
-
-            } catch (\Throwable $exception) {
-
-                throw ValidationException::withMessages([
-                    'start_time' =>
-                        'Invalid start date or time.',
-
-                    'end_time' =>
-                        'Invalid end date or time.',
-                ]);
-            }
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | ALLOWANCES
-        |--------------------------------------------------------------------------
-        */
-
-        $allowances =
-            $data['driver_allowances']
-            ?? [];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | EXPENSES
-        |--------------------------------------------------------------------------
-        */
-
-        $expenses =
-            $data['driver_expenses']
-            ?? [];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE CHILD DATA
-        |--------------------------------------------------------------------------
-        */
-
-        $data['allowances'] =
-            is_array($allowances)
-                ? $allowances
-                : [];
-
-
-        $data['expenses'] =
-            is_array($expenses)
-                ? $expenses
-                : [];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | REMOVE FORM-ONLY FIELDS
+        | DATE + TIME
         |--------------------------------------------------------------------------
         |
         | IMPORTANT:
+        | Do NOT combine start_date/start_time here.
         |
-        | driver_id is NOT removed.
+        | DutySlipService handles:
+        | - start_date + start_time
+        | - end_date + end_time
+        | - already-combined datetime values
         |
-        | vehicle_id and vehicle_type are removed because the current
-        | duty_slips table does not contain these columns.
+        */
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHILD ALLOWANCES
+        |--------------------------------------------------------------------------
+        */
+
+        $allowances = $data['driver_allowances'] ?? [];
+
+        $data['allowances'] = is_array($allowances)
+            ? $allowances
+            : [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHILD EXPENSES
+        |--------------------------------------------------------------------------
+        */
+
+        $expenses = $data['driver_expenses'] ?? [];
+
+        $data['expenses'] = is_array($expenses)
+            ? $expenses
+            : [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | FORM-ONLY / DISPLAY-ONLY FIELDS
+        |--------------------------------------------------------------------------
+        |
+        | Do NOT remove:
+        | - driver_id
+        | - vehicle_id
+        | - vehicle_type_id
+        |
+        | These are real duty_slips database columns.
         |
         */
 
         unset(
-
             $data['driver_allowances'],
-
             $data['driver_expenses'],
-
-            $data['vehicle_id'],
-
-            $data['vehicle_type'],
-
-            $data['start_date'],
-
-            $data['end_date'],
-
             $data['pickup_location'],
-
             $data['drop_location'],
-
             $data['passenger_name'],
-
             $data['passenger_mobile'],
-
             $data['number_of_passengers'],
-
             $data['fuel_quantity'],
-
             $data['fuel_amount'],
-
             $data['total_allowance'],
-
             $data['total_expense'],
-
             $data['grand_total']
-
         );
-
 
         /*
         |--------------------------------------------------------------------------
@@ -1016,97 +778,5 @@ class DutySlipController extends Controller
         */
 
         return $data;
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | COMBINE DATE + TIME
-    |--------------------------------------------------------------------------
-    */
-
-    protected function combineDateAndTime(
-        ?string $date,
-        ?string $time,
-        ?string $fallbackDate = null,
-        string $errorField = 'start_date'
-    ): ?string {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Nothing Provided
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            empty($date) &&
-            empty($time)
-        ) {
-
-            return null;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fallback Date
-        |--------------------------------------------------------------------------
-        */
-
-        $date =
-            $date
-            ?: $fallbackDate;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Date Required
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            empty($date)
-        ) {
-
-            throw ValidationException::withMessages([
-                $errorField =>
-                    'A valid date is required when time is provided.',
-            ]);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Default Time
-        |--------------------------------------------------------------------------
-        */
-
-        $time =
-            $time
-            ?: '00:00';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Build Datetime
-        |--------------------------------------------------------------------------
-        */
-
-        try {
-
-            return Carbon::createFromFormat(
-                'Y-m-d H:i',
-                "{$date} {$time}"
-            )->format(
-                'Y-m-d H:i:s'
-            );
-
-        } catch (\Throwable $exception) {
-
-            throw ValidationException::withMessages([
-                $errorField =>
-                    'Invalid date or time value.',
-            ]);
-        }
     }
 }
