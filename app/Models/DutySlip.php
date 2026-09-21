@@ -101,6 +101,7 @@ class DutySlip extends Model
 
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
 
@@ -183,6 +184,9 @@ class DutySlip extends Model
             'integer',
 
         'updated_by' =>
+            'integer',
+
+        'deleted_by' =>
             'integer',
     ];
 
@@ -361,6 +365,22 @@ class DutySlip extends Model
         return $this->belongsTo(
             User::class,
             'updated_by',
+            'id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deleted By
+    |--------------------------------------------------------------------------
+    */
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'deleted_by',
             'id'
         );
     }
