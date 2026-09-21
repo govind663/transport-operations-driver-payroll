@@ -5,1693 +5,1549 @@
 @endsection
 
 @push('styles')
+    <style>
+        /*
+        |--------------------------------------------------------------------------
+        | Section Title
+        |--------------------------------------------------------------------------
+        */
 
-<style>
+        .form-section-title {
+            color: #023a85 !important;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Section Title
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Required
+        |--------------------------------------------------------------------------
+        */
 
-    .form-section-title {
+        .required {
+            color: #dc3545;
+        }
 
-        color: #023a85 !important;
+        /*
+        |--------------------------------------------------------------------------
+        | Form Control
+        |--------------------------------------------------------------------------
+        */
 
-        font-weight: 600;
+        .form-control:focus {
+            border-color: #023a85;
+            box-shadow: 0 0 0 0.1rem rgba(2, 58, 133, .15);
+        }
 
-        margin-bottom: 10px;
+        /*
+        |--------------------------------------------------------------------------
+        | Tables
+        |--------------------------------------------------------------------------
+        */
 
-    }
+        .table-bordered,
+        .table-bordered td,
+        .table-bordered th {
+            border: 2px solid #023a85;
+        }
 
+        .table td,
+        .table th {
+            vertical-align: middle;
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Required
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | File Preview
+        |--------------------------------------------------------------------------
+        */
 
-    .required {
+        .duty-slip-file-preview {
+            margin-top: 12px;
+        }
 
-        color: #dc3545;
+        /*
+        |--------------------------------------------------------------------------
+        | Summary
+        |--------------------------------------------------------------------------
+        */
 
-    }
+        .financial-summary-box {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Readonly
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Expense Box
-    |--------------------------------------------------------------------------
-    */
+        input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
 
-    .expense-box {
+        /*
+        |--------------------------------------------------------------------------
+        | Helper
+        |--------------------------------------------------------------------------
+        */
 
-        background: #f8f9fa;
+        .form-helper-text {
+            font-size: 12px;
+            color: #6c757d;
+        }
 
-        border: 1px solid #dee2e6;
+        /*
+        |--------------------------------------------------------------------------
+        | Auto Number
+        |--------------------------------------------------------------------------
+        */
 
-        border-radius: 6px;
+        .auto-number-wrapper {
+            position: relative;
+        }
 
-        padding: 15px;
+        .auto-number-badge {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #023a85;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            pointer-events: none;
+        }
 
-    }
+        /*
+        |--------------------------------------------------------------------------
+        | Empty Row
+        |--------------------------------------------------------------------------
+        */
 
+        .child-row-empty {
+            opacity: .85;
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Total Amount
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Template
+        |--------------------------------------------------------------------------
+        */
 
-    .total-expense-box {
-
-        background: #e9f7ef;
-
-        border: 1px solid #28a745;
-
-        border-radius: 6px;
-
-        padding: 15px;
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Input
-    |--------------------------------------------------------------------------
-    */
-
-    .form-control:focus {
-
-        border-color: #023a85;
-
-        box-shadow: 0 0 0 0.1rem rgba(2, 58, 133, .15);
-
-    }
-
-</style>
-
-<style>
-    .table-bordered, .table-bordered td, .table-bordered th {
-        border: 2px solid #023a85;
-    }
-
-    .table td,
-    .table th {
-        vertical-align: middle;
-    }
-
-    .vehicle-type-code {
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-</style>
-
+        template {
+            display: none !important;
+        }
+    </style>
 @endpush
-
 
 @section('content')
 
-<div class="pd-ltr-20 xs-pd-20-10">
+    @php
 
-    <div class="min-height-200px">
+        /*
+    |--------------------------------------------------------------------------
+    | OLD ALLOWANCES
+    |--------------------------------------------------------------------------
+    */
 
+        $oldAllowances = old('driver_allowances');
 
-        {{-- ========================================================= --}}
-        {{-- PAGE HEADER --}}
-        {{-- ========================================================= --}}
+        if ($oldAllowances === null) {
+            $oldAllowances = old('allowances', []);
+        }
 
-        <div class="page-header">
+        if (!is_array($oldAllowances)) {
+            $oldAllowances = [];
+        }
 
-            <div class="row">
+        if (empty($oldAllowances)) {
+            $oldAllowances = [
+                [
+                    'allowance_id' => '',
+                    'quantity' => 1,
+                    'rate' => 0,
+                    'amount' => 0,
+                    'remarks' => '',
+                    'status' => 'pending',
+                ],
+            ];
+        }
 
-                <div class="col-md-8 col-sm-12">
+        /*
+    |--------------------------------------------------------------------------
+    | OLD EXPENSES
+    |--------------------------------------------------------------------------
+    */
 
-                    <div class="title">
+        $oldExpenses = old('driver_expenses');
 
-                        <h4>
-                            Create New Duty Slip
-                        </h4>
+        if ($oldExpenses === null) {
+            $oldExpenses = old('expenses', []);
+        }
 
-                    </div>
+        if (!is_array($oldExpenses)) {
+            $oldExpenses = [];
+        }
 
-                    <nav aria-label="breadcrumb">
+        if (empty($oldExpenses)) {
+            $oldExpenses = [
+                [
+                    'expense_id' => '',
+                    'quantity' => 1,
+                    'rate' => 0,
+                    'amount' => 0,
+                    'remarks' => '',
+                    'status' => 'pending',
+                ],
+            ];
+        }
 
-                        <ol class="breadcrumb">
+        /*
+    |--------------------------------------------------------------------------
+    | AUTO DUTY SLIP NUMBER
+    |--------------------------------------------------------------------------
+    */
 
-                            <li class="breadcrumb-item">
+        $generatedSlipNo = old('slip_no', $nextSlipNo ?? 'DS000001');
 
-                                <a href="{{ route('admin.dashboard') }}">
-                                    Dashboard
-                                </a>
+    @endphp
 
-                            </li>
+    <div class="pd-ltr-20 xs-pd-20-10">
 
-                            <li class="breadcrumb-item">
+        <div class="min-height-200px">
 
-                                <a href="{{ route('duty-slips.index') }}">
-                                    Duty Slips
-                                </a>
+            {{-- ================================================================ --}}
+            {{-- PAGE HEADER                                                       --}}
+            {{-- ================================================================ --}}
 
-                            </li>
-
-                            <li class="breadcrumb-item active">
-
-                                Create Duty Slip
-
-                            </li>
-
-                        </ol>
-
-                    </nav>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        {{-- ========================================================= --}}
-        {{-- VALIDATION ERRORS --}}
-        {{-- ========================================================= --}}
-
-        @if($errors->any())
-
-            <div class="alert alert-danger">
-
-                <strong>
-                    Please correct the following errors:
-                </strong>
-
-                <ul class="mb-0 mt-2">
-
-                    @foreach($errors->all() as $error)
-
-                        <li>
-                            {{ $error }}
-                        </li>
-
-                    @endforeach
-
-                </ul>
-
-            </div>
-
-        @endif
-
-
-
-        {{-- ========================================================= --}}
-        {{-- FORM --}}
-        {{-- ========================================================= --}}
-
-        <form action="{{ route('duty-slips.store') }}" method="POST" enctype="multipart/form-data">
-
-            @csrf
-
-            <div class="card-box pd-20 mb-30">
-
-
-                {{-- ================================================= --}}
-                {{-- DUTY SLIP INFORMATION --}}
-                {{-- ================================================= --}}
-
-                <div class="mb-4">
-
-                    <h5 class="form-section-title">
-
-                        Duty Slip Information
-
-                    </h5>
-
-                    <hr>
-
-                </div>
-
-
+            <div class="page-header">
                 <div class="row">
 
-                    {{-- ================================================= --}}
-                    {{-- Duty Slip Number --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                    <div class="col-md-8 col-sm-12">
 
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Duty Slip Number
-                                </b>
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="slip_no"
-                                id="slip_no"
-                                class="form-control @error('slip_no') is-invalid @enderror"
-                                value="{{ old('slip_no') }}"
-                                placeholder="Enter Duty Slip Number">
-
-                            @error('slip_no')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
-
-                            <small class="text-muted">
-
-                                Example: DS001, DS002
-
-                            </small>
-
+                        <div class="title">
+                            <h4>
+                                Create New Duty Slip
+                            </h4>
                         </div>
+
+                        <nav aria-label="breadcrumb">
+
+                            <ol class="breadcrumb">
+
+                                <li class="breadcrumb-item">
+                                    <a href="{{ route('admin.dashboard') }}">
+                                        Dashboard
+                                    </a>
+                                </li>
+
+                                <li class="breadcrumb-item">
+                                    <a href="{{ route('duty-slips.index') }}">
+                                        Duty Slips
+                                    </a>
+                                </li>
+
+                                <li class="breadcrumb-item active">
+                                    Create Duty Slip
+                                </li>
+
+                            </ol>
+
+                        </nav>
 
                     </div>
 
-                    {{-- ================================================= --}}
-                    {{-- Duty Assignment --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                </div>
+            </div>
 
-                        <div class="form-group">
+            {{-- ================================================================ --}}
+            {{-- ERROR SUMMARY                                                     --}}
+            {{-- ================================================================ --}}
 
-                            <label>
+            @if ($errors->any())
+                <div class="alert alert-danger">
 
-                                <b>
-                                    Duty Assignment
-                                </b>
+                    <strong>
+                        Please correct the following errors:
+                    </strong>
 
-                                {{-- <span class="required">
-                                    *
-                                </span> --}}
+                    <ul class="mb-0 mt-2">
 
-                            </label>
+                        @foreach ($errors->all() as $error)
+                            <li>
+                                {{ $error }}
+                            </li>
+                        @endforeach
 
-                            <select
-                                name="duty_assignment_id"
-                                id="duty_assignment_id"
-                                class="form-control custom-select2 @error('duty_assignment_id') is-invalid @enderror">
+                    </ul>
 
-                                <option value="">
-                                    Select Duty Assignment
-                                </option>
+                </div>
+            @endif
 
-                                @foreach($dutyAssignments ?? [] as $assignment)
+            {{-- ================================================================ --}}
+            {{-- FORM                                                              --}}
+            {{-- ================================================================ --}}
 
-                                    <option
-                                        value="{{ $assignment->id }}"
-                                        {{ (string) old(
-                                            'duty_assignment_id'
-                                        ) === (string) $assignment->id
-                                            ? 'selected'
-                                            : '' }}>
+            <form id="duty-slip-form" action="{{ route('duty-slips.store') }}" method="POST" enctype="multipart/form-data"
+                novalidate>
 
-                                        {{ $assignment->assignment_no ?? 'DA-' . $assignment->id }}
+                @csrf
 
-                                        @if(!empty($assignment->driver))
+                <div class="card-box pd-20 mb-30">
 
-                                            -
-                                            {{ trim(
+                    <div class="row">
+
+                        {{-- ==================================================== --}}
+                        {{-- DUTY SLIP INFORMATION                                --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12">
+
+                            <h5 class="form-section-title">
+                                Duty Slip Information
+                            </h5>
+
+                            <hr>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DUTY SLIP NUMBER                                     --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label for="slip_no">
+
+                                    <b>
+                                        Duty Slip Number
+                                    </b>
+
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <div class="auto-number-wrapper">
+
+                                    <input type="text" name="slip_no" id="slip_no"
+                                        class="form-control @error('slip_no') is-invalid @enderror"
+                                        value="{{ $generatedSlipNo }}" maxlength="100" autocomplete="off" readonly required>
+
+                                    <span class="auto-number-badge">
+                                        Auto
+                                    </span>
+
+                                </div>
+
+                                @error('slip_no')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                                <small class="form-helper-text">
+                                    Duty Slip number is automatically generated in sequence.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DUTY ASSIGNMENT                                      --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label for="duty_assignment_id">
+
+                                    <b>
+                                        Duty Assignment
+                                    </b>
+
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <select name="duty_assignment_id" id="duty_assignment_id"
+                                    class="form-control custom-select2 @error('duty_assignment_id') is-invalid @enderror"
+                                    required>
+
+                                    <option value="">
+                                        Select Duty Assignment
+                                    </option>
+
+                                    @foreach ($dutyAssignments ?? collect() as $assignment)
+                                        @php
+
+                                            $assignmentDriverName = trim(
                                                 ($assignment->driver->first_name ?? '') .
-                                                ' ' .
-                                                ($assignment->driver->last_name ?? '')
-                                            ) }}
+                                                    ' ' .
+                                                    ($assignment->driver->last_name ?? ''),
+                                            );
 
-                                        @endif
+                                            $assignmentVehicleNumber =
+                                                $assignment->vehicle->vehicle_number ??
+                                                ($assignment->vehicle->registration_number ?? '');
+                                        @endphp
 
+                                        <option value="{{ $assignment->id }}"
+                                            {{ (string) old('duty_assignment_id') === (string) $assignment->id ? 'selected' : '' }}>
+
+                                            {{ $assignment->assignment_no ?? 'DA-' . $assignment->id }}
+
+                                            @if ($assignmentDriverName !== '')
+                                                - {{ $assignmentDriverName }}
+                                            @endif
+
+                                            @if ($assignmentVehicleNumber !== '')
+                                                - {{ $assignmentVehicleNumber }}
+                                            @endif
+
+                                        </option>
+                                    @endforeach
+
+                                </select>
+
+                                @error('duty_assignment_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                                <small class="form-helper-text">
+                                    Duty Assignment is a separate reference.
+                                    It will not change Driver, Vehicle or Vehicle Type.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DUTY DATE                                             --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label for="duty_date">
+
+                                    <b>
+                                        Duty Date
+                                    </b>
+
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <input type="date" name="duty_date" id="duty_date"
+                                    class="form-control @error('duty_date') is-invalid @enderror"
+                                    value="{{ old('duty_date', date('Y-m-d')) }}" required>
+
+                                @error('duty_date')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DRIVER / VEHICLE INFORMATION                         --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12 mt-3">
+
+                            <h5 class="form-section-title">
+                                Driver & Vehicle Information
+                            </h5>
+
+                            <hr>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DRIVER                                                 --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label for="driver_id">
+
+                                    <b>
+                                        Driver
+                                    </b>
+
+                                    <span class="required">*</span>
+
+                                </label>
+
+                                <select name="driver_id" id="driver_id"
+                                    class="form-control custom-select2 @error('driver_id') is-invalid @enderror" required>
+
+                                    <option value="">
+                                        Select Driver
                                     </option>
 
-                                @endforeach
+                                    @foreach ($drivers ?? collect() as $driver)
+                                        @php
 
-                            </select>
+                                            $driverName = trim(
+                                                ($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''),
+                                            );
 
-                            @error('duty_assignment_id')
+                                            $driverCode = $driver->driver_code ?? 'DRV-' . $driver->id;
+                                        @endphp
 
-                                <span class="invalid-feedback d-block">
+                                        <option value="{{ $driver->id }}"
+                                            {{ (string) old('driver_id') === (string) $driver->id ? 'selected' : '' }}>
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                            {{ $driverCode }}
 
-                                </span>
+                                            @if ($driverName !== '')
+                                                - {{ $driverName }}
+                                            @endif
 
-                            @enderror
+                                        </option>
+                                    @endforeach
 
-                        </div>
+                                </select>
 
-                    </div>
+                                @error('driver_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                    {{-- ================================================= --}}
-                    {{-- Duty Date --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                                <small class="form-helper-text">
+                                    Select the Driver manually.
+                                </small>
 
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Duty Date
-                                </b>
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <input
-                                type="date"
-                                name="duty_date"
-                                id="duty_date"
-                                class="form-control @error('duty_date') is-invalid @enderror"
-                                value="{{ old('duty_date', date('Y-m-d')) }}">
-
-                            @error('duty_date')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- VEHICLE                                                --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- DUTY SLIP DOCUMENT --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                        <div class="col-md-4">
 
-                        <h5 class="form-section-title">
-                            Duty Slip Document
-                        </h5>
+                            <div class="form-group">
 
-                        <hr>
+                                <label for="vehicle_id">
 
-                    </div>
+                                    <b>
+                                        Vehicle
+                                    </b>
 
-                    {{-- ================================================= --}}
-                    {{-- DUTY SLIP FRONT --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-6">
+                                    <span class="required">*</span>
 
-                        <div class="form-group">
+                                </label>
 
-                            <label for="duty_slip_front_file">
-                                <b>Duty Slip Front</b>
-                            </label>
+                                <select name="vehicle_id" id="vehicle_id"
+                                    class="form-control custom-select2 @error('vehicle_id') is-invalid @enderror" required>
 
-                            <input
-                                type="file"
-                                name="duty_slip_front_file"
-                                id="duty_slip_front_file"
-                                class="form-control @error('duty_slip_front_file') is-invalid @enderror"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onchange="previewDutySlipFile(
-                                    'duty_slip_front_file',
-                                    'duty-slip-front-file-preview'
-                                )"
-                            >
-
-                            <small class="text-muted">
-                                Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
-                            </small>
-
-                            @error('duty_slip_front_file')
-                                <span class="invalid-feedback d-block">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-
-                            <div
-                                id="duty-slip-front-file-preview"
-                                class="mt-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- DUTY SLIP BACK --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label for="duty_slip_back_file">
-                                <b>Duty Slip Back</b>
-                            </label>
-
-                            <input
-                                type="file"
-                                name="duty_slip_back_file"
-                                id="duty_slip_back_file"
-                                class="form-control @error('duty_slip_back_file') is-invalid @enderror"
-                                accept=".pdf,.jpg,.jpeg,.png"
-                                onchange="previewDutySlipFile(
-                                    'duty_slip_back_file',
-                                    'duty-slip-back-file-preview'
-                                )"
-                            >
-
-                            <small class="text-muted">
-                                Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
-                            </small>
-
-                            @error('duty_slip_back_file')
-                                <span class="invalid-feedback d-block">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-
-                            <div
-                                id="duty-slip-back-file-preview"
-                                class="mt-3"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- DRIVER INFORMATION --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
-
-                        <h5 class="form-section-title">
-
-                            Driver & Vehicle Information
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- Driver --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Driver
-                                </b>
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <select
-                                name="driver_id"
-                                id="driver_id"
-                                class="form-control custom-select2 @error('driver_id') is-invalid @enderror">
-
-                                <option value="">
-                                    Select Driver
-                                </option>
-
-                                @foreach($drivers ?? [] as $driver)
-
-                                    <option
-                                        value="{{ $driver->id }}"
-                                        {{ (string) old(
-                                            'driver_id'
-                                        ) === (string) $driver->id
-                                            ? 'selected'
-                                            : '' }}>
-
-                                        {{ $driver->driver_code ?? 'DRV-' . $driver->id }}
-
-                                        -
-
-                                        {{ trim(
-                                            ($driver->first_name ?? '') .
-                                            ' ' .
-                                            ($driver->last_name ?? '')
-                                        ) }}
-
+                                    <option value="">
+                                        Select Vehicle
                                     </option>
 
-                                @endforeach
+                                    @foreach ($vehicles ?? collect() as $vehicle)
+                                        @php
 
-                            </select>
+                                            $vehicleNumber =
+                                                $vehicle->vehicle_number ??
+                                                ($vehicle->registration_number ?? 'Vehicle-' . $vehicle->id);
 
-                            @error('driver_id')
+                                            $vehicleRegistration = $vehicle->registration_number ?? '';
 
-                                <span class="invalid-feedback d-block">
+                                        @endphp
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                        <option value="{{ $vehicle->id }}"
+                                            {{ (string) old('vehicle_id') === (string) $vehicle->id ? 'selected' : '' }}>
 
-                                </span>
+                                            {{ $vehicleNumber }}
 
-                            @enderror
+                                            @if ($vehicleRegistration !== '' && $vehicleRegistration !== $vehicleNumber)
+                                                - {{ $vehicleRegistration }}
+                                            @endif
+
+                                        </option>
+                                    @endforeach
+
+                                </select>
+
+                                @error('vehicle_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                                <small class="form-helper-text">
+                                    Select the Vehicle manually.
+                                </small>
+
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- VEHICLE TYPE                                           --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Vehicle --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                        <div class="col-md-4">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="vehicle_type_id">
 
-                                <b>
-                                    Vehicle
-                                </b>
+                                    <b>
+                                        Vehicle Type
+                                    </b>
 
-                                <span class="required">
-                                    *
-                                </span>
+                                    <span class="required">*</span>
 
-                            </label>
+                                </label>
 
-                            <select
-                                name="vehicle_id"
-                                id="vehicle_id"
-                                class="form-control custom-select2 @error('vehicle_id') is-invalid @enderror">
+                                <select name="vehicle_type_id" id="vehicle_type_id"
+                                    class="form-control custom-select2 @error('vehicle_type_id') is-invalid @enderror"
+                                    required>
 
-                                <option value="">
-                                    Select Vehicle
-                                </option>
-
-                                @foreach($vehicles ?? [] as $vehicle)
-
-                                    <option
-                                        value="{{ $vehicle->id }}"
-                                        {{ (string) old(
-                                            'vehicle_id'
-                                        ) === (string) $vehicle->id
-                                            ? 'selected'
-                                            : '' }}>
-
-                                        {{ $vehicle->vehicle_number
-                                            ?? $vehicle->registration_number
-                                            ?? 'Vehicle-' . $vehicle->id }}
-
+                                    <option value="">
+                                        Select Vehicle Type
                                     </option>
 
-                                @endforeach
+                                    @foreach ($vehicleTypes ?? collect() as $vehicleType)
+                                        <option value="{{ $vehicleType->id }}"
+                                            {{ (string) old('vehicle_type_id') === (string) $vehicleType->id ? 'selected' : '' }}>
 
-                            </select>
+                                            {{ $vehicleType->name }}
 
-                            @error('vehicle_id')
+                                            @if ($vehicleType->code)
+                                                ({{ $vehicleType->code }})
+                                            @endif
 
-                                <span class="invalid-feedback d-block">
+                                        </option>
+                                    @endforeach
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                </select>
 
-                                </span>
+                                @error('vehicle_type_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            @enderror
+                                <small class="form-helper-text">
+                                    Select the Vehicle Type manually.
+                                </small>
 
-                        </div>
-
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- Vehicle Type --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Vehicle Type
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="vehicle_type"
-                                id="vehicle_type"
-                                class="form-control @error('vehicle_type') is-invalid @enderror"
-                                value="{{ old('vehicle_type') }}"
-                                placeholder="Enter Vehicle Type">
-
-                            @error('vehicle_type')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- DOCUMENT SECTION                                      --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- TRIP INFORMATION --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                        <div class="col-12 mt-3">
 
-                        <h5 class="form-section-title">
+                            <h5 class="form-section-title">
+                                Duty Slip Document
+                            </h5>
 
-                            Trip Information
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- Start Date --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-3">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Start Date
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="date"
-                                name="start_date"
-                                id="start_date"
-                                class="form-control @error('start_date') is-invalid @enderror"
-                                value="{{ old('start_date') }}">
-
-                            @error('start_date')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            <hr>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- FRONT FILE                                             --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Start Time --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-3">
+                        <div class="col-md-6">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="duty_slip_front_file">
 
-                                <b>
-                                    Start Time
-                                </b>
+                                    <b>
+                                        Duty Slip Front
+                                    </b>
 
-                            </label>
+                                </label>
 
-                            <input
-                                type="time"
-                                name="start_time"
-                                id="start_time"
-                                class="form-control @error('start_time') is-invalid @enderror"
-                                value="{{ old('start_time') }}">
+                                <input type="file" name="duty_slip_front_file" id="duty_slip_front_file"
+                                    class="form-control @error('duty_slip_front_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png">
 
-                            @error('start_time')
+                                <small class="form-helper-text">
+                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                                </small>
 
-                                <span class="invalid-feedback d-block">
+                                @error('duty_slip_front_file')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                <div id="duty-slip-front-file-preview" class="duty-slip-file-preview"></div>
 
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- BACK FILE                                              --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- End Date --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-3">
+                        <div class="col-md-6">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="duty_slip_back_file">
 
-                                <b>
-                                    End Date
-                                </b>
+                                    <b>
+                                        Duty Slip Back
+                                    </b>
 
-                            </label>
+                                </label>
 
-                            <input
-                                type="date"
-                                name="end_date"
-                                id="end_date"
-                                class="form-control @error('end_date') is-invalid @enderror"
-                                value="{{ old('end_date') }}">
+                                <input type="file" name="duty_slip_back_file" id="duty_slip_back_file"
+                                    class="form-control @error('duty_slip_back_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png">
 
-                            @error('end_date')
+                                <small class="form-helper-text">
+                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+                                </small>
 
-                                <span class="invalid-feedback d-block">
+                                @error('duty_slip_back_file')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
+                                <div id="duty-slip-back-file-preview" class="duty-slip-file-preview"></div>
 
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- TRIP INFORMATION                                      --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- End Time --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-3">
+                        <div class="col-12 mt-3">
 
-                        <div class="form-group">
+                            <h5 class="form-section-title">
+                                Trip Information
+                            </h5>
 
-                            <label>
-
-                                <b>
-                                    End Time
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="time"
-                                name="end_time"
-                                id="end_time"
-                                class="form-control @error('end_time') is-invalid @enderror"
-                                value="{{ old('end_time') }}">
-
-                            @error('end_time')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            <hr>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- START DATE                                             --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Pickup Location --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-6">
+                        <div class="col-md-3">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="start_date">
+                                    <b>Start Date</b>
+                                </label>
 
-                                <b>
-                                    Pickup Location
-                                </b>
+                                <input type="date" name="start_date" id="start_date"
+                                    class="form-control @error('start_date') is-invalid @enderror"
+                                    value="{{ old('start_date') }}">
 
-                            </label>
+                                @error('start_date')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            <input
-                                type="text"
-                                name="pickup_location"
-                                id="pickup_location"
-                                class="form-control @error('pickup_location') is-invalid @enderror"
-                                value="{{ old('pickup_location') }}"
-                                placeholder="Enter Pickup Location">
-
-                            @error('pickup_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- START TIME                                             --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Drop Location --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-6">
+                        <div class="col-md-3">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="start_time">
+                                    <b>Start Time</b>
+                                </label>
 
-                                <b>
-                                    Drop Location
-                                </b>
+                                <input type="time" name="start_time" id="start_time"
+                                    class="form-control @error('start_time') is-invalid @enderror"
+                                    value="{{ old('start_time') }}">
 
-                            </label>
+                                @error('start_time')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            <input
-                                type="text"
-                                name="drop_location"
-                                id="drop_location"
-                                class="form-control @error('drop_location') is-invalid @enderror"
-                                value="{{ old('drop_location') }}"
-                                placeholder="Enter Drop Location">
-
-                            @error('drop_location')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- END DATE                                               --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- KM INFORMATION --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                        <div class="col-md-3">
 
-                        <h5 class="form-section-title">
+                            <div class="form-group">
 
-                            Kilometer Information
+                                <label for="end_date">
+                                    <b>End Date</b>
+                                </label>
 
-                        </h5>
+                                <input type="date" name="end_date" id="end_date"
+                                    class="form-control @error('end_date') is-invalid @enderror"
+                                    value="{{ old('end_date') }}">
 
-                        <hr>
+                                @error('end_date')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- Opening KM --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Opening KM
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="number"
-                                name="opening_km"
-                                id="opening_km"
-                                class="form-control @error('opening_km') is-invalid @enderror"
-                                value="{{ old('opening_km') }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="Enter Opening KM">
-
-                            @error('opening_km')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- END TIME                                               --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Closing KM --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                        <div class="col-md-3">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="end_time">
+                                    <b>End Time</b>
+                                </label>
 
-                                <b>
-                                    Closing KM
-                                </b>
+                                <input type="time" name="end_time" id="end_time"
+                                    class="form-control @error('end_time') is-invalid @enderror"
+                                    value="{{ old('end_time') }}">
 
-                            </label>
+                                @error('end_time')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            <input
-                                type="number"
-                                name="closing_km"
-                                id="closing_km"
-                                class="form-control @error('closing_km') is-invalid @enderror"
-                                value="{{ old('closing_km') }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="Enter Closing KM">
-
-                            @error('closing_km')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- PICKUP LOCATION                                        --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Total KM --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                        <div class="col-md-6">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="pickup_location">
+                                    <b>Pickup Location</b>
+                                </label>
 
-                                <b>
-                                    Total KM
-                                </b>
+                                <input type="text" name="pickup_location" id="pickup_location"
+                                    class="form-control @error('pickup_location') is-invalid @enderror"
+                                    value="{{ old('pickup_location') }}" placeholder="Enter Pickup Location"
+                                    maxlength="500">
 
-                            </label>
+                                @error('pickup_location')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            <input
-                                type="number"
-                                name="total_km"
-                                id="total_km"
-                                class="form-control"
-                                value="{{ old('total_km') }}"
-                                min="0"
-                                step="0.01"
-                                placeholder="Auto Calculated"
-                                readonly>
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- DROP LOCATION                                          --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- PASSENGER INFORMATION --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                        <div class="col-md-6">
 
-                        <h5 class="form-section-title">
+                            <div class="form-group">
 
-                            Passenger Information
+                                <label for="drop_location">
+                                    <b>Drop Location</b>
+                                </label>
 
-                        </h5>
+                                <input type="text" name="drop_location" id="drop_location"
+                                    class="form-control @error('drop_location') is-invalid @enderror"
+                                    value="{{ old('drop_location') }}" placeholder="Enter Drop Location"
+                                    maxlength="500">
 
-                        <hr>
+                                @error('drop_location')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                    </div>
-
-                    {{-- ================================================= --}}
-                    {{-- Passenger Name --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Passenger Name
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="passenger_name"
-                                id="passenger_name"
-                                class="form-control @error('passenger_name') is-invalid @enderror"
-                                value="{{ old('passenger_name') }}"
-                                placeholder="Enter Passenger Name">
-
-                            @error('passenger_name')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- KM SECTION                                             --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Passenger Mobile --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                        <div class="col-12 mt-3">
 
-                        <div class="form-group">
+                            <h5 class="form-section-title">
+                                Kilometer Information
+                            </h5>
 
-                            <label>
-
-                                <b>
-                                    Passenger Mobile
-                                </b>
-
-                            </label>
-
-                            <input
-                                type="text"
-                                name="passenger_mobile"
-                                id="passenger_mobile"
-                                maxlength="10"
-                                class="form-control @error('passenger_mobile') is-invalid @enderror"
-                                value="{{ old('passenger_mobile') }}"
-                                placeholder="Enter Passenger Mobile">
-
-                            @error('passenger_mobile')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            <hr>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- OPENING KM                                              --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- Number Of Passengers --}}
-                    {{-- ================================================= --}}
-                    <div class="col-md-4">
+                        <div class="col-md-4">
 
-                        <div class="form-group">
+                            <div class="form-group">
 
-                            <label>
+                                <label for="opening_km">
+                                    <b>Opening KM</b>
+                                </label>
 
-                                <b>
-                                    Number Of Passengers
-                                </b>
+                                <input type="number" name="opening_km" id="opening_km"
+                                    class="form-control @error('opening_km') is-invalid @enderror"
+                                    value="{{ old('opening_km') }}" min="0" step="0.01"
+                                    placeholder="Enter Opening KM">
 
-                            </label>
+                                @error('opening_km')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                            <input
-                                type="number"
-                                name="number_of_passengers"
-                                id="number_of_passengers"
-                                class="form-control @error('number_of_passengers') is-invalid @enderror"
-                                value="{{ old('number_of_passengers', 1) }}"
-                                min="1"
-                                placeholder="Enter Number Of Passengers">
-
-                            @error('number_of_passengers')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- CLOSING KM                                              --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ========================================================= --}}
-                    {{-- DRIVER ALLOWANCE --}}
-                    {{-- ========================================================= --}}
-                    <div class="col-12 mt-4">
+                        <div class="col-md-4">
 
-                        <h5
-                            class="text-primary"
-                            style="color:#023a85 !important;"
-                        >
-                            <b>Driver Allowance</b>
-                        </h5>
+                            <div class="form-group">
 
-                        <hr>
+                                <label for="closing_km">
+                                    <b>Closing KM</b>
+                                </label>
 
-                    </div>
+                                <input type="number" name="closing_km" id="closing_km"
+                                    class="form-control @error('closing_km') is-invalid @enderror"
+                                    value="{{ old('closing_km') }}" min="0" step="0.01"
+                                    placeholder="Enter Closing KM">
 
-                    <div class="col-12">
+                                @error('closing_km')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                        <div class="table-responsive">
-
-                            <table
-                                class="table table-bordered table-striped"
-                                id="allowance-table"
-                            >
-
-                                <thead>
-                                    <tr>
-                                        <th style="width:30%;">Allowance</th>
-                                        <th style="width:15%;">Quantity</th>
-                                        <th style="width:15%;">Rate</th>
-                                        <th style="width:15%;">Amount</th>
-                                        <th style="width:15%;">Remarks</th>
-                                        <th style="width:12%;">Status</th>
-                                        <th style="width:10%;">Action</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="allowance-wrapper">
-
-                                    <tr
-                                        class="allowance-row"
-                                        data-index="0"
-                                    >
-
-                                        {{-- Allowance --}}
-                                        <td>
-
-                                            <select
-                                                name="allowances[0][allowance_id]"
-                                                class="form-control custom-select2"
-                                            >
-
-                                                <option value="">
-                                                    Select Allowance
-                                                </option>
-
-                                                @foreach($allowances ?? [] as $allowance)
-
-                                                    <option
-                                                        value="{{ $allowance->id }}"
-                                                        data-rate="{{ $allowance->amount ?? 0 }}"
-                                                        data-calculation-type="{{ $allowance->calculation_type }}"
-                                                    >
-                                                        {{ $allowance->name }}
-                                                    </option>
-
-                                                @endforeach
-
-                                            </select>
-
-                                        </td>
-
-                                        {{-- Quantity --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="allowances[0][quantity]"
-                                                class="form-control allowance-quantity"
-                                                value="1"
-                                                min="0"
-                                                step="0.01"
-                                            >
-
-                                        </td>
-
-                                        {{-- Rate --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="allowances[0][rate]"
-                                                class="form-control allowance-rate"
-                                                value="0"
-                                                min="0"
-                                                step="0.01"
-                                                readonly
-                                            >
-
-                                        </td>
-
-                                        {{-- Amount --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="allowances[0][amount]"
-                                                class="form-control allowance-amount"
-                                                value="0"
-                                                min="0"
-                                                step="0.01"
-                                                readonly
-                                            >
-
-                                        </td>
-
-                                        {{-- Remarks --}}
-                                        <td>
-
-                                            <input
-                                                type="text"
-                                                name="allowances[0][remarks]"
-                                                class="form-control"
-                                                placeholder="Remarks"
-                                            >
-
-                                        </td>
-
-                                        {{-- Status --}}
-                                        <td>
-
-                                            <select
-                                                name="allowances[0][status]"
-                                                class="form-control custom-select2"
-                                            >
-
-                                                <option value="pending" selected>
-                                                    Pending
-                                                </option>
-
-                                                <option value="approved">
-                                                    Approved
-                                                </option>
-
-                                                <option value="rejected">
-                                                    Rejected
-                                                </option>
-
-                                                <option value="paid">
-                                                    Paid
-                                                </option>
-
-                                                <option value="cancelled">
-                                                    Cancelled
-                                                </option>
-
-                                            </select>
-
-                                        </td>
-
-                                        {{-- Action --}}
-                                        <td class="text-center">
-
-                                            <button
-                                                type="button"
-                                                class="btn btn-danger btn-sm remove-allowance"
-                                                disabled
-                                                title="Remove"
-                                            >
-
-                                                <i class="fa fa-trash"></i>
-
-                                            </button>
-
-                                        </td>
-
-                                    </tr>
-
-                                </tbody>
-
-                            </table>
+                            </div>
 
                         </div>
 
-                        <div class="mt-2">
+                        {{-- ==================================================== --}}
+                        {{-- TOTAL KM                                                --}}
+                        {{-- ==================================================== --}}
 
-                            <button
-                                type="button"
-                                id="add-allowance"
-                                class="btn btn-primary btn-sm"
-                            >
+                        <div class="col-md-4">
 
-                                <i class="fa fa-plus"></i>
-                                Add More Allowance
+                            <div class="form-group">
 
-                            </button>
+                                <label for="total_km">
+                                    <b>Total KM</b>
+                                </label>
 
-                        </div>
+                                <input type="number" name="total_km" id="total_km" class="form-control"
+                                    value="{{ old('total_km', '0.00') }}" min="0" step="0.01"
+                                    placeholder="Auto Calculated" readonly>
 
-                    </div>
+                                <small class="form-helper-text">
+                                    Closing KM minus Opening KM.
+                                </small>
 
-                    {{-- ========================================================= --}}
-                    {{-- DRIVER EXPENSE --}}
-                    {{-- ========================================================= --}}
-                    <div class="col-12 mt-4">
-
-                        <h5
-                            class="text-primary"
-                            style="color:#023a85 !important;"
-                        >
-                            <b>Driver Expense</b>
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-                    <div class="col-12">
-
-                        <div class="table-responsive">
-
-                            <table
-                                class="table table-bordered table-striped"
-                                id="expense-table"
-                            >
-
-                                <thead>
-
-                                    <tr>
-                                        <th style="width:30%;">Expense</th>
-                                        <th style="width:15%;">Quantity</th>
-                                        <th style="width:15%;">Rate</th>
-                                        <th style="width:15%;">Amount</th>
-                                        <th style="width:15%;">Remarks</th>
-                                        <th style="width:10%;">Status</th>
-                                        <th style="width:10%;">Action</th>
-                                    </tr>
-
-                                </thead>
-
-                                <tbody id="expense-wrapper">
-
-                                    <tr
-                                        class="expense-row"
-                                        data-index="0"
-                                    >
-
-                                        {{-- Expense --}}
-                                        <td>
-
-                                            <select
-                                                name="expenses[0][expense_id]"
-                                                class="form-control custom-select2"
-                                            >
-
-                                                <option value="">
-                                                    Select Expense
-                                                </option>
-
-                                                @foreach($expenses ?? [] as $expense)
-
-                                                    <option
-                                                        value="{{ $expense->id }}"
-                                                        data-rate="{{ $expense->amount ?? 0 }}"
-                                                    >
-                                                        {{ $expense->name }}
-                                                    </option>
-
-                                                @endforeach
-
-                                            </select>
-
-                                        </td>
-
-                                        {{-- Quantity --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="expenses[0][quantity]"
-                                                class="form-control expense-quantity"
-                                                value="1"
-                                                min="0"
-                                                step="0.01"
-                                            >
-
-                                        </td>
-
-                                        {{-- Rate --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="expenses[0][rate]"
-                                                class="form-control expense-rate"
-                                                value="0"
-                                                min="0"
-                                                step="0.01"
-                                                readonly
-                                            >
-
-                                        </td>
-
-                                        {{-- Amount --}}
-                                        <td>
-
-                                            <input
-                                                type="number"
-                                                name="expenses[0][amount]"
-                                                class="form-control expense-amount"
-                                                value="0"
-                                                min="0"
-                                                step="0.01"
-                                                readonly
-                                            >
-
-                                        </td>
-
-                                        {{-- Remarks --}}
-                                        <td>
-
-                                            <input
-                                                type="text"
-                                                name="expenses[0][remarks]"
-                                                class="form-control"
-                                                placeholder="Remarks"
-                                            >
-
-                                        </td>
-
-                                        {{-- Status --}}
-                                        <td>
-
-                                            <select
-                                                name="expenses[0][status]"
-                                                class="form-control custom-select2"
-                                            >
-
-                                                <option value="pending" selected>
-                                                    Pending
-                                                </option>
-
-                                                <option value="approved">
-                                                    Approved
-                                                </option>
-
-                                                <option value="rejected">
-                                                    Rejected
-                                                </option>
-
-                                                <option value="paid">
-                                                    Paid
-                                                </option>
-
-                                                <option value="cancelled">
-                                                    Cancelled
-                                                </option>
-
-                                            </select>
-
-                                        </td>
-
-                                        {{-- Action --}}
-                                        <td class="text-center">
-
-                                            <button
-                                                type="button"
-                                                class="btn btn-danger btn-sm remove-expense"
-                                                disabled
-                                                title="Remove"
-                                            >
-
-                                                <i class="fa fa-trash"></i>
-
-                                            </button>
-
-                                        </td>
-
-                                    </tr>
-
-                                </tbody>
-
-                            </table>
+                            </div>
 
                         </div>
 
-                        <div class="mt-2">
+                        {{-- ==================================================== --}}
+                        {{-- PASSENGER SECTION                                      --}}
+                        {{-- ==================================================== --}}
 
-                            <button
-                                type="button"
-                                id="add-expense"
-                                class="btn btn-primary btn-sm"
-                            >
+                        <div class="col-12 mt-3">
 
-                                <i class="fa fa-plus"></i>
-                                Add More Expense
+                            <h5 class="form-section-title">
+                                Passenger Information
+                            </h5>
 
-                            </button>
+                            <hr>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- PASSENGER NAME                                          --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ========================================================= --}}
-                    {{-- ALLOWANCE / EXPENSE SUMMARY --}}
-                    {{-- ========================================================= --}}
-                    <div class="col-12 mt-4">
+                        <div class="col-md-4">
 
-                        <div class="card">
+                            <div class="form-group">
 
-                            <div class="card-body">
+                                <label for="passenger_name">
+                                    <b>Passenger Name</b>
+                                </label>
 
-                                <h6
-                                    class="text-primary"
-                                    style="color:#023a85 !important;">
-                                    <b>Financial Summary</b>
-                                </h6>
+                                <input type="text" name="passenger_name" id="passenger_name"
+                                    class="form-control @error('passenger_name') is-invalid @enderror"
+                                    value="{{ old('passenger_name') }}" placeholder="Enter Passenger Name"
+                                    maxlength="150">
 
-                                <hr>
+                                @error('passenger_name')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                                <div class="row">
+                            </div>
 
-                                    {{-- Total Allowance --}}
-                                    <div class="col-md-4">
+                        </div>
 
-                                        <div class="form-group">
+                        {{-- ==================================================== --}}
+                        {{-- PASSENGER MOBILE                                       --}}
+                        {{-- ==================================================== --}}
 
-                                            <label>
-                                                Total Allowance
-                                            </label>
+                        <div class="col-md-4">
 
-                                            <input
-                                                type="text"
-                                                id="total-allowance"
-                                                class="form-control"
-                                                value="0.00"
-                                                readonly
-                                            >
+                            <div class="form-group">
 
-                                            <input
-                                                type="hidden"
-                                                name="total_allowance"
-                                                id="total_allowance"
-                                                value="0.00"
-                                            >
+                                <label for="passenger_mobile">
+                                    <b>Passenger Mobile</b>
+                                </label>
+
+                                <input type="text" name="passenger_mobile" id="passenger_mobile" maxlength="10"
+                                    inputmode="numeric"
+                                    class="form-control @error('passenger_mobile') is-invalid @enderror"
+                                    value="{{ old('passenger_mobile') }}" placeholder="Enter Passenger Mobile">
+
+                                @error('passenger_mobile')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- PASSENGER COUNT                                        --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label for="number_of_passengers">
+                                    <b>Number Of Passengers</b>
+                                </label>
+
+                                <input type="number" name="number_of_passengers" id="number_of_passengers"
+                                    class="form-control @error('number_of_passengers') is-invalid @enderror"
+                                    value="{{ old('number_of_passengers', 1) }}" min="1" step="1">
+
+                                @error('number_of_passengers')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- ALLOWANCE SECTION                                      --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12 mt-4">
+
+                            <h5 class="form-section-title">
+                                Driver Allowance
+                            </h5>
+
+                            <hr>
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered table-striped" id="allowance-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th style="width:26%;">
+                                                Allowance
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Quantity
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Rate
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Amount
+                                            </th>
+
+                                            <th style="width:17%;">
+                                                Remarks
+                                            </th>
+
+                                            <th style="width:10%;">
+                                                Status
+                                            </th>
+
+                                            <th style="width:8%;">
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody id="allowance-wrapper">
+
+                                        @foreach ($oldAllowances as $index => $row)
+                                            @php
+
+                                                $selectedAllowanceId = $row['allowance_id'] ?? '';
+
+                                                $quantity = $row['quantity'] ?? 1;
+
+                                                $rate = $row['rate'] ?? 0;
+
+                                                $amount = $row['amount'] ?? 0;
+
+                                                $remarks = $row['remarks'] ?? '';
+
+                                                $rowStatus = $row['status'] ?? 'pending';
+
+                                            @endphp
+
+                                            <tr class="allowance-row" data-index="{{ $index }}">
+
+                                                <td>
+
+                                                    <select name="driver_allowances[{{ $index }}][allowance_id]"
+                                                        class="form-control custom-select2 allowance-select">
+
+                                                        <option value="">
+                                                            Select Allowance
+                                                        </option>
+
+                                                        @foreach ($allowances ?? collect() as $allowance)
+                                                            <option value="{{ $allowance->id }}"
+                                                                data-rate="{{ $allowance->amount ?? 0 }}"
+                                                                data-calculation-type="{{ $allowance->calculation_type ?? 'fixed' }}"
+                                                                {{ (string) $selectedAllowanceId === (string) $allowance->id ? 'selected' : '' }}>
+                                                                {{ $allowance->name }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_allowances[{{ $index }}][quantity]"
+                                                        class="form-control allowance-quantity"
+                                                        value="{{ $quantity }}" min="0.01" step="0.01">
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_allowances[{{ $index }}][rate]"
+                                                        class="form-control allowance-rate" value="{{ $rate }}"
+                                                        min="0" step="0.01" readonly>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_allowances[{{ $index }}][amount]"
+                                                        class="form-control allowance-amount" value="{{ $amount }}"
+                                                        min="0" step="0.01" readonly>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="text"
+                                                        name="driver_allowances[{{ $index }}][remarks]"
+                                                        class="form-control" value="{{ $remarks }}"
+                                                        placeholder="Remarks" maxlength="1000">
+
+                                                </td>
+
+                                                <td>
+
+                                                    <select name="driver_allowances[{{ $index }}][status]"
+                                                        class="form-control custom-select2">
+
+                                                        @foreach ([
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
+        ] as $statusValue => $statusLabel)
+                                                            <option value="{{ $statusValue }}"
+                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}>
+                                                                {{ $statusLabel }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+
+                                                </td>
+
+                                                <td class="text-center">
+
+                                                    <button type="button" class="btn btn-danger btn-sm remove-allowance"
+                                                        title="Remove">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+                                        @endforeach
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="mt-2">
+
+                                <button type="button" id="add-allowance" class="btn btn-primary btn-sm">
+
+                                    <i class="fa fa-plus"></i>
+                                    Add More Allowance
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- EXPENSE SECTION                                        --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12 mt-4">
+
+                            <h5 class="form-section-title">
+                                Driver Expense
+                            </h5>
+
+                            <hr>
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered table-striped" id="expense-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th style="width:26%;">
+                                                Expense
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Quantity
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Rate
+                                            </th>
+
+                                            <th style="width:13%;">
+                                                Amount
+                                            </th>
+
+                                            <th style="width:17%;">
+                                                Remarks
+                                            </th>
+
+                                            <th style="width:10%;">
+                                                Status
+                                            </th>
+
+                                            <th style="width:8%;">
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody id="expense-wrapper">
+
+                                        @foreach ($oldExpenses as $index => $row)
+                                            @php
+
+                                                $selectedExpenseId = $row['expense_id'] ?? '';
+
+                                                $quantity = $row['quantity'] ?? 1;
+
+                                                $rate = $row['rate'] ?? 0;
+
+                                                $amount = $row['amount'] ?? 0;
+
+                                                $remarks = $row['remarks'] ?? '';
+
+                                                $rowStatus = $row['status'] ?? 'pending';
+
+                                            @endphp
+
+                                            <tr class="expense-row" data-index="{{ $index }}">
+
+                                                <td>
+
+                                                    <select name="driver_expenses[{{ $index }}][expense_id]"
+                                                        class="form-control custom-select2 expense-select">
+
+                                                        <option value="">
+                                                            Select Expense
+                                                        </option>
+
+                                                        @foreach ($expenses ?? collect() as $expense)
+                                                            <option value="{{ $expense->id }}"
+                                                                data-rate="{{ $expense->amount ?? 0 }}"
+                                                                {{ (string) $selectedExpenseId === (string) $expense->id ? 'selected' : '' }}>
+                                                                {{ $expense->name }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_expenses[{{ $index }}][quantity]"
+                                                        class="form-control expense-quantity" value="{{ $quantity }}"
+                                                        min="0.01" step="0.01">
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_expenses[{{ $index }}][rate]"
+                                                        class="form-control expense-rate" value="{{ $rate }}"
+                                                        min="0" step="0.01" readonly>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="number"
+                                                        name="driver_expenses[{{ $index }}][amount]"
+                                                        class="form-control expense-amount" value="{{ $amount }}"
+                                                        min="0" step="0.01" readonly>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <input type="text"
+                                                        name="driver_expenses[{{ $index }}][remarks]"
+                                                        class="form-control" value="{{ $remarks }}"
+                                                        placeholder="Remarks" maxlength="1000">
+
+                                                </td>
+
+                                                <td>
+
+                                                    <select name="driver_expenses[{{ $index }}][status]"
+                                                        class="form-control custom-select2">
+
+                                                        @foreach ([
+            'pending' => 'Pending',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
+        ] as $statusValue => $statusLabel)
+                                                            <option value="{{ $statusValue }}"
+                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}>
+                                                                {{ $statusLabel }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+
+                                                </td>
+
+                                                <td class="text-center">
+
+                                                    <button type="button" class="btn btn-danger btn-sm remove-expense"
+                                                        title="Remove">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+                                        @endforeach
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="mt-2">
+
+                                <button type="button" id="add-expense" class="btn btn-primary btn-sm">
+
+                                    <i class="fa fa-plus"></i>
+                                    Add More Expense
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- FINANCIAL SUMMARY                                      --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12 mt-4">
+
+                            <div class="card financial-summary-box">
+
+                                <div class="card-body">
+
+                                    <h6 class="text-primary" style="color:#023a85 !important;">
+                                        <b>Financial Summary</b>
+                                    </h6>
+
+                                    <small class="form-helper-text">
+                                        Totals are for display only.
+                                        Final financial values are calculated by the backend service.
+                                    </small>
+
+                                    <hr>
+
+                                    <div class="row">
+
+                                        <div class="col-md-4">
+
+                                            <div class="form-group">
+
+                                                <label>
+                                                    Total Allowance
+                                                </label>
+
+                                                <input type="text" id="total-allowance" class="form-control"
+                                                    value="0.00" readonly>
+
+                                            </div>
 
                                         </div>
 
-                                    </div>
+                                        <div class="col-md-4">
 
+                                            <div class="form-group">
 
-                                    {{-- Total Expense --}}
-                                    <div class="col-md-4">
+                                                <label>
+                                                    Total Expense
+                                                </label>
 
-                                        <div class="form-group">
+                                                <input type="text" id="total-expense" class="form-control"
+                                                    value="0.00" readonly>
 
-                                            <label>
-                                                Total Expense
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                id="total-expense"
-                                                class="form-control"
-                                                value="0.00"
-                                                readonly
-                                            >
-
-                                            <input
-                                                type="hidden"
-                                                name="total_expense"
-                                                id="total_expense"
-                                                value="0.00"
-                                            >
+                                            </div>
 
                                         </div>
 
-                                    </div>
+                                        <div class="col-md-4">
 
+                                            <div class="form-group">
 
-                                    {{-- Grand Total --}}
-                                    <div class="col-md-4">
+                                                <label>
+                                                    <b>Grand Total</b>
+                                                </label>
 
-                                        <div class="form-group">
+                                                <input type="text" id="grand-total" class="form-control"
+                                                    value="0.00" readonly>
 
-                                            <label>
-                                                <b>Grand Total</b>
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                id="grand-total"
-                                                class="form-control"
-                                                value="0.00"
-                                                readonly
-                                            >
-
-                                            <input
-                                                type="hidden"
-                                                name="grand_total"
-                                                id="grand_total"
-                                                value="0.00"
-                                            >
+                                            </div>
 
                                         </div>
 
@@ -1703,170 +1559,119 @@
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- REMARKS                                               --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- REMARKS --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                        <div class="col-12 mt-3">
 
-                        <h5 class="form-section-title">
+                            <h5 class="form-section-title">
+                                Remarks
+                            </h5>
 
-                            Remarks
-
-                        </h5>
-
-                        <hr>
-
-                    </div>
-
-                    <div class="col-md-12">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Remarks
-                                </b>
-
-                            </label>
-
-                            <textarea
-                                name="remarks"
-                                id="remarks"
-                                rows="4"
-                                class="form-control @error('remarks') is-invalid @enderror"
-                                placeholder="Enter Remarks">{{ old('remarks') }}</textarea>
-
-                            @error('remarks')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            <hr>
 
                         </div>
 
-                    </div>
+                        <div class="col-12">
 
-                    {{-- ================================================= --}}
-                    {{-- STATUS --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12 mt-3">
+                            <div class="form-group">
 
-                        <h5 class="form-section-title">
+                                <label for="remarks">
+                                    <b>Remarks</b>
+                                </label>
 
-                            Status
+                                <textarea name="remarks" id="remarks" rows="4" class="form-control @error('remarks') is-invalid @enderror"
+                                    placeholder="Enter Remarks" maxlength="2000">{{ old('remarks') }}</textarea>
 
-                        </h5>
+                                @error('remarks')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
 
-                        <hr>
-
-                    </div>
-
-                    <div class="col-md-4">
-
-                        <div class="form-group">
-
-                            <label>
-
-                                <b>
-                                    Status
-                                </b>
-
-                                <span class="required">
-                                    *
-                                </span>
-
-                            </label>
-
-                            <select
-                                name="status"
-                                id="status"
-                                class="form-control custom-select2 @error('status') is-invalid @enderror">
-
-                                <option
-                                    value="draft"
-                                    {{ old('status', 'draft') === 'draft'
-                                        ? 'selected'
-                                        : '' }}>
-                                    Draft
-                                </option>
-
-                                <option
-                                    value="open"
-                                    {{ old('status') === 'open'
-                                        ? 'selected'
-                                        : '' }}>
-                                    Open
-                                </option>
-
-                                <option
-                                    value="completed"
-                                    {{ old('status') === 'completed'
-                                        ? 'selected'
-                                        : '' }}>
-                                    Completed
-                                </option>
-
-                                <option
-                                    value="cancelled"
-                                    {{ old('status') === 'cancelled'
-                                        ? 'selected'
-                                        : '' }}>
-                                    Cancelled
-                                </option>
-
-                            </select>
-
-                            @error('status')
-
-                                <span class="invalid-feedback d-block">
-
-                                    <strong>
-                                        {{ $message }}
-                                    </strong>
-
-                                </span>
-
-                            @enderror
+                            </div>
 
                         </div>
 
-                    </div>
+                        {{-- ==================================================== --}}
+                        {{-- STATUS                                                --}}
+                        {{-- ==================================================== --}}
 
-                    {{-- ================================================= --}}
-                    {{-- ACTION BUTTONS --}}
-                    {{-- ================================================= --}}
-                    <div class="col-12">
+                        <div class="col-12 mt-3">
 
-                        <div class="text-right mt-4">
+                            <h5 class="form-section-title">
+                                Status
+                            </h5>
 
-                            <a
-                                href="{{ route('duty-slips.index') }}"
-                                class="btn btn-danger">
+                            <hr>
 
-                                <i class="fa fa-times"></i>
+                        </div>
 
-                                Cancel
+                        <div class="col-md-4">
 
-                            </a>
+                            <div class="form-group">
 
-                            <button
-                                type="submit"
-                                class="btn btn-success">
+                                <label for="status">
 
-                                <i class="fa fa-save"></i>
+                                    <b>
+                                        Status
+                                    </b>
 
-                                Save Duty Slip
+                                    <span class="required">*</span>
 
-                            </button>
+                                </label>
+
+                                <select name="status" id="status"
+                                    class="form-control custom-select2 @error('status') is-invalid @enderror" required>
+
+                                    <option value="open" {{ old('status', 'open') === 'open' ? 'selected' : '' }}>
+                                        Open
+                                    </option>
+
+                                    <option value="started" {{ old('status') === 'started' ? 'selected' : '' }}>
+                                        Started
+                                    </option>
+
+                                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>
+                                        Completed
+                                    </option>
+
+                                    <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>
+                                        Cancelled
+                                    </option>
+
+                                </select>
+
+                                @error('status')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- ACTIONS                                                --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12">
+
+                            <div class="text-right mt-4">
+
+                                <a href="{{ route('duty-slips.index') }}" class="btn btn-danger">
+                                    <i class="fa fa-times"></i>
+                                    Cancel
+                                </a>
+
+                                <button type="submit" id="save-duty-slip" class="btn btn-success">
+                                    <i class="fa fa-save"></i>
+                                    Save Duty Slip
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -1874,880 +1679,69 @@
 
                 </div>
 
-            </div>
+            </form>
 
-        </form>
+            {{-- ================================================================= --}}
+            {{-- ALLOWANCE TEMPLATE                                                 --}}
+            {{-- ================================================================= --}}
 
-    </div>
+            <template id="allowance-row-template">
 
-
-    <x-backend.footer />
-
-</div>
-
-@endsection
-
-@push('scripts')
-<script>
-
-$(document).ready(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | HELPERS
-    |--------------------------------------------------------------------------
-    */
-
-    function numberValue(value)
-    {
-        const number = parseFloat(value);
-
-        return isNaN(number) || number < 0
-            ? 0
-            : number;
-    }
-
-
-    function formatAmount(value)
-    {
-        return numberValue(value).toFixed(2);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DUTY SLIP FRONT / BACK FILE PREVIEW
-    |--------------------------------------------------------------------------
-    */
-
-    window.previewDutySlipFile = function (
-        inputId,
-        previewId
-    ) {
-
-        const input =
-            document.getElementById(inputId);
-
-        const preview =
-            document.getElementById(previewId);
-
-
-        if (!input || !preview) {
-            return;
-        }
-
-
-        preview.innerHTML = '';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | No File
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !input.files ||
-            !input.files[0]
-        ) {
-            return;
-        }
-
-
-        const file =
-            input.files[0];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | File Label
-        |--------------------------------------------------------------------------
-        */
-
-        const isFront =
-            inputId === 'duty_slip_front_file';
-
-        const documentLabel =
-            isFront
-                ? 'Duty Slip Front'
-                : 'Duty Slip Back';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Allowed MIME Types
-        |--------------------------------------------------------------------------
-        */
-
-        const allowedTypes = [
-            'application/pdf',
-            'image/jpeg',
-            'image/png'
-        ];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | File Type Validation
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            !allowedTypes.includes(
-                file.type
-            )
-        ) {
-
-            alert(
-                `${documentLabel} must be a valid PDF, JPG, JPEG, or PNG file.`
-            );
-
-            input.value = '';
-
-            preview.innerHTML = '';
-
-            return;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | File Size Validation - 5 MB
-        |--------------------------------------------------------------------------
-        */
-
-        const maxSize =
-            5 * 1024 * 1024;
-
-
-        if (
-            file.size > maxSize
-        ) {
-
-            alert(
-                `${documentLabel} size must not exceed 5 MB.`
-            );
-
-            input.value = '';
-
-            preview.innerHTML = '';
-
-            return;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | File Size
-        |--------------------------------------------------------------------------
-        */
-
-        const fileSize =
-            (
-                file.size /
-                1024 /
-                1024
-            ).toFixed(2);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PDF PREVIEW
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            file.type ===
-            'application/pdf'
-        ) {
-
-            const fileUrl =
-                URL.createObjectURL(file);
-
-
-            preview.innerHTML = `
-
-                <div
-                    class="alert alert-light border d-flex align-items-center"
-                    style="
-                        border-radius:10px;
-                        padding:12px 15px;
-                        max-width:450px;
-                    "
-                >
-
-                    <div
-                        class="mr-3"
-                        style="
-                            min-width:45px;
-                            text-align:center;
-                        "
-                    >
-
-                        <i
-                            class="fa fa-file-pdf-o text-danger"
-                            style="
-                                font-size:36px;
-                            "
-                        ></i>
-
-                    </div>
-
-
-                    <div>
-
-                        <strong
-                            class="d-block"
-                            style="
-                                word-break:break-word;
-                            "
-                        >
-                            ${file.name}
-                        </strong>
-
-
-                        <small class="text-muted">
-
-                            ${documentLabel}
-                            &nbsp;•&nbsp;
-                            PDF
-                            &nbsp;•&nbsp;
-                            ${fileSize} MB
-
-                        </small>
-
-
-                        <div class="mt-2">
-
-                            <a
-                                href="${fileUrl}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="btn btn-sm btn-primary"
-                            >
-
-                                <i class="fa fa-eye"></i>
-
-                                Preview PDF
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            `;
-
-            return;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | IMAGE PREVIEW
-        |--------------------------------------------------------------------------
-        */
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload = function (e) {
-
-            preview.innerHTML = `
-
-                <div>
-
-                    <img
-                        src="${e.target.result}"
-                        alt="${documentLabel} Preview"
-                        class="img-thumbnail"
-                        style="
-                            width:220px;
-                            max-height:220px;
-                            object-fit:contain;
-                            border-radius:10px;
-                            border:2px solid #dee2e6;
-                            box-shadow:
-                                0 2px 10px
-                                rgba(0,0,0,.15);
-                            background:#fff;
-                        "
-                    >
-
-
-                    <div class="mt-2">
-
-                        <strong
-                            class="d-block"
-                            style="
-                                word-break:break-word;
-                            "
-                        >
-                            ${file.name}
-                        </strong>
-
-
-                        <small class="text-muted">
-
-                            ${documentLabel}
-                            &nbsp;•&nbsp;
-                            Image
-                            &nbsp;•&nbsp;
-                            ${fileSize} MB
-
-                        </small>
-
-                    </div>
-
-                </div>
-
-            `;
-        };
-
-
-        reader.readAsDataURL(file);
-    };
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DUTY SLIP NUMBER
-    |--------------------------------------------------------------------------
-    */
-
-    $('#slip_no').on('blur', function () {
-
-        this.value = $(this)
-            .val()
-            .trim()
-            .toUpperCase()
-            .replace(/\s+/g, '');
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | MOBILE NUMBER - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $('#passenger_mobile').on('input', function () {
-
-        this.value = $(this)
-            .val()
-            .replace(/[^0-9]/g, '')
-            .slice(0, 10);
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | NUMBER VALIDATION - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'input',
-        '#opening_km, #closing_km, ' +
-        '.allowance-quantity, .allowance-rate, ' +
-        '.expense-quantity, .expense-rate',
-        function () {
-
-            let value = this.value;
-
-
-            if (value === '') {
-                return;
-            }
-
-
-            value = parseFloat(value);
-
-
-            if (
-                isNaN(value) ||
-                value < 0
-            ) {
-
-                this.value = 0;
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL KM
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateTotalKm()
-    {
-        const opening =
-            numberValue(
-                $('#opening_km').val()
-            );
-
-
-        const closing =
-            numberValue(
-                $('#closing_km').val()
-            );
-
-
-        let totalKm = 0;
-
-
-        if (
-            closing >= opening
-        ) {
-
-            totalKm =
-                closing - opening;
-
-        }
-
-
-        $('#total_km').val(
-            formatAmount(totalKm)
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE PER KM ALLOWANCES
-        |--------------------------------------------------------------------------
-        */
-
-        $('#allowance-wrapper .allowance-row')
-            .each(function () {
-
-                const row =
-                    $(this);
-
-
-                const selectedOption =
-                    row.find(
-                        '.allowance-select option:selected'
-                    );
-
-
-                const calculationType =
-                    selectedOption.attr(
-                        'data-calculation-type'
-                    );
-
-
-                if (
-                    calculationType === 'per_km'
-                ) {
-
-                    row.find(
-                        '.allowance-quantity'
-                    ).val(
-                        formatAmount(totalKm)
-                    );
-
-
-                    calculateAllowanceRow(
-                        row
-                    );
-
-                }
-
-            });
-
-
-        calculateFinancialSummary();
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | OPENING / CLOSING KM - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'input',
-        '#opening_km, #closing_km',
-        function () {
-
-            calculateTotalKm();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CLOSING KM VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
-    $('#closing_km').on(
-        'change',
-        function () {
-
-            const opening =
-                numberValue(
-                    $('#opening_km').val()
-                );
-
-
-            const closing =
-                numberValue(
-                    $('#closing_km').val()
-                );
-
-
-            if (
-                closing > 0 &&
-                closing < opening
-            ) {
-
-                alert(
-                    'Closing KM cannot be less than Opening KM.'
-                );
-
-
-                $(this).val('');
-
-
-                calculateTotalKm();
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE RATE
-    |--------------------------------------------------------------------------
-    */
-
-    function setAllowanceRate(row)
-    {
-
-        const select =
-            row.find(
-                '.allowance-select'
-            );
-
-
-        const selectedOption =
-            select.find(
-                'option:selected'
-            );
-
-
-        let rate =
-            selectedOption.attr(
-                'data-rate'
-            );
-
-
-        rate =
-            numberValue(rate);
-
-
-        const calculationType =
-            selectedOption.attr(
-                'data-calculation-type'
-            );
-
-
-        row.find(
-            '.allowance-rate'
-        ).val(
-            formatAmount(rate)
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PER KM
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            calculationType === 'per_km'
-        ) {
-
-            const totalKm =
-                numberValue(
-                    $('#total_km').val()
-                );
-
-
-            row.find(
-                '.allowance-quantity'
-            ).val(
-                formatAmount(totalKm)
-            );
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | FIXED
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            calculationType === 'fixed'
-        ) {
-
-            const currentQuantity =
-                row.find(
-                    '.allowance-quantity'
-                ).val();
-
-
-            if (
-                currentQuantity === '' ||
-                numberValue(
-                    currentQuantity
-                ) <= 0
-            ) {
-
-                row.find(
-                    '.allowance-quantity'
-                ).val('1');
-
-            }
-
-        }
-
-
-        calculateAllowanceRow(row);
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE ROW CALCULATION - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateAllowanceRow(row)
-    {
-
-        const quantity =
-            numberValue(
-                row.find(
-                    '.allowance-quantity'
-                ).val()
-            );
-
-
-        const rate =
-            numberValue(
-                row.find(
-                    '.allowance-rate'
-                ).val()
-            );
-
-
-        const amount =
-            quantity * rate;
-
-
-        row.find(
-            '.allowance-amount'
-        ).val(
-            formatAmount(amount)
-        );
-
-
-        calculateFinancialSummary();
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE SELECT - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '.allowance-select',
-        function () {
-
-            const row =
-                $(this).closest(
-                    '.allowance-row'
-                );
-
-
-            setAllowanceRate(row);
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE QUANTITY / RATE - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'input',
-        '.allowance-quantity, .allowance-rate',
-        function () {
-
-            const row =
-                $(this).closest(
-                    '.allowance-row'
-                );
-
-
-            calculateAllowanceRow(
-                row
-            );
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ADD MORE ALLOWANCE
-    |--------------------------------------------------------------------------
-    */
-
-    $('#add-allowance').on(
-        'click',
-        function () {
-
-            const wrapper =
-                $('#allowance-wrapper');
-
-
-            const index =
-                wrapper.find(
-                    '.allowance-row'
-                ).length;
-
-
-            const row = `
-
-                <tr
-                    class="allowance-row"
-                    data-index="${index}"
-                >
+                <tr class="allowance-row" data-index="__INDEX__">
 
                     <td>
 
-                        <select
-                            name="allowances[${index}][allowance_id]"
-                            class="form-control custom-select2 allowance-select"
-                        >
+                        <select name="driver_allowances[__INDEX__][allowance_id]"
+                            class="form-control custom-select2 allowance-select">
 
                             <option value="">
                                 Select Allowance
                             </option>
 
-                            @foreach($allowances ?? [] as $allowance)
-
-                                <option
-                                    value="{{ $allowance->id }}"
-                                    data-rate="{{ $allowance->amount ?? 0 }}"
-                                    data-calculation-type="{{ $allowance->calculation_type }}"
-                                >
-
+                            @foreach ($allowances ?? collect() as $allowance)
+                                <option value="{{ $allowance->id }}" data-rate="{{ $allowance->amount ?? 0 }}"
+                                    data-calculation-type="{{ $allowance->calculation_type ?? 'fixed' }}">
                                     {{ $allowance->name }}
-
                                 </option>
-
                             @endforeach
 
                         </select>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="allowances[${index}][quantity]"
-                            class="form-control allowance-quantity"
-                            value="1"
-                            min="0"
-                            step="0.01"
-                        >
+                        <input type="number" name="driver_allowances[__INDEX__][quantity]"
+                            class="form-control allowance-quantity" value="1" min="0.01" step="0.01">
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="allowances[${index}][rate]"
-                            class="form-control allowance-rate"
-                            value="0.00"
-                            min="0"
-                            step="0.01"
-                            readonly
-                        >
+                        <input type="number" name="driver_allowances[__INDEX__][rate]"
+                            class="form-control allowance-rate" value="0.00" min="0" step="0.01" readonly>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="allowances[${index}][amount]"
-                            class="form-control allowance-amount"
-                            value="0.00"
-                            min="0"
-                            step="0.01"
-                            readonly
-                        >
+                        <input type="number" name="driver_allowances[__INDEX__][amount]"
+                            class="form-control allowance-amount" value="0.00" min="0" step="0.01" readonly>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="text"
-                            name="allowances[${index}][remarks]"
-                            class="form-control"
-                            placeholder="Remarks"
-                        >
+                        <input type="text" name="driver_allowances[__INDEX__][remarks]" class="form-control"
+                            placeholder="Remarks" maxlength="1000">
 
                     </td>
 
-
                     <td>
 
-                        <select
-                            name="allowances[${index}][status]"
-                            class="form-control custom-select2"
-                        >
+                        <select name="driver_allowances[__INDEX__][status]" class="form-control custom-select2">
 
-                            <option
-                                value="pending"
-                                selected
-                            >
+                            <option value="pending" selected>
                                 Pending
                             </option>
 
@@ -2771,398 +1765,78 @@ $(document).ready(function () {
 
                     </td>
 
-
                     <td class="text-center">
 
-                        <button
-                            type="button"
-                            class="btn btn-danger btn-sm remove-allowance"
-                            title="Remove"
-                        >
-
+                        <button type="button" class="btn btn-danger btn-sm remove-allowance" title="Remove">
                             <i class="fa fa-trash"></i>
-
                         </button>
 
                     </td>
 
                 </tr>
 
-            `;
+            </template>
 
+            {{-- ================================================================= --}}
+            {{-- EXPENSE TEMPLATE                                                   --}}
+            {{-- ================================================================= --}}
 
-            wrapper.append(row);
+            <template id="expense-row-template">
 
-
-            updateAllowanceIndexes();
-
-            updateAllowanceRemoveButtons();
-
-            calculateFinancialSummary();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE ALLOWANCE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'click',
-        '.remove-allowance',
-        function () {
-
-            $(this)
-                .closest(
-                    '.allowance-row'
-                )
-                .remove();
-
-
-            updateAllowanceIndexes();
-
-            updateAllowanceRemoveButtons();
-
-            calculateFinancialSummary();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE INDEXES
-    |--------------------------------------------------------------------------
-    */
-
-    function updateAllowanceIndexes()
-    {
-
-        $('#allowance-wrapper .allowance-row')
-            .each(function (index) {
-
-                const row =
-                    $(this);
-
-
-                row.attr(
-                    'data-index',
-                    index
-                );
-
-
-                row.find('[name]')
-                    .each(function () {
-
-                        const name =
-                            $(this).attr(
-                                'name'
-                            );
-
-
-                        if (!name) {
-                            return;
-                        }
-
-
-                        $(this).attr(
-                            'name',
-                            name.replace(
-                                /allowances\[\d+\]/,
-                                `allowances[${index}]`
-                            )
-                        );
-
-                    });
-
-            });
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ALLOWANCE REMOVE BUTTONS
-    |--------------------------------------------------------------------------
-    */
-
-    function updateAllowanceRemoveButtons()
-    {
-
-        const rows =
-            $('#allowance-wrapper .allowance-row');
-
-
-        rows
-            .find(
-                '.remove-allowance'
-            )
-            .prop(
-                'disabled',
-                rows.length <= 1
-            );
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE RATE
-    |--------------------------------------------------------------------------
-    */
-
-    function setExpenseRate(row)
-    {
-
-        const select =
-            row.find(
-                '.expense-select'
-            );
-
-
-        const selectedOption =
-            select.find(
-                'option:selected'
-            );
-
-
-        let rate =
-            selectedOption.attr(
-                'data-rate'
-            );
-
-
-        rate =
-            numberValue(rate);
-
-
-        row.find(
-            '.expense-rate'
-        ).val(
-            formatAmount(rate)
-        );
-
-
-        calculateExpenseRow(row);
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE ROW CALCULATION - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateExpenseRow(row)
-    {
-
-        const quantity =
-            numberValue(
-                row.find(
-                    '.expense-quantity'
-                ).val()
-            );
-
-
-        const rate =
-            numberValue(
-                row.find(
-                    '.expense-rate'
-                ).val()
-            );
-
-
-        const amount =
-            quantity * rate;
-
-
-        row.find(
-            '.expense-amount'
-        ).val(
-            formatAmount(amount)
-        );
-
-
-        calculateFinancialSummary();
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE SELECT - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'change',
-        '.expense-select',
-        function () {
-
-            const row =
-                $(this).closest(
-                    '.expense-row'
-                );
-
-
-            setExpenseRate(row);
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE QUANTITY / RATE - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'input',
-        '.expense-quantity, .expense-rate',
-        function () {
-
-            const row =
-                $(this).closest(
-                    '.expense-row'
-                );
-
-
-            calculateExpenseRow(
-                row
-            );
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ADD MORE EXPENSE
-    |--------------------------------------------------------------------------
-    */
-
-    $('#add-expense').on(
-        'click',
-        function () {
-
-            const wrapper =
-                $('#expense-wrapper');
-
-
-            const index =
-                wrapper.find(
-                    '.expense-row'
-                ).length;
-
-
-            const row = `
-
-                <tr
-                    class="expense-row"
-                    data-index="${index}"
-                >
+                <tr class="expense-row" data-index="__INDEX__">
 
                     <td>
 
-                        <select
-                            name="expenses[${index}][expense_id]"
-                            class="form-control custom-select2 expense-select"
-                        >
+                        <select name="driver_expenses[__INDEX__][expense_id]"
+                            class="form-control custom-select2 expense-select">
 
                             <option value="">
                                 Select Expense
                             </option>
 
-                            @foreach($expenses ?? [] as $expense)
-
-                                <option
-                                    value="{{ $expense->id }}"
-                                    data-rate="{{ $expense->amount ?? 0 }}"
-                                >
-
+                            @foreach ($expenses ?? collect() as $expense)
+                                <option value="{{ $expense->id }}" data-rate="{{ $expense->amount ?? 0 }}">
                                     {{ $expense->name }}
-
                                 </option>
-
                             @endforeach
 
                         </select>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="expenses[${index}][quantity]"
-                            class="form-control expense-quantity"
-                            value="1"
-                            min="0"
-                            step="0.01"
-                        >
+                        <input type="number" name="driver_expenses[__INDEX__][quantity]"
+                            class="form-control expense-quantity" value="1" min="0.01" step="0.01">
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="expenses[${index}][rate]"
-                            class="form-control expense-rate"
-                            value="0.00"
-                            min="0"
-                            step="0.01"
-                            readonly
-                        >
+                        <input type="number" name="driver_expenses[__INDEX__][rate]" class="form-control expense-rate"
+                            value="0.00" min="0" step="0.01" readonly>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="number"
-                            name="expenses[${index}][amount]"
-                            class="form-control expense-amount"
-                            value="0.00"
-                            min="0"
-                            step="0.01"
-                            readonly
-                        >
+                        <input type="number" name="driver_expenses[__INDEX__][amount]"
+                            class="form-control expense-amount" value="0.00" min="0" step="0.01" readonly>
 
                     </td>
 
-
                     <td>
 
-                        <input
-                            type="text"
-                            name="expenses[${index}][remarks]"
-                            class="form-control"
-                            placeholder="Remarks"
-                        >
+                        <input type="text" name="driver_expenses[__INDEX__][remarks]" class="form-control"
+                            placeholder="Remarks" maxlength="1000">
 
                     </td>
 
-
                     <td>
 
-                        <select
-                            name="expenses[${index}][status]"
-                            class="form-control custom-select2"
-                        >
+                        <select name="driver_expenses[__INDEX__][status]" class="form-control custom-select2">
 
-                            <option
-                                value="pending"
-                                selected
-                            >
+                            <option value="pending" selected>
                                 Pending
                             </option>
 
@@ -3186,636 +1860,26 @@ $(document).ready(function () {
 
                     </td>
 
-
                     <td class="text-center">
 
-                        <button
-                            type="button"
-                            class="btn btn-danger btn-sm remove-expense"
-                            title="Remove"
-                        >
-
+                        <button type="button" class="btn btn-danger btn-sm remove-expense" title="Remove">
                             <i class="fa fa-trash"></i>
-
                         </button>
 
                     </td>
 
                 </tr>
 
-            `;
+            </template>
 
+        </div>
 
-            wrapper.append(row);
+        <x-backend.footer />
 
+    </div>
 
-            updateExpenseIndexes();
+@endsection
 
-            updateExpenseRemoveButtons();
-
-            calculateFinancialSummary();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE EXPENSE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'click',
-        '.remove-expense',
-        function () {
-
-            $(this)
-                .closest(
-                    '.expense-row'
-                )
-                .remove();
-
-
-            updateExpenseIndexes();
-
-            updateExpenseRemoveButtons();
-
-            calculateFinancialSummary();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE INDEXES
-    |--------------------------------------------------------------------------
-    */
-
-    function updateExpenseIndexes()
-    {
-
-        $('#expense-wrapper .expense-row')
-            .each(function (index) {
-
-                const row =
-                    $(this);
-
-
-                row.attr(
-                    'data-index',
-                    index
-                );
-
-
-                row.find('[name]')
-                    .each(function () {
-
-                        const name =
-                            $(this).attr(
-                                'name'
-                            );
-
-
-                        if (!name) {
-                            return;
-                        }
-
-
-                        $(this).attr(
-                            'name',
-                            name.replace(
-                                /expenses\[\d+\]/,
-                                `expenses[${index}]`
-                            )
-                        );
-
-                    });
-
-            });
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | EXPENSE REMOVE BUTTONS
-    |--------------------------------------------------------------------------
-    */
-
-    function updateExpenseRemoveButtons()
-    {
-
-        const rows =
-            $('#expense-wrapper .expense-row');
-
-
-        rows
-            .find(
-                '.remove-expense'
-            )
-            .prop(
-                'disabled',
-                rows.length <= 1
-            );
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FINANCIAL SUMMARY - LIVE
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateFinancialSummary()
-    {
-
-        let allowanceTotal = 0;
-
-        let expenseTotal = 0;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CALCULATE ALLOWANCE TOTAL
-        |--------------------------------------------------------------------------
-        */
-
-        $('#allowance-wrapper .allowance-row')
-            .each(function () {
-
-                const amount =
-                    numberValue(
-                        $(this)
-                            .find(
-                                '.allowance-amount'
-                            )
-                            .val()
-                    );
-
-
-                allowanceTotal += amount;
-
-            });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | CALCULATE EXPENSE TOTAL
-        |--------------------------------------------------------------------------
-        */
-
-        $('#expense-wrapper .expense-row')
-            .each(function () {
-
-                const amount =
-                    numberValue(
-                        $(this)
-                            .find(
-                                '.expense-amount'
-                            )
-                            .val()
-                    );
-
-
-                expenseTotal += amount;
-
-            });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GRAND TOTAL
-        |--------------------------------------------------------------------------
-        */
-
-        const grandTotal =
-            allowanceTotal +
-            expenseTotal;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SUMMARY FIELDS
-        |--------------------------------------------------------------------------
-        */
-
-        $('#total-allowance').val(
-            formatAmount(
-                allowanceTotal
-            )
-        );
-
-
-        $('#total-expense').val(
-            formatAmount(
-                expenseTotal
-            )
-        );
-
-
-        $('#grand-total').val(
-            formatAmount(
-                grandTotal
-            )
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | HIDDEN INPUTS
-        |--------------------------------------------------------------------------
-        */
-
-        $('#total_allowance').val(
-            formatAmount(
-                allowanceTotal
-            )
-        );
-
-
-        $('#total_expense').val(
-            formatAmount(
-                expenseTotal
-            )
-        );
-
-
-        $('#grand_total').val(
-            formatAmount(
-                grandTotal
-            )
-        );
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORCE FINANCIAL SUMMARY LIVE UPDATE
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'input change',
-        '.allowance-quantity, ' +
-        '.allowance-rate, ' +
-        '.expense-quantity, ' +
-        '.expense-rate',
-        function () {
-
-            calculateFinancialSummary();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TEXT FORMATTING
-    |--------------------------------------------------------------------------
-    */
-
-    $(
-        '#pickup_location, ' +
-        '#drop_location, ' +
-        '#passenger_name, ' +
-        '#vehicle_type'
-    ).on(
-        'blur',
-        function () {
-
-            this.value =
-                $(this)
-                    .val()
-                    .replace(
-                        /\s+/g,
-                        ' '
-                    )
-                    .trim();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMARKS FORMATTING
-    |--------------------------------------------------------------------------
-    */
-
-    $(document).on(
-        'blur',
-        '#remarks, ' +
-        'input[name*="[remarks]"], ' +
-        'textarea[name*="[remarks]"]',
-        function () {
-
-            this.value =
-                $(this)
-                    .val()
-                    .replace(
-                        /\s+/g,
-                        ' '
-                    )
-                    .trim();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
-    $('form').on(
-        'submit',
-        function () {
-
-            const form =
-                $(this);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE INDEXES
-            |--------------------------------------------------------------------------
-            */
-
-            updateAllowanceIndexes();
-
-            updateExpenseIndexes();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FINAL ALLOWANCE CALCULATION
-            |--------------------------------------------------------------------------
-            */
-
-            $('#allowance-wrapper .allowance-row')
-                .each(function () {
-
-                    calculateAllowanceRow(
-                        $(this)
-                    );
-
-                });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FINAL EXPENSE CALCULATION
-            |--------------------------------------------------------------------------
-            */
-
-            $('#expense-wrapper .expense-row')
-                .each(function () {
-
-                    calculateExpenseRow(
-                        $(this)
-                    );
-
-                });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FINAL TOTAL KM
-            |--------------------------------------------------------------------------
-            */
-
-            calculateTotalKm();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FINAL FINANCIAL SUMMARY
-            |--------------------------------------------------------------------------
-            */
-
-            calculateFinancialSummary();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SLIP NUMBER FORMAT
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                $('#slip_no').length
-            ) {
-
-                $('#slip_no').val(
-
-                    $('#slip_no')
-                        .val()
-                        .trim()
-                        .toUpperCase()
-                        .replace(
-                            /\s+/g,
-                            ''
-                        )
-
-                );
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | COMMON TEXT FORMAT
-            |--------------------------------------------------------------------------
-            */
-
-            $(
-                '#pickup_location, ' +
-                '#drop_location, ' +
-                '#passenger_name, ' +
-                '#vehicle_type, ' +
-                '#remarks'
-            ).each(function () {
-
-                if (
-                    $(this).length
-                ) {
-
-                    $(this).val(
-
-                        $(this)
-                            .val()
-                            .replace(
-                                /\s+/g,
-                                ' '
-                            )
-                            .trim()
-
-                    );
-
-                }
-
-            });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DYNAMIC REMARKS
-            |--------------------------------------------------------------------------
-            */
-
-            $(
-                '#allowance-wrapper input[name*="[remarks]"], ' +
-                '#expense-wrapper input[name*="[remarks]"]'
-            ).each(function () {
-
-                this.value =
-                    $(this)
-                        .val()
-                        .replace(
-                            /\s+/g,
-                            ' '
-                        )
-                        .trim();
-
-            });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PREVENT DUPLICATE SUBMISSION
-            |--------------------------------------------------------------------------
-            */
-
-            const submitButton =
-                form.find(
-                    'button[type="submit"]'
-                );
-
-
-            if (
-                submitButton.length
-            ) {
-
-                submitButton
-                    .prop(
-                        'disabled',
-                        true
-                    )
-                    .html(
-                        '<i class="fa fa-spinner fa-spin"></i> Saving Duty Slip...'
-                    );
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE EXISTING ALLOWANCE ROWS
-    |--------------------------------------------------------------------------
-    */
-
-    $('#allowance-wrapper .allowance-row')
-        .each(function () {
-
-            const row =
-                $(this);
-
-
-            if (
-                row.find(
-                    '.allowance-select'
-                ).val()
-            ) {
-
-                setAllowanceRate(row);
-
-            } else {
-
-                calculateAllowanceRow(row);
-
-            }
-
-        });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE EXISTING EXPENSE ROWS
-    |--------------------------------------------------------------------------
-    */
-
-    $('#expense-wrapper .expense-row')
-        .each(function () {
-
-            const row =
-                $(this);
-
-
-            if (
-                row.find(
-                    '.expense-select'
-                ).val()
-            ) {
-
-                setExpenseRate(row);
-
-            } else {
-
-                calculateExpenseRow(row);
-
-            }
-
-        });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE INDEXES
-    |--------------------------------------------------------------------------
-    */
-
-    updateAllowanceIndexes();
-
-    updateExpenseIndexes();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIALIZE REMOVE BUTTONS
-    |--------------------------------------------------------------------------
-    */
-
-    updateAllowanceRemoveButtons();
-
-    updateExpenseRemoveButtons();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIAL TOTAL KM
-    |--------------------------------------------------------------------------
-    */
-
-    calculateTotalKm();
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIAL FINANCIAL SUMMARY
-    |--------------------------------------------------------------------------
-    */
-
-    calculateFinancialSummary();
-
-});
-
-</script>
+@push('scripts')
+    <script src="{{ asset('backend/assets/js/duty-slips/create.js') }}"></script>
 @endpush

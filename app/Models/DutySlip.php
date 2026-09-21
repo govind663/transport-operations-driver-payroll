@@ -4,11 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DutySlip extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table
+    |--------------------------------------------------------------------------
+    */
 
     protected $table = 'duty_slips';
 
@@ -18,6 +27,7 @@ class DutySlip extends Model
     | Fillable
     |--------------------------------------------------------------------------
     */
+
     protected $fillable = [
 
         /*
@@ -25,8 +35,12 @@ class DutySlip extends Model
         | Duty Slip Information
         |--------------------------------------------------------------------------
         */
+
         'slip_no',
         'duty_assignment_id',
+        'driver_id',
+        'vehicle_id',
+        'vehicle_type_id',
         'duty_date',
 
 
@@ -35,6 +49,7 @@ class DutySlip extends Model
         | Trip Information
         |--------------------------------------------------------------------------
         */
+
         'start_time',
         'end_time',
 
@@ -44,6 +59,7 @@ class DutySlip extends Model
         | Meter Information
         |--------------------------------------------------------------------------
         */
+
         'opening_meter',
         'closing_meter',
         'total_km',
@@ -54,6 +70,7 @@ class DutySlip extends Model
         | Status
         |--------------------------------------------------------------------------
         */
+
         'status',
 
 
@@ -62,6 +79,7 @@ class DutySlip extends Model
         | Remarks
         |--------------------------------------------------------------------------
         */
+
         'remarks',
 
 
@@ -70,6 +88,7 @@ class DutySlip extends Model
         | Duty Slip Documents
         |--------------------------------------------------------------------------
         */
+
         'duty_slip_front_file',
         'duty_slip_back_file',
 
@@ -79,6 +98,7 @@ class DutySlip extends Model
         | Audit
         |--------------------------------------------------------------------------
         */
+
         'created_by',
         'updated_by',
     ];
@@ -89,23 +109,81 @@ class DutySlip extends Model
     | Casts
     |--------------------------------------------------------------------------
     */
+
     protected $casts = [
 
-        'id' => 'integer',
+        /*
+        |--------------------------------------------------------------------------
+        | IDs
+        |--------------------------------------------------------------------------
+        */
 
-        'duty_assignment_id' => 'integer',
+        'id' =>
+            'integer',
 
-        'duty_date' => 'date:Y-m-d',
+        'duty_assignment_id' =>
+            'integer',
 
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'driver_id' =>
+            'integer',
 
-        'opening_meter' => 'decimal:2',
-        'closing_meter' => 'decimal:2',
-        'total_km' => 'decimal:2',
+        'vehicle_id' =>
+            'integer',
 
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
+        'vehicle_type_id' =>
+            'integer',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Date
+        |--------------------------------------------------------------------------
+        */
+
+        'duty_date' =>
+            'date:Y-m-d',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Datetime
+        |--------------------------------------------------------------------------
+        */
+
+        'start_time' =>
+            'datetime',
+
+        'end_time' =>
+            'datetime',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Decimal
+        |--------------------------------------------------------------------------
+        */
+
+        'opening_meter' =>
+            'decimal:2',
+
+        'closing_meter' =>
+            'decimal:2',
+
+        'total_km' =>
+            'decimal:2',
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Audit IDs
+        |--------------------------------------------------------------------------
+        */
+
+        'created_by' =>
+            'integer',
+
+        'updated_by' =>
+            'integer',
     ];
 
 
@@ -114,6 +192,7 @@ class DutySlip extends Model
     | Status Constants
     |--------------------------------------------------------------------------
     */
+
     public const STATUS_OPEN = 'open';
 
     public const STATUS_STARTED = 'started';
@@ -128,6 +207,7 @@ class DutySlip extends Model
     | Status List
     |--------------------------------------------------------------------------
     */
+
     public const STATUSES = [
 
         self::STATUS_OPEN,
@@ -146,6 +226,7 @@ class DutySlip extends Model
     | Status Helpers
     |--------------------------------------------------------------------------
     */
+
     public function isOpen(): bool
     {
         return $this->status === self::STATUS_OPEN;
@@ -172,13 +253,83 @@ class DutySlip extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Final Status
+    |--------------------------------------------------------------------------
+    */
+
+    public function isFinal(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_COMPLETED,
+                self::STATUS_CANCELLED,
+            ],
+            true
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Duty Assignment
     |--------------------------------------------------------------------------
     */
-    public function dutyAssignment()
+
+    public function dutyAssignment(): BelongsTo
     {
         return $this->belongsTo(
-            DutyAssignment::class
+            DutyAssignment::class,
+            'duty_assignment_id',
+            'id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Driver
+    |--------------------------------------------------------------------------
+    */
+
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(
+            Driver::class,
+            'driver_id',
+            'id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vehicle
+    |--------------------------------------------------------------------------
+    */
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(
+            VehicleManagement::class,
+            'vehicle_id',
+            'id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Vehicle Type
+    |--------------------------------------------------------------------------
+    */
+
+    public function vehicleType(): BelongsTo
+    {
+        return $this->belongsTo(
+            VehicleType::class,
+            'vehicle_type_id',
+            'id'
         );
     }
 
@@ -188,11 +339,13 @@ class DutySlip extends Model
     | Created By
     |--------------------------------------------------------------------------
     */
-    public function createdBy()
+
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(
             User::class,
-            'created_by'
+            'created_by',
+            'id'
         );
     }
 
@@ -202,11 +355,13 @@ class DutySlip extends Model
     | Updated By
     |--------------------------------------------------------------------------
     */
-    public function updatedBy()
+
+    public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(
             User::class,
-            'updated_by'
+            'updated_by',
+            'id'
         );
     }
 
@@ -216,10 +371,13 @@ class DutySlip extends Model
     | Working Sheet
     |--------------------------------------------------------------------------
     */
-    public function workingSheet()
+
+    public function workingSheet(): HasOne
     {
         return $this->hasOne(
-            WorkingSheet::class
+            WorkingSheet::class,
+            'duty_slip_id',
+            'id'
         );
     }
 
@@ -229,11 +387,13 @@ class DutySlip extends Model
     | Driver Allowances
     |--------------------------------------------------------------------------
     */
-    public function driverAllowances()
+
+    public function driverAllowances(): HasMany
     {
         return $this->hasMany(
             DriverAllowance::class,
-            'duty_slip_id'
+            'duty_slip_id',
+            'id'
         );
     }
 
@@ -243,11 +403,13 @@ class DutySlip extends Model
     | Driver Expenses
     |--------------------------------------------------------------------------
     */
-    public function driverExpenses()
+
+    public function driverExpenses(): HasMany
     {
         return $this->hasMany(
             DriverExpense::class,
-            'duty_slip_id'
+            'duty_slip_id',
+            'id'
         );
     }
 
@@ -257,11 +419,13 @@ class DutySlip extends Model
     | Approved Driver Allowances
     |--------------------------------------------------------------------------
     */
-    public function approvedDriverAllowances()
+
+    public function approvedDriverAllowances(): HasMany
     {
         return $this->hasMany(
             DriverAllowance::class,
-            'duty_slip_id'
+            'duty_slip_id',
+            'id'
         )->where(
             'status',
             DriverAllowance::STATUS_APPROVED
@@ -274,11 +438,13 @@ class DutySlip extends Model
     | Approved Driver Expenses
     |--------------------------------------------------------------------------
     */
-    public function approvedDriverExpenses()
+
+    public function approvedDriverExpenses(): HasMany
     {
         return $this->hasMany(
             DriverExpense::class,
-            'duty_slip_id'
+            'duty_slip_id',
+            'id'
         )->where(
             'status',
             DriverExpense::STATUS_APPROVED
@@ -291,14 +457,36 @@ class DutySlip extends Model
     | Allowance Total
     |--------------------------------------------------------------------------
     */
+
     public function getAllowanceTotalAttribute(): float
     {
-        return (float) $this->driverAllowances()
-            ->where(
-                'status',
-                DriverAllowance::STATUS_APPROVED
+        if (
+            $this->relationLoaded(
+                'driverAllowances'
             )
-            ->sum('amount');
+        ) {
+
+            return round(
+                (float) $this->driverAllowances
+                    ->where(
+                        'status',
+                        DriverAllowance::STATUS_APPROVED
+                    )
+                    ->sum('amount'),
+                2
+            );
+        }
+
+
+        return round(
+            (float) $this->driverAllowances()
+                ->where(
+                    'status',
+                    DriverAllowance::STATUS_APPROVED
+                )
+                ->sum('amount'),
+            2
+        );
     }
 
 
@@ -307,14 +495,36 @@ class DutySlip extends Model
     | Expense Total
     |--------------------------------------------------------------------------
     */
+
     public function getExpenseTotalAttribute(): float
     {
-        return (float) $this->driverExpenses()
-            ->where(
-                'status',
-                DriverExpense::STATUS_APPROVED
+        if (
+            $this->relationLoaded(
+                'driverExpenses'
             )
-            ->sum('amount');
+        ) {
+
+            return round(
+                (float) $this->driverExpenses
+                    ->where(
+                        'status',
+                        DriverExpense::STATUS_APPROVED
+                    )
+                    ->sum('amount'),
+                2
+            );
+        }
+
+
+        return round(
+            (float) $this->driverExpenses()
+                ->where(
+                    'status',
+                    DriverExpense::STATUS_APPROVED
+                )
+                ->sum('amount'),
+            2
+        );
     }
 
 
@@ -323,6 +533,7 @@ class DutySlip extends Model
     | Grand Total
     |--------------------------------------------------------------------------
     */
+
     public function getGrandTotalAttribute(): float
     {
         return round(

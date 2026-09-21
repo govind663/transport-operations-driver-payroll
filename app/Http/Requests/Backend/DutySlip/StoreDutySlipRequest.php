@@ -5,6 +5,7 @@ namespace App\Http\Requests\Backend\DutySlip;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreDutySlipRequest extends FormRequest
 {
@@ -14,6 +15,106 @@ class StoreDutySlipRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREPARE FOR VALIDATION
+    |--------------------------------------------------------------------------
+    |
+    | Backward compatibility:
+    |
+    | allowances[]       -> driver_allowances[]
+    | expenses[]         -> driver_expenses[]
+    |
+    | Vehicle Type:
+    |
+    | vehicle_type_id is the preferred field.
+    |
+    | If an older Blade still sends vehicle_type, it is retained so the
+    | service can resolve it for backward compatibility.
+    |
+    */
+
+    protected function prepareForValidation(): void
+    {
+        $data = [];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ALLOWANCES
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->has('allowances') &&
+            !$this->has('driver_allowances')
+        ) {
+            $data['driver_allowances'] =
+                $this->input('allowances');
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSES
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->has('expenses') &&
+            !$this->has('driver_expenses')
+        ) {
+            $data['driver_expenses'] =
+                $this->input('expenses');
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE EMPTY VALUES
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->input('slip_no') === ''
+        ) {
+            $data['slip_no'] = null;
+        }
+
+
+        if (
+            $this->input('driver_id') === ''
+        ) {
+            $data['driver_id'] = null;
+        }
+
+
+        if (
+            $this->input('vehicle_id') === ''
+        ) {
+            $data['vehicle_id'] = null;
+        }
+
+
+        if (
+            $this->input('vehicle_type_id') === ''
+        ) {
+            $data['vehicle_type_id'] = null;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MERGE
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($data)) {
+            $this->merge($data);
+        }
     }
 
 
@@ -32,15 +133,18 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
+            /*
+            | Server generates the final sequence.
+            | The readonly Blade value is only for display.
+            */
             'slip_no' => [
-                'required',
+                'nullable',
                 'string',
                 'max:100',
-                'unique:duty_slips,slip_no',
             ],
 
             'duty_assignment_id' => [
-                'nullable',
+                'required',
                 'integer',
                 'exists:duty_assignments,id',
             ],
@@ -55,6 +159,9 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             | DRIVER
             |--------------------------------------------------------------------------
+            |
+            | Manual selection.
+            |
             */
 
             'driver_id' => [
@@ -68,13 +175,44 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             | VEHICLE
             |--------------------------------------------------------------------------
+            |
+            | Actual VehicleManagement table:
+            | vehicle_management
+            |
             */
 
             'vehicle_id' => [
                 'nullable',
                 'integer',
-                'exists:vehicles,id',
+                'exists:vehicle_management,id',
             ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VEHICLE TYPE
+            |--------------------------------------------------------------------------
+            |
+            | Preferred field:
+            | vehicle_type_id
+            |
+            */
+
+            'vehicle_type_id' => [
+                'nullable',
+                'integer',
+                'exists:vehicle_types,id',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | LEGACY VEHICLE TYPE
+            |--------------------------------------------------------------------------
+            |
+            | Backward compatibility with older Blade/input.
+            |
+            */
 
             'vehicle_type' => [
                 'nullable',
@@ -142,6 +280,16 @@ class StoreDutySlipRequest extends FormRequest
                 'gte:opening_km',
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL KM
+            |--------------------------------------------------------------------------
+            |
+            | Frontend value is readonly.
+            | Backend Controller/Service recalculates it.
+            |
+            */
+
             'total_km' => [
                 'nullable',
                 'numeric',
@@ -182,6 +330,7 @@ class StoreDutySlipRequest extends FormRequest
             'driver_allowances' => [
                 'nullable',
                 'array',
+                'max:50',
             ],
 
             'driver_allowances.*.allowance_id' => [
@@ -197,14 +346,33 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0.01',
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | RATE
+            |--------------------------------------------------------------------------
+            |
+            | Service uses master Allowance amount.
+            | This value is not trusted for calculation.
+            |
+            */
+
             'driver_allowances.*.rate' => [
-                'required',
+                'nullable',
                 'numeric',
                 'min:0',
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | AMOUNT
+            |--------------------------------------------------------------------------
+            |
+            | Service calculates amount server-side.
+            |
+            */
+
             'driver_allowances.*.amount' => [
-                'required',
+                'nullable',
                 'numeric',
                 'min:0',
             ],
@@ -236,6 +404,7 @@ class StoreDutySlipRequest extends FormRequest
             'driver_expenses' => [
                 'nullable',
                 'array',
+                'max:50',
             ],
 
             'driver_expenses.*.expense_id' => [
@@ -251,14 +420,26 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0.01',
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | RATE
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.rate' => [
-                'required',
+                'nullable',
                 'numeric',
                 'min:0',
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | AMOUNT
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.amount' => [
-                'required',
+                'nullable',
                 'numeric',
                 'min:0',
             ],
@@ -360,9 +541,209 @@ class StoreDutySlipRequest extends FormRequest
     }
 
 
-    /**
-     * Custom validation messages.
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | ADDITIONAL BUSINESS VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    public function withValidator(
+        Validator $validator
+    ): void {
+        $validator->after(
+            function (Validator $validator) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Do Not Continue With Invalid Core Fields
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $validator->errors()->has(
+                        'duty_assignment_id'
+                    )
+                ) {
+                    return;
+                }
+
+
+                if (
+                    $validator->errors()->has(
+                        'driver_id'
+                    )
+                ) {
+                    return;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SAME-DAY / CROSS-DAY DATETIME VALIDATION
+                |--------------------------------------------------------------------------
+                |
+                | Examples:
+                |
+                | Valid:
+                | 21 Sep 18:00 -> 21 Sep 23:00
+                |
+                | Valid:
+                | 21 Sep 22:00 -> 22 Sep 02:00
+                |
+                | Invalid:
+                | 21 Sep 18:00 -> 21 Sep 09:00
+                |
+                */
+
+                $startDate =
+                    $this->input('start_date')
+                    ?: $this->input('duty_date');
+
+                $endDate =
+                    $this->input('end_date')
+                    ?: $this->input('duty_date');
+
+                $startTime =
+                    $this->input('start_time');
+
+                $endTime =
+                    $this->input('end_time');
+
+
+                if (
+                    !empty($startDate) &&
+                    !empty($endDate) &&
+                    !empty($startTime) &&
+                    !empty($endTime)
+                ) {
+
+                    try {
+
+                        $startDateTime =
+                            \Carbon\Carbon::createFromFormat(
+                                'Y-m-d H:i',
+                                "{$startDate} {$startTime}"
+                            );
+
+                        $endDateTime =
+                            \Carbon\Carbon::createFromFormat(
+                                'Y-m-d H:i',
+                                "{$endDate} {$endTime}"
+                            );
+
+
+                        if (
+                            $endDateTime->lessThan(
+                                $startDateTime
+                            )
+                        ) {
+
+                            $validator->errors()->add(
+                                'end_time',
+                                'End date and time cannot be before start date and time.'
+                            );
+                        }
+
+                    } catch (\Throwable $exception) {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Basic date/time rules already handle invalid formats.
+                        |--------------------------------------------------------------------------
+                        */
+
+                    }
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | VEHICLE TYPE COMPATIBILITY CHECK
+                |--------------------------------------------------------------------------
+                |
+                | When both modern and legacy fields are submitted, they should
+                | resolve to the same Vehicle Type.
+                |
+                */
+
+                $vehicleTypeId =
+                    $this->input('vehicle_type_id');
+
+                $legacyVehicleType =
+                    trim(
+                        (string) $this->input(
+                            'vehicle_type'
+                        )
+                    );
+
+
+                if (
+                    !empty($vehicleTypeId) &&
+                    $legacyVehicleType !== ''
+                ) {
+
+                    $legacyResolvedId =
+                        null;
+
+
+                    if (
+                        ctype_digit(
+                            $legacyVehicleType
+                        )
+                    ) {
+
+                        $legacyResolvedId =
+                            (int) $legacyVehicleType;
+
+                    } else {
+
+                        $legacyResolvedId =
+                            \App\Models\VehicleType::query()
+                                ->where(
+                                    'name',
+                                    $legacyVehicleType
+                                )
+                                ->value('id');
+
+
+                        if (
+                            !$legacyResolvedId
+                        ) {
+
+                            $legacyResolvedId =
+                                \App\Models\VehicleType::query()
+                                    ->where(
+                                        'code',
+                                        $legacyVehicleType
+                                    )
+                                    ->value('id');
+                        }
+                    }
+
+
+                    if (
+                        $legacyResolvedId &&
+                        (int) $vehicleTypeId !==
+                        (int) $legacyResolvedId
+                    ) {
+
+                        $validator->errors()->add(
+                            'vehicle_type_id',
+                            'Selected vehicle type values do not match.'
+                        );
+                    }
+                }
+            }
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CUSTOM MESSAGES
+    |--------------------------------------------------------------------------
+    */
+
     public function messages(): array
     {
         return [
@@ -373,17 +754,11 @@ class StoreDutySlipRequest extends FormRequest
             |--------------------------------------------------------------------------
             */
 
-            'slip_no.required' =>
-                'Duty slip number is required.',
-
             'slip_no.string' =>
                 'Duty slip number must be valid text.',
 
             'slip_no.max' =>
                 'Duty slip number may not exceed 100 characters.',
-
-            'slip_no.unique' =>
-                'This duty slip number already exists.',
 
 
             /*
@@ -433,6 +808,25 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
+            | VEHICLE TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            'vehicle_type_id.integer' =>
+                'Invalid vehicle type selected.',
+
+            'vehicle_type_id.exists' =>
+                'Selected vehicle type does not exist.',
+
+            'vehicle_type.string' =>
+                'Vehicle type must be valid text.',
+
+            'vehicle_type.max' =>
+                'Vehicle type may not exceed 100 characters.',
+
+
+            /*
+            |--------------------------------------------------------------------------
             | DUTY DATE
             |--------------------------------------------------------------------------
             */
@@ -446,12 +840,19 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | START / END DATE
+            | START DATE
             |--------------------------------------------------------------------------
             */
 
             'start_date.date' =>
                 'Please enter a valid start date.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | END DATE
+            |--------------------------------------------------------------------------
+            */
 
             'end_date.date' =>
                 'Please enter a valid end date.',
@@ -462,7 +863,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | START / END TIME
+            | TIME
             |--------------------------------------------------------------------------
             */
 
@@ -544,12 +945,15 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DRIVER ALLOWANCES
+            | ALLOWANCES
             |--------------------------------------------------------------------------
             */
 
             'driver_allowances.array' =>
                 'Driver allowances must be provided in a valid format.',
+
+            'driver_allowances.max' =>
+                'Too many driver allowance rows were submitted.',
 
             'driver_allowances.*.allowance_id.required' =>
                 'Please select an allowance.',
@@ -572,17 +976,11 @@ class StoreDutySlipRequest extends FormRequest
             'driver_allowances.*.quantity.min' =>
                 'Allowance quantity must be greater than zero.',
 
-            'driver_allowances.*.rate.required' =>
-                'Allowance rate is required.',
-
             'driver_allowances.*.rate.numeric' =>
                 'Allowance rate must be a valid number.',
 
             'driver_allowances.*.rate.min' =>
                 'Allowance rate cannot be negative.',
-
-            'driver_allowances.*.amount.required' =>
-                'Allowance amount is required.',
 
             'driver_allowances.*.amount.numeric' =>
                 'Allowance amount must be a valid number.',
@@ -605,12 +1003,15 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DRIVER EXPENSES
+            | EXPENSES
             |--------------------------------------------------------------------------
             */
 
             'driver_expenses.array' =>
                 'Driver expenses must be provided in a valid format.',
+
+            'driver_expenses.max' =>
+                'Too many driver expense rows were submitted.',
 
             'driver_expenses.*.expense_id.required' =>
                 'Please select an expense.',
@@ -633,17 +1034,11 @@ class StoreDutySlipRequest extends FormRequest
             'driver_expenses.*.quantity.min' =>
                 'Expense quantity must be greater than zero.',
 
-            'driver_expenses.*.rate.required' =>
-                'Expense rate is required.',
-
             'driver_expenses.*.rate.numeric' =>
                 'Expense rate must be a valid number.',
 
             'driver_expenses.*.rate.min' =>
                 'Expense rate cannot be negative.',
-
-            'driver_expenses.*.amount.required' =>
-                'Expense amount is required.',
 
             'driver_expenses.*.amount.numeric' =>
                 'Expense amount must be a valid number.',
@@ -685,7 +1080,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DUTY SLIP FRONT FILE
+            | FILES
             |--------------------------------------------------------------------------
             */
 
@@ -697,13 +1092,6 @@ class StoreDutySlipRequest extends FormRequest
 
             'duty_slip_front_file.max' =>
                 'Duty slip front file may not exceed 5 MB.',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DUTY SLIP BACK FILE
-            |--------------------------------------------------------------------------
-            */
 
             'duty_slip_back_file.file' =>
                 'Please upload a valid duty slip back file.',
@@ -717,7 +1105,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | DUTY SLIP STATUS
+            | STATUS
             |--------------------------------------------------------------------------
             */
 
