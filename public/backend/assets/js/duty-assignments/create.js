@@ -2,17 +2,17 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Travel Request Change
+    | Travel Request Handler
     |--------------------------------------------------------------------------
     */
 
     function handleTravelRequestChange(isInitialLoad = false) {
 
-        const travelRequestSelect =
+        const $travelRequest =
             $('#travel_request_id');
 
-        const selectedOption =
-            travelRequestSelect.find('option:selected');
+        const $selectedOption =
+            $travelRequest.find('option:selected');
 
 
         /*
@@ -21,7 +21,7 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        if (!travelRequestSelect.val()) {
+        if (!$travelRequest.val()) {
 
             $('#travel-request-preview').hide();
 
@@ -34,7 +34,8 @@ $(document).ready(function () {
             /*
             |--------------------------------------------------------------------------
             | Clear Auto-Filled Fields
-            | Only on manual change, not initial page load
+            |--------------------------------------------------------------------------
+            | Do not clear old input during initial page load.
             |--------------------------------------------------------------------------
             */
 
@@ -51,22 +52,28 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Travel Request Preview
+        | Travel Request Preview Data
         |--------------------------------------------------------------------------
         */
 
         const requestNo =
-            selectedOption.attr('data-request-no') || '-';
+            $selectedOption.attr('data-request-no') || '-';
 
         const passenger =
-            selectedOption.attr('data-passenger') || '-';
+            $selectedOption.attr('data-passenger') || '-';
 
         const pickup =
-            selectedOption.attr('data-pickup') || '-';
+            $selectedOption.attr('data-pickup') || '-';
 
         const drop =
-            selectedOption.attr('data-drop') || '-';
+            $selectedOption.attr('data-drop') || '-';
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Travel Request Preview
+        |--------------------------------------------------------------------------
+        */
 
         $('#preview-request-no')
             .text(requestNo);
@@ -87,40 +94,21 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Pickup Time
+        | Pickup Time -> Reporting Time
         |--------------------------------------------------------------------------
         */
 
-        let pickupTime =
-            selectedOption.attr('data-pickup-time') || '';
+        const pickupTime =
+            (
+                $selectedOption.attr('data-pickup-time') || ''
+            ).trim();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Normalize HH:MM:SS / HH:MM
+        | Initial Page Load
         |--------------------------------------------------------------------------
-        */
-
-        pickupTime =
-            pickupTime.trim();
-
-        if (pickupTime.length >= 5) {
-
-            pickupTime =
-                pickupTime.substring(0, 5);
-
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Auto Fill Reporting Time
-        |--------------------------------------------------------------------------
-        | On initial page load:
-        | Preserve old validation value if already present.
-        |
-        | On manual Travel Request change:
-        | Always update from selected Travel Request.
+        | Preserve existing old() value.
         |--------------------------------------------------------------------------
         */
 
@@ -128,13 +116,27 @@ $(document).ready(function () {
             $('#reporting_time').val();
 
 
-        if (
-            pickupTime &&
-            (
-                !isInitialLoad ||
-                !currentReportingTime
-            )
-        ) {
+        if (isInitialLoad) {
+
+            if (
+                !currentReportingTime &&
+                pickupTime
+            ) {
+
+                $('#reporting_time')
+                    .val(pickupTime);
+
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Manual Travel Request Change
+            |--------------------------------------------------------------------------
+            | Always use selected Travel Request pickup time.
+            |--------------------------------------------------------------------------
+            */
 
             $('#reporting_time')
                 .val(pickupTime);
@@ -144,23 +146,21 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Pickup Location
+        | Pickup Location -> Reporting Location
         |--------------------------------------------------------------------------
         */
 
         const pickupLocation =
-            selectedOption.attr('data-pickup-location') || '';
+            (
+                $selectedOption.attr('data-pickup-location') || ''
+            ).trim();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Auto Fill Reporting Location
+        | Initial Page Load
         |--------------------------------------------------------------------------
-        | On initial page load:
-        | Preserve old validation value if already present.
-        |
-        | On manual Travel Request change:
-        | Always update from selected Travel Request.
+        | Preserve existing old() value.
         |--------------------------------------------------------------------------
         */
 
@@ -168,13 +168,27 @@ $(document).ready(function () {
             $('#reporting_location').val();
 
 
-        if (
-            pickupLocation &&
-            (
-                !isInitialLoad ||
-                !currentReportingLocation
-            )
-        ) {
+        if (isInitialLoad) {
+
+            if (
+                !currentReportingLocation &&
+                pickupLocation
+            ) {
+
+                $('#reporting_location')
+                    .val(pickupLocation);
+
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Manual Travel Request Change
+            |--------------------------------------------------------------------------
+            | Always use selected Travel Request pickup location.
+            |--------------------------------------------------------------------------
+            */
 
             $('#reporting_location')
                 .val(pickupLocation);
@@ -186,7 +200,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Travel Request Event
+    | Travel Request Change Event
     |--------------------------------------------------------------------------
     */
 
@@ -304,13 +318,27 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Trigger Existing Selections
+    | Initial Travel Request Load
     |--------------------------------------------------------------------------
     */
 
     handleTravelRequestChange(true);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initial Driver Preview
+    |--------------------------------------------------------------------------
+    */
+
     $('#driver_id').trigger('change');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initial Vehicle Preview
+    |--------------------------------------------------------------------------
+    */
 
     $('#vehicle_id').trigger('change');
 
@@ -325,7 +353,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Reporting Location
+        | Normalize Reporting Location
         |--------------------------------------------------------------------------
         */
 
@@ -341,7 +369,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Remarks
+        | Normalize Remarks
         |--------------------------------------------------------------------------
         */
 
@@ -361,11 +389,18 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        const button =
+        const $button =
             $('#saveDutyAssignmentBtn');
 
 
-        button
+        if ($button.prop('disabled')) {
+
+            return false;
+
+        }
+
+
+        $button
             .prop('disabled', true)
             .html(
                 '<i class="fa fa-spinner fa-spin"></i> Saving...'

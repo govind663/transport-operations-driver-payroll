@@ -2,17 +2,17 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Travel Request Change
+    | Travel Request Handler
     |--------------------------------------------------------------------------
     */
 
     function handleTravelRequestChange(isInitialLoad = false) {
 
-        const travelRequestSelect =
+        const $travelRequest =
             $('#travel_request_id');
 
-        const selectedOption =
-            travelRequestSelect.find('option:selected');
+        const $selectedOption =
+            $travelRequest.find('option:selected');
 
 
         /*
@@ -21,7 +21,7 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        if (!travelRequestSelect.val()) {
+        if (!$travelRequest.val()) {
 
             $('#travel-request-preview').hide();
 
@@ -33,8 +33,7 @@ $(document).ready(function () {
 
             /*
             |--------------------------------------------------------------------------
-            | Clear Auto-Filled Fields
-            | Only when user manually clears the Travel Request.
+            | Clear fields only after manual change
             |--------------------------------------------------------------------------
             */
 
@@ -56,16 +55,16 @@ $(document).ready(function () {
         */
 
         const requestNo =
-            selectedOption.attr('data-request-no') || '-';
+            $selectedOption.attr('data-request-no') || '-';
 
         const passenger =
-            selectedOption.attr('data-passenger') || '-';
+            $selectedOption.attr('data-passenger') || '-';
 
         const pickup =
-            selectedOption.attr('data-pickup') || '-';
+            $selectedOption.attr('data-pickup') || '-';
 
         const drop =
-            selectedOption.attr('data-drop') || '-';
+            $selectedOption.attr('data-drop') || '-';
 
 
         $('#preview-request-no')
@@ -80,19 +79,18 @@ $(document).ready(function () {
         $('#preview-drop')
             .text(drop);
 
-
         $('#travel-request-preview')
             .show();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Pickup Time
+        | Pickup Time -> Reporting Time
         |--------------------------------------------------------------------------
         */
 
         let pickupTime =
-            selectedOption.attr('data-pickup-time') || '';
+            $selectedOption.attr('data-pickup-time') || '';
 
         pickupTime =
             pickupTime.trim();
@@ -100,7 +98,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Convert HH:MM:SS -> HH:MM
+        | Normalize HH:MM:SS -> HH:MM
         |--------------------------------------------------------------------------
         */
 
@@ -114,28 +112,38 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Auto Fill Reporting Time
+        | Initial Load
         |--------------------------------------------------------------------------
-        |
-        | Initial load:
-        | Keep existing Duty Assignment / old validation value.
-        |
-        | Manual Travel Request change:
-        | Update from selected Travel Request.
+        | Preserve existing Duty Assignment value.
+        | If empty, use Travel Request pickup time.
         |--------------------------------------------------------------------------
         */
 
         const currentReportingTime =
-            $('#reporting_time').val();
+            $('#reporting_time').val().trim();
 
 
-        if (
-            pickupTime &&
-            (
-                !isInitialLoad ||
-                !currentReportingTime
-            )
-        ) {
+        if (isInitialLoad) {
+
+            if (
+                !currentReportingTime &&
+                pickupTime
+            ) {
+
+                $('#reporting_time')
+                    .val(pickupTime);
+
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Manual Travel Request Change
+            |--------------------------------------------------------------------------
+            | Always update from selected Travel Request.
+            |--------------------------------------------------------------------------
+            */
 
             $('#reporting_time')
                 .val(pickupTime);
@@ -145,38 +153,50 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Pickup Location
+        | Pickup Location -> Reporting Location
         |--------------------------------------------------------------------------
         */
 
         const pickupLocation =
-            selectedOption.attr('data-pickup-location') || '';
+            (
+                $selectedOption.attr('data-pickup-location') || ''
+            ).trim();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Auto Fill Reporting Location
+        | Initial Load
         |--------------------------------------------------------------------------
-        |
-        | Initial load:
-        | Keep existing Duty Assignment / old validation value.
-        |
-        | Manual Travel Request change:
-        | Update from selected Travel Request.
+        | Preserve existing Duty Assignment value.
+        | If empty, use Travel Request pickup location.
         |--------------------------------------------------------------------------
         */
 
         const currentReportingLocation =
-            $('#reporting_location').val();
+            $('#reporting_location').val().trim();
 
 
-        if (
-            pickupLocation &&
-            (
-                !isInitialLoad ||
-                !currentReportingLocation
-            )
-        ) {
+        if (isInitialLoad) {
+
+            if (
+                !currentReportingLocation &&
+                pickupLocation
+            ) {
+
+                $('#reporting_location')
+                    .val(pickupLocation);
+
+            }
+
+        } else {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Manual Travel Request Change
+            |--------------------------------------------------------------------------
+            | Always update from selected Travel Request.
+            |--------------------------------------------------------------------------
+            */
 
             $('#reporting_location')
                 .val(pickupLocation);
@@ -188,7 +208,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Travel Request Event
+    | Travel Request Change Event
     |--------------------------------------------------------------------------
     */
 
@@ -234,7 +254,7 @@ $(document).ready(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Initial Travel Request Preview + Auto Fill
+    | Initial Travel Request Load
     |--------------------------------------------------------------------------
     */
 
@@ -251,7 +271,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Reporting Location
+        | Normalize Reporting Location
         |--------------------------------------------------------------------------
         */
 
@@ -267,7 +287,7 @@ $(document).ready(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Remarks
+        | Normalize Remarks
         |--------------------------------------------------------------------------
         */
 
@@ -287,11 +307,18 @@ $(document).ready(function () {
         |--------------------------------------------------------------------------
         */
 
-        const submitButton =
+        const $submitButton =
             $('#updateDutyAssignmentBtn');
 
 
-        submitButton
+        if ($submitButton.prop('disabled')) {
+
+            return false;
+
+        }
+
+
+        $submitButton
             .prop('disabled', true)
             .html(
                 '<i class="fa fa-spinner fa-spin"></i> Updating...'

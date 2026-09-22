@@ -16,13 +16,9 @@
     */
 
     .form-section-title {
-
         color: #023a85 !important;
-
         font-weight: 600;
-
         margin-bottom: 10px;
-
     }
 
 
@@ -33,9 +29,7 @@
     */
 
     .required {
-
         color: #dc3545;
-
     }
 
 
@@ -46,39 +40,25 @@
     */
 
     .travel-request-info {
-
         background: #f8f9fa;
-
         border: 1px solid #dee2e6;
-
         border-radius: 6px;
-
         padding: 15px;
-
         margin-top: 10px;
-
     }
 
 
     .info-label {
-
         font-size: 12px;
-
         color: #6c757d;
-
         display: block;
-
         margin-bottom: 3px;
-
     }
 
 
     .info-value {
-
         font-weight: 600;
-
         color: #212529;
-
     }
 
 
@@ -90,9 +70,7 @@
 
     .table td,
     .table th {
-
         vertical-align: middle;
-
     }
 
 
@@ -103,9 +81,7 @@
     */
 
     textarea.form-control {
-
         resize: vertical;
-
     }
 
 </style>
@@ -123,6 +99,7 @@
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
+
         <div class="page-header">
 
             <div class="row">
@@ -180,6 +157,7 @@
         {{-- ========================================================= --}}
         {{-- VALIDATION ERRORS --}}
         {{-- ========================================================= --}}
+
         @if($errors->any())
 
             <div class="alert alert-danger">
@@ -209,16 +187,27 @@
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
-        <form action="{{ route('duty-assignments.update', $dutyAssignment->id ) }}"  method="POST" id="dutyAssignmentForm">
+
+        <form
+            action="{{ route(
+                'duty-assignments.update',
+                $dutyAssignment->id
+            ) }}"
+            method="POST"
+            id="dutyAssignmentForm">
 
             @csrf
+
             @method('PUT')
 
+
             <div class="card-box pd-20 mb-30">
+
 
                 {{-- ================================================= --}}
                 {{-- ASSIGNMENT INFORMATION --}}
                 {{-- ================================================= --}}
+
                 <div class="mb-4">
 
                     <h5 class="form-section-title">
@@ -236,9 +225,11 @@
 
                 <div class="row">
 
+
                     {{-- ================================================= --}}
                     {{-- ASSIGNMENT NUMBER --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -270,9 +261,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- TRAVEL REQUEST --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -302,6 +295,13 @@
 
                                 @foreach($travelRequests ?? [] as $travelRequest)
 
+                                    @php
+                                        $pickupTime = !empty($travelRequest->pickup_time)
+                                            ? substr((string) $travelRequest->pickup_time, 0, 5)
+                                            : '';
+                                    @endphp
+
+
                                     <option
                                         value="{{ $travelRequest->id }}"
 
@@ -313,7 +313,7 @@
 
                                         data-drop="{{ $travelRequest->drop_location ?? '' }}"
 
-                                        data-pickup-time="{{ $travelRequest->pickup_time ?? '' }}"
+                                        data-pickup-time="{{ $pickupTime }}"
 
                                         data-pickup-location="{{ $travelRequest->pickup_location ?? '' }}"
 
@@ -364,9 +364,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- DRIVER --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4">
 
                         <div class="form-group">
@@ -435,9 +437,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- TRAVEL REQUEST PREVIEW --}}
                     {{-- ================================================= --}}
+
                     <div class="col-12">
 
                         <div
@@ -512,9 +516,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- VEHICLE --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4 mt-3">
 
                         <div class="form-group">
@@ -584,9 +590,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- ASSIGNMENT DATE --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4 mt-3">
 
                         <div class="form-group">
@@ -635,9 +643,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- REPORTING TIME --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-4 mt-3">
 
                         <div class="form-group">
@@ -693,9 +703,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- REPORTING LOCATION --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-6 mt-3">
 
                         <div class="form-group">
@@ -745,9 +757,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- REMARKS --}}
                     {{-- ================================================= --}}
+
                     <div class="col-md-6 mt-3">
 
                         <div class="form-group">
@@ -783,7 +797,6 @@
 
                                 </span>
 
-
                             @enderror
 
 
@@ -797,9 +810,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- STATUS --}}
                     {{-- ================================================= --}}
+
                     <div class="col-12 mt-3">
 
                         <h5 class="form-section-title">
@@ -813,6 +828,7 @@
                         <hr>
 
                     </div>
+
 
                     <div class="col-md-4">
 
@@ -942,9 +958,11 @@
 
                     </div>
 
+
                     {{-- ================================================= --}}
                     {{-- ACTION BUTTONS --}}
                     {{-- ================================================= --}}
+
                     <div class="col-12">
 
                         <div class="text-right mt-4">

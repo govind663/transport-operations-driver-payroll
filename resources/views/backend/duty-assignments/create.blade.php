@@ -122,6 +122,7 @@
 
     <div class="min-height-200px">
 
+
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
@@ -224,6 +225,7 @@
 
             <div class="card-box pd-20 mb-30">
 
+
                 {{-- ================================================= --}}
                 {{-- DUTY ASSIGNMENT INFORMATION --}}
                 {{-- ================================================= --}}
@@ -244,6 +246,7 @@
 
 
                 <div class="row">
+
 
                     {{-- ================================================= --}}
                     {{-- TRAVEL REQUEST --}}
@@ -274,6 +277,13 @@
 
                                 @foreach($travelRequests as $travelRequest)
 
+                                    @php
+                                        $pickupTime = !empty($travelRequest->pickup_time)
+                                            ? substr((string) $travelRequest->pickup_time, 0, 5)
+                                            : '';
+                                    @endphp
+
+
                                     <option
                                         value="{{ $travelRequest->id }}"
 
@@ -285,7 +295,7 @@
 
                                         data-drop="{{ $travelRequest->drop_location ?? '' }}"
 
-                                        data-pickup-time="{{ $travelRequest->pickup_time ?? '' }}"
+                                        data-pickup-time="{{ $pickupTime }}"
 
                                         data-pickup-location="{{ $travelRequest->pickup_location ?? '' }}"
 
@@ -420,7 +430,9 @@
 
 
                             <small class="text-muted">
+
                                 Auto-filled from Travel Request pickup time.
+
                             </small>
 
                         </div>
@@ -553,6 +565,7 @@
 
                                     <option
                                         value="{{ $driver->id }}"
+
                                         {{ (string) old(
                                             'driver_id'
                                         ) === (string) $driver->id
@@ -637,6 +650,7 @@
 
                                     <option
                                         value="{{ $vehicle->id }}"
+
                                         {{ (string) old(
                                             'vehicle_id'
                                         ) === (string) $vehicle->id
@@ -851,7 +865,9 @@
 
 
                             <small class="text-muted">
+
                                 Auto-filled from Travel Request pickup location.
+
                             </small>
 
                         </div>
@@ -895,7 +911,9 @@
 
 
                             <small class="text-muted">
+
                                 Maximum 2000 characters.
+
                             </small>
 
                         </div>
