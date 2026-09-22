@@ -341,7 +341,7 @@
 
                                     <input type="text" name="slip_no" id="slip_no"
                                         class="form-control @error('slip_no') is-invalid @enderror"
-                                        value="{{ $generatedSlipNo }}" maxlength="100" autocomplete="off" readonly required>
+                                        value="{{ $generatedSlipNo }}" maxlength="100" autocomplete="off" required>
 
                                     <span class="auto-number-badge">
                                         Auto
