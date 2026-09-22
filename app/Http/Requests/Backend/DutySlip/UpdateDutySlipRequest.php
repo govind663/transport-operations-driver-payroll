@@ -416,7 +416,7 @@ class UpdateDutySlipRequest extends FormRequest
             ],
 
             'driver_expenses.*.expense_id' => [
-                'required',
+                'nullable',
                 'integer',
                 'exists:expenses,id',
                 'distinct',
