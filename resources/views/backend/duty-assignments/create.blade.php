@@ -122,10 +122,10 @@
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
+
         <div class="page-header">
 
             <div class="row">
@@ -183,7 +183,9 @@
         {{-- ========================================================= --}}
         {{-- VALIDATION ERRORS --}}
         {{-- ========================================================= --}}
+
         @if ($errors->any())
+
             <div class="alert alert-danger">
 
                 <strong>
@@ -204,12 +206,14 @@
                 </ul>
 
             </div>
+
         @endif
 
 
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
+
         <form
             action="{{ route('duty-assignments.store') }}"
             method="POST"
@@ -219,7 +223,6 @@
 
 
             <div class="card-box pd-20 mb-30">
-
 
                 {{-- ================================================= --}}
                 {{-- DUTY ASSIGNMENT INFORMATION --}}
@@ -241,7 +244,6 @@
 
 
                 <div class="row">
-
 
                     {{-- ================================================= --}}
                     {{-- TRAVEL REQUEST --}}
@@ -274,10 +276,19 @@
 
                                     <option
                                         value="{{ $travelRequest->id }}"
-                                        data-request-no="{{ $travelRequest->request_no }}"
+
+                                        data-request-no="{{ $travelRequest->request_no ?? '' }}"
+
                                         data-passenger="{{ $travelRequest->passenger_name ?? '' }}"
+
                                         data-pickup="{{ $travelRequest->pickup_location ?? '' }}"
+
                                         data-drop="{{ $travelRequest->drop_location ?? '' }}"
+
+                                        data-pickup-time="{{ $travelRequest->pickup_time ?? '' }}"
+
+                                        data-pickup-location="{{ $travelRequest->pickup_location ?? '' }}"
+
                                         {{ (string) old(
                                             'travel_request_id',
                                             request('travel_request_id')
@@ -406,6 +417,11 @@
                                 </span>
 
                             @enderror
+
+
+                            <small class="text-muted">
+                                Auto-filled from Travel Request pickup time.
+                            </small>
 
                         </div>
 
@@ -833,6 +849,11 @@
 
                             @enderror
 
+
+                            <small class="text-muted">
+                                Auto-filled from Travel Request pickup location.
+                            </small>
+
                         </div>
 
                     </div>
@@ -938,233 +959,6 @@
 
 @push('scripts')
 
-<script>
-
-$(document).ready(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | Travel Request Change
-    |--------------------------------------------------------------------------
-    */
-
-    $('#travel_request_id').on('change', function () {
-
-        const selectedOption =
-            $(this).find('option:selected');
-
-        if (!this.value) {
-
-            $('#travel-request-preview').hide();
-
-            $('#preview-request-no').text('-');
-            $('#preview-passenger-name').text('-');
-            $('#preview-pickup').text('-');
-            $('#preview-drop').text('-');
-
-            return;
-        }
-
-
-        const requestNo =
-            selectedOption.data('request-no') || '-';
-
-        const passenger =
-            selectedOption.data('passenger') || '-';
-
-        const pickup =
-            selectedOption.data('pickup') || '-';
-
-        const drop =
-            selectedOption.data('drop') || '-';
-
-
-        $('#preview-request-no')
-            .text(requestNo);
-
-        $('#preview-passenger-name')
-            .text(passenger);
-
-        $('#preview-pickup')
-            .text(pickup);
-
-        $('#preview-drop')
-            .text(drop);
-
-
-        $('#travel-request-preview')
-            .show();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Driver Selection Preview
-    |--------------------------------------------------------------------------
-    */
-
-    $('#driver_id').on('change', function () {
-
-        const selectedText =
-            $(this)
-                .find('option:selected')
-                .text()
-                .trim();
-
-
-        if (!this.value) {
-
-            $('#driver-preview').hide();
-
-            return;
-        }
-
-
-        $('#driver-preview-text')
-            .text(selectedText);
-
-        $('#driver-preview')
-            .show();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Vehicle Selection Preview
-    |--------------------------------------------------------------------------
-    */
-
-    $('#vehicle_id').on('change', function () {
-
-        const selectedText =
-            $(this)
-                .find('option:selected')
-                .text()
-                .trim();
-
-
-        if (!this.value) {
-
-            $('#vehicle-preview').hide();
-
-            return;
-        }
-
-
-        $('#vehicle-preview-text')
-            .text(selectedText);
-
-        $('#vehicle-preview')
-            .show();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Reporting Location Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#reporting_location').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Remarks Formatting
-    |--------------------------------------------------------------------------
-    */
-
-    $('#remarks').on('blur', function () {
-
-        this.value = this.value
-            .replace(/\s+/g, ' ')
-            .trim();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Trigger Existing Selections
-    |--------------------------------------------------------------------------
-    */
-
-    $('#travel_request_id').trigger('change');
-
-    $('#driver_id').trigger('change');
-
-    $('#vehicle_id').trigger('change');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Form Submit
-    |--------------------------------------------------------------------------
-    */
-
-    $('#dutyAssignmentForm').on('submit', function () {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Reporting Location
-        |--------------------------------------------------------------------------
-        */
-
-        $('#reporting_location').val(
-
-            $('#reporting_location')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Remarks
-        |--------------------------------------------------------------------------
-        */
-
-        $('#remarks').val(
-
-            $('#remarks')
-                .val()
-                .replace(/\s+/g, ' ')
-                .trim()
-
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent Double Submit
-        |--------------------------------------------------------------------------
-        */
-
-        const button =
-            $('#saveDutyAssignmentBtn');
-
-
-        button
-            .prop('disabled', true)
-            .html(
-                '<i class="fa fa-spinner fa-spin"></i> Saving...'
-            );
-
-    });
-
-});
-
-</script>
+    <script src="{{ asset('backend/assets/js/duty-assignments/create.js') }}"></script>
 
 @endpush
