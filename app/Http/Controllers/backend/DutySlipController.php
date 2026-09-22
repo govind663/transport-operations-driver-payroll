@@ -14,6 +14,7 @@ use App\Models\VehicleManagement;
 use App\Models\VehicleType;
 use App\Services\DutySlip\DutySlipService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -27,6 +28,7 @@ class DutySlipController extends Controller
 
     protected DutySlipService $dutySlipService;
 
+
     /*
     |--------------------------------------------------------------------------
     | Constructor
@@ -38,6 +40,7 @@ class DutySlipController extends Controller
     ) {
         $this->dutySlipService = $dutySlipService;
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -59,6 +62,7 @@ class DutySlipController extends Controller
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | CREATE
@@ -72,31 +76,22 @@ class DutySlipController extends Controller
     {
         /*
         |--------------------------------------------------------------------------
-        | Active Duty Assignments
+        | DUTY ASSIGNMENTS
         |--------------------------------------------------------------------------
         |
-        | Duty Assignment is mandatory on the Duty Slip.
-        | Driver / Vehicle / Vehicle Type remain independent selections.
+        | admin       -> all
+        | operations  -> all
+        | accountant  -> all
+        | driver      -> only own assignments
         |
         */
 
-        $dutyAssignments = DutyAssignment::query()
-            ->whereIn('status', [
-                DutyAssignment::STATUS_ASSIGNED,
-                DutyAssignment::STATUS_ACCEPTED,
-                DutyAssignment::STATUS_STARTED,
-            ])
-            ->with([
-                'travelRequest',
-                'driver',
-                'vehicle',
-            ])
-            ->latest('id')
-            ->get();
+        $dutyAssignments = $this->getDutyAssignmentsForCurrentUser();
+
 
         /*
         |--------------------------------------------------------------------------
-        | Allowances
+        | ALLOWANCES
         |--------------------------------------------------------------------------
         */
 
@@ -104,9 +99,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Expenses
+        | EXPENSES
         |--------------------------------------------------------------------------
         */
 
@@ -114,19 +110,24 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Drivers
+        | ALL DRIVERS
         |--------------------------------------------------------------------------
+        |
+        | Driver / Vehicle / Vehicle Type remain independently selectable.
+        |
         */
 
         $drivers = Driver::query()
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Vehicles
+        | ALL VEHICLES
         |--------------------------------------------------------------------------
         */
 
@@ -134,9 +135,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Vehicle Types
+        | ALL VEHICLE TYPES
         |--------------------------------------------------------------------------
         */
 
@@ -144,18 +146,20 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Next Duty Slip Number
+        | NEXT DUTY SLIP NUMBER
         |--------------------------------------------------------------------------
         */
 
         $nextSlipNo = $this->dutySlipService
             ->generateNextSlipNo();
 
+
         /*
         |--------------------------------------------------------------------------
-        | View
+        | VIEW
         |--------------------------------------------------------------------------
         */
 
@@ -173,6 +177,7 @@ class DutySlipController extends Controller
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | STORE
@@ -187,31 +192,38 @@ class DutySlipController extends Controller
     ): RedirectResponse {
         /*
         |--------------------------------------------------------------------------
-        | Validated Data
+        | VALIDATED DATA
         |--------------------------------------------------------------------------
         */
 
         $data = $request->validated();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Prepare Data
+        | PREPARE DATA
         |--------------------------------------------------------------------------
         */
 
-        $data = $this->prepareDutySlipData($data);
+        $data = $this->prepareDutySlipData(
+            $data
+        );
+
 
         /*
         |--------------------------------------------------------------------------
-        | Store
+        | STORE
         |--------------------------------------------------------------------------
         */
 
-        $this->dutySlipService->store($data);
+        $this->dutySlipService->store(
+            $data
+        );
+
 
         /*
         |--------------------------------------------------------------------------
-        | Redirect
+        | REDIRECT
         |--------------------------------------------------------------------------
         */
 
@@ -222,6 +234,7 @@ class DutySlipController extends Controller
                 'Duty slip created successfully.'
             );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -236,13 +249,16 @@ class DutySlipController extends Controller
         DutySlip $dutySlip
     ): View {
         $dutySlip = $this->dutySlipService
-            ->findById($dutySlip->id);
+            ->findById(
+                $dutySlip->id
+            );
 
         return view(
             'backend.duty-slips.show',
             compact('dutySlip')
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -258,31 +274,34 @@ class DutySlipController extends Controller
     ): View {
         /*
         |--------------------------------------------------------------------------
-        | Fresh Duty Slip
+        | FRESH DUTY SLIP
         |--------------------------------------------------------------------------
         */
 
         $dutySlip = $this->dutySlipService
-            ->findById($dutySlip->id);
+            ->findById(
+                $dutySlip->id
+            );
+
 
         /*
         |--------------------------------------------------------------------------
-        | All Duty Assignments
+        | DUTY ASSIGNMENTS
         |--------------------------------------------------------------------------
+        |
+        | admin       -> all
+        | operations  -> all
+        | accountant  -> all
+        | driver      -> only own assignments
+        |
         */
 
-        $dutyAssignments = DutyAssignment::query()
-            ->with([
-                'travelRequest',
-                'driver',
-                'vehicle',
-            ])
-            ->latest('id')
-            ->get();
+        $dutyAssignments = $this->getDutyAssignmentsForCurrentUser();
+
 
         /*
         |--------------------------------------------------------------------------
-        | Allowances
+        | ALLOWANCES
         |--------------------------------------------------------------------------
         */
 
@@ -290,9 +309,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Expenses
+        | EXPENSES
         |--------------------------------------------------------------------------
         */
 
@@ -300,9 +320,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Drivers
+        | ALL DRIVERS
         |--------------------------------------------------------------------------
         */
 
@@ -310,9 +331,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Vehicles
+        | ALL VEHICLES
         |--------------------------------------------------------------------------
         */
 
@@ -320,9 +342,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Vehicle Types
+        | ALL VEHICLE TYPES
         |--------------------------------------------------------------------------
         */
 
@@ -330,9 +353,10 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
+
         /*
         |--------------------------------------------------------------------------
-        | View
+        | VIEW
         |--------------------------------------------------------------------------
         */
 
@@ -350,6 +374,7 @@ class DutySlipController extends Controller
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | UPDATE
@@ -365,15 +390,16 @@ class DutySlipController extends Controller
     ): RedirectResponse {
         /*
         |--------------------------------------------------------------------------
-        | Validated Data
+        | VALIDATED DATA
         |--------------------------------------------------------------------------
         */
 
         $data = $request->validated();
 
+
         /*
         |--------------------------------------------------------------------------
-        | Prepare Data
+        | PREPARE DATA
         |--------------------------------------------------------------------------
         */
 
@@ -382,9 +408,10 @@ class DutySlipController extends Controller
             $dutySlip
         );
 
+
         /*
         |--------------------------------------------------------------------------
-        | Update
+        | UPDATE
         |--------------------------------------------------------------------------
         */
 
@@ -393,9 +420,10 @@ class DutySlipController extends Controller
             $data
         );
 
+
         /*
         |--------------------------------------------------------------------------
-        | Redirect
+        | REDIRECT
         |--------------------------------------------------------------------------
         */
 
@@ -406,6 +434,7 @@ class DutySlipController extends Controller
                 'Duty slip updated successfully.'
             );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -431,6 +460,89 @@ class DutySlipController extends Controller
             );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET DUTY ASSIGNMENTS FOR CURRENT USER
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get Duty Assignments according to authenticated user's role.
+     *
+     * Rules:
+     * - admin       => all assignments
+     * - operations  => all assignments
+     * - accountant  => all assignments
+     * - driver      => only assignments linked to own driver profile
+     */
+    protected function getDutyAssignmentsForCurrentUser()
+    {
+        $user = Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base Query
+        |--------------------------------------------------------------------------
+        */
+
+        $query = DutyAssignment::query()
+            ->with([
+                'travelRequest',
+                'driver',
+                'vehicle',
+            ])
+            ->latest('id');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER ROLE
+        |--------------------------------------------------------------------------
+        |
+        | Driver must only see assignments belonging to their own
+        | Driver master record.
+        |
+        | drivers.user_id = authenticated users.id
+        |
+        */
+
+        if (
+            $user &&
+            $user->role === 'driver'
+        ) {
+
+            $query->whereHas(
+                'driver',
+                function ($driverQuery) use ($user) {
+
+                    $driverQuery->where(
+                        'user_id',
+                        $user->id
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | OTHER ROLES
+        |--------------------------------------------------------------------------
+        |
+        | admin
+        | operations
+        | accountant
+        |
+        | No additional Duty Assignment restriction.
+        |
+        */
+
+        return $query->get();
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | PREPARE DUTY SLIP DATA
@@ -444,8 +556,10 @@ class DutySlipController extends Controller
      * - Driver is manually selected.
      * - Vehicle is manually selected.
      * - Vehicle Type is manually selected.
-     * - Duty Assignment is only a required reference.
-     * - Duty Assignment never overwrites Driver / Vehicle / Vehicle Type.
+     * - Duty Assignment is required.
+     * - Duty Assignment does not overwrite Driver.
+     * - Duty Assignment does not overwrite Vehicle.
+     * - Duty Assignment does not overwrite Vehicle Type.
      * - Date/time normalization is handled by DutySlipService.
      */
     protected function prepareDutySlipData(
@@ -454,38 +568,111 @@ class DutySlipController extends Controller
     ): array {
         /*
         |--------------------------------------------------------------------------
-        | DUTY ASSIGNMENT
+        | CURRENT USER
         |--------------------------------------------------------------------------
         */
 
-        $dutyAssignmentId = $data['duty_assignment_id'] ?? null;
+        $user = Auth::user();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DUTY ASSIGNMENT ID
+        |--------------------------------------------------------------------------
+        */
+
+        $dutyAssignmentId =
+            $data['duty_assignment_id']
+            ?? null;
+
 
         if (
             $dutyAssignmentId === null ||
             $dutyAssignmentId === ''
         ) {
+
             throw ValidationException::withMessages([
                 'duty_assignment_id' =>
                     'Please select a duty assignment.',
             ]);
         }
 
-        $dutyAssignment = DutyAssignment::query()
+
+        /*
+        |--------------------------------------------------------------------------
+        | DUTY ASSIGNMENT QUERY
+        |--------------------------------------------------------------------------
+        */
+
+        $dutyAssignmentQuery = DutyAssignment::query()
             ->select([
                 'id',
                 'driver_id',
                 'vehicle_id',
             ])
-            ->find($dutyAssignmentId);
+            ->where(
+                'id',
+                $dutyAssignmentId
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER ROLE SECURITY
+        |--------------------------------------------------------------------------
+        |
+        | A driver cannot submit another driver's assignment ID manually.
+        |
+        */
+
+        if (
+            $user &&
+            $user->role === 'driver'
+        ) {
+
+            $dutyAssignmentQuery->whereHas(
+                'driver',
+                function ($driverQuery) use ($user) {
+
+                    $driverQuery->where(
+                        'user_id',
+                        $user->id
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND DUTY ASSIGNMENT
+        |--------------------------------------------------------------------------
+        */
+
+        $dutyAssignment =
+            $dutyAssignmentQuery->first();
+
 
         if (!$dutyAssignment) {
+
             throw ValidationException::withMessages([
                 'duty_assignment_id' =>
-                    'Selected duty assignment does not exist.',
+                    $user && $user->role === 'driver'
+                        ? 'You can only select your own duty assignments.'
+                        : 'Selected duty assignment does not exist.',
             ]);
         }
 
-        $data['duty_assignment_id'] = (int) $dutyAssignment->id;
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE DUTY ASSIGNMENT ID
+        |--------------------------------------------------------------------------
+        */
+
+        $data['duty_assignment_id'] =
+            (int) $dutyAssignment->id;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -493,43 +680,66 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         |
         | Manual selection.
-        | Never replaced by duty assignment driver.
+        | Duty Assignment driver is NOT copied here.
         |
         */
 
-        $driverId = $data['driver_id'] ?? null;
+        $driverId =
+            $data['driver_id']
+            ?? null;
+
 
         if (
             $driverId === null ||
             $driverId === ''
         ) {
+
             throw ValidationException::withMessages([
                 'driver_id' =>
                     'Please select a driver.',
             ]);
         }
 
-        $driverId = (int) $driverId;
+
+        $driverId =
+            (int) $driverId;
+
 
         if ($driverId <= 0) {
+
             throw ValidationException::withMessages([
                 'driver_id' =>
                     'Please select a valid driver.',
             ]);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFY DRIVER
+        |--------------------------------------------------------------------------
+        */
+
         $driverExists = Driver::query()
-            ->where('id', $driverId)
+            ->where(
+                'id',
+                $driverId
+            )
             ->exists();
 
+
         if (!$driverExists) {
+
             throw ValidationException::withMessages([
                 'driver_id' =>
                     'Selected driver does not exist.',
             ]);
         }
 
-        $data['driver_id'] = $driverId;
+
+        $data['driver_id'] =
+            $driverId;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -537,53 +747,76 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         |
         | Manual selection.
-        | This field MUST remain in $data because duty_slips.vehicle_id
-        | exists in the current database schema.
+        | Duty Assignment vehicle is NOT copied here.
         |
         */
 
-        $vehicleId = $data['vehicle_id'] ?? null;
+        $vehicleId =
+            $data['vehicle_id']
+            ?? null;
+
 
         if (
             $vehicleId === null ||
             $vehicleId === ''
         ) {
+
             throw ValidationException::withMessages([
                 'vehicle_id' =>
                     'Please select a vehicle.',
             ]);
         }
 
-        $vehicleId = (int) $vehicleId;
+
+        $vehicleId =
+            (int) $vehicleId;
+
 
         if ($vehicleId <= 0) {
+
             throw ValidationException::withMessages([
                 'vehicle_id' =>
                     'Please select a valid vehicle.',
             ]);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFY VEHICLE
+        |--------------------------------------------------------------------------
+        */
+
         $vehicleExists = VehicleManagement::query()
-            ->where('id', $vehicleId)
+            ->where(
+                'id',
+                $vehicleId
+            )
             ->exists();
 
+
         if (!$vehicleExists) {
+
             throw ValidationException::withMessages([
                 'vehicle_id' =>
                     'Selected vehicle does not exist.',
             ]);
         }
 
+
         /*
         |--------------------------------------------------------------------------
-        | IMPORTANT
+        | KEEP VEHICLE ID
         |--------------------------------------------------------------------------
         |
-        | Do NOT unset vehicle_id.
+        | IMPORTANT:
+        | Do NOT unset this field.
         |
         */
 
-        $data['vehicle_id'] = $vehicleId;
+        $data['vehicle_id'] =
+            $vehicleId;
+
 
         /*
         |--------------------------------------------------------------------------
@@ -591,104 +824,146 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         |
         | Manual selection.
-        | Current field is vehicle_type_id.
         |
         */
 
-        $vehicleTypeId = $data['vehicle_type_id'] ?? null;
+        $vehicleTypeId =
+            $data['vehicle_type_id']
+            ?? null;
+
 
         if (
             $vehicleTypeId === null ||
             $vehicleTypeId === ''
         ) {
+
             throw ValidationException::withMessages([
                 'vehicle_type_id' =>
                     'Please select a vehicle type.',
             ]);
         }
 
-        $vehicleTypeId = (int) $vehicleTypeId;
+
+        $vehicleTypeId =
+            (int) $vehicleTypeId;
+
 
         if ($vehicleTypeId <= 0) {
+
             throw ValidationException::withMessages([
                 'vehicle_type_id' =>
                     'Please select a valid vehicle type.',
             ]);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFY VEHICLE TYPE
+        |--------------------------------------------------------------------------
+        */
+
         $vehicleTypeExists = VehicleType::query()
-            ->where('id', $vehicleTypeId)
+            ->where(
+                'id',
+                $vehicleTypeId
+            )
             ->exists();
 
+
         if (!$vehicleTypeExists) {
+
             throw ValidationException::withMessages([
                 'vehicle_type_id' =>
                     'Selected vehicle type does not exist.',
             ]);
         }
 
-        $data['vehicle_type_id'] = $vehicleTypeId;
+
+        $data['vehicle_type_id'] =
+            $vehicleTypeId;
+
 
         /*
         |--------------------------------------------------------------------------
         | LEGACY VEHICLE TYPE
         |--------------------------------------------------------------------------
         |
-        | Keep only for backward compatibility.
-        | The actual database field is vehicle_type_id.
+        | Keep only when old forms send it.
         |
         */
 
         if (isset($data['vehicle_type'])) {
-            $legacyVehicleType = trim(
-                (string) $data['vehicle_type']
-            );
 
-            $data['vehicle_type'] = $legacyVehicleType !== ''
-                ? $legacyVehicleType
-                : null;
+            $legacyVehicleType =
+                trim(
+                    (string) $data['vehicle_type']
+                );
+
+
+            $data['vehicle_type'] =
+                $legacyVehicleType !== ''
+                    ? $legacyVehicleType
+                    : null;
         }
+
 
         /*
         |--------------------------------------------------------------------------
         | DUTY DATE
         |--------------------------------------------------------------------------
-        |
-        | Form Request already validates this.
-        | Keep the value untouched for Service normalization.
-        |
         */
 
-        if (empty($data['duty_date'])) {
+        if (
+            empty(
+                $data['duty_date']
+            )
+        ) {
+
             throw ValidationException::withMessages([
                 'duty_date' =>
                     'Duty date is required.',
             ]);
         }
 
+
         /*
         |--------------------------------------------------------------------------
-        | KILOMETERS
+        | OPENING KM
         |--------------------------------------------------------------------------
-        |
-        | Do not calculate database totals here.
-        | DutySlipService is authoritative for opening/closing/total KM.
-        |
         */
 
         if (
             isset($data['opening_km']) &&
             $data['opening_km'] !== ''
         ) {
-            $data['opening_km'] = (float) $data['opening_km'];
+
+            $data['opening_km'] =
+                (float) $data['opening_km'];
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CLOSING KM
+        |--------------------------------------------------------------------------
+        */
 
         if (
             isset($data['closing_km']) &&
             $data['closing_km'] !== ''
         ) {
-            $data['closing_km'] = (float) $data['closing_km'];
+
+            $data['closing_km'] =
+                (float) $data['closing_km'];
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | KM VALIDATION
+        |--------------------------------------------------------------------------
+        */
 
         if (
             isset($data['opening_km']) &&
@@ -697,11 +972,13 @@ class DutySlipController extends Controller
             $data['closing_km'] !== null &&
             $data['closing_km'] < $data['opening_km']
         ) {
+
             throw ValidationException::withMessages([
                 'closing_km' =>
                     'Closing KM must be greater than or equal to Opening KM.',
             ]);
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -709,50 +986,62 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         |
         | IMPORTANT:
-        | Do NOT combine start_date/start_time here.
+        | Controller does not combine date + time.
         |
         | DutySlipService handles:
-        | - start_date + start_time
-        | - end_date + end_time
-        | - already-combined datetime values
+        |
+        | start_date + start_time
+        | end_date + end_time
+        | already combined datetime
         |
         */
 
         /*
         |--------------------------------------------------------------------------
-        | CHILD ALLOWANCES
+        | DRIVER ALLOWANCES
         |--------------------------------------------------------------------------
         */
 
-        $allowances = $data['driver_allowances'] ?? [];
+        $allowances =
+            $data['driver_allowances']
+            ?? [];
 
-        $data['allowances'] = is_array($allowances)
-            ? $allowances
-            : [];
+
+        $data['allowances'] =
+            is_array($allowances)
+                ? $allowances
+                : [];
+
 
         /*
         |--------------------------------------------------------------------------
-        | CHILD EXPENSES
+        | DRIVER EXPENSES
         |--------------------------------------------------------------------------
         */
 
-        $expenses = $data['driver_expenses'] ?? [];
+        $expenses =
+            $data['driver_expenses']
+            ?? [];
 
-        $data['expenses'] = is_array($expenses)
-            ? $expenses
-            : [];
+
+        $data['expenses'] =
+            is_array($expenses)
+                ? $expenses
+                : [];
+
 
         /*
         |--------------------------------------------------------------------------
-        | FORM-ONLY / DISPLAY-ONLY FIELDS
+        | REMOVE FORM-ONLY / DISPLAY-ONLY FIELDS
         |--------------------------------------------------------------------------
         |
-        | Do NOT remove:
+        | IMPORTANT:
+        |
+        | KEEP:
         | - driver_id
         | - vehicle_id
         | - vehicle_type_id
-        |
-        | These are real duty_slips database columns.
+        | - duty_assignment_id
         |
         */
 
@@ -770,6 +1059,7 @@ class DutySlipController extends Controller
             $data['total_expense'],
             $data['grand_total']
         );
+
 
         /*
         |--------------------------------------------------------------------------
