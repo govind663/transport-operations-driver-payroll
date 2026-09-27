@@ -679,7 +679,8 @@ class DutySlipService
 
                     $this->syncExpenses(
                         $dutySlip,
-                        $expenses
+                        $expenses,
+                        $uploadedFiles
                     );
 
 
@@ -739,6 +740,15 @@ class DutySlipService
         $uploadedFiles = [];
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | OLD CHILD FILES TO DELETE AFTER SUCCESS
+        |--------------------------------------------------------------------------
+        */
+
+        $filesToDelete = [];
+
+
         try {
 
             $updatedDutySlip =
@@ -746,7 +756,8 @@ class DutySlipService
                     function () use (
                         $dutySlip,
                         $data,
-                        &$uploadedFiles
+                        &$uploadedFiles,
+                        &$filesToDelete
                     ) {
 
                         /*
@@ -1165,7 +1176,9 @@ class DutySlipService
 
                         $this->syncExpenses(
                             $dutySlip,
-                            $expenses
+                            $expenses,
+                            $uploadedFiles,
+                            $filesToDelete
                         );
 
 
@@ -1197,9 +1210,8 @@ class DutySlipService
                     $updatedDutySlip->duty_slip_front_file
             ) {
 
-                $this->deleteFileSafely(
-                    $oldFrontFile
-                );
+                $filesToDelete[] =
+                    $oldFrontFile;
             }
 
 
@@ -1218,8 +1230,31 @@ class DutySlipService
                     $updatedDutySlip->duty_slip_back_file
             ) {
 
+                $filesToDelete[] =
+                    $oldBackFile;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE OLD / REMOVED CHILD FILES
+            |--------------------------------------------------------------------------
+            */
+
+            $filesToDelete =
+                array_values(
+                    array_unique(
+                        array_filter(
+                            $filesToDelete
+                        )
+                    )
+                );
+
+
+            foreach ($filesToDelete as $file) {
+
                 $this->deleteFileSafely(
-                    $oldBackFile
+                    $file
                 );
             }
 
@@ -1533,6 +1568,7 @@ class DutySlipService
             if (!is_array($allowance)) {
 
                 continue;
+
             }
 
 
@@ -1543,6 +1579,7 @@ class DutySlipService
             ) {
 
                 continue;
+
             }
 
 
@@ -1742,15 +1779,31 @@ class DutySlipService
     |--------------------------------------------------------------------------
     | SYNC EXPENSES
     |--------------------------------------------------------------------------
+    |
+    | Expense document handling:
+    |
+    | - New expense document -> upload + save
+    | - Existing expense without new document -> keep old document
+    | - Existing expense with new document -> replace old document
+    | - Removed expense row -> old document deleted after successful transaction
+    |
     */
 
     protected function syncExpenses(
         DutySlip $dutySlip,
-        array $expenses
+        array $expenses,
+        array &$uploadedFiles = [],
+        array &$filesToDelete = []
     ): void {
 
         $existingIds = [];
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE MASTER IDS
+        |--------------------------------------------------------------------------
+        */
 
         $expenseIds =
             collect($expenses)
@@ -1768,6 +1821,12 @@ class DutySlipService
                 ->values();
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | LOAD EXPENSE MASTERS
+        |--------------------------------------------------------------------------
+        */
+
         $expenseMasters =
             $expenseIds->isNotEmpty()
                 ? Expense::query()
@@ -1779,6 +1838,12 @@ class DutySlipService
                     ->keyBy('id')
                 : collect();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER
+        |--------------------------------------------------------------------------
+        */
 
         $driverId =
             $this->getDriverId(
@@ -1795,13 +1860,26 @@ class DutySlipService
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | PROCESS EXPENSE ROWS
+        |--------------------------------------------------------------------------
+        */
+
         foreach ($expenses as $expense) {
 
             if (!is_array($expense)) {
 
                 continue;
+
             }
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | SKIP EMPTY ROW
+            |--------------------------------------------------------------------------
+            */
 
             if (
                 empty(
@@ -1810,12 +1888,19 @@ class DutySlipService
             ) {
 
                 continue;
+
             }
 
 
             $expenseId =
                 (int) $expense['expense_id'];
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE MASTER
+            |--------------------------------------------------------------------------
+            */
 
             $master =
                 $expenseMasters->get(
@@ -1832,6 +1917,12 @@ class DutySlipService
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | QUANTITY
+            |--------------------------------------------------------------------------
+            */
+
             $quantity =
                 isset($expense['quantity']) &&
                 $expense['quantity'] !== ''
@@ -1846,6 +1937,16 @@ class DutySlipService
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | RATE
+            |--------------------------------------------------------------------------
+            |
+            | Always use Expense Master amount.
+            | Frontend rate is not trusted.
+            |
+            */
+
             $rate =
                 (float) (
                     $master->amount
@@ -1853,12 +1954,24 @@ class DutySlipService
                 );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | AMOUNT
+            |--------------------------------------------------------------------------
+            */
+
             $amount =
                 round(
                     $quantity * $rate,
                     2
                 );
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXISTING RECORD
+            |--------------------------------------------------------------------------
+            */
 
             $record = null;
 
@@ -1883,6 +1996,70 @@ class DutySlipService
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | DOCUMENT
+            |--------------------------------------------------------------------------
+            */
+
+            $documentPath =
+                $record?->document_file
+                ?? null;
+
+
+            $newDocument =
+                $expense['document_file']
+                ?? null;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPLOAD NEW DOCUMENT
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $newDocument instanceof UploadedFile
+            ) {
+
+                $newDocumentPath =
+                    $this->fileUploadService->upload(
+                        $newDocument,
+                        'duty-slip/expenses'
+                    );
+
+
+                $uploadedFiles[] =
+                    $newDocumentPath;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Old Document
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    !empty($documentPath) &&
+                    $documentPath !== $newDocumentPath
+                ) {
+
+                    $filesToDelete[] =
+                        $documentPath;
+                }
+
+
+                $documentPath =
+                    $newDocumentPath;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE EXISTING EXPENSE
+            |--------------------------------------------------------------------------
+            */
+
             if ($record) {
 
                 $record->update([
@@ -1901,6 +2078,9 @@ class DutySlipService
 
                     'amount' =>
                         $amount,
+
+                    'document_file' =>
+                        $documentPath,
 
                     'remarks' =>
                         $this->nullableString(
@@ -1926,6 +2106,12 @@ class DutySlipService
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE NEW EXPENSE
+            |--------------------------------------------------------------------------
+            */
+
             $record =
                 DriverExpense::create([
 
@@ -1946,6 +2132,9 @@ class DutySlipService
 
                     'amount' =>
                         $amount,
+
+                    'document_file' =>
+                        $documentPath,
 
                     'remarks' =>
                         $this->nullableString(
@@ -1971,7 +2160,17 @@ class DutySlipService
         }
 
 
-        $query =
+        /*
+        |--------------------------------------------------------------------------
+        | FIND REMOVED EXPENSE RECORDS
+        |--------------------------------------------------------------------------
+        |
+        | Before deleting child records, collect their documents.
+        | Files are deleted only after DB transaction succeeds.
+        |
+        */
+
+        $removedExpensesQuery =
             DriverExpense::query()
                 ->where(
                     'duty_slip_id',
@@ -1981,14 +2180,58 @@ class DutySlipService
 
         if (!empty($existingIds)) {
 
-            $query->whereNotIn(
+            $removedExpensesQuery->whereNotIn(
                 'id',
                 $existingIds
             );
         }
 
 
-        $query->delete();
+        $removedExpenses =
+            $removedExpensesQuery
+                ->get([
+                    'id',
+                    'document_file',
+                ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | COLLECT REMOVED DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        foreach ($removedExpenses as $removedExpense) {
+
+            if (
+                !empty(
+                    $removedExpense->document_file
+                )
+            ) {
+
+                $filesToDelete[] =
+                    $removedExpense->document_file;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELETE REMOVED EXPENSE ROWS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($removedExpenses->isNotEmpty()) {
+
+            DriverExpense::query()
+                ->whereIn(
+                    'id',
+                    $removedExpenses
+                        ->pluck('id')
+                        ->all()
+                )
+                ->delete();
+        }
     }
 
 
@@ -2854,15 +3097,17 @@ class DutySlipService
         array $files
     ): void {
 
+        $files =
+            array_values(
+                array_unique(
+                    array_filter(
+                        $files
+                    )
+                )
+            );
+
+
         foreach ($files as $file) {
-
-            if (
-                empty($file)
-            ) {
-
-                continue;
-            }
-
 
             try {
 
@@ -2956,6 +3201,21 @@ class DutySlipService
             $dutySlip->duty_slip_back_file;
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | CHILD EXPENSE DOCUMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $expenseDocuments =
+            $dutySlip
+                ->driverExpenses()
+                ->pluck('document_file')
+                ->filter()
+                ->values()
+                ->all();
+
+
         $deleted =
             DB::transaction(
                 function () use (
@@ -3018,14 +3278,44 @@ class DutySlipService
 
         if ($deleted) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE DUTY SLIP FRONT
+            |--------------------------------------------------------------------------
+            */
+
             $this->deleteFileSafely(
                 $frontFile
             );
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE DUTY SLIP BACK
+            |--------------------------------------------------------------------------
+            */
+
             $this->deleteFileSafely(
                 $backFile
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE EXPENSE DOCUMENTS
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                array_unique(
+                    $expenseDocuments
+                ) as $expenseDocument
+            ) {
+
+                $this->deleteFileSafely(
+                    $expenseDocument
+                );
+            }
         }
 
 

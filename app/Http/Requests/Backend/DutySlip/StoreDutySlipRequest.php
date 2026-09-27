@@ -280,6 +280,7 @@ class StoreDutySlipRequest extends FormRequest
                 'gte:opening_km',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | TOTAL KM
@@ -346,9 +347,10 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0.01',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | RATE
+            | ALLOWANCE RATE
             |--------------------------------------------------------------------------
             |
             | Service uses master Allowance amount.
@@ -362,9 +364,10 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | AMOUNT
+            | ALLOWANCE AMOUNT
             |--------------------------------------------------------------------------
             |
             | Service calculates amount server-side.
@@ -420,9 +423,10 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0.01',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | RATE
+            | EXPENSE RATE
             |--------------------------------------------------------------------------
             */
 
@@ -432,9 +436,10 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | AMOUNT
+            | EXPENSE AMOUNT
             |--------------------------------------------------------------------------
             */
 
@@ -444,11 +449,46 @@ class StoreDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE DOCUMENT
+            |--------------------------------------------------------------------------
+            |
+            | Supported:
+            | PDF / JPG / JPEG / PNG
+            |
+            | Maximum:
+            | 5 MB
+            |
+            */
+
+            'driver_expenses.*.document_file' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE REMARKS
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.remarks' => [
                 'nullable',
                 'string',
                 'max:1000',
             ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE STATUS
+            |--------------------------------------------------------------------------
+            */
 
             'driver_expenses.*.status' => [
                 'required',
@@ -546,6 +586,7 @@ class StoreDutySlipRequest extends FormRequest
     | ADDITIONAL BUSINESS VALIDATION
     |--------------------------------------------------------------------------
     */
+
     public function withValidator(
         Validator $validator
     ): void {
@@ -742,6 +783,7 @@ class StoreDutySlipRequest extends FormRequest
     | CUSTOM MESSAGES
     |--------------------------------------------------------------------------
     */
+
     public function messages(): array
     {
         return [
@@ -751,6 +793,7 @@ class StoreDutySlipRequest extends FormRequest
             | DUTY SLIP
             |--------------------------------------------------------------------------
             */
+
             'slip_no.string' =>
                 'Duty slip number must be valid text.',
 
@@ -763,6 +806,7 @@ class StoreDutySlipRequest extends FormRequest
             | DUTY ASSIGNMENT
             |--------------------------------------------------------------------------
             */
+
             'duty_assignment_id.required' =>
                 'Please select a duty assignment.',
 
@@ -778,6 +822,7 @@ class StoreDutySlipRequest extends FormRequest
             | DRIVER
             |--------------------------------------------------------------------------
             */
+
             'driver_id.required' =>
                 'Please select a driver.',
 
@@ -793,6 +838,7 @@ class StoreDutySlipRequest extends FormRequest
             | VEHICLE
             |--------------------------------------------------------------------------
             */
+
             'vehicle_id.integer' =>
                 'Invalid vehicle selected.',
 
@@ -805,6 +851,7 @@ class StoreDutySlipRequest extends FormRequest
             | VEHICLE TYPE
             |--------------------------------------------------------------------------
             */
+
             'vehicle_type_id.integer' =>
                 'Invalid vehicle type selected.',
 
@@ -823,6 +870,7 @@ class StoreDutySlipRequest extends FormRequest
             | DUTY DATE
             |--------------------------------------------------------------------------
             */
+
             'duty_date.required' =>
                 'Duty date is required.',
 
@@ -835,6 +883,7 @@ class StoreDutySlipRequest extends FormRequest
             | START DATE
             |--------------------------------------------------------------------------
             */
+
             'start_date.date' =>
                 'Please enter a valid start date.',
 
@@ -844,6 +893,7 @@ class StoreDutySlipRequest extends FormRequest
             | END DATE
             |--------------------------------------------------------------------------
             */
+
             'end_date.date' =>
                 'Please enter a valid end date.',
 
@@ -856,6 +906,7 @@ class StoreDutySlipRequest extends FormRequest
             | TIME
             |--------------------------------------------------------------------------
             */
+
             'start_time.date_format' =>
                 'Start time must be in HH:MM format.',
 
@@ -868,6 +919,7 @@ class StoreDutySlipRequest extends FormRequest
             | LOCATION
             |--------------------------------------------------------------------------
             */
+
             'pickup_location.string' =>
                 'Pickup location must be valid text.',
 
@@ -886,6 +938,7 @@ class StoreDutySlipRequest extends FormRequest
             | KM
             |--------------------------------------------------------------------------
             */
+
             'opening_km.numeric' =>
                 'Opening KM must be a valid number.',
 
@@ -913,6 +966,7 @@ class StoreDutySlipRequest extends FormRequest
             | PASSENGER
             |--------------------------------------------------------------------------
             */
+
             'passenger_name.string' =>
                 'Passenger name must be valid text.',
 
@@ -934,6 +988,7 @@ class StoreDutySlipRequest extends FormRequest
             | ALLOWANCES
             |--------------------------------------------------------------------------
             */
+
             'driver_allowances.array' =>
                 'Driver allowances must be provided in a valid format.',
 
@@ -991,6 +1046,7 @@ class StoreDutySlipRequest extends FormRequest
             | EXPENSES
             |--------------------------------------------------------------------------
             */
+
             'driver_expenses.array' =>
                 'Driver expenses must be provided in a valid format.',
 
@@ -1030,11 +1086,41 @@ class StoreDutySlipRequest extends FormRequest
             'driver_expenses.*.amount.min' =>
                 'Expense amount cannot be negative.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE DOCUMENT
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_expenses.*.document_file.file' =>
+                'Expense document must be a valid file.',
+
+            'driver_expenses.*.document_file.mimes' =>
+                'Expense document must be a PDF, JPG, JPEG, or PNG file.',
+
+            'driver_expenses.*.document_file.max' =>
+                'Expense document may not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE REMARKS
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.remarks.string' =>
                 'Expense remarks must be valid text.',
 
             'driver_expenses.*.remarks.max' =>
                 'Expense remarks may not exceed 1000 characters.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE STATUS
+            |--------------------------------------------------------------------------
+            */
 
             'driver_expenses.*.status.required' =>
                 'Expense status is required.',
@@ -1064,7 +1150,7 @@ class StoreDutySlipRequest extends FormRequest
 
             /*
             |--------------------------------------------------------------------------
-            | FILES
+            | DUTY SLIP FRONT FILE
             |--------------------------------------------------------------------------
             */
 
@@ -1076,6 +1162,13 @@ class StoreDutySlipRequest extends FormRequest
 
             'duty_slip_front_file.max' =>
                 'Duty slip front file may not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DUTY SLIP BACK FILE
+            |--------------------------------------------------------------------------
+            */
 
             'duty_slip_back_file.file' =>
                 'Please upload a valid duty slip back file.',

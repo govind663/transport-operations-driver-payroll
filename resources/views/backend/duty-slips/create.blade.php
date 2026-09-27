@@ -62,8 +62,25 @@
         |--------------------------------------------------------------------------
         */
 
-        .duty-slip-file-preview {
+        .duty-slip-file-preview,
+        .expense-document-preview {
             margin-top: 12px;
+        }
+
+        .expense-document-preview img {
+            max-width: 100px;
+            max-height: 80px;
+            object-fit: contain;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .expense-document-name {
+            font-size: 12px;
+            color: #6c757d;
+            word-break: break-word;
+            margin-top: 4px;
         }
 
         /*
@@ -145,6 +162,16 @@
         template {
             display: none !important;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Expense Document Column
+        |--------------------------------------------------------------------------
+        */
+
+        .expense-document-input {
+            min-width: 180px;
+        }
     </style>
 @endpush
 
@@ -153,10 +180,10 @@
     @php
 
         /*
-    |--------------------------------------------------------------------------
-    | OLD ALLOWANCES
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | OLD ALLOWANCES
+        |--------------------------------------------------------------------------
+        */
 
         $oldAllowances = old('driver_allowances');
 
@@ -181,11 +208,12 @@
             ];
         }
 
+
         /*
-    |--------------------------------------------------------------------------
-    | OLD EXPENSES
-    |--------------------------------------------------------------------------
-    */
+        |--------------------------------------------------------------------------
+        | OLD EXPENSES
+        |--------------------------------------------------------------------------
+        */
 
         $oldExpenses = old('driver_expenses');
 
@@ -210,13 +238,17 @@
             ];
         }
 
-        /*
-    |--------------------------------------------------------------------------
-    | AUTO DUTY SLIP NUMBER
-    |--------------------------------------------------------------------------
-    */
 
-        $generatedSlipNo = old('slip_no', $nextSlipNo ?? 'DS000001');
+        /*
+        |--------------------------------------------------------------------------
+        | AUTO DUTY SLIP NUMBER
+        |--------------------------------------------------------------------------
+        */
+
+        $generatedSlipNo = old(
+            'slip_no',
+            $nextSlipNo ?? 'DS000001'
+        );
 
     @endphp
 
@@ -229,14 +261,17 @@
             {{-- ================================================================ --}}
 
             <div class="page-header">
+
                 <div class="row">
 
                     <div class="col-md-8 col-sm-12">
 
                         <div class="title">
+
                             <h4>
                                 Create New Duty Slip
                             </h4>
+
                         </div>
 
                         <nav aria-label="breadcrumb">
@@ -244,19 +279,25 @@
                             <ol class="breadcrumb">
 
                                 <li class="breadcrumb-item">
+
                                     <a href="{{ route('admin.dashboard') }}">
                                         Dashboard
                                     </a>
+
                                 </li>
 
                                 <li class="breadcrumb-item">
+
                                     <a href="{{ route('duty-slips.index') }}">
                                         Duty Slips
                                     </a>
+
                                 </li>
 
                                 <li class="breadcrumb-item active">
+
                                     Create Duty Slip
+
                                 </li>
 
                             </ol>
@@ -266,13 +307,16 @@
                     </div>
 
                 </div>
+
             </div>
+
 
             {{-- ================================================================ --}}
             {{-- ERROR SUMMARY                                                     --}}
             {{-- ================================================================ --}}
 
             @if ($errors->any())
+
                 <div class="alert alert-danger">
 
                     <strong>
@@ -282,22 +326,31 @@
                     <ul class="mb-0 mt-2">
 
                         @foreach ($errors->all() as $error)
+
                             <li>
                                 {{ $error }}
                             </li>
+
                         @endforeach
 
                     </ul>
 
                 </div>
+
             @endif
+
 
             {{-- ================================================================ --}}
             {{-- FORM                                                              --}}
             {{-- ================================================================ --}}
 
-            <form id="duty-slip-form" action="{{ route('duty-slips.store') }}" method="POST" enctype="multipart/form-data"
-                novalidate>
+            <form
+                id="duty-slip-form"
+                action="{{ route('duty-slips.store') }}"
+                method="POST"
+                enctype="multipart/form-data"
+                novalidate
+            >
 
                 @csrf
 
@@ -319,6 +372,7 @@
 
                         </div>
 
+
                         {{-- ==================================================== --}}
                         {{-- DUTY SLIP NUMBER                                     --}}
                         {{-- ==================================================== --}}
@@ -339,9 +393,16 @@
 
                                 <div class="auto-number-wrapper">
 
-                                    <input type="text" name="slip_no" id="slip_no"
+                                    <input
+                                        type="text"
+                                        name="slip_no"
+                                        id="slip_no"
                                         class="form-control @error('slip_no') is-invalid @enderror"
-                                        value="{{ $generatedSlipNo }}" maxlength="100" autocomplete="off" required>
+                                        value="{{ $generatedSlipNo }}"
+                                        maxlength="100"
+                                        autocomplete="off"
+                                        readonly
+                                    >
 
                                     <span class="auto-number-badge">
                                         Auto
@@ -350,18 +411,27 @@
                                 </div>
 
                                 @error('slip_no')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                                 <small class="form-helper-text">
+
                                     Duty Slip number is automatically generated in sequence.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DUTY ASSIGNMENT                                      --}}
@@ -381,30 +451,37 @@
 
                                 </label>
 
-                                <select name="duty_assignment_id" id="duty_assignment_id"
+                                <select
+                                    name="duty_assignment_id"
+                                    id="duty_assignment_id"
                                     class="form-control custom-select2 @error('duty_assignment_id') is-invalid @enderror"
-                                    required>
+                                    required
+                                >
 
                                     <option value="">
                                         Select Duty Assignment
                                     </option>
 
                                     @foreach ($dutyAssignments ?? collect() as $assignment)
+
                                         @php
 
                                             $assignmentDriverName = trim(
                                                 ($assignment->driver->first_name ?? '') .
-                                                    ' ' .
-                                                    ($assignment->driver->last_name ?? ''),
+                                                ' ' .
+                                                ($assignment->driver->last_name ?? '')
                                             );
 
                                             $assignmentVehicleNumber =
                                                 $assignment->vehicle->vehicle_number ??
                                                 ($assignment->vehicle->registration_number ?? '');
+
                                         @endphp
 
-                                        <option value="{{ $assignment->id }}"
-                                            {{ (string) old('duty_assignment_id') === (string) $assignment->id ? 'selected' : '' }}>
+                                        <option
+                                            value="{{ $assignment->id }}"
+                                            {{ (string) old('duty_assignment_id') === (string) $assignment->id ? 'selected' : '' }}
+                                        >
 
                                             {{ $assignment->assignment_no ?? 'DA-' . $assignment->id }}
 
@@ -417,24 +494,34 @@
                                             @endif
 
                                         </option>
+
                                     @endforeach
 
                                 </select>
 
                                 @error('duty_assignment_id')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                                 <small class="form-helper-text">
+
                                     Duty Assignment is a separate reference.
                                     It will not change Driver, Vehicle or Vehicle Type.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DUTY DATE                                             --}}
@@ -454,19 +541,31 @@
 
                                 </label>
 
-                                <input type="date" name="duty_date" id="duty_date"
+                                <input
+                                    type="date"
+                                    name="duty_date"
+                                    id="duty_date"
                                     class="form-control @error('duty_date') is-invalid @enderror"
-                                    value="{{ old('duty_date', date('Y-m-d')) }}" required>
+                                    value="{{ old('duty_date', date('Y-m-d')) }}"
+                                    required
+                                >
 
                                 @error('duty_date')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DRIVER / VEHICLE INFORMATION                         --}}
@@ -475,12 +574,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Driver & Vehicle Information
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DRIVER                                                 --}}
@@ -500,25 +602,37 @@
 
                                 </label>
 
-                                <select name="driver_id" id="driver_id"
-                                    class="form-control custom-select2 @error('driver_id') is-invalid @enderror" required>
+                                <select
+                                    name="driver_id"
+                                    id="driver_id"
+                                    class="form-control custom-select2 @error('driver_id') is-invalid @enderror"
+                                    required
+                                >
 
                                     <option value="">
                                         Select Driver
                                     </option>
 
                                     @foreach ($drivers ?? collect() as $driver)
+
                                         @php
 
                                             $driverName = trim(
-                                                ($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''),
+                                                ($driver->first_name ?? '') .
+                                                ' ' .
+                                                ($driver->last_name ?? '')
                                             );
 
-                                            $driverCode = $driver->driver_code ?? 'DRV-' . $driver->id;
+                                            $driverCode =
+                                                $driver->driver_code ??
+                                                'DRV-' . $driver->id;
+
                                         @endphp
 
-                                        <option value="{{ $driver->id }}"
-                                            {{ (string) old('driver_id') === (string) $driver->id ? 'selected' : '' }}>
+                                        <option
+                                            value="{{ $driver->id }}"
+                                            {{ (string) old('driver_id') === (string) $driver->id ? 'selected' : '' }}
+                                        >
 
                                             {{ $driverCode }}
 
@@ -527,23 +641,33 @@
                                             @endif
 
                                         </option>
+
                                     @endforeach
 
                                 </select>
 
                                 @error('driver_id')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                                 <small class="form-helper-text">
+
                                     Select the Driver manually.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- VEHICLE                                                --}}
@@ -563,51 +687,74 @@
 
                                 </label>
 
-                                <select name="vehicle_id" id="vehicle_id"
-                                    class="form-control custom-select2 @error('vehicle_id') is-invalid @enderror" required>
+                                <select
+                                    name="vehicle_id"
+                                    id="vehicle_id"
+                                    class="form-control custom-select2 @error('vehicle_id') is-invalid @enderror"
+                                    required
+                                >
 
                                     <option value="">
                                         Select Vehicle
                                     </option>
 
                                     @foreach ($vehicles ?? collect() as $vehicle)
+
                                         @php
 
                                             $vehicleNumber =
                                                 $vehicle->vehicle_number ??
                                                 ($vehicle->registration_number ?? 'Vehicle-' . $vehicle->id);
 
-                                            $vehicleRegistration = $vehicle->registration_number ?? '';
+                                            $vehicleRegistration =
+                                                $vehicle->registration_number ?? '';
 
                                         @endphp
 
-                                        <option value="{{ $vehicle->id }}"
-                                            {{ (string) old('vehicle_id') === (string) $vehicle->id ? 'selected' : '' }}>
+                                        <option
+                                            value="{{ $vehicle->id }}"
+                                            {{ (string) old('vehicle_id') === (string) $vehicle->id ? 'selected' : '' }}
+                                        >
 
                                             {{ $vehicleNumber }}
 
-                                            @if ($vehicleRegistration !== '' && $vehicleRegistration !== $vehicleNumber)
+                                            @if (
+                                                $vehicleRegistration !== '' &&
+                                                $vehicleRegistration !== $vehicleNumber
+                                            )
+
                                                 - {{ $vehicleRegistration }}
+
                                             @endif
 
                                         </option>
+
                                     @endforeach
 
                                 </select>
 
                                 @error('vehicle_id')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                                 <small class="form-helper-text">
+
                                     Select the Vehicle manually.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- VEHICLE TYPE                                           --}}
@@ -627,17 +774,23 @@
 
                                 </label>
 
-                                <select name="vehicle_type_id" id="vehicle_type_id"
+                                <select
+                                    name="vehicle_type_id"
+                                    id="vehicle_type_id"
                                     class="form-control custom-select2 @error('vehicle_type_id') is-invalid @enderror"
-                                    required>
+                                    required
+                                >
 
                                     <option value="">
                                         Select Vehicle Type
                                     </option>
 
                                     @foreach ($vehicleTypes ?? collect() as $vehicleType)
-                                        <option value="{{ $vehicleType->id }}"
-                                            {{ (string) old('vehicle_type_id') === (string) $vehicleType->id ? 'selected' : '' }}>
+
+                                        <option
+                                            value="{{ $vehicleType->id }}"
+                                            {{ (string) old('vehicle_type_id') === (string) $vehicleType->id ? 'selected' : '' }}
+                                        >
 
                                             {{ $vehicleType->name }}
 
@@ -646,23 +799,33 @@
                                             @endif
 
                                         </option>
+
                                     @endforeach
 
                                 </select>
 
                                 @error('vehicle_type_id')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                                 <small class="form-helper-text">
+
                                     Select the Vehicle Type manually.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DOCUMENT SECTION                                      --}}
@@ -671,12 +834,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Duty Slip Document
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- FRONT FILE                                             --}}
@@ -694,25 +860,42 @@
 
                                 </label>
 
-                                <input type="file" name="duty_slip_front_file" id="duty_slip_front_file"
+                                <input
+                                    type="file"
+                                    name="duty_slip_front_file"
+                                    id="duty_slip_front_file"
                                     class="form-control @error('duty_slip_front_file') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                >
 
                                 <small class="form-helper-text">
-                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+
+                                    Allowed: PDF, JPG, JPEG & PNG
+                                    (Maximum 5 MB)
+
                                 </small>
 
                                 @error('duty_slip_front_file')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
-                                <div id="duty-slip-front-file-preview" class="duty-slip-file-preview"></div>
+                                <div
+                                    id="duty-slip-front-file-preview"
+                                    class="duty-slip-file-preview"
+                                ></div>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- BACK FILE                                              --}}
@@ -730,25 +913,42 @@
 
                                 </label>
 
-                                <input type="file" name="duty_slip_back_file" id="duty_slip_back_file"
+                                <input
+                                    type="file"
+                                    name="duty_slip_back_file"
+                                    id="duty_slip_back_file"
                                     class="form-control @error('duty_slip_back_file') is-invalid @enderror"
-                                    accept=".pdf,.jpg,.jpeg,.png">
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                >
 
                                 <small class="form-helper-text">
-                                    Allowed: PDF, JPG, JPEG & PNG (Maximum 5 MB)
+
+                                    Allowed: PDF, JPG, JPEG & PNG
+                                    (Maximum 5 MB)
+
                                 </small>
 
                                 @error('duty_slip_back_file')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
-                                <div id="duty-slip-back-file-preview" class="duty-slip-file-preview"></div>
+                                <div
+                                    id="duty-slip-back-file-preview"
+                                    class="duty-slip-file-preview"
+                                ></div>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- TRIP INFORMATION                                      --}}
@@ -757,12 +957,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Trip Information
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- START DATE                                             --}}
@@ -773,22 +976,37 @@
                             <div class="form-group">
 
                                 <label for="start_date">
-                                    <b>Start Date</b>
+
+                                    <b>
+                                        Start Date
+                                    </b>
+
                                 </label>
 
-                                <input type="date" name="start_date" id="start_date"
+                                <input
+                                    type="date"
+                                    name="start_date"
+                                    id="start_date"
                                     class="form-control @error('start_date') is-invalid @enderror"
-                                    value="{{ old('start_date') }}">
+                                    value="{{ old('start_date') }}"
+                                >
 
                                 @error('start_date')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- START TIME                                             --}}
@@ -799,22 +1017,37 @@
                             <div class="form-group">
 
                                 <label for="start_time">
-                                    <b>Start Time</b>
+
+                                    <b>
+                                        Start Time
+                                    </b>
+
                                 </label>
 
-                                <input type="time" name="start_time" id="start_time"
+                                <input
+                                    type="time"
+                                    name="start_time"
+                                    id="start_time"
                                     class="form-control @error('start_time') is-invalid @enderror"
-                                    value="{{ old('start_time') }}">
+                                    value="{{ old('start_time') }}"
+                                >
 
                                 @error('start_time')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- END DATE                                               --}}
@@ -825,22 +1058,37 @@
                             <div class="form-group">
 
                                 <label for="end_date">
-                                    <b>End Date</b>
+
+                                    <b>
+                                        End Date
+                                    </b>
+
                                 </label>
 
-                                <input type="date" name="end_date" id="end_date"
+                                <input
+                                    type="date"
+                                    name="end_date"
+                                    id="end_date"
                                     class="form-control @error('end_date') is-invalid @enderror"
-                                    value="{{ old('end_date') }}">
+                                    value="{{ old('end_date') }}"
+                                >
 
                                 @error('end_date')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- END TIME                                               --}}
@@ -851,22 +1099,37 @@
                             <div class="form-group">
 
                                 <label for="end_time">
-                                    <b>End Time</b>
+
+                                    <b>
+                                        End Time
+                                    </b>
+
                                 </label>
 
-                                <input type="time" name="end_time" id="end_time"
+                                <input
+                                    type="time"
+                                    name="end_time"
+                                    id="end_time"
                                     class="form-control @error('end_time') is-invalid @enderror"
-                                    value="{{ old('end_time') }}">
+                                    value="{{ old('end_time') }}"
+                                >
 
                                 @error('end_time')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- PICKUP LOCATION                                        --}}
@@ -877,23 +1140,39 @@
                             <div class="form-group">
 
                                 <label for="pickup_location">
-                                    <b>Pickup Location</b>
+
+                                    <b>
+                                        Pickup Location
+                                    </b>
+
                                 </label>
 
-                                <input type="text" name="pickup_location" id="pickup_location"
+                                <input
+                                    type="text"
+                                    name="pickup_location"
+                                    id="pickup_location"
                                     class="form-control @error('pickup_location') is-invalid @enderror"
-                                    value="{{ old('pickup_location') }}" placeholder="Enter Pickup Location"
-                                    maxlength="500">
+                                    value="{{ old('pickup_location') }}"
+                                    placeholder="Enter Pickup Location"
+                                    maxlength="500"
+                                >
 
                                 @error('pickup_location')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- DROP LOCATION                                          --}}
@@ -904,23 +1183,39 @@
                             <div class="form-group">
 
                                 <label for="drop_location">
-                                    <b>Drop Location</b>
+
+                                    <b>
+                                        Drop Location
+                                    </b>
+
                                 </label>
 
-                                <input type="text" name="drop_location" id="drop_location"
+                                <input
+                                    type="text"
+                                    name="drop_location"
+                                    id="drop_location"
                                     class="form-control @error('drop_location') is-invalid @enderror"
-                                    value="{{ old('drop_location') }}" placeholder="Enter Drop Location"
-                                    maxlength="500">
+                                    value="{{ old('drop_location') }}"
+                                    placeholder="Enter Drop Location"
+                                    maxlength="500"
+                                >
 
                                 @error('drop_location')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- KM SECTION                                             --}}
@@ -929,12 +1224,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Kilometer Information
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- OPENING KM                                              --}}
@@ -945,23 +1243,40 @@
                             <div class="form-group">
 
                                 <label for="opening_km">
-                                    <b>Opening KM</b>
+
+                                    <b>
+                                        Opening KM
+                                    </b>
+
                                 </label>
 
-                                <input type="number" name="opening_km" id="opening_km"
+                                <input
+                                    type="number"
+                                    name="opening_km"
+                                    id="opening_km"
                                     class="form-control @error('opening_km') is-invalid @enderror"
-                                    value="{{ old('opening_km') }}" min="0" step="0.01"
-                                    placeholder="Enter Opening KM">
+                                    value="{{ old('opening_km') }}"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Enter Opening KM"
+                                >
 
                                 @error('opening_km')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- CLOSING KM                                              --}}
@@ -972,23 +1287,40 @@
                             <div class="form-group">
 
                                 <label for="closing_km">
-                                    <b>Closing KM</b>
+
+                                    <b>
+                                        Closing KM
+                                    </b>
+
                                 </label>
 
-                                <input type="number" name="closing_km" id="closing_km"
+                                <input
+                                    type="number"
+                                    name="closing_km"
+                                    id="closing_km"
                                     class="form-control @error('closing_km') is-invalid @enderror"
-                                    value="{{ old('closing_km') }}" min="0" step="0.01"
-                                    placeholder="Enter Closing KM">
+                                    value="{{ old('closing_km') }}"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Enter Closing KM"
+                                >
 
                                 @error('closing_km')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- TOTAL KM                                                --}}
@@ -999,20 +1331,35 @@
                             <div class="form-group">
 
                                 <label for="total_km">
-                                    <b>Total KM</b>
+
+                                    <b>
+                                        Total KM
+                                    </b>
+
                                 </label>
 
-                                <input type="number" name="total_km" id="total_km" class="form-control"
-                                    value="{{ old('total_km', '0.00') }}" min="0" step="0.01"
-                                    placeholder="Auto Calculated" readonly>
+                                <input
+                                    type="number"
+                                    name="total_km"
+                                    id="total_km"
+                                    class="form-control"
+                                    value="{{ old('total_km', '0.00') }}"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Auto Calculated"
+                                    readonly
+                                >
 
                                 <small class="form-helper-text">
+
                                     Closing KM minus Opening KM.
+
                                 </small>
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- PASSENGER SECTION                                      --}}
@@ -1021,12 +1368,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Passenger Information
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- PASSENGER NAME                                          --}}
@@ -1037,23 +1387,39 @@
                             <div class="form-group">
 
                                 <label for="passenger_name">
-                                    <b>Passenger Name</b>
+
+                                    <b>
+                                        Passenger Name
+                                    </b>
+
                                 </label>
 
-                                <input type="text" name="passenger_name" id="passenger_name"
+                                <input
+                                    type="text"
+                                    name="passenger_name"
+                                    id="passenger_name"
                                     class="form-control @error('passenger_name') is-invalid @enderror"
-                                    value="{{ old('passenger_name') }}" placeholder="Enter Passenger Name"
-                                    maxlength="150">
+                                    value="{{ old('passenger_name') }}"
+                                    placeholder="Enter Passenger Name"
+                                    maxlength="150"
+                                >
 
                                 @error('passenger_name')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- PASSENGER MOBILE                                       --}}
@@ -1064,23 +1430,40 @@
                             <div class="form-group">
 
                                 <label for="passenger_mobile">
-                                    <b>Passenger Mobile</b>
+
+                                    <b>
+                                        Passenger Mobile
+                                    </b>
+
                                 </label>
 
-                                <input type="text" name="passenger_mobile" id="passenger_mobile" maxlength="10"
+                                <input
+                                    type="text"
+                                    name="passenger_mobile"
+                                    id="passenger_mobile"
+                                    maxlength="10"
                                     inputmode="numeric"
                                     class="form-control @error('passenger_mobile') is-invalid @enderror"
-                                    value="{{ old('passenger_mobile') }}" placeholder="Enter Passenger Mobile">
+                                    value="{{ old('passenger_mobile') }}"
+                                    placeholder="Enter Passenger Mobile"
+                                >
 
                                 @error('passenger_mobile')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- PASSENGER COUNT                                        --}}
@@ -1091,22 +1474,39 @@
                             <div class="form-group">
 
                                 <label for="number_of_passengers">
-                                    <b>Number Of Passengers</b>
+
+                                    <b>
+                                        Number Of Passengers
+                                    </b>
+
                                 </label>
 
-                                <input type="number" name="number_of_passengers" id="number_of_passengers"
+                                <input
+                                    type="number"
+                                    name="number_of_passengers"
+                                    id="number_of_passengers"
                                     class="form-control @error('number_of_passengers') is-invalid @enderror"
-                                    value="{{ old('number_of_passengers', 1) }}" min="1" step="1">
+                                    value="{{ old('number_of_passengers', 1) }}"
+                                    min="1"
+                                    step="1"
+                                >
 
                                 @error('number_of_passengers')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- ALLOWANCE SECTION                                      --}}
@@ -1115,18 +1515,24 @@
                         <div class="col-12 mt-4">
 
                             <h5 class="form-section-title">
+
                                 Driver Allowance
+
                             </h5>
 
                             <hr>
 
                         </div>
 
+
                         <div class="col-12">
 
                             <div class="table-responsive">
 
-                                <table class="table table-bordered table-striped" id="allowance-table">
+                                <table
+                                    class="table table-bordered table-striped"
+                                    id="allowance-table"
+                                >
 
                                     <thead>
 
@@ -1167,40 +1573,58 @@
                                     <tbody id="allowance-wrapper">
 
                                         @foreach ($oldAllowances as $index => $row)
+
                                             @php
 
-                                                $selectedAllowanceId = $row['allowance_id'] ?? '';
+                                                $selectedAllowanceId =
+                                                    $row['allowance_id'] ?? '';
 
-                                                $quantity = $row['quantity'] ?? 1;
+                                                $quantity =
+                                                    $row['quantity'] ?? 1;
 
-                                                $rate = $row['rate'] ?? 0;
+                                                $rate =
+                                                    $row['rate'] ?? 0;
 
-                                                $amount = $row['amount'] ?? 0;
+                                                $amount =
+                                                    $row['amount'] ?? 0;
 
-                                                $remarks = $row['remarks'] ?? '';
+                                                $remarks =
+                                                    $row['remarks'] ?? '';
 
-                                                $rowStatus = $row['status'] ?? 'pending';
+                                                $rowStatus =
+                                                    $row['status'] ?? 'pending';
 
                                             @endphp
 
-                                            <tr class="allowance-row" data-index="{{ $index }}">
+                                            <tr
+                                                class="allowance-row"
+                                                data-index="{{ $index }}"
+                                            >
 
                                                 <td>
 
-                                                    <select name="driver_allowances[{{ $index }}][allowance_id]"
-                                                        class="form-control custom-select2 allowance-select">
+                                                    <select
+                                                        name="driver_allowances[{{ $index }}][allowance_id]"
+                                                        class="form-control custom-select2 allowance-select"
+                                                    >
 
                                                         <option value="">
                                                             Select Allowance
                                                         </option>
 
                                                         @foreach ($allowances ?? collect() as $allowance)
-                                                            <option value="{{ $allowance->id }}"
+
+                                                            <option
+                                                                value="{{ $allowance->id }}"
                                                                 data-rate="{{ $allowance->amount ?? 0 }}"
                                                                 data-calculation-type="{{ $allowance->calculation_type ?? 'fixed' }}"
-                                                                {{ (string) $selectedAllowanceId === (string) $allowance->id ? 'selected' : '' }}>
+                                                                {{ (string) $selectedAllowanceId === (string) $allowance->id ? 'selected' : '' }}
+                                                            >
+
                                                                 {{ $allowance->name }}
+
                                                             </option>
+
                                                         @endforeach
 
                                                     </select>
@@ -1209,56 +1633,82 @@
 
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_allowances[{{ $index }}][quantity]"
                                                         class="form-control allowance-quantity"
-                                                        value="{{ $quantity }}" min="0.01" step="0.01">
+                                                        value="{{ $quantity }}"
+                                                        min="0.01"
+                                                        step="0.01"
+                                                    >
 
                                                 </td>
 
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_allowances[{{ $index }}][rate]"
-                                                        class="form-control allowance-rate" value="{{ $rate }}"
-                                                        min="0" step="0.01" readonly>
+                                                        class="form-control allowance-rate"
+                                                        value="{{ $rate }}"
+                                                        min="0"
+                                                        step="0.01"
+                                                        readonly
+                                                    >
 
                                                 </td>
 
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_allowances[{{ $index }}][amount]"
-                                                        class="form-control allowance-amount" value="{{ $amount }}"
-                                                        min="0" step="0.01" readonly>
+                                                        class="form-control allowance-amount"
+                                                        value="{{ $amount }}"
+                                                        min="0"
+                                                        step="0.01"
+                                                        readonly
+                                                    >
 
                                                 </td>
 
                                                 <td>
 
-                                                    <input type="text"
+                                                    <input
+                                                        type="text"
                                                         name="driver_allowances[{{ $index }}][remarks]"
-                                                        class="form-control" value="{{ $remarks }}"
-                                                        placeholder="Remarks" maxlength="1000">
+                                                        class="form-control"
+                                                        value="{{ $remarks }}"
+                                                        placeholder="Remarks"
+                                                        maxlength="1000"
+                                                    >
 
                                                 </td>
 
                                                 <td>
 
-                                                    <select name="driver_allowances[{{ $index }}][status]"
-                                                        class="form-control custom-select2">
+                                                    <select
+                                                        name="driver_allowances[{{ $index }}][status]"
+                                                        class="form-control custom-select2"
+                                                    >
 
                                                         @foreach ([
-            'pending' => 'Pending',
-            'approved' => 'Approved',
-            'rejected' => 'Rejected',
-            'paid' => 'Paid',
-            'cancelled' => 'Cancelled',
-        ] as $statusValue => $statusLabel)
-                                                            <option value="{{ $statusValue }}"
-                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}>
+                                                            'pending' => 'Pending',
+                                                            'approved' => 'Approved',
+                                                            'rejected' => 'Rejected',
+                                                            'paid' => 'Paid',
+                                                            'cancelled' => 'Cancelled',
+                                                        ] as $statusValue => $statusLabel)
+
+                                                            <option
+                                                                value="{{ $statusValue }}"
+                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}
+                                                            >
+
                                                                 {{ $statusLabel }}
+
                                                             </option>
+
                                                         @endforeach
 
                                                     </select>
@@ -1267,14 +1717,20 @@
 
                                                 <td class="text-center">
 
-                                                    <button type="button" class="btn btn-danger btn-sm remove-allowance"
-                                                        title="Remove">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-danger btn-sm remove-allowance"
+                                                        title="Remove"
+                                                    >
+
                                                         <i class="fa fa-trash"></i>
+
                                                     </button>
 
                                                 </td>
 
                                             </tr>
+
                                         @endforeach
 
                                     </tbody>
@@ -1283,11 +1739,17 @@
 
                             </div>
 
+
                             <div class="mt-2">
 
-                                <button type="button" id="add-allowance" class="btn btn-primary btn-sm">
+                                <button
+                                    type="button"
+                                    id="add-allowance"
+                                    class="btn btn-primary btn-sm"
+                                >
 
                                     <i class="fa fa-plus"></i>
+
                                     Add More Allowance
 
                                 </button>
@@ -1296,6 +1758,7 @@
 
                         </div>
 
+
                         {{-- ==================================================== --}}
                         {{-- EXPENSE SECTION                                        --}}
                         {{-- ==================================================== --}}
@@ -1303,40 +1766,50 @@
                         <div class="col-12 mt-4">
 
                             <h5 class="form-section-title">
+
                                 Driver Expense
+
                             </h5>
 
                             <hr>
 
                         </div>
 
+
                         <div class="col-12">
 
                             <div class="table-responsive">
 
-                                <table class="table table-bordered table-striped" id="expense-table">
+                                <table
+                                    class="table table-bordered table-striped"
+                                    id="expense-table"
+                                >
 
                                     <thead>
 
                                         <tr>
 
-                                            <th style="width:26%;">
+                                            <th style="width:21%;">
                                                 Expense
                                             </th>
 
-                                            <th style="width:13%;">
+                                            <th style="width:10%;">
                                                 Quantity
                                             </th>
 
-                                            <th style="width:13%;">
+                                            <th style="width:10%;">
                                                 Rate
                                             </th>
 
-                                            <th style="width:13%;">
+                                            <th style="width:10%;">
                                                 Amount
                                             </th>
 
-                                            <th style="width:17%;">
+                                            <th style="width:14%;">
+                                                Document
+                                            </th>
+
+                                            <th style="width:16%;">
                                                 Remarks
                                             </th>
 
@@ -1344,7 +1817,7 @@
                                                 Status
                                             </th>
 
-                                            <th style="width:8%;">
+                                            <th style="width:9%;">
                                                 Action
                                             </th>
 
@@ -1352,116 +1825,199 @@
 
                                     </thead>
 
+
                                     <tbody id="expense-wrapper">
 
                                         @foreach ($oldExpenses as $index => $row)
+
                                             @php
 
-                                                $selectedExpenseId = $row['expense_id'] ?? '';
+                                                $selectedExpenseId =
+                                                    $row['expense_id'] ?? '';
 
-                                                $quantity = $row['quantity'] ?? 1;
+                                                $quantity =
+                                                    $row['quantity'] ?? 1;
 
-                                                $rate = $row['rate'] ?? 0;
+                                                $rate =
+                                                    $row['rate'] ?? 0;
 
-                                                $amount = $row['amount'] ?? 0;
+                                                $amount =
+                                                    $row['amount'] ?? 0;
 
-                                                $remarks = $row['remarks'] ?? '';
+                                                $remarks =
+                                                    $row['remarks'] ?? '';
 
-                                                $rowStatus = $row['status'] ?? 'pending';
+                                                $rowStatus =
+                                                    $row['status'] ?? 'pending';
 
                                             @endphp
 
-                                            <tr class="expense-row" data-index="{{ $index }}">
+                                            <tr
+                                                class="expense-row"
+                                                data-index="{{ $index }}"
+                                            >
 
                                                 <td>
 
-                                                    <select name="driver_expenses[{{ $index }}][expense_id]"
-                                                        class="form-control custom-select2 expense-select">
+                                                    <select
+                                                        name="driver_expenses[{{ $index }}][expense_id]"
+                                                        class="form-control custom-select2 expense-select"
+                                                    >
 
                                                         <option value="">
                                                             Select Expense
                                                         </option>
 
                                                         @foreach ($expenses ?? collect() as $expense)
-                                                            <option value="{{ $expense->id }}"
+
+                                                            <option
+                                                                value="{{ $expense->id }}"
                                                                 data-rate="{{ $expense->amount ?? 0 }}"
-                                                                {{ (string) $selectedExpenseId === (string) $expense->id ? 'selected' : '' }}>
+                                                                {{ (string) $selectedExpenseId === (string) $expense->id ? 'selected' : '' }}
+                                                            >
+
                                                                 {{ $expense->name }}
+
                                                             </option>
+
                                                         @endforeach
 
                                                     </select>
 
                                                 </td>
 
+
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_expenses[{{ $index }}][quantity]"
-                                                        class="form-control expense-quantity" value="{{ $quantity }}"
-                                                        min="0.01" step="0.01">
+                                                        class="form-control expense-quantity"
+                                                        value="{{ $quantity }}"
+                                                        min="0.01"
+                                                        step="0.01"
+                                                    >
 
                                                 </td>
 
+
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_expenses[{{ $index }}][rate]"
-                                                        class="form-control expense-rate" value="{{ $rate }}"
-                                                        min="0" step="0.01" readonly>
+                                                        class="form-control expense-rate"
+                                                        value="{{ $rate }}"
+                                                        min="0"
+                                                        step="0.01"
+                                                        readonly
+                                                    >
 
                                                 </td>
 
+
                                                 <td>
 
-                                                    <input type="number"
+                                                    <input
+                                                        type="number"
                                                         name="driver_expenses[{{ $index }}][amount]"
-                                                        class="form-control expense-amount" value="{{ $amount }}"
-                                                        min="0" step="0.01" readonly>
+                                                        class="form-control expense-amount"
+                                                        value="{{ $amount }}"
+                                                        min="0"
+                                                        step="0.01"
+                                                        readonly
+                                                    >
 
                                                 </td>
 
+
+                                                {{-- ================================================= --}}
+                                                {{-- EXPENSE DOCUMENT                               --}}
+                                                {{-- ================================================= --}}
+
                                                 <td>
 
-                                                    <input type="text"
+                                                    <input
+                                                        type="file"
+                                                        name="driver_expenses[{{ $index }}][document_file]"
+                                                        class="form-control expense-document-input"
+                                                        accept=".pdf,.jpg,.jpeg,.png"
+                                                    >
+
+                                                    <small class="form-helper-text d-block mt-1">
+
+                                                        PDF, JPG, JPEG, PNG
+                                                        <br>
+                                                        Maximum 5 MB
+
+                                                    </small>
+
+                                                    <div class="expense-document-preview"></div>
+
+                                                </td>
+
+
+                                                <td>
+
+                                                    <input
+                                                        type="text"
                                                         name="driver_expenses[{{ $index }}][remarks]"
-                                                        class="form-control" value="{{ $remarks }}"
-                                                        placeholder="Remarks" maxlength="1000">
+                                                        class="form-control"
+                                                        value="{{ $remarks }}"
+                                                        placeholder="Remarks"
+                                                        maxlength="1000"
+                                                    >
 
                                                 </td>
 
+
                                                 <td>
 
-                                                    <select name="driver_expenses[{{ $index }}][status]"
-                                                        class="form-control custom-select2">
+                                                    <select
+                                                        name="driver_expenses[{{ $index }}][status]"
+                                                        class="form-control custom-select2"
+                                                    >
 
                                                         @foreach ([
-            'pending' => 'Pending',
-            'approved' => 'Approved',
-            'rejected' => 'Rejected',
-            'paid' => 'Paid',
-            'cancelled' => 'Cancelled',
-        ] as $statusValue => $statusLabel)
-                                                            <option value="{{ $statusValue }}"
-                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}>
+                                                            'pending' => 'Pending',
+                                                            'approved' => 'Approved',
+                                                            'rejected' => 'Rejected',
+                                                            'paid' => 'Paid',
+                                                            'cancelled' => 'Cancelled',
+                                                        ] as $statusValue => $statusLabel)
+
+                                                            <option
+                                                                value="{{ $statusValue }}"
+                                                                {{ $rowStatus === $statusValue ? 'selected' : '' }}
+                                                            >
+
                                                                 {{ $statusLabel }}
+
                                                             </option>
+
                                                         @endforeach
 
                                                     </select>
 
                                                 </td>
+
 
                                                 <td class="text-center">
 
-                                                    <button type="button" class="btn btn-danger btn-sm remove-expense"
-                                                        title="Remove">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-danger btn-sm remove-expense"
+                                                        title="Remove"
+                                                    >
+
                                                         <i class="fa fa-trash"></i>
+
                                                     </button>
 
                                                 </td>
 
                                             </tr>
+
                                         @endforeach
 
                                     </tbody>
@@ -1470,11 +2026,17 @@
 
                             </div>
 
+
                             <div class="mt-2">
 
-                                <button type="button" id="add-expense" class="btn btn-primary btn-sm">
+                                <button
+                                    type="button"
+                                    id="add-expense"
+                                    class="btn btn-primary btn-sm"
+                                >
 
                                     <i class="fa fa-plus"></i>
+
                                     Add More Expense
 
                                 </button>
@@ -1482,6 +2044,7 @@
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- FINANCIAL SUMMARY                                      --}}
@@ -1493,13 +2056,22 @@
 
                                 <div class="card-body">
 
-                                    <h6 class="text-primary" style="color:#023a85 !important;">
-                                        <b>Financial Summary</b>
+                                    <h6
+                                        class="text-primary"
+                                        style="color:#023a85 !important;"
+                                    >
+
+                                        <b>
+                                            Financial Summary
+                                        </b>
+
                                     </h6>
 
                                     <small class="form-helper-text">
+
                                         Totals are for display only.
                                         Final financial values are calculated by the backend service.
+
                                     </small>
 
                                     <hr>
@@ -1514,12 +2086,18 @@
                                                     Total Allowance
                                                 </label>
 
-                                                <input type="text" id="total-allowance" class="form-control"
-                                                    value="0.00" readonly>
+                                                <input
+                                                    type="text"
+                                                    id="total-allowance"
+                                                    class="form-control"
+                                                    value="0.00"
+                                                    readonly
+                                                >
 
                                             </div>
 
                                         </div>
+
 
                                         <div class="col-md-4">
 
@@ -1529,23 +2107,38 @@
                                                     Total Expense
                                                 </label>
 
-                                                <input type="text" id="total-expense" class="form-control"
-                                                    value="0.00" readonly>
+                                                <input
+                                                    type="text"
+                                                    id="total-expense"
+                                                    class="form-control"
+                                                    value="0.00"
+                                                    readonly
+                                                >
 
                                             </div>
 
                                         </div>
+
 
                                         <div class="col-md-4">
 
                                             <div class="form-group">
 
                                                 <label>
-                                                    <b>Grand Total</b>
+
+                                                    <b>
+                                                        Grand Total
+                                                    </b>
+
                                                 </label>
 
-                                                <input type="text" id="grand-total" class="form-control"
-                                                    value="0.00" readonly>
+                                                <input
+                                                    type="text"
+                                                    id="grand-total"
+                                                    class="form-control"
+                                                    value="0.00"
+                                                    readonly
+                                                >
 
                                             </div>
 
@@ -1559,6 +2152,7 @@
 
                         </div>
 
+
                         {{-- ==================================================== --}}
                         {{-- REMARKS                                               --}}
                         {{-- ==================================================== --}}
@@ -1566,33 +2160,53 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Remarks
+
                             </h5>
 
                             <hr>
 
                         </div>
 
+
                         <div class="col-12">
 
                             <div class="form-group">
 
                                 <label for="remarks">
-                                    <b>Remarks</b>
+
+                                    <b>
+                                        Remarks
+                                    </b>
+
                                 </label>
 
-                                <textarea name="remarks" id="remarks" rows="4" class="form-control @error('remarks') is-invalid @enderror"
-                                    placeholder="Enter Remarks" maxlength="2000">{{ old('remarks') }}</textarea>
+                                <textarea
+                                    name="remarks"
+                                    id="remarks"
+                                    rows="4"
+                                    class="form-control @error('remarks') is-invalid @enderror"
+                                    placeholder="Enter Remarks"
+                                    maxlength="2000"
+                                >{{ old('remarks') }}</textarea>
 
                                 @error('remarks')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- STATUS                                                --}}
@@ -1601,12 +2215,15 @@
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
+
                                 Status
+
                             </h5>
 
                             <hr>
 
                         </div>
+
 
                         <div class="col-md-4">
 
@@ -1622,36 +2239,59 @@
 
                                 </label>
 
-                                <select name="status" id="status"
-                                    class="form-control custom-select2 @error('status') is-invalid @enderror" required>
+                                <select
+                                    name="status"
+                                    id="status"
+                                    class="form-control custom-select2 @error('status') is-invalid @enderror"
+                                    required
+                                >
 
-                                    <option value="open" {{ old('status', 'open') === 'open' ? 'selected' : '' }}>
+                                    <option
+                                        value="open"
+                                        {{ old('status', 'open') === 'open' ? 'selected' : '' }}
+                                    >
                                         Open
                                     </option>
 
-                                    <option value="started" {{ old('status') === 'started' ? 'selected' : '' }}>
+                                    <option
+                                        value="started"
+                                        {{ old('status') === 'started' ? 'selected' : '' }}
+                                    >
                                         Started
                                     </option>
 
-                                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>
+                                    <option
+                                        value="completed"
+                                        {{ old('status') === 'completed' ? 'selected' : '' }}
+                                    >
                                         Completed
                                     </option>
 
-                                    <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>
+                                    <option
+                                        value="cancelled"
+                                        {{ old('status') === 'cancelled' ? 'selected' : '' }}
+                                    >
                                         Cancelled
                                     </option>
 
                                 </select>
 
                                 @error('status')
+
                                     <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
+
+                                        <strong>
+                                            {{ $message }}
+                                        </strong>
+
                                     </span>
+
                                 @enderror
 
                             </div>
 
                         </div>
+
 
                         {{-- ==================================================== --}}
                         {{-- ACTIONS                                                --}}
@@ -1661,14 +2301,27 @@
 
                             <div class="text-right mt-4">
 
-                                <a href="{{ route('duty-slips.index') }}" class="btn btn-danger">
+                                <a
+                                    href="{{ route('duty-slips.index') }}"
+                                    class="btn btn-danger"
+                                >
+
                                     <i class="fa fa-times"></i>
+
                                     Cancel
+
                                 </a>
 
-                                <button type="submit" id="save-duty-slip" class="btn btn-success">
+                                <button
+                                    type="submit"
+                                    id="save-duty-slip"
+                                    class="btn btn-success"
+                                >
+
                                     <i class="fa fa-save"></i>
+
                                     Save Duty Slip
+
                                 </button>
 
                             </div>
@@ -1681,67 +2334,116 @@
 
             </form>
 
+
             {{-- ================================================================= --}}
             {{-- ALLOWANCE TEMPLATE                                                 --}}
             {{-- ================================================================= --}}
 
             <template id="allowance-row-template">
 
-                <tr class="allowance-row" data-index="__INDEX__">
+                <tr
+                    class="allowance-row"
+                    data-index="__INDEX__"
+                >
 
                     <td>
 
-                        <select name="driver_allowances[__INDEX__][allowance_id]"
-                            class="form-control custom-select2 allowance-select">
+                        <select
+                            name="driver_allowances[__INDEX__][allowance_id]"
+                            class="form-control custom-select2 allowance-select"
+                        >
 
                             <option value="">
                                 Select Allowance
                             </option>
 
                             @foreach ($allowances ?? collect() as $allowance)
-                                <option value="{{ $allowance->id }}" data-rate="{{ $allowance->amount ?? 0 }}"
-                                    data-calculation-type="{{ $allowance->calculation_type ?? 'fixed' }}">
+
+                                <option
+                                    value="{{ $allowance->id }}"
+                                    data-rate="{{ $allowance->amount ?? 0 }}"
+                                    data-calculation-type="{{ $allowance->calculation_type ?? 'fixed' }}"
+                                >
+
                                     {{ $allowance->name }}
+
                                 </option>
+
                             @endforeach
 
                         </select>
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_allowances[__INDEX__][quantity]"
-                            class="form-control allowance-quantity" value="1" min="0.01" step="0.01">
+                        <input
+                            type="number"
+                            name="driver_allowances[__INDEX__][quantity]"
+                            class="form-control allowance-quantity"
+                            value="1"
+                            min="0.01"
+                            step="0.01"
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_allowances[__INDEX__][rate]"
-                            class="form-control allowance-rate" value="0.00" min="0" step="0.01" readonly>
+                        <input
+                            type="number"
+                            name="driver_allowances[__INDEX__][rate]"
+                            class="form-control allowance-rate"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_allowances[__INDEX__][amount]"
-                            class="form-control allowance-amount" value="0.00" min="0" step="0.01" readonly>
+                        <input
+                            type="number"
+                            name="driver_allowances[__INDEX__][amount]"
+                            class="form-control allowance-amount"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <input type="text" name="driver_allowances[__INDEX__][remarks]" class="form-control"
-                            placeholder="Remarks" maxlength="1000">
+                        <input
+                            type="text"
+                            name="driver_allowances[__INDEX__][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                            maxlength="1000"
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <select name="driver_allowances[__INDEX__][status]" class="form-control custom-select2">
+                        <select
+                            name="driver_allowances[__INDEX__][status]"
+                            class="form-control custom-select2"
+                        >
 
-                            <option value="pending" selected>
+                            <option
+                                value="pending"
+                                selected
+                            >
                                 Pending
                             </option>
 
@@ -1765,10 +2467,17 @@
 
                     </td>
 
+
                     <td class="text-center">
 
-                        <button type="button" class="btn btn-danger btn-sm remove-allowance" title="Remove">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-allowance"
+                            title="Remove"
+                        >
+
                             <i class="fa fa-trash"></i>
+
                         </button>
 
                     </td>
@@ -1777,66 +2486,141 @@
 
             </template>
 
+
             {{-- ================================================================= --}}
             {{-- EXPENSE TEMPLATE                                                   --}}
             {{-- ================================================================= --}}
 
             <template id="expense-row-template">
 
-                <tr class="expense-row" data-index="__INDEX__">
+                <tr
+                    class="expense-row"
+                    data-index="__INDEX__"
+                >
 
                     <td>
 
-                        <select name="driver_expenses[__INDEX__][expense_id]"
-                            class="form-control custom-select2 expense-select">
+                        <select
+                            name="driver_expenses[__INDEX__][expense_id]"
+                            class="form-control custom-select2 expense-select"
+                        >
 
                             <option value="">
                                 Select Expense
                             </option>
 
                             @foreach ($expenses ?? collect() as $expense)
-                                <option value="{{ $expense->id }}" data-rate="{{ $expense->amount ?? 0 }}">
+
+                                <option
+                                    value="{{ $expense->id }}"
+                                    data-rate="{{ $expense->amount ?? 0 }}"
+                                >
+
                                     {{ $expense->name }}
+
                                 </option>
+
                             @endforeach
 
                         </select>
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_expenses[__INDEX__][quantity]"
-                            class="form-control expense-quantity" value="1" min="0.01" step="0.01">
+                        <input
+                            type="number"
+                            name="driver_expenses[__INDEX__][quantity]"
+                            class="form-control expense-quantity"
+                            value="1"
+                            min="0.01"
+                            step="0.01"
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_expenses[__INDEX__][rate]" class="form-control expense-rate"
-                            value="0.00" min="0" step="0.01" readonly>
+                        <input
+                            type="number"
+                            name="driver_expenses[__INDEX__][rate]"
+                            class="form-control expense-rate"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
 
                     </td>
 
+
                     <td>
 
-                        <input type="number" name="driver_expenses[__INDEX__][amount]"
-                            class="form-control expense-amount" value="0.00" min="0" step="0.01" readonly>
+                        <input
+                            type="number"
+                            name="driver_expenses[__INDEX__][amount]"
+                            class="form-control expense-amount"
+                            value="0.00"
+                            min="0"
+                            step="0.01"
+                            readonly
+                        >
 
                     </td>
 
+
+                    {{-- ========================================================= --}}
+                    {{-- EXPENSE DOCUMENT                                           --}}
+                    {{-- ========================================================= --}}
+
                     <td>
 
-                        <input type="text" name="driver_expenses[__INDEX__][remarks]" class="form-control"
-                            placeholder="Remarks" maxlength="1000">
+                        <input
+                            type="file"
+                            name="driver_expenses[__INDEX__][document_file]"
+                            class="form-control expense-document-input"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                        >
+
+                        <small class="form-helper-text d-block mt-1">
+
+                            PDF, JPG, JPEG, PNG
+                            <br>
+                            Maximum 5 MB
+
+                        </small>
+
+                        <div class="expense-document-preview"></div>
 
                     </td>
 
+
                     <td>
 
-                        <select name="driver_expenses[__INDEX__][status]" class="form-control custom-select2">
+                        <input
+                            type="text"
+                            name="driver_expenses[__INDEX__][remarks]"
+                            class="form-control"
+                            placeholder="Remarks"
+                            maxlength="1000"
+                        >
 
-                            <option value="pending" selected>
+                    </td>
+
+
+                    <td>
+
+                        <select
+                            name="driver_expenses[__INDEX__][status]"
+                            class="form-control custom-select2"
+                        >
+
+                            <option
+                                value="pending"
+                                selected
+                            >
                                 Pending
                             </option>
 
@@ -1860,10 +2644,17 @@
 
                     </td>
 
+
                     <td class="text-center">
 
-                        <button type="button" class="btn btn-danger btn-sm remove-expense" title="Remove">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-expense"
+                            title="Remove"
+                        >
+
                             <i class="fa fa-trash"></i>
+
                         </button>
 
                     </td>
@@ -1874,12 +2665,16 @@
 
         </div>
 
+
         <x-backend.footer />
 
     </div>
 
 @endsection
 
+
 @push('scripts')
+
     <script src="{{ asset('backend/assets/js/duty-slips/create.js') }}"></script>
+
 @endpush

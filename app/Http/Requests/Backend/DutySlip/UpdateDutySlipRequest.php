@@ -17,6 +17,7 @@ class UpdateDutySlipRequest extends FormRequest
         return true;
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | PREPARE FOR VALIDATION
@@ -40,6 +41,7 @@ class UpdateDutySlipRequest extends FormRequest
     {
         $data = [];
 
+
         /*
         |--------------------------------------------------------------------------
         | ALLOWANCES
@@ -50,8 +52,10 @@ class UpdateDutySlipRequest extends FormRequest
             $this->has('allowances') &&
             !$this->has('driver_allowances')
         ) {
-            $data['driver_allowances'] = $this->input('allowances');
+            $data['driver_allowances'] =
+                $this->input('allowances');
         }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -63,8 +67,44 @@ class UpdateDutySlipRequest extends FormRequest
             $this->has('expenses') &&
             !$this->has('driver_expenses')
         ) {
-            $data['driver_expenses'] = $this->input('expenses');
+            $data['driver_expenses'] =
+                $this->input('expenses');
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NORMALIZE EMPTY VALUES
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->input('slip_no') === ''
+        ) {
+            $data['slip_no'] = null;
+        }
+
+
+        if (
+            $this->input('driver_id') === ''
+        ) {
+            $data['driver_id'] = null;
+        }
+
+
+        if (
+            $this->input('vehicle_id') === ''
+        ) {
+            $data['vehicle_id'] = null;
+        }
+
+
+        if (
+            $this->input('vehicle_type_id') === ''
+        ) {
+            $data['vehicle_type_id'] = null;
+        }
+
 
         /*
         |--------------------------------------------------------------------------
@@ -76,6 +116,7 @@ class UpdateDutySlipRequest extends FormRequest
             $this->merge($data);
         }
     }
+
 
     /**
      * Get the validation rules that apply to the request.
@@ -92,9 +133,12 @@ class UpdateDutySlipRequest extends FormRequest
 
         $dutySlip = $this->route('duty_slip');
 
-        $dutySlipId = is_object($dutySlip)
-            ? $dutySlip->id
-            : $dutySlip;
+
+        $dutySlipId =
+            is_object($dutySlip)
+                ? $dutySlip->id
+                : $dutySlip;
+
 
         return [
 
@@ -108,9 +152,14 @@ class UpdateDutySlipRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('duty_slips', 'slip_no')
-                    ->ignore($dutySlipId),
+                Rule::unique(
+                    'duty_slips',
+                    'slip_no'
+                )->ignore(
+                    $dutySlipId
+                ),
             ],
+
 
             'duty_assignment_id' => [
                 'required',
@@ -118,10 +167,12 @@ class UpdateDutySlipRequest extends FormRequest
                 'exists:duty_assignments,id',
             ],
 
+
             'duty_date' => [
                 'required',
                 'date',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -139,6 +190,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'exists:drivers,id',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | VEHICLE
@@ -155,6 +207,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'exists:vehicle_management,id',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | VEHICLE TYPE
@@ -169,6 +222,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'integer',
                 'exists:vehicle_types,id',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -186,6 +240,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'max:100',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | TRIP INFORMATION
@@ -197,10 +252,12 @@ class UpdateDutySlipRequest extends FormRequest
                 'date',
             ],
 
+
             'start_time' => [
                 'nullable',
                 'date_format:H:i',
             ],
+
 
             'end_date' => [
                 'nullable',
@@ -208,10 +265,12 @@ class UpdateDutySlipRequest extends FormRequest
                 'after_or_equal:start_date',
             ],
 
+
             'end_time' => [
                 'nullable',
                 'date_format:H:i',
             ],
+
 
             'pickup_location' => [
                 'nullable',
@@ -219,11 +278,13 @@ class UpdateDutySlipRequest extends FormRequest
                 'max:500',
             ],
 
+
             'drop_location' => [
                 'nullable',
                 'string',
                 'max:500',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -237,12 +298,14 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             'closing_km' => [
                 'nullable',
                 'numeric',
                 'min:0',
                 'gte:opening_km',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -263,6 +326,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | PASSENGER INFORMATION
@@ -275,16 +339,19 @@ class UpdateDutySlipRequest extends FormRequest
                 'max:150',
             ],
 
+
             'passenger_mobile' => [
                 'nullable',
                 'digits:10',
             ],
+
 
             'number_of_passengers' => [
                 'nullable',
                 'integer',
                 'min:1',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -297,6 +364,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'array',
                 'max:50',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -320,6 +388,7 @@ class UpdateDutySlipRequest extends FormRequest
                 ),
             ],
 
+
             'driver_allowances.*.allowance_id' => [
                 'required',
                 'integer',
@@ -327,15 +396,17 @@ class UpdateDutySlipRequest extends FormRequest
                 'distinct',
             ],
 
+
             'driver_allowances.*.quantity' => [
                 'required',
                 'numeric',
                 'min:0.01',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | RATE
+            | ALLOWANCE RATE
             |--------------------------------------------------------------------------
             |
             | Master allowance rate is authoritative in the Service.
@@ -349,9 +420,10 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | AMOUNT
+            | ALLOWANCE AMOUNT
             |--------------------------------------------------------------------------
             |
             | Service calculates the final amount.
@@ -364,11 +436,13 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             'driver_allowances.*.remarks' => [
                 'nullable',
                 'string',
                 'max:1000',
             ],
+
 
             'driver_allowances.*.status' => [
                 'required',
@@ -381,6 +455,7 @@ class UpdateDutySlipRequest extends FormRequest
                 ]),
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | DRIVER EXPENSES
@@ -392,6 +467,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'array',
                 'max:50',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -415,6 +491,7 @@ class UpdateDutySlipRequest extends FormRequest
                 ),
             ],
 
+
             'driver_expenses.*.expense_id' => [
                 'nullable',
                 'integer',
@@ -422,16 +499,22 @@ class UpdateDutySlipRequest extends FormRequest
                 'distinct',
             ],
 
+
             'driver_expenses.*.quantity' => [
                 'required',
                 'numeric',
                 'min:0.01',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | RATE
+            | EXPENSE RATE
             |--------------------------------------------------------------------------
+            |
+            | Expense master amount is authoritative in the Service.
+            | Frontend rate is not trusted.
+            |
             */
 
             'driver_expenses.*.rate' => [
@@ -440,10 +523,14 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
-            | AMOUNT
+            | EXPENSE AMOUNT
             |--------------------------------------------------------------------------
+            |
+            | Service calculates the final amount.
+            |
             */
 
             'driver_expenses.*.amount' => [
@@ -452,11 +539,58 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE DOCUMENT
+            |--------------------------------------------------------------------------
+            |
+            | Each Driver Expense can have its own supporting document.
+            |
+            | Supported:
+            |
+            | PDF
+            | JPG
+            | JPEG
+            | PNG
+            |
+            | Maximum:
+            |
+            | 5 MB
+            |
+            | Nullable:
+            |
+            | Existing document remains untouched when no new
+            | document is uploaded during update.
+            |
+            */
+
+            'driver_expenses.*.document_file' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE REMARKS
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.remarks' => [
                 'nullable',
                 'string',
                 'max:1000',
             ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE STATUS
+            |--------------------------------------------------------------------------
+            */
 
             'driver_expenses.*.status' => [
                 'required',
@@ -468,6 +602,7 @@ class UpdateDutySlipRequest extends FormRequest
                     'cancelled',
                 ]),
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -484,11 +619,13 @@ class UpdateDutySlipRequest extends FormRequest
                 'min:0',
             ],
 
+
             'fuel_amount' => [
                 'nullable',
                 'numeric',
                 'min:0',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -503,6 +640,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'max:5120',
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | DUTY SLIP BACK FILE
@@ -515,6 +653,7 @@ class UpdateDutySlipRequest extends FormRequest
                 'mimes:pdf,jpg,jpeg,png',
                 'max:5120',
             ],
+
 
             /*
             |--------------------------------------------------------------------------
@@ -532,6 +671,7 @@ class UpdateDutySlipRequest extends FormRequest
                 ]),
             ],
 
+
             /*
             |--------------------------------------------------------------------------
             | REMARKS
@@ -546,6 +686,7 @@ class UpdateDutySlipRequest extends FormRequest
         ];
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | ADDITIONAL BUSINESS VALIDATION
@@ -555,6 +696,7 @@ class UpdateDutySlipRequest extends FormRequest
     public function withValidator(
         Validator $validator
     ): void {
+
         $validator->after(
             function (Validator $validator): void {
 
@@ -576,15 +718,19 @@ class UpdateDutySlipRequest extends FormRequest
                     $this->input('start_date')
                     ?: $this->input('duty_date');
 
+
                 $endDate =
                     $this->input('end_date')
                     ?: $this->input('duty_date');
 
+
                 $startTime =
                     $this->input('start_time');
 
+
                 $endTime =
                     $this->input('end_time');
+
 
                 if (
                     !empty($startDate) &&
@@ -592,12 +738,15 @@ class UpdateDutySlipRequest extends FormRequest
                     !empty($startTime) &&
                     !empty($endTime)
                 ) {
+
                     try {
+
                         $startDateTime =
                             \Carbon\Carbon::createFromFormat(
                                 'Y-m-d H:i',
                                 "{$startDate} {$startTime}"
                             );
+
 
                         $endDateTime =
                             \Carbon\Carbon::createFromFormat(
@@ -605,28 +754,34 @@ class UpdateDutySlipRequest extends FormRequest
                                 "{$endDate} {$endTime}"
                             );
 
+
                         if (
                             $endDateTime->lessThan(
                                 $startDateTime
                             )
                         ) {
+
                             $validator->errors()->add(
                                 'end_time',
                                 'End date and time cannot be before start date and time.'
                             );
                         }
+
                     } catch (\Throwable $exception) {
+
                         /*
                         |--------------------------------------------------------------------------
                         | Basic Laravel date/time validation already handles
                         | malformed values. No additional error is required here.
                         |--------------------------------------------------------------------------
                         */
+
                     }
                 }
             }
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -656,6 +811,7 @@ class UpdateDutySlipRequest extends FormRequest
             'slip_no.unique' =>
                 'This duty slip number already exists.',
 
+
             /*
             |--------------------------------------------------------------------------
             | DUTY ASSIGNMENT
@@ -671,6 +827,7 @@ class UpdateDutySlipRequest extends FormRequest
             'duty_assignment_id.exists' =>
                 'Selected duty assignment does not exist.',
 
+
             /*
             |--------------------------------------------------------------------------
             | DUTY DATE
@@ -682,6 +839,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'duty_date.date' =>
                 'Please enter a valid duty date.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -698,6 +856,7 @@ class UpdateDutySlipRequest extends FormRequest
             'driver_id.exists' =>
                 'Selected driver does not exist.',
 
+
             /*
             |--------------------------------------------------------------------------
             | VEHICLE
@@ -712,6 +871,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'vehicle_id.exists' =>
                 'Selected vehicle does not exist.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -728,6 +888,7 @@ class UpdateDutySlipRequest extends FormRequest
             'vehicle_type_id.exists' =>
                 'Selected vehicle type does not exist.',
 
+
             /*
             |--------------------------------------------------------------------------
             | LEGACY VEHICLE TYPE
@@ -739,6 +900,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'vehicle_type.max' =>
                 'Vehicle type may not exceed 100 characters.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -755,6 +917,7 @@ class UpdateDutySlipRequest extends FormRequest
             'end_date.after_or_equal' =>
                 'End date cannot be before start date.',
 
+
             /*
             |--------------------------------------------------------------------------
             | START / END TIME
@@ -766,6 +929,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'end_time.date_format' =>
                 'End time must be in HH:MM format.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -784,6 +948,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'drop_location.max' =>
                 'Drop location may not exceed 500 characters.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -812,6 +977,7 @@ class UpdateDutySlipRequest extends FormRequest
             'total_km.min' =>
                 'Total KM cannot be negative.',
 
+
             /*
             |--------------------------------------------------------------------------
             | PASSENGER
@@ -832,6 +998,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'number_of_passengers.min' =>
                 'At least one passenger is required.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -896,6 +1063,7 @@ class UpdateDutySlipRequest extends FormRequest
             'driver_allowances.*.status.in' =>
                 'Selected allowance status is invalid.',
 
+
             /*
             |--------------------------------------------------------------------------
             | DRIVER EXPENSES
@@ -947,17 +1115,48 @@ class UpdateDutySlipRequest extends FormRequest
             'driver_expenses.*.amount.min' =>
                 'Expense amount cannot be negative.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE DOCUMENT
+            |--------------------------------------------------------------------------
+            */
+
+            'driver_expenses.*.document_file.file' =>
+                'Expense document must be a valid file.',
+
+            'driver_expenses.*.document_file.mimes' =>
+                'Expense document must be a PDF, JPG, JPEG, or PNG file.',
+
+            'driver_expenses.*.document_file.max' =>
+                'Expense document may not exceed 5 MB.',
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE REMARKS
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.remarks.string' =>
                 'Expense remarks must be valid text.',
 
             'driver_expenses.*.remarks.max' =>
                 'Expense remarks may not exceed 1000 characters.',
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXPENSE STATUS
+            |--------------------------------------------------------------------------
+            */
+
             'driver_expenses.*.status.required' =>
                 'Expense status is required.',
 
             'driver_expenses.*.status.in' =>
                 'Selected expense status is invalid.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -977,6 +1176,7 @@ class UpdateDutySlipRequest extends FormRequest
             'fuel_amount.min' =>
                 'Fuel amount cannot be negative.',
 
+
             /*
             |--------------------------------------------------------------------------
             | FRONT FILE
@@ -991,6 +1191,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'duty_slip_front_file.max' =>
                 'Duty slip front file may not exceed 5 MB.',
+
 
             /*
             |--------------------------------------------------------------------------
@@ -1007,6 +1208,7 @@ class UpdateDutySlipRequest extends FormRequest
             'duty_slip_back_file.max' =>
                 'Duty slip back file may not exceed 5 MB.',
 
+
             /*
             |--------------------------------------------------------------------------
             | STATUS
@@ -1018,6 +1220,7 @@ class UpdateDutySlipRequest extends FormRequest
 
             'status.in' =>
                 'Selected duty slip status is invalid.',
+
 
             /*
             |--------------------------------------------------------------------------
