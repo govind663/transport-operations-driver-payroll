@@ -67,11 +67,9 @@
                 return;
             }
 
-
             const $scope = scope
                 ? $(scope)
                 : $(document);
-
 
             $scope
                 .find('.custom-select2')
@@ -80,7 +78,6 @@
 
                     const $select =
                         $(this);
-
 
                     if (
                         !$select.hasClass(
@@ -136,12 +133,10 @@
                 return false;
             }
 
-
             const extension =
                 getFileExtension(
                     file.name
                 );
-
 
             if (
                 !allowedFileExtensions.includes(
@@ -151,10 +146,9 @@
                 return false;
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | Browser may return an empty MIME type for some files.
+            | Browser may return an empty MIME type.
             |--------------------------------------------------------------------------
             */
 
@@ -166,7 +160,6 @@
             ) {
                 return false;
             }
-
 
             return true;
         }
@@ -188,12 +181,10 @@
                     inputId
                 );
 
-
             const preview =
                 document.getElementById(
                     previewId
                 );
-
 
             if (
                 !input ||
@@ -201,7 +192,6 @@
             ) {
                 return;
             }
-
 
             preview.innerHTML = '';
 
@@ -232,9 +222,7 @@
                     'Please select a valid PDF, JPG, JPEG, or PNG file.'
                 );
 
-
                 input.value = '';
-
 
                 return;
             }
@@ -249,9 +237,7 @@
                     'File size must not exceed 5 MB.'
                 );
 
-
                 input.value = '';
-
 
                 return;
             }
@@ -480,9 +466,7 @@
         |
         */
 
-        function previewExpenseDocument(
-            input
-        ) {
+        function previewExpenseDocument(input) {
 
             const $input =
                 $(input);
@@ -535,9 +519,7 @@
                     'Expense document must be a PDF, JPG, JPEG, or PNG file.'
                 );
 
-
                 input.value = '';
-
 
                 return;
             }
@@ -558,9 +540,7 @@
                     'Expense document size must not exceed 5 MB.'
                 );
 
-
                 input.value = '';
-
 
                 return;
             }
@@ -787,7 +767,10 @@
 
         $(document).on(
             'input',
-            '#opening_km, #closing_km',
+            '#opening_km, #closing_km, ' +
+            '.allowance-quantity, ' +
+            '.expense-quantity, ' +
+            '.expense-rate',
             function () {
 
                 if (
@@ -809,6 +792,29 @@
                 ) {
 
                     this.value = '0';
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Recalculate Expense Amount
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $(this).hasClass(
+                        'expense-quantity'
+                    ) ||
+                    $(this).hasClass(
+                        'expense-rate'
+                    )
+                ) {
+
+                    calculateExpenseRow(
+                        $(this).closest(
+                            '.expense-row'
+                        )
+                    );
                 }
             }
         );
@@ -1402,43 +1408,14 @@
 
         /*
         |--------------------------------------------------------------------------
-        | EXPENSE RATE
-        |--------------------------------------------------------------------------
-        */
-
-        function setExpenseRate(
-            $row
-        ) {
-
-            const rate =
-                numberValue(
-                    $row.find(
-                        '.expense-select option:selected'
-                    ).attr(
-                        'data-rate'
-                    )
-                );
-
-
-            $row.find(
-                '.expense-rate'
-            ).val(
-                formatAmount(
-                    rate
-                )
-            );
-
-
-            calculateExpenseRow(
-                $row
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
         | EXPENSE CALCULATION
         |--------------------------------------------------------------------------
+        |
+        | Expense Master only provides the Expense Type.
+        | Driver/User enters the actual Rate manually.
+        |
+        | Amount = Quantity × Rate
+        |
         */
 
         function calculateExpenseRow(
@@ -1483,6 +1460,10 @@
         |--------------------------------------------------------------------------
         | EXPENSE SELECT
         |--------------------------------------------------------------------------
+        |
+        | Selecting an Expense does NOT change the Rate.
+        | Rate remains manually entered by the user.
+        |
         */
 
         $(document).on(
@@ -1500,6 +1481,12 @@
                     !$(this).val()
                 ) {
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Clear financial values when no expense type is selected.
+                    |--------------------------------------------------------------------------
+                    */
+
                     $row.find(
                         '.expense-rate'
                     ).val('0.00');
@@ -1516,7 +1503,13 @@
                 }
 
 
-                setExpenseRate(
+                /*
+                |--------------------------------------------------------------------------
+                | Do NOT fetch rate from Expense Master.
+                |--------------------------------------------------------------------------
+                */
+
+                calculateExpenseRow(
                     $row
                 );
             }
@@ -1532,6 +1525,26 @@
         $(document).on(
             'input',
             '.expense-quantity',
+            function () {
+
+                calculateExpenseRow(
+                    $(this).closest(
+                        '.expense-row'
+                    )
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE RATE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '.expense-rate',
             function () {
 
                 calculateExpenseRow(
@@ -1931,8 +1944,7 @@
 
                     /*
                     |--------------------------------------------------------------------------
-                    | A document without an expense is not a valid child record.
-                    | Remove that empty row before submission.
+                    | Expense type is mandatory for a child row.
                     |--------------------------------------------------------------------------
                     */
 
@@ -2006,6 +2018,7 @@
 
                         $input.val('');
 
+
                         $row.find(
                             '.expense-document-preview'
                         ).empty();
@@ -2028,6 +2041,7 @@
 
 
                         $input.val('');
+
 
                         $row.find(
                             '.expense-document-preview'
@@ -2285,6 +2299,11 @@
                 |--------------------------------------------------------------------------
                 | Final Expense Calculation
                 |--------------------------------------------------------------------------
+                |
+                | IMPORTANT:
+                | Rate is manually entered by the user.
+                | Do not overwrite it from Expense Master.
+                |
                 */
 
                 $('#expense-wrapper .expense-row')
@@ -2300,7 +2319,7 @@
                             ).val()
                         ) {
 
-                            setExpenseRate(
+                            calculateExpenseRow(
                                 $row
                             );
                         }
@@ -2408,6 +2427,10 @@
         |--------------------------------------------------------------------------
         | INITIAL EXPENSE CALCULATION
         |--------------------------------------------------------------------------
+        |
+        | Existing/old value of Rate is preserved.
+        | No Expense Master rate is applied.
+        |
         */
 
         $('#expense-wrapper .expense-row')
@@ -2423,7 +2446,7 @@
                     ).val()
                 ) {
 
-                    setExpenseRate(
+                    calculateExpenseRow(
                         $row
                     );
 

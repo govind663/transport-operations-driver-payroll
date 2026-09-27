@@ -9,6 +9,7 @@
             return;
         }
 
+
         /*
         |--------------------------------------------------------------------------
         | CONSTANTS
@@ -380,9 +381,7 @@
 
         function previewExpenseDocument(input) {
 
-            if (
-                !input
-            ) {
+            if (!input) {
                 return;
             }
 
@@ -734,7 +733,8 @@
             'input',
             '#opening_km, #closing_km, ' +
             '.allowance-quantity, ' +
-            '.expense-quantity',
+            '.expense-quantity, ' +
+            '.expense-rate',
             function () {
 
                 if (this.value === '') {
@@ -750,6 +750,28 @@
                 ) {
 
                     this.value = '0';
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Recalculate Expense
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $(this).hasClass(
+                        'expense-quantity'
+                    ) ||
+                    $(this).hasClass(
+                        'expense-rate'
+                    )
+                ) {
+
+                    calculateExpenseRow(
+                        $(this).closest(
+                            '.expense-row'
+                        )
+                    );
                 }
             }
         );
@@ -893,7 +915,9 @@
 
             const rate =
                 numberValue(
-                    $option.attr('data-rate')
+                    $option.attr(
+                        'data-rate'
+                    )
                 );
 
             const calculationType =
@@ -1264,28 +1288,13 @@
         |--------------------------------------------------------------------------
         | EXPENSE
         |--------------------------------------------------------------------------
+        |
+        | Expense Master only provides the Expense Type.
+        | Actual Rate is entered manually by the user.
+        |
+        | Amount = Quantity × Rate
+        |
         */
-
-        function setExpenseRate($row) {
-
-            const rate =
-                numberValue(
-                    $row.find(
-                        '.expense-select option:selected'
-                    ).attr(
-                        'data-rate'
-                    )
-                );
-
-            $row.find(
-                '.expense-rate'
-            ).val(
-                formatAmount(rate)
-            );
-
-            calculateExpenseRow($row);
-        }
-
 
         function calculateExpenseRow($row) {
 
@@ -1316,6 +1325,16 @@
         }
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE SELECT
+        |--------------------------------------------------------------------------
+        |
+        | Selecting Expense Type does NOT change the Rate.
+        | Existing/manual Rate remains untouched.
+        |
+        */
+
         $(document).on(
             'change',
             '.expense-select',
@@ -1341,14 +1360,51 @@
                     return;
                 }
 
-                setExpenseRate($row);
+                /*
+                |--------------------------------------------------------------------------
+                | IMPORTANT
+                |--------------------------------------------------------------------------
+                |
+                | No rate is fetched from Expense Master.
+                |
+                */
+
+                calculateExpenseRow(
+                    $row
+                );
             }
         );
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE QUANTITY
+        |--------------------------------------------------------------------------
+        */
+
         $(document).on(
             'input',
             '.expense-quantity',
+            function () {
+
+                calculateExpenseRow(
+                    $(this).closest(
+                        '.expense-row'
+                    )
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | EXPENSE RATE
+        |--------------------------------------------------------------------------
+        */
+
+        $(document).on(
+            'input',
+            '.expense-rate',
             function () {
 
                 calculateExpenseRow(
@@ -1560,8 +1616,8 @@
                     | Existing Child ID
                     |--------------------------------------------------------------------------
                     |
-                    | Removing the ID tells backend this existing
-                    | child expense should no longer be retained.
+                    | Remove the ID so backend receives no existing
+                    | record for this row.
                     |
                     */
 
@@ -1569,16 +1625,11 @@
                         'input[name*="[id]"]'
                     ).remove();
 
+
                     /*
                     |--------------------------------------------------------------------------
-                    | Expense Document
+                    | New Expense Document Input
                     |--------------------------------------------------------------------------
-                    |
-                    | Remove only the uploaded file input/preview.
-                    | Existing document is represented by the existing
-                    | child record and will be deleted by backend if
-                    | the child record itself is removed.
-                    |
                     */
 
                     const documentInput =
@@ -1596,12 +1647,23 @@
                         documentPreview
                     );
 
+
                     updateExpenseRemoveButtons();
 
                     calculateFinancialSummary();
 
                     return;
                 }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Removing Existing Row
+                |--------------------------------------------------------------------------
+                |
+                | Backend service handles database child deletion
+                | and old document cleanup.
+                |
+                */
 
                 $row.remove();
 
@@ -1663,18 +1725,14 @@
                             '.expense-select'
                         ).val();
 
-                    if (!expenseId) {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Existing rows have Expense ID selected.
+                    | New blank rows are removed before submit.
+                    |--------------------------------------------------------------------------
+                    */
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | New/empty row cleanup
-                        |--------------------------------------------------------------------------
-                        |
-                        | Existing rows always have expense-select value.
-                        | Therefore this does not remove a valid existing
-                        | expense merely because its document is missing.
-                        |
-                        */
+                    if (!expenseId) {
 
                         $row.remove();
                     }
@@ -1975,6 +2033,17 @@
                     });
 
 
+                /*
+                |--------------------------------------------------------------------------
+                | FINAL EXPENSE CALCULATION
+                |--------------------------------------------------------------------------
+                |
+                | IMPORTANT:
+                | Actual Rate entered by user is preserved.
+                | Expense Master rate is never applied.
+                |
+                */
+
                 $('#expense-wrapper .expense-row')
                     .each(function () {
 
@@ -1987,7 +2056,7 @@
                             ).val()
                         ) {
 
-                            setExpenseRate($row);
+                            calculateExpenseRow($row);
                         }
                     });
 
@@ -2077,6 +2146,10 @@
         |--------------------------------------------------------------------------
         | INITIALIZE EXISTING EXPENSES
         |--------------------------------------------------------------------------
+        |
+        | Existing saved Rate is preserved.
+        | No Expense Master Rate is applied.
+        |
         */
 
         $('#expense-wrapper .expense-row')
@@ -2085,28 +2158,7 @@
                 const $row =
                     $(this);
 
-                /*
-                |--------------------------------------------------------------------------
-                | Existing Document
-                |--------------------------------------------------------------------------
-                |
-                | Existing document preview/view button is rendered by
-                | the Blade file. We do not remove or replace it here.
-                |
-                */
-
-                if (
-                    $row.find(
-                        '.expense-select'
-                    ).val()
-                ) {
-
-                    setExpenseRate($row);
-
-                } else {
-
-                    calculateExpenseRow($row);
-                }
+                calculateExpenseRow($row);
             });
 
 

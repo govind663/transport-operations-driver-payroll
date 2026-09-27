@@ -2287,6 +2287,10 @@
                                                     >
 
 
+                                                    {{-- ================================================= --}}
+                                                    {{-- EXPENSE TYPE / MASTER                       --}}
+                                                    {{-- ================================================= --}}
+
                                                     <select
                                                         name="driver_expenses[{{ $index }}][expense_id]"
                                                         class="form-control custom-select2 expense-select"
@@ -2301,7 +2305,6 @@
 
                                                             <option
                                                                 value="{{ $expense->id }}"
-                                                                data-rate="{{ $expense->amount ?? 0 }}"
                                                                 {{ (string) $driverExpense->expense_id === (string) $expense->id ? 'selected' : '' }}
                                                             >
 
@@ -2343,6 +2346,10 @@
                                                 </td>
 
 
+                                                {{-- ================================================= --}}
+                                                {{-- ACTUAL RATE                                    --}}
+                                                {{-- ================================================= --}}
+
                                                 <td>
 
                                                     <input
@@ -2352,11 +2359,21 @@
                                                         value="{{ old("driver_expenses.$index.rate", $driverExpense->rate) }}"
                                                         min="0"
                                                         step="0.01"
-                                                        readonly
+                                                        placeholder="Enter Rate"
                                                     >
+
+                                                    <small class="form-helper-text d-block mt-1">
+
+                                                        Enter actual rate.
+
+                                                    </small>
 
                                                 </td>
 
+
+                                                {{-- ================================================= --}}
+                                                {{-- AMOUNT                                         --}}
+                                                {{-- ================================================= --}}
 
                                                 <td>
 
@@ -2367,8 +2384,15 @@
                                                         value="{{ old("driver_expenses.$index.amount", $driverExpense->amount) }}"
                                                         min="0"
                                                         step="0.01"
+                                                        placeholder="Auto Calculated"
                                                         readonly
                                                     >
+
+                                                    <small class="form-helper-text d-block mt-1">
+
+                                                        Quantity × Rate
+
+                                                    </small>
 
                                                 </td>
 
@@ -2700,7 +2724,6 @@
 
                                                             <option
                                                                 value="{{ $expense->id }}"
-                                                                data-rate="{{ $expense->amount ?? 0 }}"
                                                             >
 
                                                                 {{ $expense->name }}
@@ -2728,6 +2751,10 @@
                                                 </td>
 
 
+                                                {{-- ================================================= --}}
+                                                {{-- ACTUAL RATE                                    --}}
+                                                {{-- ================================================= --}}
+
                                                 <td>
 
                                                     <input
@@ -2737,11 +2764,21 @@
                                                         value="0.00"
                                                         min="0"
                                                         step="0.01"
-                                                        readonly
+                                                        placeholder="Enter Rate"
                                                     >
+
+                                                    <small class="form-helper-text d-block mt-1">
+
+                                                        Enter actual rate.
+
+                                                    </small>
 
                                                 </td>
 
+
+                                                {{-- ================================================= --}}
+                                                {{-- AMOUNT                                         --}}
+                                                {{-- ================================================= --}}
 
                                                 <td>
 
@@ -2752,8 +2789,15 @@
                                                         value="0.00"
                                                         min="0"
                                                         step="0.01"
+                                                        placeholder="Auto Calculated"
                                                         readonly
                                                     >
+
+                                                    <small class="form-helper-text d-block mt-1">
+
+                                                        Quantity × Rate
+
+                                                    </small>
 
                                                 </td>
 
@@ -3370,7 +3414,6 @@
 
                                 <option
                                     value="{{ $expense->id }}"
-                                    data-rate="{{ $expense->amount ?? 0 }}"
                                 >
 
                                     {{ $expense->name }}
@@ -3398,6 +3441,10 @@
                     </td>
 
 
+                    {{-- ========================================================= --}}
+                    {{-- ACTUAL RATE                                                --}}
+                    {{-- ========================================================= --}}
+
                     <td>
 
                         <input
@@ -3407,11 +3454,21 @@
                             value="0.00"
                             min="0"
                             step="0.01"
-                            readonly
+                            placeholder="Enter Rate"
                         >
+
+                        <small class="form-helper-text d-block mt-1">
+
+                            Enter actual rate.
+
+                        </small>
 
                     </td>
 
+
+                    {{-- ========================================================= --}}
+                    {{-- AMOUNT                                                      --}}
+                    {{-- ========================================================= --}}
 
                     <td>
 
@@ -3422,8 +3479,15 @@
                             value="0.00"
                             min="0"
                             step="0.01"
+                            placeholder="Auto Calculated"
                             readonly
                         >
+
+                        <small class="form-helper-text d-block mt-1">
+
+                            Quantity × Rate
+
+                        </small>
 
                     </td>
 
