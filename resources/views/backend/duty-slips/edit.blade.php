@@ -417,7 +417,7 @@
                                     value="{{ old('slip_no', $dutySlip->slip_no) }}"
                                     maxlength="100"
                                     autocomplete="off"
-                                    readonly
+                                    placeholder="Duty Slip number"
                                     required
                                 >
 

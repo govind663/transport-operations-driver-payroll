@@ -401,7 +401,7 @@
                                         value="{{ $generatedSlipNo }}"
                                         maxlength="100"
                                         autocomplete="off"
-                                        readonly
+                                        placeholder="Duty Slip number"
                                     >
 
                                     <span class="auto-number-badge">
