@@ -13,6 +13,8 @@ use App\Models\VehicleManagement;
 use App\Models\VehicleType;
 use App\Services\FileUploadService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -47,13 +49,21 @@ class DutySlipService
 
     /*
     |--------------------------------------------------------------------------
-    | GET ALL DUTY SLIPS
+    | GET DUTY SLIPS
     |--------------------------------------------------------------------------
+    |
+    | Access:
+    |
+    | admin       -> ALL
+    | operations  -> ALL
+    | accountant  -> ALL
+    | driver      -> ONLY own driver's slips
+    |
     */
 
     public function getDutySlips(): Collection
     {
-        return DutySlip::query()
+        $query = DutySlip::query()
             ->with([
                 'driver',
                 'vehicle',
@@ -76,8 +86,21 @@ class DutySlipService
                 'driverExpenses.expense',
                 'driverExpenses.driver',
             ])
-            ->latest('id')
-            ->get();
+            ->latest('id');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLY ROLE BASED ACCESS
+        |--------------------------------------------------------------------------
+        */
+
+        $this->applyDutySlipAccessScope(
+            $query
+        );
+
+
+        return $query->get();
     }
 
 
@@ -85,12 +108,19 @@ class DutySlipService
     |--------------------------------------------------------------------------
     | FIND DUTY SLIP
     |--------------------------------------------------------------------------
+    |
+    | Access control is also applied here.
+    |
+    | This prevents a driver from opening another driver's
+    | duty slip through a direct URL.
+    |
     */
 
     public function findById(
         string|int $id
     ): DutySlip {
-        return DutySlip::query()
+
+        $query = DutySlip::query()
             ->with([
                 'driver',
                 'vehicle',
@@ -112,8 +142,23 @@ class DutySlipService
                 'driverExpenses',
                 'driverExpenses.expense',
                 'driverExpenses.driver',
-            ])
-            ->findOrFail($id);
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLY ROLE BASED ACCESS
+        |--------------------------------------------------------------------------
+        */
+
+        $this->applyDutySlipAccessScope(
+            $query
+        );
+
+
+        return $query->findOrFail(
+            $id
+        );
     }
 
 
@@ -135,22 +180,31 @@ class DutySlipService
                 'CAST(SUBSTRING(slip_no, 3) AS UNSIGNED) DESC'
             );
 
+
         if (DB::transactionLevel() > 0) {
+
             $query->lockForUpdate();
+
         }
+
 
         $lastSlipNo =
             $query->value('slip_no');
 
+
         if (empty($lastSlipNo)) {
+
             return 'DS000001';
+
         }
+
 
         $lastNumber =
             (int) substr(
                 $lastSlipNo,
                 2
             );
+
 
         return 'DS' .
             str_pad(
@@ -173,6 +227,7 @@ class DutySlipService
     ): DutySlip {
 
         $uploadedFiles = [];
+
 
         try {
 
@@ -199,6 +254,7 @@ class DutySlipService
                                 ?? []
                             );
 
+
                     $expenses =
                         array_key_exists(
                             'driver_expenses',
@@ -210,12 +266,18 @@ class DutySlipService
                                 ?? []
                             );
 
+
                     if (!is_array($allowances)) {
+
                         $allowances = [];
+
                     }
 
+
                     if (!is_array($expenses)) {
+
                         $expenses = [];
+
                     }
 
 
@@ -228,6 +290,7 @@ class DutySlipService
                     $frontFile =
                         $data['duty_slip_front_file']
                         ?? null;
+
 
                     $backFile =
                         $data['duty_slip_back_file']
@@ -328,10 +391,6 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     | DUTY ASSIGNMENT
                     |--------------------------------------------------------------------------
-                    |
-                    | Assignment is only a reference.
-                    | Assignment driver/vehicle are NOT required.
-                    |
                     */
 
                     $dutyAssignment =
@@ -339,6 +398,7 @@ class DutySlipService
                             $data['duty_assignment_id']
                             ?? null
                         );
+
 
                     $data['duty_assignment_id'] =
                         (int) $dutyAssignment->id;
@@ -352,8 +412,10 @@ class DutySlipService
 
                     $driverId =
                         $this->normalizeRequiredId(
-                            $data['driver_id'] ?? null
+                            $data['driver_id']
+                            ?? null
                         );
+
 
                     if (!$driverId) {
 
@@ -361,19 +423,47 @@ class DutySlipService
                             'driver_id' =>
                                 'Please select a driver.',
                         ]);
+
                     }
 
-                    if (
-                        !Driver::query()
-                            ->whereKey($driverId)
-                            ->exists()
-                    ) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DRIVER EXISTS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $driverQuery =
+                        Driver::query()
+                            ->whereKey(
+                                $driverId
+                            );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DRIVER ROLE OWNERSHIP
+                    |--------------------------------------------------------------------------
+                    |
+                    | A logged-in driver can create only a Duty Slip
+                    | for their own Driver record.
+                    |
+                    */
+
+                    $this->applyDriverOwnershipToDriverQuery(
+                        $driverQuery
+                    );
+
+
+                    if (!$driverQuery->exists()) {
 
                         throw ValidationException::withMessages([
                             'driver_id' =>
-                                'Selected driver does not exist.',
+                                'Selected driver is not available for your account.',
                         ]);
+
                     }
+
 
                     $data['driver_id'] =
                         $driverId;
@@ -387,8 +477,10 @@ class DutySlipService
 
                     $vehicleId =
                         $this->normalizeRequiredId(
-                            $data['vehicle_id'] ?? null
+                            $data['vehicle_id']
+                            ?? null
                         );
+
 
                     if (!$vehicleId) {
 
@@ -396,11 +488,15 @@ class DutySlipService
                             'vehicle_id' =>
                                 'Please select a vehicle.',
                         ]);
+
                     }
+
 
                     if (
                         !VehicleManagement::query()
-                            ->whereKey($vehicleId)
+                            ->whereKey(
+                                $vehicleId
+                            )
                             ->exists()
                     ) {
 
@@ -408,7 +504,9 @@ class DutySlipService
                             'vehicle_id' =>
                                 'Selected vehicle does not exist.',
                         ]);
+
                     }
+
 
                     $data['vehicle_id'] =
                         $vehicleId;
@@ -422,8 +520,10 @@ class DutySlipService
 
                     $vehicleTypeId =
                         $this->normalizeRequiredId(
-                            $data['vehicle_type_id'] ?? null
+                            $data['vehicle_type_id']
+                            ?? null
                         );
+
 
                     /*
                     |--------------------------------------------------------------------------
@@ -438,7 +538,9 @@ class DutySlipService
                                 $data['vehicle_type']
                                 ?? null
                             );
+
                     }
+
 
                     if (!$vehicleTypeId) {
 
@@ -446,11 +548,15 @@ class DutySlipService
                             'vehicle_type_id' =>
                                 'Please select a vehicle type.',
                         ]);
+
                     }
+
 
                     if (
                         !VehicleType::query()
-                            ->whereKey($vehicleTypeId)
+                            ->whereKey(
+                                $vehicleTypeId
+                            )
                             ->exists()
                     ) {
 
@@ -458,7 +564,9 @@ class DutySlipService
                             'vehicle_type_id' =>
                                 'Selected vehicle type does not exist.',
                         ]);
+
                     }
+
 
                     $data['vehicle_type_id'] =
                         $vehicleTypeId;
@@ -501,11 +609,14 @@ class DutySlipService
                                 'duty-slip/front'
                             );
 
+
                         $uploadedFiles[] =
                             $frontPath;
 
+
                         $data['duty_slip_front_file'] =
                             $frontPath;
+
                     }
 
 
@@ -525,11 +636,14 @@ class DutySlipService
                                 'duty-slip/back'
                             );
 
+
                         $uploadedFiles[] =
                             $backPath;
 
+
                         $data['duty_slip_back_file'] =
                             $backPath;
+
                     }
 
 
@@ -603,13 +717,27 @@ class DutySlipService
         array $data
     ): DutySlip {
 
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY
+        |--------------------------------------------------------------------------
+        */
+
+        $this->ensureDutySlipAccess(
+            $dutySlip
+        );
+
+
         $oldFrontFile =
             $dutySlip->duty_slip_front_file;
+
 
         $oldBackFile =
             $dutySlip->duty_slip_back_file;
 
+
         $uploadedFiles = [];
+
 
         try {
 
@@ -638,6 +766,7 @@ class DutySlipService
                                     ?? []
                                 );
 
+
                         $expenses =
                             array_key_exists(
                                 'driver_expenses',
@@ -649,12 +778,18 @@ class DutySlipService
                                     ?? []
                                 );
 
+
                         if (!is_array($allowances)) {
+
                             $allowances = [];
+
                         }
 
+
                         if (!is_array($expenses)) {
+
                             $expenses = [];
+
                         }
 
 
@@ -667,6 +802,7 @@ class DutySlipService
                         $newFrontFile =
                             $data['duty_slip_front_file']
                             ?? null;
+
 
                         $newBackFile =
                             $data['duty_slip_back_file']
@@ -765,6 +901,7 @@ class DutySlipService
                                 ?? null
                             );
 
+
                         $data['duty_assignment_id'] =
                             (int) $dutyAssignment->id;
 
@@ -782,25 +919,44 @@ class DutySlipService
                                 ?? null
                             );
 
+
                         if (!$driverId) {
 
                             throw ValidationException::withMessages([
                                 'driver_id' =>
                                     'Please select a driver.',
                             ]);
+
                         }
 
-                        if (
-                            !Driver::query()
-                                ->whereKey($driverId)
-                                ->exists()
-                        ) {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | DRIVER EXISTS + OWNERSHIP
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $driverQuery =
+                            Driver::query()
+                                ->whereKey(
+                                    $driverId
+                                );
+
+
+                        $this->applyDriverOwnershipToDriverQuery(
+                            $driverQuery
+                        );
+
+
+                        if (!$driverQuery->exists()) {
 
                             throw ValidationException::withMessages([
                                 'driver_id' =>
-                                    'Selected driver does not exist.',
+                                    'Selected driver is not available for your account.',
                             ]);
+
                         }
+
 
                         $data['driver_id'] =
                             $driverId;
@@ -819,17 +975,22 @@ class DutySlipService
                                 ?? null
                             );
 
+
                         if (!$vehicleId) {
 
                             throw ValidationException::withMessages([
                                 'vehicle_id' =>
                                     'Please select a vehicle.',
                             ]);
+
                         }
+
 
                         if (
                             !VehicleManagement::query()
-                                ->whereKey($vehicleId)
+                                ->whereKey(
+                                    $vehicleId
+                                )
                                 ->exists()
                         ) {
 
@@ -837,7 +998,9 @@ class DutySlipService
                                 'vehicle_id' =>
                                     'Selected vehicle does not exist.',
                             ]);
+
                         }
+
 
                         $data['vehicle_id'] =
                             $vehicleId;
@@ -864,6 +1027,7 @@ class DutySlipService
                                     $data['vehicle_type']
                                     ?? null
                                 );
+
                         }
 
 
@@ -873,12 +1037,15 @@ class DutySlipService
                                 'vehicle_type_id' =>
                                     'Please select a vehicle type.',
                             ]);
+
                         }
 
 
                         if (
                             !VehicleType::query()
-                                ->whereKey($vehicleTypeId)
+                                ->whereKey(
+                                    $vehicleTypeId
+                                )
                                 ->exists()
                         ) {
 
@@ -886,6 +1053,7 @@ class DutySlipService
                                 'vehicle_type_id' =>
                                     'Selected vehicle type does not exist.',
                             ]);
+
                         }
 
 
@@ -930,8 +1098,10 @@ class DutySlipService
                                     'duty-slip/front'
                                 );
 
+
                             $uploadedFiles[] =
                                 $newFrontPath;
+
 
                             $data['duty_slip_front_file'] =
                                 $newFrontPath;
@@ -954,8 +1124,10 @@ class DutySlipService
                                     'duty-slip/back'
                                 );
 
+
                             $uploadedFiles[] =
                                 $newBackPath;
+
 
                             $data['duty_slip_back_file'] =
                                 $newBackPath;
@@ -1067,6 +1239,240 @@ class DutySlipService
 
     /*
     |--------------------------------------------------------------------------
+    | APPLY DUTY SLIP ACCESS SCOPE
+    |--------------------------------------------------------------------------
+    |
+    | admin       -> ALL
+    | operations  -> ALL
+    | accountant  -> ALL
+    | driver      -> ONLY drivers.user_id = Auth::id()
+    |
+    */
+
+    protected function applyDutySlipAccessScope(
+        Builder $query
+    ): Builder {
+
+        $user =
+            $this->authenticatedUser();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN / OPERATIONS / ACCOUNTANT
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->isFullDutySlipAccessRole(
+                $user->role
+            )
+        ) {
+
+            return $query;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $user->role === 'driver'
+        ) {
+
+            return $query->whereHas(
+                'driver',
+                function (Builder $driverQuery) use ($user) {
+
+                    $driverQuery->where(
+                        'user_id',
+                        $user->id
+                    );
+
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UNAUTHORIZED ROLE
+        |--------------------------------------------------------------------------
+        */
+
+        throw new AuthorizationException(
+            'You are not authorized to access duty slips.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ENSURE DUTY SLIP ACCESS
+    |--------------------------------------------------------------------------
+    |
+    | Used for update / delete.
+    |
+    */
+
+    protected function ensureDutySlipAccess(
+        DutySlip $dutySlip
+    ): void {
+
+        $user =
+            $this->authenticatedUser();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN / OPERATIONS / ACCOUNTANT
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->isFullDutySlipAccessRole(
+                $user->role
+            )
+        ) {
+
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $user->role === 'driver'
+        ) {
+
+            $ownsDutySlip =
+                Driver::query()
+                    ->whereKey(
+                        $dutySlip->driver_id
+                    )
+                    ->where(
+                        'user_id',
+                        $user->id
+                    )
+                    ->exists();
+
+
+            if ($ownsDutySlip) {
+
+                return;
+            }
+
+
+            throw new AuthorizationException(
+                'You are not authorized to access this duty slip.'
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | UNAUTHORIZED ROLE
+        |--------------------------------------------------------------------------
+        */
+
+        throw new AuthorizationException(
+            'You are not authorized to access this duty slip.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPLY DRIVER OWNERSHIP
+    |--------------------------------------------------------------------------
+    |
+    | For driver users, restrict Driver query to their own
+    | drivers.user_id = Auth::id().
+    |
+    | Admin / Operations / Accountant:
+    | No additional restriction.
+    |
+    */
+
+    protected function applyDriverOwnershipToDriverQuery(
+        Builder $query
+    ): Builder {
+
+        $user =
+            $this->authenticatedUser();
+
+
+        if (
+            $user->role === 'driver'
+        ) {
+
+            $query->where(
+                'user_id',
+                $user->id
+            );
+
+        }
+
+
+        return $query;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FULL DUTY SLIP ACCESS ROLE
+    |--------------------------------------------------------------------------
+    */
+
+    protected function isFullDutySlipAccessRole(
+        ?string $role
+    ): bool {
+
+        return in_array(
+            $role,
+            [
+                'admin',
+                'operations',
+                'accountant',
+            ],
+            true
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHENTICATED USER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function authenticatedUser()
+    {
+        $user =
+            Auth::user();
+
+
+        if (!$user) {
+
+            throw new AuthorizationException(
+                'Authentication is required.'
+            );
+        }
+
+
+        return $user;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | SYNC ALLOWANCES
     |--------------------------------------------------------------------------
     */
@@ -1125,14 +1531,17 @@ class DutySlipService
         foreach ($allowances as $allowance) {
 
             if (!is_array($allowance)) {
+
                 continue;
             }
+
 
             if (
                 empty(
                     $allowance['allowance_id']
                 )
             ) {
+
                 continue;
             }
 
@@ -1164,7 +1573,9 @@ class DutySlipService
 
 
             if ($quantity <= 0) {
+
                 $quantity = 1;
+
             }
 
 
@@ -1255,6 +1666,7 @@ class DutySlipService
 
                 $existingIds[] =
                     $record->id;
+
 
                 continue;
             }
@@ -1386,14 +1798,17 @@ class DutySlipService
         foreach ($expenses as $expense) {
 
             if (!is_array($expense)) {
+
                 continue;
             }
+
 
             if (
                 empty(
                     $expense['expense_id']
                 )
             ) {
+
                 continue;
             }
 
@@ -1425,7 +1840,9 @@ class DutySlipService
 
 
             if ($quantity <= 0) {
+
                 $quantity = 1;
+
             }
 
 
@@ -1503,6 +1920,7 @@ class DutySlipService
 
                 $existingIds[] =
                     $record->id;
+
 
                 continue;
             }
@@ -1682,61 +2100,49 @@ class DutySlipService
         array $data
     ): array {
 
-        /*
-        |--------------------------------------------------------------------------
-        | RAW VALUES
-        |--------------------------------------------------------------------------
-        */
-
         $startDate =
             $data['start_date']
             ?? null;
+
 
         $startTime =
             $data['start_time']
             ?? null;
 
+
         $endDate =
             $data['end_date']
             ?? null;
+
 
         $endTime =
             $data['end_time']
             ?? null;
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | CLEAN STRINGS
-        |--------------------------------------------------------------------------
-        */
-
         $startDate =
             $startDate !== null
                 ? trim((string) $startDate)
                 : null;
+
 
         $startTime =
             $startTime !== null
                 ? trim((string) $startTime)
                 : null;
 
+
         $endDate =
             $endDate !== null
                 ? trim((string) $endDate)
                 : null;
+
 
         $endTime =
             $endTime !== null
                 ? trim((string) $endTime)
                 : null;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE START DATETIME
-        |--------------------------------------------------------------------------
-        */
 
         $normalizedStart =
             $this->buildDateTimeValue(
@@ -1747,12 +2153,6 @@ class DutySlipService
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE END DATETIME
-        |--------------------------------------------------------------------------
-        */
-
         $normalizedEnd =
             $this->buildDateTimeValue(
                 $endDate,
@@ -1762,24 +2162,13 @@ class DutySlipService
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | SAVE DB DATETIME VALUES
-        |--------------------------------------------------------------------------
-        */
-
         $data['start_time'] =
             $normalizedStart;
+
 
         $data['end_time'] =
             $normalizedEnd;
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | FINAL ORDER VALIDATION
-        |--------------------------------------------------------------------------
-        */
 
         if (
             $normalizedStart !== null &&
@@ -1793,10 +2182,12 @@ class DutySlipService
                         $normalizedStart
                     );
 
+
                 $end =
                     Carbon::parse(
                         $normalizedEnd
                     );
+
 
                 if (
                     $end->lessThan($start)
@@ -1830,14 +2221,6 @@ class DutySlipService
     |--------------------------------------------------------------------------
     | BUILD DATETIME VALUE
     |--------------------------------------------------------------------------
-    |
-    | Supports:
-    |
-    | 14:30
-    | 14:30:00
-    | 2026-09-21 14:30
-    | 2026-09-21 14:30:00
-    |
     */
 
     protected function buildDateTimeValue(
@@ -1847,32 +2230,15 @@ class DutySlipService
         mixed $fallbackDate = null
     ): ?string {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Nothing Supplied
-        |--------------------------------------------------------------------------
-        */
-
         if (
             empty($date) &&
             empty($time)
         ) {
+
             return null;
+
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Already Combined DATETIME
-        |--------------------------------------------------------------------------
-        |
-        | Controller may already have converted:
-        |
-        | start_date + start_time
-        |
-        | into one datetime field.
-        |
-        */
 
         if (
             !empty($time) &&
@@ -1885,6 +2251,7 @@ class DutySlipService
                     $this->parseDateTimeSafely(
                         $time
                     );
+
 
                 return $dateTime->format(
                     'Y-m-d H:i:s'
@@ -1907,12 +2274,6 @@ class DutySlipService
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Time Exists But Date Is Missing
-        |--------------------------------------------------------------------------
-        */
-
         if (
             empty($date) &&
             !empty($time)
@@ -1921,6 +2282,7 @@ class DutySlipService
             $date =
                 $fallbackDate
                 ?? null;
+
 
             if (
                 empty($date)
@@ -1941,42 +2303,21 @@ class DutySlipService
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Date Exists But Time Is Missing
-        |--------------------------------------------------------------------------
-        |
-        | No datetime should be created.
-        | The DB field remains NULL.
-        |
-        */
-
         if (
             !empty($date) &&
             empty($time)
         ) {
 
             return null;
+
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE TIME FORMAT
-        |--------------------------------------------------------------------------
-        */
 
         $normalizedTime =
             $this->normalizeTimeValue(
                 $time
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | NORMALIZE DATE FORMAT
-        |--------------------------------------------------------------------------
-        */
 
         $normalizedDate =
             $this->normalizeDateValue(
@@ -1985,12 +2326,6 @@ class DutySlipService
             );
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | COMBINE DATE + TIME
-        |--------------------------------------------------------------------------
-        */
-
         try {
 
             $dateTime =
@@ -1998,6 +2333,7 @@ class DutySlipService
                     'Y-m-d H:i',
                     "{$normalizedDate} {$normalizedTime}"
                 );
+
 
             return $dateTime->format(
                 'Y-m-d H:i:s'
@@ -2055,12 +2391,6 @@ class DutySlipService
             trim($value);
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | With Seconds
-        |--------------------------------------------------------------------------
-        */
-
         try {
 
             return Carbon::createFromFormat(
@@ -2069,17 +2399,14 @@ class DutySlipService
             );
 
         } catch (\Throwable $exception) {
+
             /*
+            |--------------------------------------------------------------------------
             | Continue with minute format.
+            |--------------------------------------------------------------------------
             */
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Without Seconds
-        |--------------------------------------------------------------------------
-        */
 
         try {
 
@@ -2089,10 +2416,6 @@ class DutySlipService
             );
 
         } catch (\Throwable $exception) {
-
-            /*
-            | Final generic parse.
-            */
 
             return Carbon::parse(
                 $value
@@ -2126,12 +2449,6 @@ class DutySlipService
             trim($time);
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | H:i
-        |--------------------------------------------------------------------------
-        */
-
         if (
             preg_match(
                 '/^\d{2}:\d{2}$/',
@@ -2142,12 +2459,6 @@ class DutySlipService
             return $time;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | H:i:s
-        |--------------------------------------------------------------------------
-        */
 
         if (
             preg_match(
@@ -2163,12 +2474,6 @@ class DutySlipService
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Carbon Time Parse Fallback
-        |--------------------------------------------------------------------------
-        */
 
         try {
 
@@ -2335,6 +2640,7 @@ class DutySlipService
         $data['opening_meter'] =
             $openingMeter;
 
+
         $data['closing_meter'] =
             $closingMeter;
 
@@ -2375,6 +2681,7 @@ class DutySlipService
             $value === null ||
             $value === ''
         ) {
+
             return null;
         }
 
@@ -2382,6 +2689,7 @@ class DutySlipService
         if (
             !is_numeric($value)
         ) {
+
             return null;
         }
 
@@ -2410,6 +2718,7 @@ class DutySlipService
             $value === null ||
             $value === ''
         ) {
+
             return null;
         }
 
@@ -2421,15 +2730,10 @@ class DutySlipService
 
 
         if ($value === '') {
+
             return null;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Numeric ID
-        |--------------------------------------------------------------------------
-        */
 
         if (
             ctype_digit($value)
@@ -2438,17 +2742,12 @@ class DutySlipService
             $id =
                 (int) $value;
 
+
             return $id > 0
                 ? $id
                 : null;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Name
-        |--------------------------------------------------------------------------
-        */
 
         $id =
             VehicleType::query()
@@ -2460,15 +2759,10 @@ class DutySlipService
 
 
         if ($id) {
+
             return (int) $id;
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Code
-        |--------------------------------------------------------------------------
-        */
 
         $id =
             VehicleType::query()
@@ -2498,6 +2792,7 @@ class DutySlipService
         if (
             $value === null
         ) {
+
             return null;
         }
 
@@ -2564,6 +2859,7 @@ class DutySlipService
             if (
                 empty($file)
             ) {
+
                 continue;
             }
 
@@ -2604,6 +2900,7 @@ class DutySlipService
         if (
             empty($file)
         ) {
+
             return;
         }
 
@@ -2640,8 +2937,20 @@ class DutySlipService
         DutySlip $dutySlip
     ): bool {
 
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY
+        |--------------------------------------------------------------------------
+        */
+
+        $this->ensureDutySlipAccess(
+            $dutySlip
+        );
+
+
         $frontFile =
             $dutySlip->duty_slip_front_file;
+
 
         $backFile =
             $dutySlip->duty_slip_back_file;
@@ -2677,7 +2986,7 @@ class DutySlipService
 
                     /*
                     |--------------------------------------------------------------------------
-                    | deleted_by - only when column exists
+                    | deleted_by
                     |--------------------------------------------------------------------------
                     */
 
@@ -2690,6 +2999,7 @@ class DutySlipService
 
                         $dutySlip->deleted_by =
                             Auth::id();
+
 
                         $dutySlip->save();
                     }
@@ -2711,6 +3021,7 @@ class DutySlipService
             $this->deleteFileSafely(
                 $frontFile
             );
+
 
             $this->deleteFileSafely(
                 $backFile
