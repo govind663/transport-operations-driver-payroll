@@ -214,20 +214,28 @@ class DutySlipService
                 STR_PAD_LEFT
             );
     }
-
-
+    
     /*
     |--------------------------------------------------------------------------
-    | STORE
+    | STORE DUTY SLIP
     |--------------------------------------------------------------------------
+    |
+    | CREATE REQUIREMENTS:
+    |
+    | 1. Duty Slip Number is generated automatically by the backend.
+    | 2. Any slip_no submitted by the Create form is ignored.
+    | 3. Driver, Vehicle and Vehicle Type are validated.
+    | 4. Pickup and Drop Locations are saved in duty_slips.
+    | 5. Allowances and Expenses are synchronized.
+    | 6. Duty Slip and expense documents are uploaded.
+    | 7. Database transaction and uploaded-file cleanup are preserved.
+    |
     */
-
     public function store(
         array $data
     ): DutySlip {
 
         $uploadedFiles = [];
-
 
         try {
 
@@ -243,43 +251,27 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $allowances =
-                        array_key_exists(
-                            'driver_allowances',
-                            $data
-                        )
-                            ? $data['driver_allowances']
-                            : (
-                                $data['allowances']
-                                ?? []
-                            );
+                    $allowances = array_key_exists(
+                        'driver_allowances',
+                        $data
+                    )
+                        ? $data['driver_allowances']
+                        : ($data['allowances'] ?? []);
 
-
-                    $expenses =
-                        array_key_exists(
-                            'driver_expenses',
-                            $data
-                        )
-                            ? $data['driver_expenses']
-                            : (
-                                $data['expenses']
-                                ?? []
-                            );
-
+                    $expenses = array_key_exists(
+                        'driver_expenses',
+                        $data
+                    )
+                        ? $data['driver_expenses']
+                        : ($data['expenses'] ?? []);
 
                     if (!is_array($allowances)) {
-
                         $allowances = [];
-
                     }
-
 
                     if (!is_array($expenses)) {
-
                         $expenses = [];
-
                     }
-
 
                     /*
                     |--------------------------------------------------------------------------
@@ -287,15 +279,9 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $frontFile =
-                        $data['duty_slip_front_file']
-                        ?? null;
+                    $frontFile = $data['duty_slip_front_file'] ?? null;
 
-
-                    $backFile =
-                        $data['duty_slip_back_file']
-                        ?? null;
-
+                    $backFile = $data['duty_slip_back_file'] ?? null;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -303,11 +289,9 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $data =
-                        $this->normalizeDateTimeValues(
-                            $data
-                        );
-
+                    $data = $this->normalizeDateTimeValues(
+                        $data
+                    );
 
                     /*
                     |--------------------------------------------------------------------------
@@ -315,11 +299,41 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $data =
-                        $this->normalizeMeterValues(
-                            $data
-                        );
+                    $data = $this->normalizeMeterValues(
+                        $data
+                    );
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMALIZE PICKUP AND DROP LOCATIONS
+                    |--------------------------------------------------------------------------
+                    |
+                    | Keep these fields in $data because both columns exist
+                    | in the duty_slips database table.
+                    |
+                    | Empty strings become null.
+                    |
+                    */
+
+                    foreach ([
+                        'pickup_location',
+                        'drop_location',
+                    ] as $locationField) {
+
+                        if (array_key_exists($locationField, $data)) {
+
+                            $location = $data[$locationField];
+
+                            if ($location !== null) {
+
+                                $location = trim((string) $location);
+
+                                $data[$locationField] = $location !== ''
+                                    ? $location
+                                    : null;
+                            }
+                        }
+                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -334,24 +348,29 @@ class DutySlipService
                         $data['driver_expenses']
                     );
 
-
                     /*
                     |--------------------------------------------------------------------------
                     | REMOVE FORM-ONLY DATA
                     |--------------------------------------------------------------------------
+                    |
+                    | IMPORTANT:
+                    |
+                    | Do not remove:
+                    | - pickup_location
+                    | - drop_location
+                    | - vehicle_type (until it has been resolved below)
+                    |
+                    | Passenger and fuel fields are removed because this
+                    | service does not store them as duty_slips columns.
+                    |
                     */
 
                     unset(
-                        $data['vehicle_type'],
-
                         $data['start_date'],
                         $data['end_date'],
 
                         $data['opening_km'],
                         $data['closing_km'],
-
-                        $data['pickup_location'],
-                        $data['drop_location'],
 
                         $data['passenger_name'],
                         $data['passenger_mobile'],
@@ -365,27 +384,22 @@ class DutySlipService
                         $data['grand_total']
                     );
 
-
                     /*
                     |--------------------------------------------------------------------------
                     | CREATED BY
                     |--------------------------------------------------------------------------
                     */
 
-                    $data['created_by'] =
-                        Auth::id();
-
+                    $data['created_by'] = Auth::id();
 
                     /*
                     |--------------------------------------------------------------------------
-                    | STATUS
+                    | DEFAULT STATUS
                     |--------------------------------------------------------------------------
                     */
 
-                    $data['status'] =
-                        $data['status']
+                    $data['status'] = $data['status']
                         ?? DutySlip::STATUS_OPEN;
-
 
                     /*
                     |--------------------------------------------------------------------------
@@ -393,16 +407,12 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $dutyAssignment =
-                        $this->getDutyAssignment(
-                            $data['duty_assignment_id']
-                            ?? null
-                        );
-
+                    $dutyAssignment = $this->getDutyAssignment(
+                        $data['duty_assignment_id'] ?? null
+                    );
 
                     $data['duty_assignment_id'] =
                         (int) $dutyAssignment->id;
-
 
                     /*
                     |--------------------------------------------------------------------------
@@ -410,64 +420,41 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $driverId =
-                        $this->normalizeRequiredId(
-                            $data['driver_id']
-                            ?? null
-                        );
-
+                    $driverId = $this->normalizeRequiredId(
+                        $data['driver_id'] ?? null
+                    );
 
                     if (!$driverId) {
-
                         throw ValidationException::withMessages([
-                            'driver_id' =>
-                                'Please select a driver.',
+                            'driver_id' => 'Please select a driver.',
                         ]);
-
                     }
 
-
                     /*
                     |--------------------------------------------------------------------------
-                    | DRIVER EXISTS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $driverQuery =
-                        Driver::query()
-                            ->whereKey(
-                                $driverId
-                            );
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | DRIVER ROLE OWNERSHIP
+                    | DRIVER EXISTS AND OWNERSHIP
                     |--------------------------------------------------------------------------
                     |
-                    | A logged-in driver can create only a Duty Slip
+                    | A logged-in driver may create a Duty Slip only
                     | for their own Driver record.
                     |
                     */
+
+                    $driverQuery = Driver::query()
+                        ->whereKey($driverId);
 
                     $this->applyDriverOwnershipToDriverQuery(
                         $driverQuery
                     );
 
-
                     if (!$driverQuery->exists()) {
-
                         throw ValidationException::withMessages([
                             'driver_id' =>
                                 'Selected driver is not available for your account.',
                         ]);
-
                     }
 
-
-                    $data['driver_id'] =
-                        $driverId;
-
+                    $data['driver_id'] = $driverId;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -475,42 +462,28 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $vehicleId =
-                        $this->normalizeRequiredId(
-                            $data['vehicle_id']
-                            ?? null
-                        );
-
+                    $vehicleId = $this->normalizeRequiredId(
+                        $data['vehicle_id'] ?? null
+                    );
 
                     if (!$vehicleId) {
-
                         throw ValidationException::withMessages([
-                            'vehicle_id' =>
-                                'Please select a vehicle.',
+                            'vehicle_id' => 'Please select a vehicle.',
                         ]);
-
                     }
-
 
                     if (
                         !VehicleManagement::query()
-                            ->whereKey(
-                                $vehicleId
-                            )
+                            ->whereKey($vehicleId)
                             ->exists()
                     ) {
-
                         throw ValidationException::withMessages([
                             'vehicle_id' =>
                                 'Selected vehicle does not exist.',
                         ]);
-
                     }
 
-
-                    $data['vehicle_id'] =
-                        $vehicleId;
-
+                    $data['vehicle_id'] = $vehicleId;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -518,151 +491,122 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $vehicleTypeId =
-                        $this->normalizeRequiredId(
-                            $data['vehicle_type_id']
-                            ?? null
-                        );
-
+                    $vehicleTypeId = $this->normalizeRequiredId(
+                        $data['vehicle_type_id'] ?? null
+                    );
 
                     /*
                     |--------------------------------------------------------------------------
-                    | LEGACY FALLBACK
+                    | LEGACY VEHICLE TYPE FALLBACK
                     |--------------------------------------------------------------------------
+                    |
+                    | Resolve vehicle_type before removing the legacy form field.
+                    |
                     */
 
                     if (!$vehicleTypeId) {
-
-                        $vehicleTypeId =
-                            $this->resolveLegacyVehicleType(
-                                $data['vehicle_type']
-                                ?? null
-                            );
-
+                        $vehicleTypeId = $this->resolveLegacyVehicleType(
+                            $data['vehicle_type'] ?? null
+                        );
                     }
 
-
                     if (!$vehicleTypeId) {
-
                         throw ValidationException::withMessages([
                             'vehicle_type_id' =>
                                 'Please select a vehicle type.',
                         ]);
-
                     }
-
 
                     if (
                         !VehicleType::query()
-                            ->whereKey(
-                                $vehicleTypeId
-                            )
+                            ->whereKey($vehicleTypeId)
                             ->exists()
                     ) {
-
                         throw ValidationException::withMessages([
                             'vehicle_type_id' =>
                                 'Selected vehicle type does not exist.',
                         ]);
-
                     }
 
-
-                    $data['vehicle_type_id'] =
-                        $vehicleTypeId;
-
+                    $data['vehicle_type_id'] = $vehicleTypeId;
 
                     /*
                     |--------------------------------------------------------------------------
-                    | REMOVE LEGACY VALUE
+                    | REMOVE LEGACY VEHICLE TYPE
                     |--------------------------------------------------------------------------
                     */
 
-                    unset(
-                        $data['vehicle_type']
-                    );
-
+                    unset($data['vehicle_type']);
 
                     /*
                     |--------------------------------------------------------------------------
-                    | SERVER-SIDE SLIP NUMBER
+                    | CREATE: AUTO-GENERATE DUTY SLIP NUMBER
                     |--------------------------------------------------------------------------
+                    |
+                    | The final number is always generated by the backend.
+                    | Ignore any number submitted by the Create form.
+                    |
                     */
 
-                    $data['slip_no'] =
-                        $this->generateNextSlipNo();
+                    unset($data['slip_no']);
 
+                    $data['slip_no'] = $this->generateNextSlipNo();
 
                     /*
                     |--------------------------------------------------------------------------
-                    | FRONT FILE
+                    | UPLOAD DUTY SLIP FRONT FILE
                     |--------------------------------------------------------------------------
                     */
 
-                    if (
-                        $frontFile instanceof UploadedFile
-                    ) {
+                    if ($frontFile instanceof UploadedFile) {
 
-                        $frontPath =
-                            $this->fileUploadService->upload(
-                                $frontFile,
-                                'duty-slip/front'
-                            );
-
-
-                        $uploadedFiles[] =
-                            $frontPath;
-
-
-                        $data['duty_slip_front_file'] =
-                            $frontPath;
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | BACK FILE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (
-                        $backFile instanceof UploadedFile
-                    ) {
-
-                        $backPath =
-                            $this->fileUploadService->upload(
-                                $backFile,
-                                'duty-slip/back'
-                            );
-
-
-                        $uploadedFiles[] =
-                            $backPath;
-
-
-                        $data['duty_slip_back_file'] =
-                            $backPath;
-
-                    }
-
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CREATE DUTY SLIP
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $dutySlip =
-                        DutySlip::create(
-                            $data
+                        $frontPath = $this->fileUploadService->upload(
+                            $frontFile,
+                            'duty-slip/front'
                         );
 
+                        $uploadedFiles[] = $frontPath;
+
+                        $data['duty_slip_front_file'] = $frontPath;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPLOAD DUTY SLIP BACK FILE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($backFile instanceof UploadedFile) {
+
+                        $backPath = $this->fileUploadService->upload(
+                            $backFile,
+                            'duty-slip/back'
+                        );
+
+                        $uploadedFiles[] = $backPath;
+
+                        $data['duty_slip_back_file'] = $backPath;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CREATE DUTY SLIP RECORD
+                    |--------------------------------------------------------------------------
+                    |
+                    | pickup_location and drop_location remain in $data
+                    | and are saved through the DutySlip model's $fillable.
+                    |
+                    */
+
+                    $dutySlip = DutySlip::create($data);
 
                     /*
                     |--------------------------------------------------------------------------
                     | SYNC ALLOWANCES
                     |--------------------------------------------------------------------------
+                    |
+                    | Existing allowance-master calculation remains unchanged.
+                    |
                     */
 
                     $this->syncAllowances(
@@ -670,11 +614,15 @@ class DutySlipService
                         $allowances
                     );
 
-
                     /*
                     |--------------------------------------------------------------------------
                     | SYNC EXPENSES
                     |--------------------------------------------------------------------------
+                    |
+                    | Actual Rate is entered for each expense.
+                    | Backend calculates Amount = Quantity × Rate.
+                    | Expense documents are handled by syncExpenses().
+                    |
                     */
 
                     $this->syncExpenses(
@@ -683,10 +631,9 @@ class DutySlipService
                         $uploadedFiles
                     );
 
-
                     /*
                     |--------------------------------------------------------------------------
-                    | FRESH
+                    | RETURN FRESH DUTY SLIP
                     |--------------------------------------------------------------------------
                     */
 
@@ -698,6 +645,12 @@ class DutySlipService
 
         } catch (\Throwable $exception) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | CLEANUP UPLOADED FILES IF CREATE FAILS
+            |--------------------------------------------------------------------------
+            */
+
             $this->cleanupUploadedFiles(
                 $uploadedFiles
             );
@@ -706,13 +659,21 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | UPDATE
+    | UPDATE DUTY SLIP
     |--------------------------------------------------------------------------
+    |
+    | CREATE:
+    |   Duty Slip Number is automatically generated in store().
+    |
+    | UPDATE:
+    |   User can edit the existing Duty Slip Number.
+    |   Submitted number is normalized before saving.
+    |   Duplicate numbers are rejected.
+    |   Existing number is preserved if slip_no is not submitted.
+    |
     */
-
     public function update(
         DutySlip $dutySlip,
         array $data
@@ -724,553 +685,537 @@ class DutySlipService
         |--------------------------------------------------------------------------
         */
 
-        $this->ensureDutySlipAccess(
-            $dutySlip
-        );
-
-
-        $oldFrontFile =
-            $dutySlip->duty_slip_front_file;
-
-
-        $oldBackFile =
-            $dutySlip->duty_slip_back_file;
-
-
-        $uploadedFiles = [];
-
+        $this->ensureDutySlipAccess($dutySlip);
 
         /*
         |--------------------------------------------------------------------------
-        | OLD CHILD FILES TO DELETE AFTER SUCCESS
+        | EXISTING PARENT FILES
+        |--------------------------------------------------------------------------
+        */
+
+        $oldFrontFile = $dutySlip->duty_slip_front_file;
+        $oldBackFile = $dutySlip->duty_slip_back_file;
+
+        /*
+        |--------------------------------------------------------------------------
+        | TRACK NEWLY UPLOADED FILES
+        |--------------------------------------------------------------------------
+        */
+
+        $uploadedFiles = [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | OLD FILES TO DELETE AFTER SUCCESSFUL TRANSACTION
         |--------------------------------------------------------------------------
         */
 
         $filesToDelete = [];
 
-
         try {
 
-            $updatedDutySlip =
-                DB::transaction(
-                    function () use (
-                        $dutySlip,
-                        $data,
-                        &$uploadedFiles,
-                        &$filesToDelete
+            $updatedDutySlip = DB::transaction(
+                function () use (
+                    $dutySlip,
+                    $data,
+                    &$uploadedFiles,
+                    &$filesToDelete
+                ) {
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | CHILD PAYLOAD
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $allowances = array_key_exists(
+                        'driver_allowances',
+                        $data
+                    )
+                        ? $data['driver_allowances']
+                        : ($data['allowances'] ?? []);
+
+                    $expenses = array_key_exists(
+                        'driver_expenses',
+                        $data
+                    )
+                        ? $data['driver_expenses']
+                        : ($data['expenses'] ?? []);
+
+                    if (!is_array($allowances)) {
+                        $allowances = [];
+                    }
+
+                    if (!is_array($expenses)) {
+                        $expenses = [];
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NEW PARENT FILES
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $newFrontFile =
+                        $data['duty_slip_front_file'] ?? null;
+
+                    $newBackFile =
+                        $data['duty_slip_back_file'] ?? null;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMALIZE DATE / TIME
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $data = $this->normalizeDateTimeValues($data);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMALIZE METER VALUES
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $data = $this->normalizeMeterValues($data);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMALIZE PICKUP / DROP LOCATIONS
+                    |--------------------------------------------------------------------------
+                    |
+                    | Keep these fields in $data so they can be saved to
+                    | the duty_slips table.
+                    |
+                    | Trim surrounding spaces.
+                    | Convert empty strings to null.
+                    | If a field is not submitted, preserve its existing value.
+                    |
+                    */
+
+                    foreach ([
+                        'pickup_location',
+                        'drop_location',
+                    ] as $locationField) {
+
+                        if (array_key_exists($locationField, $data)) {
+
+                            if (is_string($data[$locationField])) {
+                                $data[$locationField] = trim(
+                                    $data[$locationField]
+                                );
+                            }
+
+                            if ($data[$locationField] === '') {
+                                $data[$locationField] = null;
+                            }
+                        }
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | REMOVE CHILD DATA
+                    |--------------------------------------------------------------------------
+                    */
+
+                    unset(
+                        $data['allowances'],
+                        $data['expenses'],
+                        $data['driver_allowances'],
+                        $data['driver_expenses']
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | REMOVE FORM-ONLY DATA
+                    |--------------------------------------------------------------------------
+                    |
+                    | IMPORTANT:
+                    | Do not remove pickup_location or drop_location.
+                    | Do not remove vehicle_type before resolving the legacy
+                    | vehicle type fallback below.
+                    |
+                    */
+
+                    unset(
+                        $data['start_date'],
+                        $data['end_date'],
+
+                        $data['opening_km'],
+                        $data['closing_km'],
+
+                        $data['passenger_name'],
+                        $data['passenger_mobile'],
+                        $data['number_of_passengers'],
+
+                        $data['fuel_quantity'],
+                        $data['fuel_amount'],
+
+                        $data['total_allowance'],
+                        $data['total_expense'],
+                        $data['grand_total']
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPDATED BY
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $data['updated_by'] = Auth::id();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DUTY ASSIGNMENT
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $dutyAssignment = $this->getDutyAssignment(
+                        $data['duty_assignment_id']
+                            ?? $dutySlip->duty_assignment_id
+                            ?? null
+                    );
+
+                    $data['duty_assignment_id'] =
+                        (int) $dutyAssignment->id;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DRIVER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $driverId = $this->normalizeRequiredId(
+                        $data['driver_id']
+                            ?? $dutySlip->driver_id
+                            ?? null
+                    );
+
+                    if (!$driverId) {
+                        throw ValidationException::withMessages([
+                            'driver_id' => 'Please select a driver.',
+                        ]);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DRIVER EXISTS AND OWNERSHIP
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $driverQuery = Driver::query()
+                        ->whereKey($driverId);
+
+                    $this->applyDriverOwnershipToDriverQuery(
+                        $driverQuery
+                    );
+
+                    if (!$driverQuery->exists()) {
+                        throw ValidationException::withMessages([
+                            'driver_id' =>
+                                'Selected driver is not available for your account.',
+                        ]);
+                    }
+
+                    $data['driver_id'] = $driverId;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | VEHICLE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $vehicleId = $this->normalizeRequiredId(
+                        $data['vehicle_id']
+                            ?? $dutySlip->vehicle_id
+                            ?? null
+                    );
+
+                    if (!$vehicleId) {
+                        throw ValidationException::withMessages([
+                            'vehicle_id' => 'Please select a vehicle.',
+                        ]);
+                    }
+
+                    if (
+                        !VehicleManagement::query()
+                            ->whereKey($vehicleId)
+                            ->exists()
                     ) {
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | CHILD PAYLOAD
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $allowances =
-                            array_key_exists(
-                                'driver_allowances',
-                                $data
-                            )
-                                ? $data['driver_allowances']
-                                : (
-                                    $data['allowances']
-                                    ?? []
-                                );
-
-
-                        $expenses =
-                            array_key_exists(
-                                'driver_expenses',
-                                $data
-                            )
-                                ? $data['driver_expenses']
-                                : (
-                                    $data['expenses']
-                                    ?? []
-                                );
-
-
-                        if (!is_array($allowances)) {
-
-                            $allowances = [];
-
-                        }
-
-
-                        if (!is_array($expenses)) {
-
-                            $expenses = [];
-
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FILES
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $newFrontFile =
-                            $data['duty_slip_front_file']
-                            ?? null;
-
-
-                        $newBackFile =
-                            $data['duty_slip_back_file']
-                            ?? null;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | NORMALIZE DATE / TIME
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $data =
-                            $this->normalizeDateTimeValues(
-                                $data
-                            );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | NORMALIZE METERS
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $data =
-                            $this->normalizeMeterValues(
-                                $data
-                            );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | REMOVE CHILD DATA
-                        |--------------------------------------------------------------------------
-                        */
-
-                        unset(
-                            $data['allowances'],
-                            $data['expenses'],
-                            $data['driver_allowances'],
-                            $data['driver_expenses']
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | REMOVE FORM-ONLY DATA
-                        |--------------------------------------------------------------------------
-                        */
-
-                        unset(
-                            $data['vehicle_type'],
-
-                            $data['start_date'],
-                            $data['end_date'],
-
-                            $data['opening_km'],
-                            $data['closing_km'],
-
-                            $data['pickup_location'],
-                            $data['drop_location'],
-
-                            $data['passenger_name'],
-                            $data['passenger_mobile'],
-                            $data['number_of_passengers'],
-
-                            $data['fuel_quantity'],
-                            $data['fuel_amount'],
-
-                            $data['total_allowance'],
-                            $data['total_expense'],
-                            $data['grand_total']
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | UPDATED BY
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $data['updated_by'] =
-                            Auth::id();
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | DUTY ASSIGNMENT
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $dutyAssignment =
-                            $this->getDutyAssignment(
-                                $data['duty_assignment_id']
-                                ?? $dutySlip->duty_assignment_id
-                                ?? null
-                            );
-
-
-                        $data['duty_assignment_id'] =
-                            (int) $dutyAssignment->id;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | DRIVER
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $driverId =
-                            $this->normalizeRequiredId(
-                                $data['driver_id']
-                                ?? $dutySlip->driver_id
-                                ?? null
-                            );
-
-
-                        if (!$driverId) {
-
-                            throw ValidationException::withMessages([
-                                'driver_id' =>
-                                    'Please select a driver.',
-                            ]);
-
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | DRIVER EXISTS + OWNERSHIP
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $driverQuery =
-                            Driver::query()
-                                ->whereKey(
-                                    $driverId
-                                );
-
-
-                        $this->applyDriverOwnershipToDriverQuery(
-                            $driverQuery
-                        );
-
-
-                        if (!$driverQuery->exists()) {
-
-                            throw ValidationException::withMessages([
-                                'driver_id' =>
-                                    'Selected driver is not available for your account.',
-                            ]);
-
-                        }
-
-
-                        $data['driver_id'] =
-                            $driverId;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | VEHICLE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $vehicleId =
-                            $this->normalizeRequiredId(
-                                $data['vehicle_id']
-                                ?? $dutySlip->vehicle_id
-                                ?? null
-                            );
-
-
-                        if (!$vehicleId) {
-
-                            throw ValidationException::withMessages([
-                                'vehicle_id' =>
-                                    'Please select a vehicle.',
-                            ]);
-
-                        }
-
-
-                        if (
-                            !VehicleManagement::query()
-                                ->whereKey(
-                                    $vehicleId
-                                )
-                                ->exists()
-                        ) {
-
-                            throw ValidationException::withMessages([
-                                'vehicle_id' =>
-                                    'Selected vehicle does not exist.',
-                            ]);
-
-                        }
-
-
-                        $data['vehicle_id'] =
-                            $vehicleId;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | VEHICLE TYPE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $vehicleTypeId =
-                            $this->normalizeRequiredId(
-                                $data['vehicle_type_id']
-                                ?? $dutySlip->vehicle_type_id
-                                ?? null
-                            );
-
-
-                        if (!$vehicleTypeId) {
-
-                            $vehicleTypeId =
-                                $this->resolveLegacyVehicleType(
-                                    $data['vehicle_type']
-                                    ?? null
-                                );
-
-                        }
-
-
-                        if (!$vehicleTypeId) {
-
-                            throw ValidationException::withMessages([
-                                'vehicle_type_id' =>
-                                    'Please select a vehicle type.',
-                            ]);
-
-                        }
-
-
-                        if (
-                            !VehicleType::query()
-                                ->whereKey(
-                                    $vehicleTypeId
-                                )
-                                ->exists()
-                        ) {
-
-                            throw ValidationException::withMessages([
-                                'vehicle_type_id' =>
-                                    'Selected vehicle type does not exist.',
-                            ]);
-
-                        }
-
-
-                        $data['vehicle_type_id'] =
-                            $vehicleTypeId;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | REMOVE LEGACY VALUE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        unset(
-                            $data['vehicle_type']
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PRESERVE SLIP NUMBER
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $data['slip_no'] =
-                            $dutySlip->slip_no;
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FRONT FILE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            $newFrontFile instanceof UploadedFile
-                        ) {
-
-                            $newFrontPath =
-                                $this->fileUploadService->upload(
-                                    $newFrontFile,
-                                    'duty-slip/front'
-                                );
-
-
-                            $uploadedFiles[] =
-                                $newFrontPath;
-
-
-                            $data['duty_slip_front_file'] =
-                                $newFrontPath;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | BACK FILE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            $newBackFile instanceof UploadedFile
-                        ) {
-
-                            $newBackPath =
-                                $this->fileUploadService->upload(
-                                    $newBackFile,
-                                    'duty-slip/back'
-                                );
-
-
-                            $uploadedFiles[] =
-                                $newBackPath;
-
-
-                            $data['duty_slip_back_file'] =
-                                $newBackPath;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | UPDATE PARENT
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $dutySlip->update(
-                            $data
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SYNC ALLOWANCES
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $this->syncAllowances(
-                            $dutySlip,
-                            $allowances
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SYNC EXPENSES
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $this->syncExpenses(
-                            $dutySlip,
-                            $expenses,
-                            $uploadedFiles,
-                            $filesToDelete
-                        );
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | FRESH
-                        |--------------------------------------------------------------------------
-                        */
-
-                        return $this->freshDutySlip(
-                            $dutySlip
+                        throw ValidationException::withMessages([
+                            'vehicle_id' =>
+                                'Selected vehicle does not exist.',
+                        ]);
+                    }
+
+                    $data['vehicle_id'] = $vehicleId;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | VEHICLE TYPE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $vehicleTypeId = $this->normalizeRequiredId(
+                        $data['vehicle_type_id']
+                            ?? $dutySlip->vehicle_type_id
+                            ?? null
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | LEGACY VEHICLE TYPE FALLBACK
+                    |--------------------------------------------------------------------------
+                    |
+                    | Resolve vehicle_type before removing it from $data.
+                    |
+                    */
+
+                    if (!$vehicleTypeId) {
+                        $vehicleTypeId = $this->resolveLegacyVehicleType(
+                            $data['vehicle_type'] ?? null
                         );
                     }
-                );
 
+                    if (!$vehicleTypeId) {
+                        throw ValidationException::withMessages([
+                            'vehicle_type_id' =>
+                                'Please select a vehicle type.',
+                        ]);
+                    }
+
+                    if (
+                        !VehicleType::query()
+                            ->whereKey($vehicleTypeId)
+                            ->exists()
+                    ) {
+                        throw ValidationException::withMessages([
+                            'vehicle_type_id' =>
+                                'Selected vehicle type does not exist.',
+                        ]);
+                    }
+
+                    $data['vehicle_type_id'] = $vehicleTypeId;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | REMOVE LEGACY VEHICLE TYPE
+                    |--------------------------------------------------------------------------
+                    |
+                    | vehicle_type_id is the database field.
+                    | vehicle_type is used only as a legacy fallback.
+                    |
+                    */
+
+                    unset($data['vehicle_type']);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPDATE DUTY SLIP NUMBER
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (array_key_exists('slip_no', $data)) {
+
+                        $normalizedSlipNo = $this->normalizeSlipNo(
+                            $data['slip_no']
+                        );
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | REQUIRED DUTY SLIP NUMBER
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if ($normalizedSlipNo === null) {
+                            throw ValidationException::withMessages([
+                                'slip_no' =>
+                                    'Duty slip number is required.',
+                            ]);
+                        }
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | UNIQUE DUTY SLIP NUMBER CHECK
+                        |--------------------------------------------------------------------------
+                        |
+                        | Include soft-deleted records in the duplicate check.
+                        |
+                        */
+
+                        $duplicateSlipNo = DutySlip::withTrashed()
+                            ->where('slip_no', $normalizedSlipNo)
+                            ->where('id', '!=', $dutySlip->id)
+                            ->exists();
+
+                        if ($duplicateSlipNo) {
+                            throw ValidationException::withMessages([
+                                'slip_no' =>
+                                    'This duty slip number already exists.',
+                            ]);
+                        }
+
+                        $data['slip_no'] = $normalizedSlipNo;
+
+                    } else {
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | PRESERVE EXISTING DUTY SLIP NUMBER
+                        |--------------------------------------------------------------------------
+                        */
+
+                        $data['slip_no'] = $dutySlip->slip_no;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPLOAD NEW FRONT FILE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($newFrontFile instanceof UploadedFile) {
+
+                        $newFrontPath = $this->fileUploadService->upload(
+                            $newFrontFile,
+                            'duty-slip/front'
+                        );
+
+                        $uploadedFiles[] = $newFrontPath;
+
+                        $data['duty_slip_front_file'] = $newFrontPath;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPLOAD NEW BACK FILE
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if ($newBackFile instanceof UploadedFile) {
+
+                        $newBackPath = $this->fileUploadService->upload(
+                            $newBackFile,
+                            'duty-slip/back'
+                        );
+
+                        $uploadedFiles[] = $newBackPath;
+
+                        $data['duty_slip_back_file'] = $newBackPath;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | UPDATE DUTY SLIP RECORD
+                    |--------------------------------------------------------------------------
+                    |
+                    | pickup_location and drop_location are now retained in
+                    | $data and can be saved, provided they are fillable
+                    | in the DutySlip model.
+                    |
+                    */
+
+                    $dutySlip->update($data);
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SYNC ALLOWANCES
+                    |--------------------------------------------------------------------------
+                    |
+                    | Existing allowance-master calculation remains unchanged.
+                    |
+                    */
+
+                    $this->syncAllowances(
+                        $dutySlip,
+                        $allowances
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SYNC EXPENSES
+                    |--------------------------------------------------------------------------
+                    |
+                    | Amount = Quantity × User-entered Rate.
+                    | Existing expense documents remain unless replaced or removed.
+                    |
+                    */
+
+                    $this->syncExpenses(
+                        $dutySlip,
+                        $expenses,
+                        $uploadedFiles,
+                        $filesToDelete
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | RETURN FRESH DUTY SLIP
+                    |--------------------------------------------------------------------------
+                    */
+
+                    return $this->freshDutySlip($dutySlip);
+                }
+            );
 
             /*
             |--------------------------------------------------------------------------
-            | DELETE OLD FRONT
+            | DELETE OLD FRONT FILE AFTER SUCCESS
             |--------------------------------------------------------------------------
             */
 
             if (
                 !empty($oldFrontFile) &&
-                !empty(
-                    $updatedDutySlip->duty_slip_front_file
-                ) &&
-                $oldFrontFile !==
-                    $updatedDutySlip->duty_slip_front_file
+                !empty($updatedDutySlip->duty_slip_front_file) &&
+                $oldFrontFile !== $updatedDutySlip->duty_slip_front_file
             ) {
-
-                $filesToDelete[] =
-                    $oldFrontFile;
+                $filesToDelete[] = $oldFrontFile;
             }
-
 
             /*
             |--------------------------------------------------------------------------
-            | DELETE OLD BACK
+            | DELETE OLD BACK FILE AFTER SUCCESS
             |--------------------------------------------------------------------------
             */
 
             if (
                 !empty($oldBackFile) &&
-                !empty(
-                    $updatedDutySlip->duty_slip_back_file
-                ) &&
-                $oldBackFile !==
-                    $updatedDutySlip->duty_slip_back_file
+                !empty($updatedDutySlip->duty_slip_back_file) &&
+                $oldBackFile !== $updatedDutySlip->duty_slip_back_file
             ) {
-
-                $filesToDelete[] =
-                    $oldBackFile;
+                $filesToDelete[] = $oldBackFile;
             }
-
 
             /*
             |--------------------------------------------------------------------------
-            | DELETE OLD / REMOVED CHILD FILES
+            | DELETE REPLACED / REMOVED CHILD FILES
             |--------------------------------------------------------------------------
             */
 
-            $filesToDelete =
-                array_values(
-                    array_unique(
-                        array_filter(
-                            $filesToDelete
-                        )
-                    )
-                );
-
+            $filesToDelete = array_values(
+                array_unique(
+                    array_filter($filesToDelete)
+                )
+            );
 
             foreach ($filesToDelete as $file) {
-
-                $this->deleteFileSafely(
-                    $file
-                );
+                $this->deleteFileSafely($file);
             }
-
 
             return $updatedDutySlip;
 
         } catch (\Throwable $exception) {
 
-            $this->cleanupUploadedFiles(
-                $uploadedFiles
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | CLEANUP NEW FILES IF UPDATE FAILS
+            |--------------------------------------------------------------------------
+            */
+
+            $this->cleanupUploadedFiles($uploadedFiles);
 
             throw $exception;
         }
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1629,6 +1574,16 @@ class DutySlipService
             }
 
 
+            /*
+            |--------------------------------------------------------------------------
+            | ALLOWANCE MASTER RATE
+            |--------------------------------------------------------------------------
+            |
+            | Allowance business rule is unchanged.
+            | Allowance rate continues to come from Allowance Master.
+            |
+            */
+
             $rate =
                 (float) (
                     $master->amount
@@ -1780,7 +1735,19 @@ class DutySlipService
     | SYNC EXPENSES
     |--------------------------------------------------------------------------
     |
-    | Expense document handling:
+    | BUSINESS RULE:
+    |
+    | Expense Master:
+    |   - Provides Expense Type / Name only.
+    |
+    | Driver Expense:
+    |   - Quantity is entered by user.
+    |   - Actual Rate is entered by user.
+    |   - Amount = Quantity × Actual Rate.
+    |
+    | Expense Master amount/rate is NOT used here.
+    |
+    | Document handling:
     |
     | - New expense document -> upload + save
     | - Existing expense without new document -> keep old document
@@ -1803,6 +1770,12 @@ class DutySlipService
         |--------------------------------------------------------------------------
         | EXPENSE MASTER IDS
         |--------------------------------------------------------------------------
+        |
+        | Still load the selected Expense Masters so that the backend
+        | can verify the selected Expense Type exists.
+        |
+        | The Master amount is intentionally NOT used for Rate.
+        |
         */
 
         $expenseIds =
@@ -1866,7 +1839,9 @@ class DutySlipService
         |--------------------------------------------------------------------------
         */
 
-        foreach ($expenses as $expense) {
+        foreach (
+            $expenses as $expenseIndex => $expense
+        ) {
 
             if (!is_array($expense)) {
 
@@ -1911,7 +1886,7 @@ class DutySlipService
             if (!$master) {
 
                 throw ValidationException::withMessages([
-                    'driver_expenses' =>
+                    "driver_expenses.{$expenseIndex}.expense_id" =>
                         'One of the selected expenses does not exist.',
                 ]);
             }
@@ -1923,41 +1898,101 @@ class DutySlipService
             |--------------------------------------------------------------------------
             */
 
+            $quantityRaw =
+                $expense['quantity']
+                ?? null;
+
+
+            if (
+                $quantityRaw === null ||
+                $quantityRaw === ''
+            ) {
+
+                throw ValidationException::withMessages([
+                    "driver_expenses.{$expenseIndex}.quantity" =>
+                        'Expense quantity is required.',
+                ]);
+            }
+
+
             $quantity =
-                isset($expense['quantity']) &&
-                $expense['quantity'] !== ''
-                    ? (float) $expense['quantity']
-                    : 1;
+                (float) $quantityRaw;
 
 
             if ($quantity <= 0) {
 
-                $quantity = 1;
-
+                throw ValidationException::withMessages([
+                    "driver_expenses.{$expenseIndex}.quantity" =>
+                        'Expense quantity must be greater than zero.',
+                ]);
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | RATE
+            | ACTUAL EXPENSE RATE
             |--------------------------------------------------------------------------
             |
-            | Always use Expense Master amount.
-            | Frontend rate is not trusted.
+            | BUSINESS REQUIREMENT:
+            |
+            | Expense Master does NOT define the driver's actual Rate.
+            |
+            | The user must enter the actual transaction Rate.
             |
             */
 
+            $rateRaw =
+                $expense['rate']
+                ?? null;
+
+
+            if (
+                $rateRaw === null ||
+                $rateRaw === ''
+            ) {
+
+                throw ValidationException::withMessages([
+                    "driver_expenses.{$expenseIndex}.rate" =>
+                        'Expense rate is required.',
+                ]);
+            }
+
+
+            if (
+                !is_numeric($rateRaw)
+            ) {
+
+                throw ValidationException::withMessages([
+                    "driver_expenses.{$expenseIndex}.rate" =>
+                        'Expense rate must be a valid number.',
+                ]);
+            }
+
+
             $rate =
-                (float) (
-                    $master->amount
-                    ?? 0
-                );
+                (float) $rateRaw;
+
+
+            if ($rate < 0) {
+
+                throw ValidationException::withMessages([
+                    "driver_expenses.{$expenseIndex}.rate" =>
+                        'Expense rate cannot be negative.',
+                ]);
+            }
 
 
             /*
             |--------------------------------------------------------------------------
             | AMOUNT
             |--------------------------------------------------------------------------
+            |
+            | Final amount is always calculated by backend:
+            |
+            |   Quantity × Actual Rate
+            |
+            | Frontend amount is never trusted.
+            |
             */
 
             $amount =
@@ -2035,7 +2070,7 @@ class DutySlipService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Old Document
+                | OLD DOCUMENT
                 |--------------------------------------------------------------------------
                 */
 
@@ -2316,6 +2351,67 @@ class DutySlipService
         return $assignmentDriverId !== null
             ? (int) $assignmentDriverId
             : null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE DUTY SLIP NUMBER
+    |--------------------------------------------------------------------------
+    |
+    | Examples:
+    |
+    |   " ds 000125 " -> "DS000125"
+    |   "DS 000125"   -> "DS000125"
+    |
+    */
+
+    protected function normalizeSlipNo(
+        mixed $value
+    ): ?string {
+
+        if (
+            $value === null
+        ) {
+
+            return null;
+        }
+
+
+        $value =
+            trim(
+                (string) $value
+            );
+
+
+        if (
+            $value === ''
+        ) {
+
+            return null;
+        }
+
+
+        $value =
+            preg_replace(
+                '/\s+/',
+                '',
+                $value
+            );
+
+
+        if (
+            $value === null ||
+            $value === ''
+        ) {
+
+            return null;
+        }
+
+
+        return strtoupper(
+            $value
+        );
     }
 
 

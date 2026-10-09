@@ -18,6 +18,20 @@
         font-weight: 600;
         letter-spacing: 0.5px;
     }
+
+    .location-cell {
+        min-width: 180px;
+        max-width: 260px;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+
+    .location-text {
+        display: inline-block;
+        max-width: 250px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 </style>
 
 @endpush
@@ -28,7 +42,6 @@
 <div class="pd-ltr-20 xs-pd-20-10">
 
     <div class="min-height-200px">
-
 
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
@@ -42,20 +55,15 @@
                 <div class="col-md-6 col-sm-12">
 
                     <h4 class="text-blue">
-
                         Duty Slips
-
                     </h4>
 
                     <p class="mb-0">
-
                         Manage all duty slips, trip details, vehicle usage
-                        and fuel information.
-
+                        and pickup/drop locations.
                     </p>
 
                 </div>
-
 
                 {{-- Add Duty Slip --}}
                 <div class="col-md-6 col-sm-12 text-right">
@@ -65,7 +73,6 @@
                         class="btn btn-primary">
 
                         <i class="fa fa-plus"></i>
-
                         Add New Duty Slip
 
                     </a>
@@ -77,39 +84,28 @@
         </div>
 
 
-
         {{-- ========================================================= --}}
         {{-- DUTY SLIP LIST CARD --}}
         {{-- ========================================================= --}}
 
         <div class="card-box mb-30">
 
-
             {{-- Card Header --}}
-
             <div class="pd-20">
 
                 <div class="d-flex justify-content-between align-items-center">
 
                     <h4 class="text-blue h4 mb-0">
-
                         All Duty Slips
-
                     </h4>
 
-
                     <span class="badge badge-primary">
-
-                        Total :
-
-                        {{ $dutySlips->count() }}
-
+                        Total : {{ $dutySlips->count() }}
                     </span>
 
                 </div>
 
             </div>
-
 
 
             {{-- ===================================================== --}}
@@ -121,7 +117,6 @@
                 <table
                     class="table hover multiple-select-row data-table-export1 nowrap p-3"
                     data-title="Duty Slips">
-
 
                     {{-- ================================================= --}}
                     {{-- TABLE HEADER --}}
@@ -167,12 +162,14 @@
                                 Total KM
                             </th>
 
+                            {{-- Pickup Location --}}
                             <th class="text-wrap">
-                                Fuel Quantity
+                                Pickup Location
                             </th>
 
+                            {{-- Drop Location --}}
                             <th class="text-wrap">
-                                Fuel Amount
+                                Drop Location
                             </th>
 
                             <th class="text-wrap">
@@ -196,7 +193,6 @@
                     </thead>
 
 
-
                     {{-- ================================================= --}}
                     {{-- TABLE BODY --}}
                     {{-- ================================================= --}}
@@ -207,17 +203,13 @@
 
                             <tr>
 
-
                                 {{-- ========================================= --}}
-                                {{-- Sr No --}}
+                                {{-- Sr. No. --}}
                                 {{-- ========================================= --}}
 
                                 <td>
-
                                     {{ $key + 1 }}
-
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -227,13 +219,10 @@
                                 <td>
 
                                     <strong class="slip-code">
-
                                         {{ $dutySlip->slip_no ?? '-' }}
-
                                     </strong>
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -245,11 +234,8 @@
                                     @if($dutySlip->dutyAssignment)
 
                                         <strong class="text-dark">
-
                                             {{ $dutySlip->dutyAssignment->assignment_no ?? '-' }}
-
                                         </strong>
-
 
                                         @if(
                                             !empty(
@@ -265,7 +251,6 @@
                                                 <i class="fa fa-user"></i>
 
                                                 Driver:
-
                                                 {{ $dutySlip->dutyAssignment->driver->driver_code }}
 
                                             </small>
@@ -279,7 +264,6 @@
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -299,7 +283,6 @@
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -329,7 +312,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- End Time --}}
                                 {{-- ========================================= --}}
@@ -357,7 +339,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Opening Meter --}}
                                 {{-- ========================================= --}}
@@ -367,12 +348,10 @@
                                     @if($dutySlip->opening_meter !== null)
 
                                         <span class="amount-text">
-
                                             {{ number_format(
                                                 (float) $dutySlip->opening_meter,
                                                 2
                                             ) }}
-
                                         </span>
 
                                     @else
@@ -382,7 +361,6 @@
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -394,12 +372,10 @@
                                     @if($dutySlip->closing_meter !== null)
 
                                         <span class="amount-text">
-
                                             {{ number_format(
                                                 (float) $dutySlip->closing_meter,
                                                 2
                                             ) }}
-
                                         </span>
 
                                     @else
@@ -409,7 +385,6 @@
                                     @endif
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -440,43 +415,23 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
-                                {{-- Fuel Quantity --}}
-                                {{-- ========================================= --}}
-
-                                <td>
-
-                                    @if($dutySlip->fuel_quantity !== null)
-
-                                        {{ number_format(
-                                            (float) $dutySlip->fuel_quantity,
-                                            2
-                                        ) }}
-
-                                    @else
-
-                                        -
-
-                                    @endif
-
-                                </td>
-
-
-
-                                {{-- ========================================= --}}
-                                {{-- Fuel Amount --}}
+                                {{-- Pickup Location --}}
                                 {{-- ========================================= --}}
 
-                                <td>
+                                <td class="location-cell">
 
-                                    @if($dutySlip->fuel_amount !== null)
+                                    @if(!empty($dutySlip->pickup_location))
 
-                                        <span class="amount-text">
+                                        <span
+                                            class="location-text"
+                                            title="{{ $dutySlip->pickup_location }}">
 
-                                            ₹{{ number_format(
-                                                (float) $dutySlip->fuel_amount,
-                                                2
+                                            <i class="fa fa-map-marker text-success"></i>
+
+                                            {{ \Illuminate\Support\Str::limit(
+                                                $dutySlip->pickup_location,
+                                                50
                                             ) }}
 
                                         </span>
@@ -489,6 +444,35 @@
 
                                 </td>
 
+
+                                {{-- ========================================= --}}
+                                {{-- Drop Location --}}
+                                {{-- ========================================= --}}
+
+                                <td class="location-cell">
+
+                                    @if(!empty($dutySlip->drop_location))
+
+                                        <span
+                                            class="location-text"
+                                            title="{{ $dutySlip->drop_location }}">
+
+                                            <i class="fa fa-map-marker text-danger"></i>
+
+                                            {{ \Illuminate\Support\Str::limit(
+                                                $dutySlip->drop_location,
+                                                50
+                                            ) }}
+
+                                        </span>
+
+                                    @else
+
+                                        -
+
+                                    @endif
+
+                                </td>
 
 
                                 {{-- ========================================= --}}
@@ -503,45 +487,33 @@
 
                                         $statusClass = match ($status) {
 
-                                            'open' =>
-                                                'badge-primary',
+                                            'open' => 'badge-primary',
 
-                                            'started' =>
-                                                'badge-info',
+                                            'started' => 'badge-info',
 
-                                            'completed' =>
-                                                'badge-success',
+                                            'completed' => 'badge-success',
 
-                                            'cancelled' =>
-                                                'badge-danger',
+                                            'cancelled' => 'badge-danger',
 
-                                            default =>
-                                                'badge-secondary',
+                                            default => 'badge-secondary',
 
                                         };
 
-
                                         $statusIcon = match ($status) {
 
-                                            'open' =>
-                                                'fa-folder-open',
+                                            'open' => 'fa-folder-open',
 
-                                            'started' =>
-                                                'fa-play',
+                                            'started' => 'fa-play',
 
-                                            'completed' =>
-                                                'fa-check-circle',
+                                            'completed' => 'fa-check-circle',
 
-                                            'cancelled' =>
-                                                'fa-times-circle',
+                                            'cancelled' => 'fa-times-circle',
 
-                                            default =>
-                                                'fa-info-circle',
+                                            default => 'fa-info-circle',
 
                                         };
 
                                     @endphp
-
 
                                     <span
                                         class="badge {{ $statusClass }} badge-pill px-3 py-2">
@@ -555,7 +527,6 @@
                                 </td>
 
 
-
                                 {{-- ========================================= --}}
                                 {{-- Remarks --}}
                                 {{-- ========================================= --}}
@@ -564,8 +535,7 @@
 
                                     @if(!empty($dutySlip->remarks))
 
-                                        <span
-                                            title="{{ $dutySlip->remarks }}">
+                                        <span title="{{ $dutySlip->remarks }}">
 
                                             {{ \Illuminate\Support\Str::limit(
                                                 $dutySlip->remarks,
@@ -582,6 +552,7 @@
 
                                 </td>
 
+
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}
                                 {{-- ========================================= --}}
@@ -596,13 +567,11 @@
                                         class="btn btn-warning btn-sm">
 
                                         <i class="dw dw-pencil-1"></i>
-
                                         Edit
 
                                     </a>
 
                                 </td>
-
 
 
                                 {{-- ========================================= --}}
@@ -612,20 +581,25 @@
                                 <td class="no-export">
 
                                     <form
-                                        action="{{ route('duty-slips.destroy', $dutySlip->id) }}"
+                                        action="{{ route(
+                                            'duty-slips.destroy',
+                                            $dutySlip->id
+                                        ) }}"
                                         method="POST"
-                                        class="delete-form"
-                                    >
+                                        class="delete-form">
+
                                         @csrf
                                         @method('DELETE')
 
                                         <button
                                             type="submit"
-                                            class="btn btn-danger btn-sm"
-                                        >
+                                            class="btn btn-danger btn-sm">
+
                                             <i class="dw dw-trash"></i>
                                             Delete
+
                                         </button>
+
                                     </form>
 
                                 </td>
@@ -640,12 +614,8 @@
 
                             <tr>
 
-                                <td
-                                    colspan="16"
-                                    class="text-center">
-
+                                <td colspan="15" class="text-center">
                                     No Duty Slips Found
-
                                 </td>
 
                             </tr>
@@ -663,10 +633,11 @@
     </div>
 
 
-    {{-- Footer --}}
+    {{-- ========================================================= --}}
+    {{-- FOOTER --}}
+    {{-- ========================================================= --}}
 
     <x-backend.footer />
-
 
 </div>
 
@@ -685,8 +656,7 @@ document.addEventListener('DOMContentLoaded', function () {
     | DUTY SLIP DELETE CONFIRMATION
     |--------------------------------------------------------------------------
     |
-    | Delegated submit handler:
-    | Works for normal rows as well as DataTable-generated/re-drawn rows.
+    | Delegated submit handler supports normal rows and DataTable redraws.
     |
     */
 
@@ -700,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         /*
         |--------------------------------------------------------------------------
-        | Stop normal form submission
+        | STOP NORMAL FORM SUBMISSION
         |--------------------------------------------------------------------------
         */
 
@@ -708,23 +678,15 @@ document.addEventListener('DOMContentLoaded', function () {
         e.stopPropagation();
         e.stopImmediatePropagation();
 
-
         /*
         |--------------------------------------------------------------------------
-        | SweetAlert Availability Check
+        | SWEETALERT AVAILABILITY CHECK
         |--------------------------------------------------------------------------
         */
 
         if (typeof Swal === 'undefined') {
 
-            console.error(
-                'SweetAlert2 is not loaded.'
-            );
-
-            /*
-            | Fallback:
-            | Ask browser confirmation instead of silently submitting.
-            */
+            console.error('SweetAlert2 is not loaded.');
 
             if (
                 window.confirm(
@@ -737,10 +699,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Confirmation Dialog
+        | CONFIRMATION DIALOG
         |--------------------------------------------------------------------------
         */
 
@@ -769,12 +730,6 @@ document.addEventListener('DOMContentLoaded', function () {
             allowEscapeKey: true
 
         }).then(function (result) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Confirmed
-            |--------------------------------------------------------------------------
-            */
 
             if (result.isConfirmed) {
 

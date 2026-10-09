@@ -46,6 +46,19 @@ class DutySlip extends Model
 
         /*
         |--------------------------------------------------------------------------
+        | Trip Location Information
+        |--------------------------------------------------------------------------
+        |
+        | Pickup and Drop Location are stored directly in duty_slips.
+        |
+        */
+
+        'pickup_location',
+        'drop_location',
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Trip Information
         |--------------------------------------------------------------------------
         */
@@ -119,20 +132,15 @@ class DutySlip extends Model
         |--------------------------------------------------------------------------
         */
 
-        'id' =>
-            'integer',
+        'id' => 'integer',
 
-        'duty_assignment_id' =>
-            'integer',
+        'duty_assignment_id' => 'integer',
 
-        'driver_id' =>
-            'integer',
+        'driver_id' => 'integer',
 
-        'vehicle_id' =>
-            'integer',
+        'vehicle_id' => 'integer',
 
-        'vehicle_type_id' =>
-            'integer',
+        'vehicle_type_id' => 'integer',
 
 
         /*
@@ -141,8 +149,7 @@ class DutySlip extends Model
         |--------------------------------------------------------------------------
         */
 
-        'duty_date' =>
-            'date:Y-m-d',
+        'duty_date' => 'date:Y-m-d',
 
 
         /*
@@ -151,11 +158,9 @@ class DutySlip extends Model
         |--------------------------------------------------------------------------
         */
 
-        'start_time' =>
-            'datetime',
+        'start_time' => 'datetime',
 
-        'end_time' =>
-            'datetime',
+        'end_time' => 'datetime',
 
 
         /*
@@ -164,14 +169,11 @@ class DutySlip extends Model
         |--------------------------------------------------------------------------
         */
 
-        'opening_meter' =>
-            'decimal:2',
+        'opening_meter' => 'decimal:2',
 
-        'closing_meter' =>
-            'decimal:2',
+        'closing_meter' => 'decimal:2',
 
-        'total_km' =>
-            'decimal:2',
+        'total_km' => 'decimal:2',
 
 
         /*
@@ -180,14 +182,11 @@ class DutySlip extends Model
         |--------------------------------------------------------------------------
         */
 
-        'created_by' =>
-            'integer',
+        'created_by' => 'integer',
 
-        'updated_by' =>
-            'integer',
+        'updated_by' => 'integer',
 
-        'deleted_by' =>
-            'integer',
+        'deleted_by' => 'integer',
     ];
 
 
@@ -213,15 +212,10 @@ class DutySlip extends Model
     */
 
     public const STATUSES = [
-
         self::STATUS_OPEN,
-
         self::STATUS_STARTED,
-
         self::STATUS_COMPLETED,
-
         self::STATUS_CANCELLED,
-
     ];
 
 
@@ -480,11 +474,7 @@ class DutySlip extends Model
 
     public function getAllowanceTotalAttribute(): float
     {
-        if (
-            $this->relationLoaded(
-                'driverAllowances'
-            )
-        ) {
+        if ($this->relationLoaded('driverAllowances')) {
 
             return round(
                 (float) $this->driverAllowances
@@ -496,7 +486,6 @@ class DutySlip extends Model
                 2
             );
         }
-
 
         return round(
             (float) $this->driverAllowances()
@@ -518,11 +507,7 @@ class DutySlip extends Model
 
     public function getExpenseTotalAttribute(): float
     {
-        if (
-            $this->relationLoaded(
-                'driverExpenses'
-            )
-        ) {
+        if ($this->relationLoaded('driverExpenses')) {
 
             return round(
                 (float) $this->driverExpenses
@@ -534,7 +519,6 @@ class DutySlip extends Model
                 2
             );
         }
-
 
         return round(
             (float) $this->driverExpenses()
