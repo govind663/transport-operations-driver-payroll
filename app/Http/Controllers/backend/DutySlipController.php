@@ -56,8 +56,7 @@ class DutySlipController extends Controller
         $dutySlips = $this->dutySlipService
             ->getDutySlips();
 
-        return view(
-            'backend.duty-slips.index',
+        return view('backend.duty-slips.index',
             compact('dutySlips')
         );
     }
@@ -163,8 +162,7 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view(
-            'backend.duty-slips.create',
+        return view('backend.duty-slips.create',
             compact(
                 'dutyAssignments',
                 'allowances',
@@ -253,8 +251,7 @@ class DutySlipController extends Controller
                 $dutySlip->id
             );
 
-        return view(
-            'backend.duty-slips.show',
+        return view('backend.duty-slips.show',
             compact('dutySlip')
         );
     }
@@ -360,8 +357,7 @@ class DutySlipController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view(
-            'backend.duty-slips.edit',
+        return view('backend.duty-slips.edit',
             compact(
                 'dutySlip',
                 'dutyAssignments',

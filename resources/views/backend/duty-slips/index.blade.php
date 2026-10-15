@@ -556,20 +556,26 @@
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}
                                 {{-- ========================================= --}}
-
                                 <td class="no-export">
 
-                                    <a
-                                        href="{{ route(
-                                            'duty-slips.edit',
-                                            $dutySlip->id
-                                        ) }}"
-                                        class="btn btn-warning btn-sm">
+                                    @if(
+                                        !(
+                                            auth()->check()
+                                            && auth()->user()->role === 'driver'
+                                            && strtolower((string) $dutySlip->status) === 'cancelled'
+                                        )
+                                    )
 
-                                        <i class="dw dw-pencil-1"></i>
-                                        Edit
+                                        <a
+                                            href="{{ route('duty-slips.edit', $dutySlip->id) }}"
+                                            class="btn btn-warning btn-sm">
 
-                                    </a>
+                                            <i class="dw dw-pencil-1"></i>
+                                            Edit
+
+                                        </a>
+
+                                    @endif
 
                                 </td>
 
@@ -577,30 +583,36 @@
                                 {{-- ========================================= --}}
                                 {{-- Delete --}}
                                 {{-- ========================================= --}}
-
                                 <td class="no-export">
 
-                                    <form
-                                        action="{{ route(
-                                            'duty-slips.destroy',
-                                            $dutySlip->id
-                                        ) }}"
-                                        method="POST"
-                                        class="delete-form">
+                                    @if(
+                                        !(
+                                            auth()->check()
+                                            && auth()->user()->role === 'driver'
+                                            && strtolower((string) $dutySlip->status) === 'cancelled'
+                                        )
+                                    )
 
-                                        @csrf
-                                        @method('DELETE')
+                                        <form
+                                            action="{{ route('duty-slips.destroy', $dutySlip->id) }}"
+                                            method="POST"
+                                            class="delete-form">
 
-                                        <button
-                                            type="submit"
-                                            class="btn btn-danger btn-sm">
+                                            @csrf
+                                            @method('DELETE')
 
-                                            <i class="dw dw-trash"></i>
-                                            Delete
+                                            <button
+                                                type="submit"
+                                                class="btn btn-danger btn-sm">
 
-                                        </button>
+                                                <i class="dw dw-trash"></i>
+                                                Delete
 
-                                    </form>
+                                            </button>
+
+                                        </form>
+
+                                    @endif
 
                                 </td>
 

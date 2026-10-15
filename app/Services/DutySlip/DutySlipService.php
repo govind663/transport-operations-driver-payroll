@@ -689,6 +689,22 @@ class DutySlipService
 
         /*
         |--------------------------------------------------------------------------
+        | PREVENT DRIVER FROM EDITING A CANCELLED DUTY SLIP
+        |--------------------------------------------------------------------------
+        |
+        | Drivers may not edit their own Duty Slip after it is cancelled.
+        | The exception message is intended to be shown by the controller
+        | as a user-friendly toast/flash message.
+        |
+        */
+
+        $this->preventDriverModificationOfCancelledSlip(
+            $dutySlip,
+            'edit'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
         | EXISTING PARENT FILES
         |--------------------------------------------------------------------------
         */
@@ -1365,6 +1381,42 @@ class DutySlipService
         throw new AuthorizationException(
             'You are not authorized to access this duty slip.'
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREVENT DRIVER MODIFICATION OF CANCELLED DUTY SLIP
+    |--------------------------------------------------------------------------
+    |
+    | Only the driver role is restricted by this rule.
+    | Admin, Operations and Accountant retain their existing access.
+    | Call this after ensureDutySlipAccess() so ownership is verified first.
+    |
+    | The AuthorizationException message can be flashed by the controller
+    | and displayed in the existing SweetAlert toast on the index page.
+    |
+    */
+
+    protected function preventDriverModificationOfCancelledSlip(
+        DutySlip $dutySlip,
+        string $action
+    ): void {
+
+        $user = $this->authenticatedUser();
+
+        if (
+            $user->role !== 'driver' ||
+            strtolower((string) $dutySlip->status) !== 'cancelled'
+        ) {
+            return;
+        }
+
+        $message = $action === 'delete'
+            ? 'This duty slip is cancelled. You cannot delete it as a driver.'
+            : 'This duty slip is cancelled. You cannot edit it as a driver.';
+
+        throw new AuthorizationException($message);
     }
 
 
@@ -3286,6 +3338,21 @@ class DutySlipService
 
         $this->ensureDutySlipAccess(
             $dutySlip
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | PREVENT DRIVER FROM DELETING A CANCELLED DUTY SLIP
+        |--------------------------------------------------------------------------
+        |
+        | The exception message can be shown as a user-friendly toast by the
+        | controller. No records or files are deleted when this check fails.
+        |
+        */
+
+        $this->preventDriverModificationOfCancelledSlip(
+            $dutySlip,
+            'delete'
         );
 
 
