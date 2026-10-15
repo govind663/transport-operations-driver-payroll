@@ -111,6 +111,18 @@
             margin-top: 8px;
         }
 
+        .expense-document-existing img {
+            display: block;
+            width: 120px;
+            max-width: 100%;
+            max-height: 90px;
+            object-fit: contain;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 2px;
+            background: #fff;
+        }
+
         .expense-document-name {
             font-size: 12px;
             color: #6c757d;
@@ -158,6 +170,62 @@
 @section('content')
 
     @php
+
+        /*
+        |--------------------------------------------------------------------------
+        | DUTY SLIP FILE URL RESOLVER
+        |--------------------------------------------------------------------------
+        |
+        | Supports paths stored by the public storage disk, older uploads in
+        | backend/assets/uploads/duty-slip, paths with a storage/ or public/
+        | prefix, and absolute URLs. Normalizing this in one place prevents the
+        | preview <img> and the View link from being generated with bad paths.
+        |
+        */
+
+        $resolveDutySlipFileUrl = static function ($storedPath) {
+            $path = trim((string) $storedPath);
+
+            if ($path === '') {
+                return null;
+            }
+
+            if (preg_match('#^https?://#i', $path)) {
+                return $path;
+            }
+
+            $path = str_replace('\\', '/', $path);
+            $path = preg_replace('#^(?:\./)+#', '', $path) ?? $path;
+            $path = ltrim($path, '/');
+
+            if (str_starts_with($path, 'storage/app/public/')) {
+                $path = substr($path, strlen('storage/app/public/'));
+            } elseif (str_starts_with($path, 'public/storage/')) {
+                $path = substr($path, strlen('public/'));
+            } elseif (str_starts_with($path, 'public/')) {
+                $path = substr($path, strlen('public/'));
+            }
+
+            if (str_starts_with($path, 'backend/assets/uploads/')) {
+                return asset($path);
+            }
+
+            if (str_starts_with($path, 'storage/')) {
+                return asset($path);
+            }
+
+            if (str_starts_with($path, 'duty-slip/')) {
+                return asset('storage/' . $path);
+            }
+
+            if (str_starts_with($path, 'uploads/')) {
+                return asset('backend/assets/' . $path);
+            }
+
+            // Legacy records contain only the original filename.
+            return asset('backend/assets/uploads/duty-slip/' . $path);
+        };
+
 
         /*
         |--------------------------------------------------------------------------
@@ -960,36 +1028,20 @@
                                                 );
 
 
+                                            $frontFileExtensionPath =
+                                                parse_url($frontFilePath, PHP_URL_PATH)
+                                                ?: $frontFilePath;
+
                                             $frontFileExtension =
                                                 strtolower(
                                                     pathinfo(
-                                                        $frontFilePath,
+                                                        $frontFileExtensionPath,
                                                         PATHINFO_EXTENSION
                                                     )
                                                 );
 
 
-                                            if (
-                                                str_starts_with(
-                                                    $frontFilePath,
-                                                    'duty-slip/'
-                                                )
-                                            ) {
-
-                                                $frontFileUrl =
-                                                    asset(
-                                                        'storage/' .
-                                                        $frontFilePath
-                                                    );
-
-                                            } else {
-
-                                                $frontFileUrl =
-                                                    asset(
-                                                        'backend/assets/uploads/duty-slip/' .
-                                                        $frontFilePath
-                                                    );
-                                            }
+                                            $frontFileUrl = $resolveDutySlipFileUrl($dutySlip->duty_slip_front_file);
 
 
                                             $frontImageExtensions = [
@@ -1015,8 +1067,9 @@
                                                 <img
                                                     src="{{ $frontFileUrl }}"
                                                     alt="Duty Slip Front"
-                                                    loading="lazy"
+                                                    loading="eager"
                                                     decoding="async"
+                                                    fetchpriority="high"
                                                     class="img-thumbnail"
                                                     style="
                                                         width:220px;
@@ -1028,10 +1081,6 @@
                                                         border:2px solid #dee2e6;
                                                         border-radius:10px;
                                                         box-shadow:0 2px 10px rgba(0,0,0,.15);
-                                                    "
-                                                    onerror="
-                                                        this.onerror=null;
-                                                        this.src='{{ asset('backend/assets/img/logo/user.png') }}';
                                                     "
                                                 >
 
@@ -1241,36 +1290,20 @@
                                                 );
 
 
+                                            $backFileExtensionPath =
+                                                parse_url($backFilePath, PHP_URL_PATH)
+                                                ?: $backFilePath;
+
                                             $backFileExtension =
                                                 strtolower(
                                                     pathinfo(
-                                                        $backFilePath,
+                                                        $backFileExtensionPath,
                                                         PATHINFO_EXTENSION
                                                     )
                                                 );
 
 
-                                            if (
-                                                str_starts_with(
-                                                    $backFilePath,
-                                                    'duty-slip/'
-                                                )
-                                            ) {
-
-                                                $backFileUrl =
-                                                    asset(
-                                                        'storage/' .
-                                                        $backFilePath
-                                                    );
-
-                                            } else {
-
-                                                $backFileUrl =
-                                                    asset(
-                                                        'backend/assets/uploads/duty-slip/' .
-                                                        $backFilePath
-                                                    );
-                                            }
+                                            $backFileUrl = $resolveDutySlipFileUrl($dutySlip->duty_slip_back_file);
 
 
                                             $backImageExtensions = [
@@ -1296,8 +1329,9 @@
                                                 <img
                                                     src="{{ $backFileUrl }}"
                                                     alt="Duty Slip Back"
-                                                    loading="lazy"
+                                                    loading="eager"
                                                     decoding="async"
+                                                    fetchpriority="high"
                                                     class="img-thumbnail"
                                                     style="
                                                         width:220px;
@@ -1309,10 +1343,6 @@
                                                         border:2px solid #dee2e6;
                                                         border-radius:10px;
                                                         box-shadow:0 2px 10px rgba(0,0,0,.15);
-                                                    "
-                                                    onerror="
-                                                        this.onerror=null;
-                                                        this.src='{{ asset('backend/assets/img/logo/user.png') }}';
                                                     "
                                                 >
 
@@ -2446,36 +2476,21 @@
                                                                 );
 
 
+                                                            $expenseDocumentExtensionPath =
+                                                                parse_url($expenseDocumentPath, PHP_URL_PATH)
+                                                                ?: $expenseDocumentPath;
+
                                                             $expenseDocumentExtension =
                                                                 strtolower(
                                                                     pathinfo(
-                                                                        $expenseDocumentPath,
+                                                                        $expenseDocumentExtensionPath,
                                                                         PATHINFO_EXTENSION
                                                                     )
                                                                 );
 
-
-                                                            if (
-                                                                str_starts_with(
-                                                                    $expenseDocumentPath,
-                                                                    'duty-slip/'
-                                                                )
-                                                            ) {
-
-                                                                $expenseDocumentUrl =
-                                                                    asset(
-                                                                        'storage/' .
-                                                                        $expenseDocumentPath
-                                                                    );
-
-                                                            } else {
-
-                                                                $expenseDocumentUrl =
-                                                                    asset(
-                                                                        'backend/assets/uploads/duty-slip/' .
-                                                                        $expenseDocumentPath
-                                                                    );
-                                                            }
+                                                            $expenseDocumentUrl = $resolveDutySlipFileUrl(
+                                                                $driverExpense->document_file
+                                                            );
 
 
                                                             $expenseImageExtensions = [
@@ -2501,8 +2516,9 @@
                                                                 <img
                                                                     src="{{ $expenseDocumentUrl }}"
                                                                     alt="Expense Document"
-                                                                    loading="lazy"
+                                                                    loading="eager"
                                                                     decoding="async"
+                                                                    class="expense-document-image"
                                                                 >
 
 

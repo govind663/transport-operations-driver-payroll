@@ -1418,22 +1418,6 @@
 
         /*
         |--------------------------------------------------------------------------
-        | EXPENSE DOCUMENT INPUT
-        |--------------------------------------------------------------------------
-        */
-
-        $(document).on(
-            'change',
-            '.expense-document-input',
-            function () {
-
-                previewExpenseDocument(this);
-            }
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
         | EXPENSE INDEX
         |--------------------------------------------------------------------------
         */
@@ -2104,6 +2088,61 @@
                 return true;
             }
         );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | INITIALIZE EXISTING DOCUMENT IMAGES
+        |--------------------------------------------------------------------------
+        |
+        | Saved images are rendered by Blade. Load them eagerly on the edit
+        | screen and make a failed image request visible instead of leaving a
+        | blank preview area.
+        |
+        */
+
+        function initializeExistingDocumentImages() {
+
+            const selector = [
+                '#duty-slip-front-file-preview img',
+                '#duty-slip-back-file-preview img',
+                '.expense-document-existing img'
+            ].join(', ');
+
+            $(selector).each(function () {
+
+                const image = this;
+
+                image.loading = 'eager';
+                image.decoding = 'async';
+                image.style.display = 'block';
+
+                function showImageLoadError() {
+
+                    if (image.dataset.previewErrorShown === '1') {
+                        return;
+                    }
+
+                    image.dataset.previewErrorShown = '1';
+                    image.style.display = 'none';
+
+                    const notice = document.createElement('small');
+                    notice.className = 'text-danger d-block mt-2';
+                    notice.textContent = 'Image preview could not be loaded. Use the View button to open the saved file.';
+
+                    image.insertAdjacentElement('afterend', notice);
+                }
+
+                image.addEventListener('error', showImageLoadError, { once: true });
+
+                // The request may have failed before this script initialized.
+                if (image.complete && image.naturalWidth === 0) {
+                    showImageLoadError();
+                }
+            });
+        }
+
+        initializeExistingDocumentImages();
 
 
         /*
