@@ -4,13 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserHistory extends Model
 {
     use HasFactory;
 
+    /**
+     * Database table associated with this model.
+     */
     protected $table = 'user_histories';
 
+    /**
+     * Attributes that can be mass assigned.
+     */
     protected $fillable = [
         'user_id',
         'activity',
@@ -20,23 +27,43 @@ class UserHistory extends Model
         'device',
         'user_agent',
         'activity_time',
-    ];
 
-    protected $casts = [
-        'activity_time' => 'datetime',
-        'created_at'    => 'datetime',
-        'updated_at'    => 'datetime',
+        // Optional browser location data
+        'latitude',
+        'longitude',
+        'location_accuracy',
+        'location_captured_at',
     ];
 
     /**
-     * User relationship
+     * Attribute casting.
      */
-    public function user()
+    protected $casts = [
+        'activity_time'        => 'datetime',
+        'location_captured_at' => 'datetime',
+
+        'latitude'             => 'float',
+        'longitude'            => 'float',
+        'location_accuracy'    => 'float',
+
+        'created_at'           => 'datetime',
+        'updated_at'           => 'datetime',
+    ];
+
+    /**
+     * User associated with this activity history.
+     */
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(
-            User::class,
-            'user_id',
-            'id'
-        );
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
+     * Check whether valid coordinates are available.
+     */
+    public function hasLocation(): bool
+    {
+        return $this->latitude !== null
+            && $this->longitude !== null;
     }
 }

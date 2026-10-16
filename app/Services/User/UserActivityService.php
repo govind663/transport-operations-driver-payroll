@@ -11,103 +11,65 @@ class UserActivityService
     |--------------------------------------------------------------------------
     | LOG ACTIVITY
     |--------------------------------------------------------------------------
+    |
+    | User activity ke saath IP, device aur optional browser location
+    | information save karne ke liye.
+    |
     */
 
     public function log(
         string $activity,
-        ?int $userId = null
+        ?int $userId = null,
+        array $location = []
     ): ?UserHistory {
-
         try {
-
             $request = request();
 
-            /*
-            |--------------------------------------------------------------------------
-            | USER ID
-            |--------------------------------------------------------------------------
-            |
-            | By default activity kis logged-in user ne perform ki
-            |
-            |--------------------------------------------------------------------------
-            */
-
             $userId = $userId ?? Auth::id();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | IP ADDRESS
-            |--------------------------------------------------------------------------
-            */
-
-            $ipAddress = $request->ip();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | USER AGENT
-            |--------------------------------------------------------------------------
-            */
-
             $userAgent = $request->userAgent();
 
+            $data = [
+                'user_id'       => $userId,
+                'activity'      => $activity,
+                'ip_address'    => $request->ip(),
+                'city'          => null,
+                'country'       => null,
+                'device'        => $this->detectDevice($userAgent),
+                'user_agent'    => $userAgent,
+                'activity_time' => now(),
+            ];
 
             /*
             |--------------------------------------------------------------------------
-            | DEVICE
+            | OPTIONAL LOCATION DATA
             |--------------------------------------------------------------------------
+            |
+            | Coordinates tabhi save honge jab caller location provide kare.
+            | Browser permission aur validation controller mein handle honi chahiye.
+            |
             */
 
-            $device = $this->detectDevice(
-                $userAgent
-            );
+            if ($this->hasValidCoordinates($location)) {
+                $data['latitude'] = (float) $location['latitude'];
+                $data['longitude'] = (float) $location['longitude'];
 
+                if (
+                    isset($location['accuracy'])
+                    && is_numeric($location['accuracy'])
+                    && (float) $location['accuracy'] >= 0
+                ) {
+                    $data['location_accuracy'] =
+                        (float) $location['accuracy'];
+                }
 
-            /*
-            |--------------------------------------------------------------------------
-            | CREATE HISTORY
-            |--------------------------------------------------------------------------
-            */
+                $data['location_captured_at'] = now();
+            }
 
-            return UserHistory::create([
-
-                'user_id' =>
-                    $userId,
-
-                'activity' =>
-                    $activity,
-
-                'ip_address' =>
-                    $ipAddress,
-
-                'city' =>
-                    null,
-
-                'country' =>
-                    null,
-
-                'device' =>
-                    $device,
-
-                'user_agent' =>
-                    $userAgent,
-
-                'activity_time' =>
-                    now(),
-
-            ]);
-
+            return UserHistory::create($data);
         } catch (\Throwable $e) {
-
             /*
             |--------------------------------------------------------------------------
-            | IMPORTANT
-            |--------------------------------------------------------------------------
-            |
-            | Activity logging failure should NEVER break
-            | the main User CRUD operation.
-            |
+            | LOGGING FAILURE MUST NOT BREAK MAIN OPERATION
             |--------------------------------------------------------------------------
             */
 
@@ -117,6 +79,30 @@ class UserActivityService
         }
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATE LOCATION COORDINATES
+    |--------------------------------------------------------------------------
+    */
+
+    protected function hasValidCoordinates(array $location): bool
+    {
+        if (
+            !isset($location['latitude'], $location['longitude'])
+            || !is_numeric($location['latitude'])
+            || !is_numeric($location['longitude'])
+        ) {
+            return false;
+        }
+
+        $latitude = (float) $location['latitude'];
+        $longitude = (float) $location['longitude'];
+
+        return $latitude >= -90
+            && $latitude <= 90
+            && $longitude >= -180
+            && $longitude <= 180;
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -124,64 +110,27 @@ class UserActivityService
     |--------------------------------------------------------------------------
     */
 
-    protected function detectDevice(
-        ?string $userAgent
-    ): string {
-
+    protected function detectDevice(?string $userAgent): string
+    {
         if (empty($userAgent)) {
             return 'Unknown';
         }
 
-        $userAgent = strtolower(
-            $userAgent
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | TABLET
-        |--------------------------------------------------------------------------
-        */
+        $userAgent = strtolower($userAgent);
 
         if (
-            str_contains(
-                $userAgent,
-                'ipad'
-            ) ||
-            str_contains(
-                $userAgent,
-                'tablet'
-            )
+            str_contains($userAgent, 'ipad')
+            || str_contains($userAgent, 'tablet')
         ) {
             return 'Tablet';
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | MOBILE
-        |--------------------------------------------------------------------------
-        */
-
         if (
-            str_contains(
-                $userAgent,
-                'mobile'
-            ) ||
-            str_contains(
-                $userAgent,
-                'android'
-            )
+            str_contains($userAgent, 'mobile')
+            || str_contains($userAgent, 'android')
         ) {
             return 'Mobile';
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DESKTOP
-        |--------------------------------------------------------------------------
-        */
 
         return 'Desktop';
     }

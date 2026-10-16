@@ -6,21 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Backend\Auth\RegisterRequest;
 use App\Models\User;
 use App\Services\UserHistoryService;
-use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
-    protected $historyService;
+    /**
+     * User history service.
+     */
+    protected UserHistoryService $historyService;
 
-    // Dependency Injection
+    /**
+     * Dependency injection.
+     */
     public function __construct(UserHistoryService $historyService)
     {
         $this->historyService = $historyService;
     }
 
-    public function register()
+    /**
+     * Display registration page.
+     */
+    public function register(): View|RedirectResponse
     {
         if (Auth::guard('web')->check()) {
             return redirect()->route('admin.dashboard');
@@ -29,25 +38,67 @@ class RegisterController extends Controller
         return view('backend.auth.register');
     }
 
-    public function store(RegisterRequest $request)
+    /**
+     * Create a new user account.
+     */
+    public function store(RegisterRequest $request): RedirectResponse
     {
-        $data = new User();
-        $data->name = $request->get('name');
-        $data->email = $request->get('email');
-        $data->password = Hash::make($request->get('password'));
-        $data->created_at = Carbon::now();
-        $data->save();
+        /*
+        |--------------------------------------------------------------------------
+        | CREATE USER
+        |--------------------------------------------------------------------------
+        */
 
-        // update created_by
-        $data->update([
-            'created_by' => $data->id
+        $user = new User();
+
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->password = Hash::make(
+            $request->input('password')
+        );
+
+        $user->save();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SET CREATOR
+        |--------------------------------------------------------------------------
+        |
+        | Preserve existing behavior: a self-registered user is recorded
+        | as their own creator.
+        |
+        */
+
+        $user->update([
+            'created_by' => $user->id,
         ]);
 
-        // Store register history
-        $this->historyService->store($data->id, 'register');
+        /*
+        |--------------------------------------------------------------------------
+        | STORE REGISTRATION HISTORY
+        |--------------------------------------------------------------------------
+        |
+        | History logging failure should not undo successful registration.
+        |
+        */
+
+        try {
+            $this->historyService->store(
+                $user->id,
+                'register'
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()
             ->route('admin.login')
-            ->with('message', 'You are Register Successfully.');
+            ->with('message', 'You are registered successfully.');
     }
 }

@@ -6,8 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Dashboard\DashboardService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Throwable;
 
 class HomeController extends Controller
 {
@@ -19,76 +24,50 @@ class HomeController extends Controller
 
     protected DashboardService $dashboardService;
 
-
     /*
     |--------------------------------------------------------------------------
     | Constructor
     |--------------------------------------------------------------------------
     */
 
-    public function __construct(
-        DashboardService $dashboardService
-    ) {
+    public function __construct(DashboardService $dashboardService)
+    {
         $this->dashboardService = $dashboardService;
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | Admin Dashboard
+    | Role-Based Dashboard
     |--------------------------------------------------------------------------
     */
 
-    public function adminHome()
+    public function adminHome(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Logged-in User
-        |--------------------------------------------------------------------------
-        */
+        $user = $request->user();
 
-        $user = Auth::user();
+        abort_unless($user, 401);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dashboard Statistics
-        |--------------------------------------------------------------------------
-        */
-
-        $dashboardStats =
-            $this->dashboardService
-                ->getDashboardData($user);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dashboard View
-        |--------------------------------------------------------------------------
-        */
+        $dashboardStats = $this->dashboardService
+            ->getDashboardData($user);
 
         return view(
             'backend.home',
-            compact(
-                'dashboardStats'
-            )
+            compact('dashboardStats')
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | Change Password
+    | Change Password Page
     |--------------------------------------------------------------------------
     */
 
     public function changePassword(Request $request)
     {
-        return view(
-            'backend.auth.change-password'
-        );
-    }
+        abort_unless($request->user(), 401);
 
+        return view('backend.auth.change-password');
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -98,83 +77,84 @@ class HomeController extends Controller
 
     public function updatePassword(Request $request)
     {
+        $user = $request->user();
+
+        abort_unless($user, 401);
+
         /*
         |--------------------------------------------------------------------------
-        | Validation
+        | Validate Password Fields
         |--------------------------------------------------------------------------
         */
 
-        $request->validate([
-
-            'current_password' =>
+        $validated = $request->validate([
+            'current_password' => [
                 'required',
+                'string',
+            ],
 
-            'password' =>
-                'required|string|min:8|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'different:current_password',
+            ],
 
-            'password_confirmation' =>
-                'required|string|min:8',
-
+            'password_confirmation' => [
+                'required',
+                'string',
+                'min:8',
+            ],
         ], [
-
             'current_password.required' =>
-                'Current Password is required',
+                'Current Password is required.',
 
             'password.required' =>
-                'New Password is required',
-
-            'password.confirmed' =>
-                'Password and Confirm Password does not match',
+                'New Password is required.',
 
             'password.min' =>
                 'Password must be at least 8 characters.',
 
+            'password.confirmed' =>
+                'Password and Confirm Password do not match.',
+
+            'password.different' =>
+                'New password must be different from the current password.',
+
             'password_confirmation.required' =>
-                'Confirm Password is required',
+                'Confirm Password is required.',
 
             'password_confirmation.min' =>
                 'Confirm Password must be at least 8 characters.',
-
         ]);
-
 
         /*
         |--------------------------------------------------------------------------
-        | Match Old Password
+        | Verify Current Password
         |--------------------------------------------------------------------------
         */
 
-        if (
-            !Hash::check(
-                $request->current_password,
-                Auth::user()->password
-            )
-        ) {
-
-            return back()->with(
-                'error',
-                "Old Password Doesn't match!"
-            );
+        if (!Hash::check(
+            $validated['current_password'],
+            $user->password
+        )) {
+            return back()
+                ->withErrors([
+                    'current_password' =>
+                        "The current password doesn't match.",
+                ])
+                ->with('error', "Old Password Doesn't match!");
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | Update Password
+        | Save New Password
         |--------------------------------------------------------------------------
         */
 
-        User::whereId(
-            Auth::user()->id
-        )->update([
-
-            'password' =>
-                Hash::make(
-                    $request->password
-                ),
-
-        ]);
-
+        $user->password = Hash::make($validated['password']);
+        $user->save();
 
         /*
         |--------------------------------------------------------------------------
@@ -184,198 +164,221 @@ class HomeController extends Controller
 
         return redirect()
             ->route('admin.dashboard')
-            ->with(
-                'message',
-                'Password changed successfully!'
-            );
+            ->with('message', 'Password changed successfully!');
     }
-
 
     /*
     |--------------------------------------------------------------------------
-    | Admin Profile
+    | Profile Page
     |--------------------------------------------------------------------------
     */
 
-    public function adminProfile()
+    public function adminProfile(Request $request)
     {
-        return view(
-            'backend.auth.profile'
-        );
-    }
+        abort_unless($request->user(), 401);
 
+        return view('backend.auth.profile');
+    }
 
     /*
     |--------------------------------------------------------------------------
-    | Update Admin Profile
+    | Update Profile
     |--------------------------------------------------------------------------
     */
 
     public function updateAdminProfile(Request $request)
     {
+        $user = $request->user();
+
+        abort_unless($user, 401);
+
         /*
         |--------------------------------------------------------------------------
-        | Validation
+        | Validate Profile Fields
         |--------------------------------------------------------------------------
         */
 
-        $request->validate([
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
 
-            'name' =>
-                'required|string|max:255',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->getKey()),
+            ],
 
-            'email' =>
-                'required|string|email|max:255|unique:users,email,' .
-                Auth::user()->id,
+            'phone' => [
+                'required',
+                'string',
+                'max:15',
+            ],
 
-            'phone' =>
-                'required|string|max:15',
-
-            'profile_image' =>
-                'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-
+            'profile_image' => [
+                'nullable',
+                'image',
+                'mimes:jpeg,png,jpg,webp',
+                'max:2048',
+            ],
         ], [
-
             'name.required' =>
-                'Full Name is required',
+                'Full Name is required.',
 
             'email.required' =>
-                'Email is required',
+                'Email is required.',
 
             'email.email' =>
-                'Please enter a valid email address',
+                'Please enter a valid email address.',
 
             'email.unique' =>
-                'This email is already taken',
+                'This email is already taken.',
 
             'phone.required' =>
-                'Phone number is required',
+                'Phone number is required.',
 
             'phone.max' =>
-                'Phone number must not exceed 15 characters',
+                'Phone number must not exceed 15 characters.',
 
             'profile_image.image' =>
-                'The profile image must be an image file',
+                'The profile image must be an image file.',
 
             'profile_image.mimes' =>
-                'Allowed formats: jpeg, png, jpg, webp',
+                'Allowed formats: jpeg, png, jpg, webp.',
 
             'profile_image.max' =>
-                'File size cannot exceed 2MB',
-
+                'File size cannot exceed 2MB.',
         ]);
 
-
         /*
         |--------------------------------------------------------------------------
-        | Get User
+        | Get Current User
         |--------------------------------------------------------------------------
         */
 
-        $user = User::find(
-            Auth::user()->id
+        $user = User::findOrFail($user->getKey());
+
+        $profileDirectory = public_path(
+            'backend/assets/uploads/profile'
         );
 
+        $oldImageName = $user->profile_image;
+
+        $newImageName = null;
+        $newImagePath = null;
 
         /*
         |--------------------------------------------------------------------------
-        | Basic Information
+        | Upload New Image Before Replacing Existing Image
         |--------------------------------------------------------------------------
         */
 
-        $user->name =
-            $request->name;
+        try {
+            if ($request->hasFile('profile_image')) {
+                if (!File::isDirectory($profileDirectory)) {
+                    File::makeDirectory(
+                        $profileDirectory,
+                        0755,
+                        true
+                    );
+                }
 
-        $user->email =
-            $request->email;
+                $image = $request->file('profile_image');
 
-        $user->phone =
-            $request->phone;
-
-        $user->updated_by =
-            Auth::user()->id;
-
-        $user->updated_at =
-            now();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Profile Image Upload
-        |--------------------------------------------------------------------------
-        */
-
-        if ($request->hasFile('profile_image')) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Delete Old Image
-            |--------------------------------------------------------------------------
-            */
-
-            if ($user->profile_image) {
-
-                $oldPath = public_path(
-                    'backend/assets/uploads/profile/' .
-                    $user->profile_image
+                $extension = strtolower(
+                    $image->extension() ?: 'jpg'
                 );
 
-                if (file_exists($oldPath)) {
+                $newImageName = Str::uuid()
+                    . '.'
+                    . $extension;
 
-                    unlink($oldPath);
-                }
+                $image->move(
+                    $profileDirectory,
+                    $newImageName
+                );
+
+                $newImagePath = $profileDirectory
+                    . DIRECTORY_SEPARATOR
+                    . $newImageName;
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | Upload New Image
+            | Update Profile in Database Transaction
             |--------------------------------------------------------------------------
             */
 
-            $image =
-                $request->file('profile_image');
+            DB::transaction(function () use (
+                $user,
+                $validated,
+                $newImageName
+            ) {
+                $user->name = $validated['name'];
+                $user->email = $validated['email'];
+                $user->phone = $validated['phone'];
+                $user->updated_by = $user->getKey();
 
-            $extension =
-                $image->getClientOriginalExtension();
+                if ($newImageName !== null) {
+                    $user->profile_image = $newImageName;
+                }
 
-            $newName =
-                time() .
-                rand(10, 999) .
-                '.' .
-                $extension;
-
-
-            $image->move(
-
-                public_path(
-                    'backend/assets/uploads/profile'
-                ),
-
-                $newName
-
-            );
-
-
+                $user->save();
+            });
+        } catch (Throwable $exception) {
             /*
             |--------------------------------------------------------------------------
-            | Save Image Name
+            | Clean Up Newly Uploaded Image on Failure
             |--------------------------------------------------------------------------
             */
 
-            $user->profile_image =
-                $newName;
+            if (
+                $newImagePath !== null
+                && is_file($newImagePath)
+            ) {
+                @unlink($newImagePath);
+            }
+
+            report($exception);
+
+            return back()
+                ->withInput($request->except('profile_image'))
+                ->with(
+                    'error',
+                    'Profile could not be updated. Please try again.'
+                );
         }
-
 
         /*
         |--------------------------------------------------------------------------
-        | Save User
+        | Delete Previous Image Only After Successful Database Update
         |--------------------------------------------------------------------------
         */
 
-        $user->save();
+        if (
+            $newImageName !== null
+            && !empty($oldImageName)
+        ) {
+            // Restrict deletion to a filename inside the profile directory.
+            $safeOldImageName = basename($oldImageName);
 
+            if ($safeOldImageName === $oldImageName) {
+                $oldImagePath = $profileDirectory
+                    . DIRECTORY_SEPARATOR
+                    . $safeOldImageName;
+
+                if (
+                    $oldImagePath !== $newImagePath
+                    && is_file($oldImagePath)
+                ) {
+                    @unlink($oldImagePath);
+                }
+            }
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -385,9 +388,6 @@ class HomeController extends Controller
 
         return redirect()
             ->route('admin.profile')
-            ->with(
-                'message',
-                'Profile updated successfully!'
-            );
+            ->with('message', 'Profile updated successfully!');
     }
 }
