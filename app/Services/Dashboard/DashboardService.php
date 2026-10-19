@@ -356,9 +356,17 @@ class DashboardService
             $metrics['completed_duty_slips_period'] = $this->statusCount($slipStatuses, DutySlip::STATUS_COMPLETED);
             $metrics['cancelled_duty_slips_period'] = $this->statusCount($slipStatuses, DutySlip::STATUS_CANCELLED);
 
+            // working_sheets has no driver_id column. Scope driver records through
+            // the related duty slip, which owns the driver_id foreign key.
             $sheets = WorkingSheet::query()->whereBetween('work_date', [$startDate, $endDate]);
             if ($role === User::ROLE_DRIVER) {
-                $sheets->where('driver_id', $driverId);
+                if (!$driverId) {
+                    $sheets->whereRaw('1 = 0');
+                } else {
+                    $sheets->whereHas('dutySlip', function ($query) use ($driverId) {
+                        $query->where('driver_id', $driverId);
+                    });
+                }
             }
             $sheetStatuses = $this->statusAggregates(clone $sheets);
             $metrics['working_sheets_period'] = array_sum(array_map(static fn ($row) => (int) $row->aggregate, $sheetStatuses));
@@ -946,9 +954,9 @@ class DashboardService
     | DRIVER DASHBOARD
     |--------------------------------------------------------------------------
     |
-    | Every result in this section is filtered by the Driver model linked to
-    | the authenticated users.id. Driver, DutySlip, WorkingSheet, Attendance,
-    | claims and payroll models all carry the driver_id foreign key.
+    | Driver-specific results are filtered by the Driver profile linked to the
+    | authenticated user. WorkingSheet records are scoped through dutySlip
+    | because working_sheets does not contain a driver_id column.
     |
     */
 
@@ -987,7 +995,9 @@ class DashboardService
                 ->where('status', DutySlip::STATUS_OPEN)->count(),
             'completed_duties' => DutyAssignment::where('driver_id', $driverId)
                 ->where('status', DutyAssignment::STATUS_COMPLETED)->count(),
-            'working_sheets' => WorkingSheet::where('driver_id', $driverId)->count(),
+            'working_sheets' => WorkingSheet::whereHas('dutySlip', function ($query) use ($driverId) {
+                $query->where('driver_id', $driverId);
+            })->count(),
             'current_salary' => round((float) ($latestSalary?->net_salary ?? 0), 2),
             'pending_salary' => round((float) (clone $salarySlipBase)
                 ->where('payment_status', SalarySlip::PAYMENT_UNPAID)->sum('net_salary'), 2),
@@ -1005,14 +1015,18 @@ class DashboardService
                 ->where('status', DutySlip::STATUS_STARTED)->count(),
             'completed_duty_slips' => DutySlip::where('driver_id', $driverId)
                 ->where('status', DutySlip::STATUS_COMPLETED)->count(),
-            'draft_working_sheets' => WorkingSheet::where('driver_id', $driverId)
-                ->where('status', WorkingSheet::STATUS_DRAFT)->count(),
-            'submitted_working_sheets' => WorkingSheet::where('driver_id', $driverId)
-                ->where('status', WorkingSheet::STATUS_SUBMITTED)->count(),
-            'approved_working_sheets' => WorkingSheet::where('driver_id', $driverId)
-                ->where('status', WorkingSheet::STATUS_APPROVED)->count(),
-            'rejected_working_sheets' => WorkingSheet::where('driver_id', $driverId)
-                ->where('status', WorkingSheet::STATUS_REJECTED)->count(),
+            'draft_working_sheets' => WorkingSheet::whereHas('dutySlip', function ($query) use ($driverId) {
+                $query->where('driver_id', $driverId);
+            })->where('status', WorkingSheet::STATUS_DRAFT)->count(),
+            'submitted_working_sheets' => WorkingSheet::whereHas('dutySlip', function ($query) use ($driverId) {
+                $query->where('driver_id', $driverId);
+            })->where('status', WorkingSheet::STATUS_SUBMITTED)->count(),
+            'approved_working_sheets' => WorkingSheet::whereHas('dutySlip', function ($query) use ($driverId) {
+                $query->where('driver_id', $driverId);
+            })->where('status', WorkingSheet::STATUS_APPROVED)->count(),
+            'rejected_working_sheets' => WorkingSheet::whereHas('dutySlip', function ($query) use ($driverId) {
+                $query->where('driver_id', $driverId);
+            })->where('status', WorkingSheet::STATUS_REJECTED)->count(),
 
             // Attendance. A partial day is counted separately; only present and
             // on-duty statuses are included in the full present-day metric.
