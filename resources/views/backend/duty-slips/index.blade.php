@@ -562,7 +562,11 @@
                                         !(
                                             auth()->check()
                                             && auth()->user()->role === 'driver'
-                                            && strtolower((string) $dutySlip->status) === 'cancelled'
+                                            && in_array(
+                                                strtolower(trim((string) $dutySlip->status)),
+                                                ['completed', 'cancelled'],
+                                                true
+                                            )
                                         )
                                     )
 
@@ -589,7 +593,11 @@
                                         !(
                                             auth()->check()
                                             && auth()->user()->role === 'driver'
-                                            && strtolower((string) $dutySlip->status) === 'cancelled'
+                                            && in_array(
+                                                strtolower(trim((string) $dutySlip->status)),
+                                                ['completed', 'cancelled'],
+                                                true
+                                            )
                                         )
                                     )
 

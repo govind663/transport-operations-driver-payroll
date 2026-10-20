@@ -30,22 +30,18 @@ class DutySlipService
     | File Upload Service
     |--------------------------------------------------------------------------
     */
-
     protected FileUploadService $fileUploadService;
-
 
     /*
     |--------------------------------------------------------------------------
     | Constructor
     |--------------------------------------------------------------------------
     */
-
     public function __construct(
         FileUploadService $fileUploadService
     ) {
         $this->fileUploadService = $fileUploadService;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +56,6 @@ class DutySlipService
     | driver      -> ONLY own driver's slips
     |
     */
-
     public function getDutySlips(): Collection
     {
         $query = DutySlip::query()
@@ -103,7 +98,6 @@ class DutySlipService
         return $query->get();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | FIND DUTY SLIP
@@ -115,7 +109,6 @@ class DutySlipService
     | duty slip through a direct URL.
     |
     */
-
     public function findById(
         string|int $id
     ): DutySlip {
@@ -161,13 +154,11 @@ class DutySlipService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GENERATE NEXT DUTY SLIP NUMBER
     |--------------------------------------------------------------------------
     */
-
     public function generateNextSlipNo(): string
     {
         $query = DutySlip::withTrashed()
@@ -698,7 +689,7 @@ class DutySlipService
         |
         */
 
-        $this->preventDriverModificationOfCancelledSlip(
+        $this->preventDriverModificationOfCompletedOrCancelledSlip(
             $dutySlip,
             'edit'
         );
@@ -1304,7 +1295,6 @@ class DutySlipService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | ENSURE DUTY SLIP ACCESS
@@ -1313,7 +1303,6 @@ class DutySlipService
     | Used for update / delete.
     |
     */
-
     protected function ensureDutySlipAccess(
         DutySlip $dutySlip
     ): void {
@@ -1327,7 +1316,6 @@ class DutySlipService
         | ADMIN / OPERATIONS / ACCOUNTANT
         |--------------------------------------------------------------------------
         */
-
         if (
             $this->isFullDutySlipAccessRole(
                 $user->role
@@ -1343,7 +1331,6 @@ class DutySlipService
         | DRIVER
         |--------------------------------------------------------------------------
         */
-
         if (
             $user->role === 'driver'
         ) {
@@ -1371,54 +1358,49 @@ class DutySlipService
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
         | UNAUTHORIZED ROLE
         |--------------------------------------------------------------------------
         */
-
         throw new AuthorizationException(
             'You are not authorized to access this duty slip.'
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | PREVENT DRIVER MODIFICATION OF CANCELLED DUTY SLIP
+    | PREVENT DRIVER MODIFICATION OF COMPLETED OR CANCELLED DUTY SLIP
     |--------------------------------------------------------------------------
     |
-    | Only the driver role is restricted by this rule.
+    | Driver cannot edit or delete completed/cancelled Duty Slips.
     | Admin, Operations and Accountant retain their existing access.
-    | Call this after ensureDutySlipAccess() so ownership is verified first.
-    |
-    | The AuthorizationException message can be flashed by the controller
-    | and displayed in the existing SweetAlert toast on the index page.
     |
     */
-
-    protected function preventDriverModificationOfCancelledSlip(
+    protected function preventDriverModificationOfCompletedOrCancelledSlip(
         DutySlip $dutySlip,
         string $action
     ): void {
 
         $user = $this->authenticatedUser();
 
+        $status = strtolower(
+            trim((string) $dutySlip->status)
+        );
+
         if (
             $user->role !== 'driver' ||
-            strtolower((string) $dutySlip->status) !== 'cancelled'
+            !in_array($status, ['completed', 'cancelled'], true)
         ) {
             return;
         }
 
         $message = $action === 'delete'
-            ? 'This duty slip is cancelled. You cannot delete it as a driver.'
-            : 'This duty slip is cancelled. You cannot edit it as a driver.';
+            ? "This duty slip is {$status}. You cannot delete it as a driver."
+            : "This duty slip is {$status}. You cannot edit it as a driver.";
 
         throw new AuthorizationException($message);
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -1432,7 +1414,6 @@ class DutySlipService
     | No additional restriction.
     |
     */
-
     protected function applyDriverOwnershipToDriverQuery(
         Builder $query
     ): Builder {
@@ -1456,13 +1437,11 @@ class DutySlipService
         return $query;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | FULL DUTY SLIP ACCESS ROLE
     |--------------------------------------------------------------------------
     */
-
     protected function isFullDutySlipAccessRole(
         ?string $role
     ): bool {
@@ -1478,13 +1457,11 @@ class DutySlipService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | AUTHENTICATED USER
     |--------------------------------------------------------------------------
     */
-
     protected function authenticatedUser()
     {
         $user =
@@ -1502,13 +1479,11 @@ class DutySlipService
         return $user;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SYNC ALLOWANCES
     |--------------------------------------------------------------------------
     */
-
     protected function syncAllowances(
         DutySlip $dutySlip,
         array $allowances
@@ -1781,7 +1756,6 @@ class DutySlipService
         $query->delete();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SYNC EXPENSES
@@ -1807,7 +1781,6 @@ class DutySlipService
     | - Removed expense row -> old document deleted after successful transaction
     |
     */
-
     protected function syncExpenses(
         DutySlip $dutySlip,
         array $expenses,
@@ -2321,13 +2294,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET DUTY ASSIGNMENT
     |--------------------------------------------------------------------------
     */
-
     protected function getDutyAssignment(
         string|int|null $dutyAssignmentId
     ): DutyAssignment {
@@ -2368,13 +2339,11 @@ class DutySlipService
         return $dutyAssignment;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET DRIVER ID
     |--------------------------------------------------------------------------
     */
-
     protected function getDriverId(
         DutySlip $dutySlip
     ): ?int {
@@ -2405,7 +2374,6 @@ class DutySlipService
             : null;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE DUTY SLIP NUMBER
@@ -2417,7 +2385,6 @@ class DutySlipService
     |   "DS 000125"   -> "DS000125"
     |
     */
-
     protected function normalizeSlipNo(
         mixed $value
     ): ?string {
@@ -2466,7 +2433,6 @@ class DutySlipService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE DATE / TIME
@@ -2486,7 +2452,6 @@ class DutySlipService
     | before attempting to combine again.
     |
     */
-
     protected function normalizeDateTimeValues(
         array $data
     ): array {
@@ -2607,13 +2572,11 @@ class DutySlipService
         return $data;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | BUILD DATETIME VALUE
     |--------------------------------------------------------------------------
     */
-
     protected function buildDateTimeValue(
         ?string $date,
         ?string $time,
@@ -2746,7 +2709,6 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DETECT DATETIME
@@ -2767,13 +2729,11 @@ class DutySlipService
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | PARSE DATETIME SAFELY
     |--------------------------------------------------------------------------
     */
-
     protected function parseDateTimeSafely(
         string $value
     ): Carbon {
@@ -2814,13 +2774,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE TIME VALUE
     |--------------------------------------------------------------------------
     */
-
     protected function normalizeTimeValue(
         ?string $time
     ): string {
@@ -2881,13 +2839,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE DATE VALUE
     |--------------------------------------------------------------------------
     */
-
     protected function normalizeDateValue(
         ?string $date,
         string $field
@@ -2938,13 +2894,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE METER VALUES
     |--------------------------------------------------------------------------
     */
-
     protected function normalizeMeterValues(
         array $data
     ): array {
@@ -3057,13 +3011,11 @@ class DutySlipService
         return $data;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NORMALIZE REQUIRED ID
     |--------------------------------------------------------------------------
     */
-
     protected function normalizeRequiredId(
         mixed $value
     ): ?int {
@@ -3094,13 +3046,11 @@ class DutySlipService
             : null;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | RESOLVE LEGACY VEHICLE TYPE
     |--------------------------------------------------------------------------
     */
-
     protected function resolveLegacyVehicleType(
         mixed $value
     ): ?int {
@@ -3169,13 +3119,11 @@ class DutySlipService
             : null;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | NULLABLE STRING
     |--------------------------------------------------------------------------
     */
-
     protected function nullableString(
         mixed $value
     ): ?string {
@@ -3199,13 +3147,11 @@ class DutySlipService
             : null;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | FRESH DUTY SLIP
     |--------------------------------------------------------------------------
     */
-
     protected function freshDutySlip(
         DutySlip $dutySlip
     ): DutySlip {
@@ -3234,13 +3180,11 @@ class DutySlipService
         ]);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CLEANUP UPLOADED FILES
     |--------------------------------------------------------------------------
     */
-
     protected function cleanupUploadedFiles(
         array $files
     ): void {
@@ -3279,13 +3223,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SAFE FILE DELETE
     |--------------------------------------------------------------------------
     */
-
     protected function deleteFileSafely(
         ?string $file
     ): void {
@@ -3319,13 +3261,11 @@ class DutySlipService
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DELETE DUTY SLIP
     |--------------------------------------------------------------------------
     */
-
     public function delete(
         DutySlip $dutySlip
     ): bool {
@@ -3350,7 +3290,7 @@ class DutySlipService
         |
         */
 
-        $this->preventDriverModificationOfCancelledSlip(
+        $this->preventDriverModificationOfCompletedOrCancelledSlip(
             $dutySlip,
             'delete'
         );
