@@ -51,13 +51,26 @@ class DutySlipController extends Controller
     /**
      * Display a listing of duty slips.
      */
+    
     public function index(): View
     {
-        $dutySlips = $this->dutySlipService
-            ->getDutySlips();
+        $filters = request()->only([
+            'driver_id',
+            'date_from',
+            'date_to',
+            'status',
+        ]);
 
-        return view('backend.duty-slips.index',
-            compact('dutySlips')
+        $dutySlips = $this->dutySlipService
+            ->getDutySlips($filters);
+
+        $drivers = Driver::query()
+            ->latest('id')
+            ->get();
+
+        return view(
+            'backend.duty-slips.index',
+            compact('dutySlips', 'drivers')
         );
     }
 
@@ -1065,4 +1078,4 @@ class DutySlipController extends Controller
 
         return $data;
     }
-}
+} 

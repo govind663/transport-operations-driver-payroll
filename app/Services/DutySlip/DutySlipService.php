@@ -42,7 +42,7 @@ class DutySlipService
     ) {
         $this->fileUploadService = $fileUploadService;
     }
-
+    
     /*
     |--------------------------------------------------------------------------
     | GET DUTY SLIPS
@@ -56,7 +56,7 @@ class DutySlipService
     | driver      -> ONLY own driver's slips
     |
     */
-    public function getDutySlips(): Collection
+    public function getDutySlips(array $filters = []): Collection
     {
         $query = DutySlip::query()
             ->with([
@@ -83,17 +83,64 @@ class DutySlipService
             ])
             ->latest('id');
 
+        /*
+        |--------------------------------------------------------------------------
+        | APPLY DRIVER FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['driver_id'])) {
+            $query->where(
+                'driver_id',
+                (int) $filters['driver_id']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLY DATE RANGE FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate(
+                'duty_date',
+                '>=',
+                $filters['date_from']
+            );
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate(
+                'duty_date',
+                '<=',
+                $filters['date_to']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | APPLY STATUS FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['status'])) {
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------
         | APPLY ROLE BASED ACCESS
         |--------------------------------------------------------------------------
+        |
+        | Keep existing role-based access restrictions unchanged.
+        |
         */
 
-        $this->applyDutySlipAccessScope(
-            $query
-        );
-
+        $this->applyDutySlipAccessScope($query);
 
         return $query->get();
     }

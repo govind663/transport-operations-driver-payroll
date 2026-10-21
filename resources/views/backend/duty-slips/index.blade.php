@@ -46,7 +46,6 @@
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -83,11 +82,152 @@
 
         </div>
 
+        {{-- ========================================================= --}}
+        {{-- DUTY SLIP FILTER CARD --}}
+        {{-- ========================================================= --}}
+        <div class="card-box mb-30">
+
+            <div class="pd-20">
+
+                <h4 class="text-blue h4 mb-20">
+                    Duty Slip Filters
+                </h4>
+
+                <form
+                    method="GET"
+                    action="{{ route('duty-slips.index') }}"
+                    class="form-horizontal"
+                    style="border: 1px solid #023a85; padding: 20px; border-radius: 6px;"
+                >
+
+                    <div class="row">
+
+                        {{-- DRIVER NAME --}}
+                        <div class="col-md-3 col-sm-6 mb-20">
+
+                            <label>Driver Name</label>
+
+                            <select
+                                name="driver_id"
+                                class="form-control custom-select2"
+                            >
+                                <option value="">All Drivers</option>
+
+                                @foreach($drivers as $driver)
+
+                                    <option
+                                        value="{{ $driver->id }}"
+                                        {{ request('driver_id') == $driver->id ? 'selected' : '' }}
+                                    >
+                                        {{ trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? '')) }}
+                                        @if(!empty($driver->driver_code))
+                                            - {{ $driver->driver_code }}
+                                        @endif
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                        </div>
+
+
+                        {{-- DATE FROM --}}
+                        <div class="col-md-2 col-sm-6 mb-20">
+
+                            <label>Date From</label>
+
+                            <input
+                                type="date"
+                                name="date_from"
+                                value="{{ request('date_from') }}"
+                                class="form-control"
+                            >
+
+                        </div>
+
+
+                        {{-- DATE TO --}}
+                        <div class="col-md-2 col-sm-6 mb-20">
+
+                            <label>Date To</label>
+
+                            <input
+                                type="date"
+                                name="date_to"
+                                value="{{ request('date_to') }}"
+                                class="form-control"
+                                min="{{ request('date_from') }}"
+                            >
+
+                        </div>
+
+
+                        {{-- STATUS --}}
+                        <div class="col-md-2 col-sm-6 mb-20">
+
+                            <label>Status</label>
+
+                            <select
+                                name="status"
+                                class="form-control custom-select2"
+                            >
+
+                                <option value="">All Status</option>
+
+                                @foreach([
+                                    'open',
+                                    'started',
+                                    'completed',
+                                    'cancelled'
+                                ] as $status)
+
+                                    <option
+                                        value="{{ $status }}"
+                                        {{ request('status') === $status ? 'selected' : '' }}
+                                    >
+                                        {{ ucfirst($status) }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                        </div>
+
+
+                        {{-- BUTTONS --}}
+                        <div class="col-md-3 col-sm-6 mb-20 d-flex align-items-end">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary mr-2"
+                            >
+                                <i class="fa fa-search"></i>
+                                Filter
+                            </button>
+
+                            <a
+                                href="{{ route('duty-slips.index') }}"
+                                class="btn btn-secondary"
+                            >
+                                <i class="fa fa-refresh"></i>
+                                Reset
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
 
         {{-- ========================================================= --}}
         {{-- DUTY SLIP LIST CARD --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
 
             {{-- Card Header --}}
@@ -107,21 +247,16 @@
 
             </div>
 
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
-
             <div class="pb-20">
 
-                <table
-                    class="table hover multiple-select-row data-table-export1 nowrap p-3"
-                    data-title="Duty Slips">
+                <table class="table hover multiple-select-row data-table-export1 nowrap p-3" data-title="Duty Slips">
 
                     {{-- ================================================= --}}
                     {{-- TABLE HEADER --}}
                     {{-- ================================================= --}}
-
                     <thead>
 
                         <tr>
@@ -228,7 +363,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Duty Assignment --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->dutyAssignment)
@@ -237,22 +371,18 @@
                                             {{ $dutySlip->dutyAssignment->assignment_no ?? '-' }}
                                         </strong>
 
-                                        @if(
-                                            !empty(
-                                                $dutySlip
-                                                    ->dutyAssignment
-                                                    ->driver
-                                                    ->driver_code
-                                            )
-                                        )
+                                        @if($dutySlip->dutyAssignment->driver)
 
                                             <small class="text-muted d-block mt-1">
-
                                                 <i class="fa fa-user"></i>
 
                                                 Driver:
-                                                {{ $dutySlip->dutyAssignment->driver->driver_code }}
-
+                                                {{ $dutySlip->dutyAssignment->driver->driver_code ?? '-' }}
+                                                -
+                                                {{ trim(
+                                                    ($dutySlip->dutyAssignment->driver->first_name ?? '') . ' ' .
+                                                    ($dutySlip->dutyAssignment->driver->last_name ?? '')
+                                                ) ?: '-' }}
                                             </small>
 
                                         @endif
