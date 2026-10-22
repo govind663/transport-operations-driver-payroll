@@ -40,9 +40,9 @@ final class RegexHelper
     public const PARTIAL_IN_PARENS             = '\\((' . self::PARTIAL_ESCAPED_CHAR . '|[^)\x00])*\\)';
     public const PARTIAL_REG_CHAR              = '[^\\\\()\x00-\x20]';
     public const PARTIAL_IN_PARENS_NOSP        = '\((' . self::PARTIAL_REG_CHAR . '|' . self::PARTIAL_ESCAPED_CHAR . '|\\\\)*\)';
-    public const PARTIAL_TAGNAME               = '[a-z][a-z0-9-]*';
+    public const PARTIAL_TAGNAME               = '[A-Za-z][A-Za-z0-9-]*';
     public const PARTIAL_BLOCKTAGNAME          = '(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h1|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)';
-    public const PARTIAL_ATTRIBUTENAME         = '[a-z_:][a-z0-9:._-]*';
+    public const PARTIAL_ATTRIBUTENAME         = '[A-Za-z_:][A-Za-z0-9:._-]*';
     public const PARTIAL_UNQUOTEDVALUE         = '[^"\'=<>`\x00-\x20]+';
     public const PARTIAL_SINGLEQUOTEDVALUE     = '\'[^\']*\'';
     public const PARTIAL_DOUBLEQUOTEDVALUE     = '"[^"]*"';
@@ -62,14 +62,14 @@ final class RegexHelper
     public const PARTIAL_HTMLBLOCKOPEN         = '<(?:' . self::PARTIAL_BLOCKTAGNAME . '(?:[\s\/>]|$)' . '|' .
         '\/' . self::PARTIAL_BLOCKTAGNAME . '(?:[\s>]|$)' . '|' . '[?!])';
     /**
-     * @internal Unanchored so each call site can supply its own anchor ("^" against a detached
-     *           string, "\G" at a cursor position). PARTIAL_LINK_TITLE is composed from this
-     *           and must keep its value, so only this fragment should be used in new code.
+     * Unanchored so each call site can supply its own anchor: "^" against a detached string,
+     * or "\G" at a cursor position (see Cursor::matchInPlace()).
      */
     public const PARTIAL_LINK_TITLE_UNANCHORED = '(?:"(' . self::PARTIAL_ESCAPED_CHAR . '|[^"\x00])*+"' .
         '|' . '\'(' . self::PARTIAL_ESCAPED_CHAR . '|[^\'\x00])*+\'' .
         '|' . '\((' . self::PARTIAL_ESCAPED_CHAR . '|[^()\x00])*+\))';
-    public const PARTIAL_LINK_TITLE            = '^' . self::PARTIAL_LINK_TITLE_UNANCHORED;
+    /** @deprecated since 2.10; use {@link RegexHelper::PARTIAL_LINK_TITLE_UNANCHORED} with an explicit anchor instead */
+    public const PARTIAL_LINK_TITLE = '^' . self::PARTIAL_LINK_TITLE_UNANCHORED;
 
     public const REGEX_PUNCTUATION        = '/^[\p{P}\p{S}]/u';
     public const REGEX_UNSAFE_PROTOCOL    = '/^(?:javascript|vbscript|file|data):/i';
@@ -80,13 +80,12 @@ final class RegexHelper
     public const REGEX_UNICODE_WHITESPACE_CHAR = '/^\pZ|\s/u';
     public const REGEX_THEMATIC_BREAK          = '/^(?:(?:\*[ \t]*){3,}|(?:_[ \t]*){3,}|(?:-[ \t]*){3,})$/';
     /**
-     * @internal Unanchored so each call site can supply its own anchor ("^" against a detached
-     *           string, "\G" at a cursor position). REGEX_LINK_DESTINATION_BRACES is composed
-     *           from this and must keep its value, so only this fragment should be used in new
-     *           code.
+     * Unanchored so each call site can supply its own anchor: "^" against a detached string,
+     * or "\G" at a cursor position (see Cursor::matchInPlace()).
      */
     public const PARTIAL_LINK_DESTINATION_BRACES = '(?:<(?:[^<>\\n\\\\\\x00]|\\\\.)*>)';
-    public const REGEX_LINK_DESTINATION_BRACES   = '/^' . self::PARTIAL_LINK_DESTINATION_BRACES . '/';
+    /** @deprecated since 2.10; use {@link RegexHelper::PARTIAL_LINK_DESTINATION_BRACES} with an explicit anchor instead */
+    public const REGEX_LINK_DESTINATION_BRACES = '/^' . self::PARTIAL_LINK_DESTINATION_BRACES . '/';
 
     /**
      * @psalm-pure
