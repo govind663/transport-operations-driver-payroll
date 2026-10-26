@@ -51,7 +51,7 @@ class DutySlipController extends Controller
     /**
      * Display a listing of duty slips.
      */
-    
+
     public function index(): View
     {
         $filters = request()->only([
@@ -80,10 +80,6 @@ class DutySlipController extends Controller
     | CREATE
     |--------------------------------------------------------------------------
     */
-
-    /**
-     * Show the form for creating a new duty slip.
-     */
     public function create(): View
     {
         /*
@@ -171,6 +167,16 @@ class DutySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | CURRENT USER ROLE
+        |--------------------------------------------------------------------------
+        */
+
+        $isDriver = Auth::check()
+            && Auth::user()->role === 'driver';
+
+
+        /*
+        |--------------------------------------------------------------------------
         | VIEW
         |--------------------------------------------------------------------------
         */
@@ -183,7 +189,8 @@ class DutySlipController extends Controller
                 'drivers',
                 'vehicles',
                 'vehicleTypes',
-                'nextSlipNo'
+                'nextSlipNo',
+                'isDriver'
             )
         );
     }
@@ -1078,4 +1085,4 @@ class DutySlipController extends Controller
 
         return $data;
     }
-} 
+}
