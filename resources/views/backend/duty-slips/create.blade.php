@@ -2247,7 +2247,6 @@
                         {{-- ==================================================== --}}
                         {{-- STATUS                                                --}}
                         {{-- ==================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
@@ -2260,19 +2259,12 @@
 
                         </div>
 
-
                         <div class="col-md-4">
-
                             <div class="form-group">
 
                                 <label for="status">
-
-                                    <b>
-                                        Status
-                                    </b>
-
+                                    <b>Status</b>
                                     <span class="required">*</span>
-
                                 </label>
 
                                 <select
@@ -2296,43 +2288,38 @@
                                         Started
                                     </option>
 
-                                    <option
-                                        value="completed"
-                                        {{ old('status') === 'completed' ? 'selected' : '' }}
-                                    >
-                                        Completed
-                                    </option>
+                                    @if(!$isDriver)
 
-                                    <option
-                                        value="cancelled"
-                                        {{ old('status') === 'cancelled' ? 'selected' : '' }}
-                                    >
-                                        Cancelled
-                                    </option>
+                                        <option
+                                            value="completed"
+                                            {{ old('status') === 'completed' ? 'selected' : '' }}
+                                        >
+                                            Completed
+                                        </option>
+
+                                        <option
+                                            value="cancelled"
+                                            {{ old('status') === 'cancelled' ? 'selected' : '' }}
+                                        >
+                                            Cancelled
+                                        </option>
+
+                                    @endif
 
                                 </select>
 
                                 @error('status')
-
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
-
                                 @enderror
 
                             </div>
-
                         </div>
-
 
                         {{-- ==================================================== --}}
                         {{-- ACTIONS                                                --}}
                         {{-- ==================================================== --}}
-
                         <div class="col-12">
 
                             <div class="text-right mt-4">
