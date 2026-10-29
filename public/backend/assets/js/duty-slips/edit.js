@@ -240,7 +240,9 @@
             const documentLabel =
                 inputId === 'duty_slip_front_file'
                     ? 'Duty Slip Front'
-                    : 'Duty Slip Back';
+                    : (inputId === 'duty_slip_back_file'
+                        ? 'Duty Slip Back'
+                        : 'Request Slip Front');
 
             const safeFileName =
                 escapeHtml(file.name);
@@ -658,6 +660,17 @@
                 previewDutySlipFile(
                     'duty_slip_back_file',
                     'duty-slip-back-file-preview'
+                );
+            }
+        );
+
+
+        $('#request_slip_front_file').on(
+            'change',
+            function () {
+                previewDutySlipFile(
+                    'request_slip_front_file',
+                    'request-slip-front-file-preview'
                 );
             }
         );
@@ -2222,3 +2235,285 @@
     });
 
 })(jQuery);
+/*
+|--------------------------------------------------------------------------
+| DRIVER ADVANCE - EDIT / ADD MORE / REMOVE / TOTAL
+|--------------------------------------------------------------------------
+| This standalone module intentionally avoids modifying the existing allowance,
+| expense, KM and financial-summary handlers above. Driver Advances remain a
+| separate collection and are never included in Duty Slip Grand Total.
+|--------------------------------------------------------------------------
+*/
+(function () {
+    'use strict';
+
+    function initializeDriverAdvanceRows() {
+        const form = document.getElementById('duty-slip-form');
+        const wrapper = document.getElementById('driver-advance-wrapper');
+        const addButton = document.getElementById('add-driver-advance');
+        const template = document.getElementById('driver-advance-row-template');
+        const limitMessage = document.getElementById('driver-advance-limit-message');
+        const totalInput = document.getElementById('total-driver-advance');
+        const emptyMarker = document.getElementById('driver-advances-empty-marker');
+        const maxRows = 50;
+
+        if (!form || !wrapper || !addButton || !template || !totalInput) {
+            return;
+        }
+
+        let submitHandlerAttached = false;
+
+        function rows() {
+            return Array.from(wrapper.querySelectorAll('.driver-advance-row'));
+        }
+
+        function fieldValue(row, selector) {
+            const field = row.querySelector(selector);
+            return field ? String(field.value || '').trim() : '';
+        }
+
+        function rowHasData(row) {
+            const hasExistingId = fieldValue(row, '.advance-id') !== '';
+            const amount = fieldValue(row, '.advance-amount');
+            const fromDate = fieldValue(row, '.advance-from-date');
+            const toDate = fieldValue(row, '.advance-to-date');
+            const remarks = fieldValue(row, '.advance-remarks');
+            const status = fieldValue(row, '.advance-status') || 'pending';
+
+            return hasExistingId || amount !== '' || fromDate !== '' || toDate !== '' || remarks !== '' || status !== 'pending';
+        }
+
+        function isBlankNewRow(row) {
+            if (fieldValue(row, '.advance-id') !== '') {
+                return false;
+            }
+
+            return !fieldValue(row, '.advance-amount')
+                && !fieldValue(row, '.advance-from-date')
+                && !fieldValue(row, '.advance-to-date')
+                && !fieldValue(row, '.advance-remarks')
+                && (fieldValue(row, '.advance-status') || 'pending') === 'pending';
+        }
+
+        function syncRowStatus(row) {
+            const status = row.querySelector('.advance-status');
+            if (!status) {
+                return;
+            }
+
+            const hasData = rowHasData(row);
+            status.disabled = !hasData;
+
+            if (!hasData) {
+                status.value = 'pending';
+            }
+        }
+
+        function updateTotal() {
+            const total = rows().reduce(function (sum, row) {
+                const field = row.querySelector('.advance-amount');
+                const value = field && field.value.trim() !== '' ? Number(field.value) : 0;
+
+                if (Number.isFinite(value) && value > 0) {
+                    return sum + value;
+                }
+
+                return sum;
+            }, 0);
+
+            totalInput.value = total.toFixed(2);
+            totalInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function updateIndexes() {
+            rows().forEach(function (row, index) {
+                row.dataset.index = String(index);
+
+                row.querySelectorAll('[name]').forEach(function (field) {
+                    const name = field.getAttribute('name');
+                    if (!name) {
+                        return;
+                    }
+
+                    field.setAttribute(
+                        'name',
+                        name.replace(/driver_advances\[[^\]]+\]/, 'driver_advances[' + index + ']')
+                    );
+                });
+            });
+        }
+
+        function updateControls() {
+            const count = rows().length;
+            const atLimit = count >= maxRows;
+            addButton.disabled = atLimit;
+
+            if (limitMessage) {
+                limitMessage.textContent = atLimit
+                    ? 'Maximum of 50 Driver Advance rows reached.'
+                    : '';
+            }
+
+            // The marker is sent only for an explicitly empty collection. With
+            // one or more rows, normal driver_advances[index][...] fields suffice.
+            if (emptyMarker) {
+                emptyMarker.disabled = count !== 0;
+            }
+        }
+
+        function initializeRow(row) {
+            row.querySelectorAll(
+                '.advance-amount, .advance-from-date, .advance-to-date, .advance-remarks, .advance-status'
+            ).forEach(function (field) {
+                field.addEventListener('input', function () {
+                    syncRowStatus(row);
+                    updateTotal();
+                    updateControls();
+                });
+
+                field.addEventListener('change', function () {
+                    syncRowStatus(row);
+                    updateTotal();
+                    updateControls();
+                });
+            });
+
+            const fromDate = row.querySelector('.advance-from-date');
+            const toDate = row.querySelector('.advance-to-date');
+
+            if (fromDate && toDate) {
+                function synchronizeDateRange(clearInvalidEndDate) {
+                    toDate.min = fromDate.value || '';
+
+                    if (
+                        clearInvalidEndDate &&
+                        toDate.value &&
+                        fromDate.value &&
+                        toDate.value < fromDate.value
+                    ) {
+                        toDate.value = '';
+                    }
+                }
+
+                fromDate.addEventListener('change', function () {
+                    synchronizeDateRange(true);
+                });
+
+                toDate.addEventListener('change', function () {
+                    synchronizeDateRange(false);
+                });
+
+                synchronizeDateRange(false);
+            }
+
+            syncRowStatus(row);
+        }
+
+        function addRow() {
+            const currentRows = rows();
+            if (currentRows.length >= maxRows) {
+                updateControls();
+                return;
+            }
+
+            const nextIndex = currentRows.reduce(function (maxIndex, row) {
+                const index = Number.parseInt(row.dataset.index || '-1', 10);
+                return Number.isFinite(index) ? Math.max(maxIndex, index) : maxIndex;
+            }, -1) + 1;
+
+            const html = template.innerHTML.replace(/__INDEX__/g, String(nextIndex));
+            const temporary = document.createElement('tbody');
+            temporary.innerHTML = html.trim();
+            const newRow = temporary.querySelector('.driver-advance-row');
+
+            if (!newRow) {
+                return;
+            }
+
+            wrapper.appendChild(newRow);
+            initializeRow(newRow);
+            updateIndexes();
+            updateControls();
+            updateTotal();
+
+            const amount = newRow.querySelector('.advance-amount');
+            if (amount) {
+                amount.focus();
+            }
+        }
+
+        addButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            addRow();
+        });
+
+        wrapper.addEventListener('click', function (event) {
+            const target = event.target;
+            if (!(target instanceof Element)) {
+                return;
+            }
+
+            const button = target.closest('.remove-driver-advance');
+            if (!button) {
+                return;
+            }
+
+            event.preventDefault();
+            const row = button.closest('.driver-advance-row');
+            if (!row) {
+                return;
+            }
+
+            // Removing the final row is valid. The empty marker makes the empty
+            // collection explicit so the service can soft-delete saved advances.
+            row.remove();
+            updateIndexes();
+            updateControls();
+            updateTotal();
+        });
+
+        if (!submitHandlerAttached) {
+            form.addEventListener('submit', function (event) {
+                // Remove blank placeholders but keep saved rows and partially
+                // completed new rows (the server then returns field validation).
+                rows().forEach(function (row) {
+                    if (isBlankNewRow(row)) {
+                        row.remove();
+                    }
+                });
+
+                const currentRows = rows();
+                for (const row of currentRows) {
+                    const hasExistingId = fieldValue(row, '.advance-id') !== '';
+                    const amount = row.querySelector('.advance-amount');
+
+                    if (!hasExistingId && rowHasData(row) && !fieldValue(row, '.advance-amount')) {
+                        event.preventDefault();
+                        window.alert('Driver advance amount is required for each new advance row that contains data.');
+                        if (amount) {
+                            amount.focus();
+                        }
+                        updateControls();
+                        return;
+                    }
+                }
+
+                updateIndexes();
+                updateControls();
+                updateTotal();
+            });
+            submitHandlerAttached = true;
+        }
+
+        rows().forEach(initializeRow);
+        updateIndexes();
+        updateControls();
+        updateTotal();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeDriverAdvanceRows, { once: true });
+    } else {
+        initializeDriverAdvanceRows();
+    }
+})();

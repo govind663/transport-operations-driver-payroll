@@ -7,6 +7,7 @@ use App\Http\Requests\Backend\DutySlip\StoreDutySlipRequest;
 use App\Http\Requests\Backend\DutySlip\UpdateDutySlipRequest;
 use App\Models\Allowance;
 use App\Models\Driver;
+use App\Models\DriverAdvance;
 use App\Models\DutyAssignment;
 use App\Models\DutySlip;
 use App\Models\Expense;
@@ -68,8 +69,7 @@ class DutySlipController extends Controller
             ->latest('id')
             ->get();
 
-        return view(
-            'backend.duty-slips.index',
+        return view('backend.duty-slips.index',
             compact('dutySlips', 'drivers')
         );
     }
@@ -117,6 +117,23 @@ class DutySlipController extends Controller
         $expenses = Expense::query()
             ->latest('id')
             ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER ADVANCES (ADD MORE)
+        |--------------------------------------------------------------------------
+        |
+        | A new Duty Slip starts with one empty Driver Advance row so the
+        | Create view can render the first row before the user clicks Add More.
+        | Additional rows are submitted as driver_advances[index][field].
+        |
+        */
+
+        $driverAdvances = $this->getDriverAdvanceFormRows();
+
+        $driverAdvanceStatuses = DriverAdvance::STATUSES;
+
 
 
         /*
@@ -186,13 +203,15 @@ class DutySlipController extends Controller
                 'dutyAssignments',
                 'allowances',
                 'expenses',
+                'driverAdvances',
+                'driverAdvanceStatuses',
                 'drivers',
                 'vehicles',
                 'vehicleTypes',
                 'nextSlipNo',
                 'isDriver'
             )
-        );
+);
     }
 
 
@@ -303,6 +322,25 @@ class DutySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | DRIVER ADVANCES (ADD MORE / EDIT EXISTING)
+        |--------------------------------------------------------------------------
+        |
+        | Existing advances are loaded by DutySlipService::findById().
+        | If no advance exists yet, provide one empty model row for the form.
+        | The service keeps advance synchronization separate from totals.
+        |
+        */
+
+        $driverAdvances = $this->getDriverAdvanceFormRows(
+            $dutySlip
+        );
+
+        $driverAdvanceStatuses = DriverAdvance::STATUSES;
+
+
+
+        /*
+        |--------------------------------------------------------------------------
         | DUTY ASSIGNMENTS
         |--------------------------------------------------------------------------
         |
@@ -383,6 +421,8 @@ class DutySlipController extends Controller
                 'dutyAssignments',
                 'allowances',
                 'expenses',
+                'driverAdvances',
+                'driverAdvanceStatuses',
                 'drivers',
                 'vehicles',
                 'vehicleTypes'
@@ -556,6 +596,42 @@ class DutySlipController extends Controller
         */
 
         return $query->get();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DRIVER ADVANCE FORM ROWS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Return existing advance rows for Edit, or one blank row for Create/Edit.
+     *
+     * The blank row is an unsaved DriverAdvance model so Blade templates can
+     * access its properties in the same way as saved records. It is not saved
+     * unless the form submits advance data.
+     */
+    protected function getDriverAdvanceFormRows(
+        ?DutySlip $dutySlip = null
+    ) {
+        $advances = $dutySlip
+            ? $dutySlip->driverAdvances
+            : collect();
+
+        if ($advances->isEmpty()) {
+            return collect([
+                new DriverAdvance([
+                    'amount' => null,
+                    'from_date' => null,
+                    'to_date' => null,
+                    'remarks' => null,
+                    'status' => null,
+                ]),
+            ]);
+        }
+
+        return $advances;
     }
 
 
@@ -1048,6 +1124,36 @@ class DutySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | DRIVER ADVANCES (ADD MORE)
+        |--------------------------------------------------------------------------
+        |
+        | Preserve this child payload for DutySlipService::store()/update().
+        | On Update, only normalize advances if the request actually contains
+        | driver_advances or the legacy advances alias. If omitted entirely,
+        | do not add the key: the service then retains existing advance records.
+        |
+        */
+
+        $hasDriverAdvancePayload =
+            array_key_exists('driver_advances', $data) ||
+            array_key_exists('advances', $data);
+
+        if ($hasDriverAdvancePayload) {
+
+            $advances = array_key_exists('driver_advances', $data)
+                ? $data['driver_advances']
+                : $data['advances'];
+
+            $data['driver_advances'] = is_array($advances)
+                ? $advances
+                : [];
+
+            unset($data['advances']);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | REMOVE FORM-ONLY / DISPLAY-ONLY FIELDS
         |--------------------------------------------------------------------------
         |
@@ -1058,6 +1164,7 @@ class DutySlipController extends Controller
         | - vehicle_id
         | - vehicle_type_id
         | - duty_assignment_id
+        | - driver_advances (child payload consumed by DutySlipService)
         |
         */
 

@@ -4,6 +4,7 @@ namespace App\Services\DutySlip;
 
 use App\Models\Allowance;
 use App\Models\Driver;
+use App\Models\DriverAdvance;
 use App\Models\DriverAllowance;
 use App\Models\DriverExpense;
 use App\Models\DutyAssignment;
@@ -42,7 +43,7 @@ class DutySlipService
     ) {
         $this->fileUploadService = $fileUploadService;
     }
-    
+
     /*
     |--------------------------------------------------------------------------
     | GET DUTY SLIPS
@@ -70,8 +71,17 @@ class DutySlipService
 
                 'createdBy',
                 'updatedBy',
+                'deletedBy',
 
                 'workingSheet',
+
+                // Driver advance records use their own status and soft-delete lifecycle.
+                'driverAdvances',
+                'driverAdvances.driver',
+                'driverAdvances.createdBy',
+                'driverAdvances.updatedBy',
+                'driverAdvances.deletedBy',
+                'approvedDriverAdvances',
 
                 'driverAllowances',
                 'driverAllowances.allowance',
@@ -172,8 +182,17 @@ class DutySlipService
 
                 'createdBy',
                 'updatedBy',
+                'deletedBy',
 
                 'workingSheet',
+
+                // Driver advance records use their own status and soft-delete lifecycle.
+                'driverAdvances',
+                'driverAdvances.driver',
+                'driverAdvances.createdBy',
+                'driverAdvances.updatedBy',
+                'driverAdvances.deletedBy',
+                'approvedDriverAdvances',
 
                 'driverAllowances',
                 'driverAllowances.allowance',
@@ -252,7 +271,7 @@ class DutySlipService
                 STR_PAD_LEFT
             );
     }
-    
+
     /*
     |--------------------------------------------------------------------------
     | STORE DUTY SLIP
@@ -303,12 +322,23 @@ class DutySlipService
                         ? $data['driver_expenses']
                         : ($data['expenses'] ?? []);
 
+                    $advances = array_key_exists(
+                        'driver_advances',
+                        $data
+                    )
+                        ? $data['driver_advances']
+                        : ($data['advances'] ?? []);
+
                     if (!is_array($allowances)) {
                         $allowances = [];
                     }
 
                     if (!is_array($expenses)) {
                         $expenses = [];
+                    }
+
+                    if (!is_array($advances)) {
+                        $advances = [];
                     }
 
                     /*
@@ -320,6 +350,8 @@ class DutySlipService
                     $frontFile = $data['duty_slip_front_file'] ?? null;
 
                     $backFile = $data['duty_slip_back_file'] ?? null;
+
+                    $requestSlipFrontFile = $data['request_slip_front_file'] ?? null;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -383,7 +415,9 @@ class DutySlipService
                         $data['allowances'],
                         $data['expenses'],
                         $data['driver_allowances'],
-                        $data['driver_expenses']
+                        $data['driver_expenses'],
+                        $data['advances'],
+                        $data['driver_advances']
                     );
 
                     /*
@@ -436,8 +470,12 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     */
 
-                    $data['status'] = $data['status']
-                        ?? DutySlip::STATUS_OPEN;
+                    $data['status'] = $this->normalizeAllowedStatus(
+                        $data['status'] ?? DutySlip::STATUS_OPEN,
+                        DutySlip::STATUSES,
+                        'status',
+                        'duty slip'
+                    );
 
                     /*
                     |--------------------------------------------------------------------------
@@ -626,6 +664,17 @@ class DutySlipService
                         $data['duty_slip_back_file'] = $backPath;
                     }
 
+                    if ($requestSlipFrontFile instanceof UploadedFile) {
+
+                        $requestSlipFrontPath = $this->fileUploadService->upload(
+                            $requestSlipFrontFile,
+                            'duty-slip/request-front'
+                        );
+
+                        $uploadedFiles[] = $requestSlipFrontPath;
+                        $data['request_slip_front_file'] = $requestSlipFrontPath;
+                    }
+
                     /*
                     |--------------------------------------------------------------------------
                     | CREATE DUTY SLIP RECORD
@@ -667,6 +716,22 @@ class DutySlipService
                         $dutySlip,
                         $expenses,
                         $uploadedFiles
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | SYNC DRIVER ADVANCES
+                    |--------------------------------------------------------------------------
+                    |
+                    | DriverAdvance is a separate model with its own status,
+                    | date range, audit fields and SoftDeletes lifecycle.
+                    | Its amounts remain separate from DutySlip grand_total.
+                    |
+                    */
+
+                    $this->syncDriverAdvances(
+                        $dutySlip,
+                        $advances
                     );
 
                     /*
@@ -749,6 +814,7 @@ class DutySlipService
 
         $oldFrontFile = $dutySlip->duty_slip_front_file;
         $oldBackFile = $dutySlip->duty_slip_back_file;
+        $oldRequestSlipFrontFile = $dutySlip->request_slip_front_file;
 
         /*
         |--------------------------------------------------------------------------
@@ -796,12 +862,27 @@ class DutySlipService
                         ? $data['driver_expenses']
                         : ($data['expenses'] ?? []);
 
+                    $advancesProvided =
+                        array_key_exists('driver_advances', $data) ||
+                        array_key_exists('advances', $data);
+
+                    $advances = array_key_exists(
+                        'driver_advances',
+                        $data
+                    )
+                        ? $data['driver_advances']
+                        : ($data['advances'] ?? []);
+
                     if (!is_array($allowances)) {
                         $allowances = [];
                     }
 
                     if (!is_array($expenses)) {
                         $expenses = [];
+                    }
+
+                    if (!is_array($advances)) {
+                        $advances = [];
                     }
 
                     /*
@@ -815,6 +896,14 @@ class DutySlipService
 
                     $newBackFile =
                         $data['duty_slip_back_file'] ?? null;
+
+                    $newRequestSlipFrontFile =
+                        $data['request_slip_front_file'] ?? null;
+
+                    // An empty file input means keep the saved Request Slip file.
+                    if (!$newRequestSlipFrontFile instanceof UploadedFile) {
+                        unset($data['request_slip_front_file']);
+                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -875,7 +964,9 @@ class DutySlipService
                         $data['allowances'],
                         $data['expenses'],
                         $data['driver_allowances'],
-                        $data['driver_expenses']
+                        $data['driver_expenses'],
+                        $data['advances'],
+                        $data['driver_advances']
                     );
 
                     /*
@@ -916,6 +1007,15 @@ class DutySlipService
                     */
 
                     $data['updated_by'] = Auth::id();
+
+                    if (array_key_exists('status', $data)) {
+                        $data['status'] = $this->normalizeAllowedStatus(
+                            $data['status'],
+                            DutySlip::STATUSES,
+                            'status',
+                            'duty slip'
+                        );
+                    }
 
                     /*
                     |--------------------------------------------------------------------------
@@ -1157,6 +1257,17 @@ class DutySlipService
                         $data['duty_slip_back_file'] = $newBackPath;
                     }
 
+                    if ($newRequestSlipFrontFile instanceof UploadedFile) {
+
+                        $newRequestSlipFrontPath = $this->fileUploadService->upload(
+                            $newRequestSlipFrontFile,
+                            'duty-slip/request-front'
+                        );
+
+                        $uploadedFiles[] = $newRequestSlipFrontPath;
+                        $data['request_slip_front_file'] = $newRequestSlipFrontPath;
+                    }
+
                     /*
                     |--------------------------------------------------------------------------
                     | UPDATE DUTY SLIP RECORD
@@ -1203,6 +1314,25 @@ class DutySlipService
 
                     /*
                     |--------------------------------------------------------------------------
+                    | SYNC DRIVER ADVANCES WHEN PROVIDED
+                    |--------------------------------------------------------------------------
+                    |
+                    | A normal DutySlip edit may not include advance fields.
+                    | In that case existing advances are retained unchanged.
+                    | An explicit driver_advances/advances payload synchronizes
+                    | the current set and soft-deletes rows removed from it.
+                    |
+                    */
+
+                    if ($advancesProvided) {
+                        $this->syncDriverAdvances(
+                            $dutySlip,
+                            $advances
+                        );
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
                     | RETURN FRESH DUTY SLIP
                     |--------------------------------------------------------------------------
                     */
@@ -1237,6 +1367,14 @@ class DutySlipService
                 $oldBackFile !== $updatedDutySlip->duty_slip_back_file
             ) {
                 $filesToDelete[] = $oldBackFile;
+            }
+
+            if (
+                !empty($oldRequestSlipFrontFile) &&
+                !empty($updatedDutySlip->request_slip_front_file) &&
+                $oldRequestSlipFrontFile !== $updatedDutySlip->request_slip_front_file
+            ) {
+                $filesToDelete[] = $oldRequestSlipFrontFile;
             }
 
             /*
@@ -1582,7 +1720,7 @@ class DutySlipService
         }
 
 
-        foreach ($allowances as $allowance) {
+        foreach ($allowances as $allowanceIndex => $allowance) {
 
             if (!is_array($allowance)) {
 
@@ -1635,17 +1773,37 @@ class DutySlipService
             }
 
 
-            if (
-                ($master->calculation_type ?? null)
-                === 'per_km'
-            ) {
+            $calculationType =
+                $master->calculation_type ?? null;
 
-                $quantity =
-                    (float) (
-                        $dutySlip->total_km
-                        ?? 0
-                    );
+            if (
+                !in_array(
+                    $calculationType,
+                    Allowance::CALCULATION_TYPES,
+                    true
+                )
+            ) {
+                throw ValidationException::withMessages([
+                    'driver_allowances' =>
+                        'The selected allowance has an unsupported calculation type.',
+                ]);
             }
+
+            if (
+                $calculationType === Allowance::CALCULATION_FIXED
+            ) {
+                // A fixed allowance is charged once, regardless of posted quantity.
+                $quantity = 1;
+            } elseif (
+                $calculationType === Allowance::CALCULATION_PER_KM
+            ) {
+                // Per-kilometre quantity is always derived from the DutySlip meters.
+                $quantity = (float) ($dutySlip->total_km ?? 0);
+            }
+
+            // Per-day and per-hour quantities are intentionally taken from the
+            // submitted quantity because the model stores no separate day/hour
+            // quantity and this service preserves the existing form-driven rule.
 
 
             /*
@@ -1671,6 +1829,13 @@ class DutySlipService
                     2
                 );
 
+
+            $allowanceStatus = $this->normalizeAllowedStatus(
+                $allowance['status'] ?? DriverAllowance::STATUS_PENDING,
+                DriverAllowance::STATUSES,
+                "driver_allowances.{$allowanceIndex}.status",
+                'driver allowance'
+            );
 
             $record = null;
 
@@ -1721,8 +1886,7 @@ class DutySlipService
                         ),
 
                     'status' =>
-                        $allowance['status']
-                        ?? DriverAllowance::STATUS_PENDING,
+                        $allowanceStatus,
 
                     'updated_by' =>
                         Auth::id(),
@@ -1766,8 +1930,7 @@ class DutySlipService
                         ),
 
                     'status' =>
-                        $allowance['status']
-                        ?? DriverAllowance::STATUS_PENDING,
+                        $allowanceStatus,
 
                     'created_by' =>
                         Auth::id(),
@@ -2074,6 +2237,13 @@ class DutySlipService
                 );
 
 
+            $expenseStatus = $this->normalizeAllowedStatus(
+                $expense['status'] ?? DriverExpense::STATUS_PENDING,
+                DriverExpense::STATUSES,
+                "driver_expenses.{$expenseIndex}.status",
+                'driver expense'
+            );
+
             /*
             |--------------------------------------------------------------------------
             | EXISTING RECORD
@@ -2196,8 +2366,7 @@ class DutySlipService
                         ),
 
                     'status' =>
-                        $expense['status']
-                        ?? DriverExpense::STATUS_PENDING,
+                        $expenseStatus,
 
                     'updated_by' =>
                         Auth::id(),
@@ -2250,8 +2419,7 @@ class DutySlipService
                         ),
 
                     'status' =>
-                        $expense['status']
-                        ?? DriverExpense::STATUS_PENDING,
+                        $expenseStatus,
 
                     'created_by' =>
                         Auth::id(),
@@ -2338,6 +2506,270 @@ class DutySlipService
                         ->all()
                 )
                 ->delete();
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE MODEL STATUS
+    |--------------------------------------------------------------------------
+    |
+    | Validate submitted status fields against the constants exposed by the
+    | approved models instead of allowing unsupported database status values.
+    |
+    */
+    protected function normalizeAllowedStatus(
+        mixed $value,
+        array $allowedStatuses,
+        string $field,
+        string $label
+    ): string {
+
+        $status = strtolower(trim((string) $value));
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            throw ValidationException::withMessages([
+                $field => "The selected {$label} status is invalid.",
+            ]);
+        }
+
+        return $status;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SYNC DRIVER ADVANCES
+    |--------------------------------------------------------------------------
+    |
+    | Model alignment:
+    | - driver_advances.driver_id is synchronized from the DutySlip driver.
+    | - duty_slip_id is always taken from the parent DutySlip, never from input.
+    | - amount, from_date, to_date, remarks and status match DriverAdvance::$fillable.
+    | - statuses are restricted to DriverAdvance::STATUSES.
+    | - created_by / updated_by are maintained for audit.
+    | - removed advance rows are soft-deleted and retain deleted_by.
+    |
+    | Advances are intentionally excluded from DutySlip grand_total because the
+    | approved DutySlip model defines grand_total as allowance_total + expense_total.
+    |
+    */
+    protected function syncDriverAdvances(
+        DutySlip $dutySlip,
+        array $advances
+    ): void {
+
+        $existingIds = [];
+
+        $driverId = $this->getDriverId($dutySlip);
+
+        if (!$driverId) {
+            throw ValidationException::withMessages([
+                'driver_advances' =>
+                    'Unable to determine the driver for this duty slip.',
+            ]);
+        }
+
+        foreach ($advances as $advanceIndex => $advance) {
+
+            if (!is_array($advance)) {
+                continue;
+            }
+
+            // Ignore completely blank advance rows that may be present in a form.
+            $hasAdvanceData =
+                !empty($advance['id']) ||
+                (isset($advance['amount']) && $advance['amount'] !== '') ||
+                !empty($advance['from_date']) ||
+                !empty($advance['to_date']) ||
+                !empty($advance['remarks']) ||
+                !empty($advance['status']);
+
+            if (!$hasAdvanceData) {
+                continue;
+            }
+
+            $record = null;
+
+            if (!empty($advance['id'])) {
+                $advanceId = $this->normalizeRequiredId($advance['id']);
+
+                if (!$advanceId) {
+                    throw ValidationException::withMessages([
+                        "driver_advances.{$advanceIndex}.id" =>
+                            'The selected driver advance ID is invalid.',
+                    ]);
+                }
+
+                $record = DriverAdvance::query()
+                    ->where('duty_slip_id', $dutySlip->id)
+                    ->whereKey($advanceId)
+                    ->first();
+
+                if (!$record) {
+                    throw ValidationException::withMessages([
+                        "driver_advances.{$advanceIndex}.id" =>
+                            'The selected advance does not belong to this duty slip or is no longer available.',
+                    ]);
+                }
+            }
+
+            // Amount is a decimal field on DriverAdvance and is mandatory for a populated row.
+            $amountRaw = $advance['amount'] ?? $record?->amount;
+
+            if ($amountRaw === null || $amountRaw === '') {
+                throw ValidationException::withMessages([
+                    "driver_advances.{$advanceIndex}.amount" =>
+                        'Driver advance amount is required.',
+                ]);
+            }
+
+            if (!is_numeric($amountRaw)) {
+                throw ValidationException::withMessages([
+                    "driver_advances.{$advanceIndex}.amount" =>
+                        'Driver advance amount must be a valid number.',
+                ]);
+            }
+
+            $amount = round((float) $amountRaw, 2);
+
+            if ($amount < 0) {
+                throw ValidationException::withMessages([
+                    "driver_advances.{$advanceIndex}.amount" =>
+                        'Driver advance amount cannot be negative.',
+                ]);
+            }
+
+            $fromDateRaw = array_key_exists('from_date', $advance)
+                ? $advance['from_date']
+                : ($record?->from_date?->format('Y-m-d'));
+
+            $toDateRaw = array_key_exists('to_date', $advance)
+                ? $advance['to_date']
+                : ($record?->to_date?->format('Y-m-d'));
+
+            $fromDate = $this->normalizeAdvanceDate(
+                $fromDateRaw,
+                "driver_advances.{$advanceIndex}.from_date"
+            );
+
+            $toDate = $this->normalizeAdvanceDate(
+                $toDateRaw,
+                "driver_advances.{$advanceIndex}.to_date"
+            );
+
+            if (
+                $fromDate !== null &&
+                $toDate !== null &&
+                Carbon::parse($toDate)->lessThan(Carbon::parse($fromDate))
+            ) {
+                throw ValidationException::withMessages([
+                    "driver_advances.{$advanceIndex}.to_date" =>
+                        'The end date cannot be before the start date.',
+                ]);
+            }
+
+            $statusRaw = $advance['status']
+                ?? $record?->status
+                ?? DriverAdvance::STATUS_PENDING;
+
+            $status = strtolower(trim((string) $statusRaw));
+
+            if (!in_array($status, DriverAdvance::STATUSES, true)) {
+                throw ValidationException::withMessages([
+                    "driver_advances.{$advanceIndex}.status" =>
+                        'The selected driver advance status is invalid.',
+                ]);
+            }
+
+            $payload = [
+                'driver_id' => $driverId,
+                'duty_slip_id' => $dutySlip->id,
+                'amount' => $amount,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'remarks' => $this->nullableString($advance['remarks'] ?? $record?->remarks),
+                'status' => $status,
+                'updated_by' => Auth::id(),
+            ];
+
+            if ($record) {
+                $record->update($payload);
+            } else {
+                $payload['created_by'] = Auth::id();
+                $record = DriverAdvance::create($payload);
+            }
+
+            $existingIds[] = (int) $record->id;
+        }
+
+        // A provided advance payload represents the current set of active rows.
+        // Removed rows are soft-deleted rather than physically erased.
+        $removedAdvancesQuery = DriverAdvance::query()
+            ->where('duty_slip_id', $dutySlip->id);
+
+        if (!empty($existingIds)) {
+            $removedAdvancesQuery->whereNotIn('id', $existingIds);
+        }
+
+        $removedAdvanceIds = $removedAdvancesQuery
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if (!empty($removedAdvanceIds)) {
+            DriverAdvance::query()
+                ->whereIn('id', $removedAdvanceIds)
+                ->update([
+                    'deleted_by' => Auth::id(),
+                ]);
+
+            DriverAdvance::query()
+                ->whereIn('id', $removedAdvanceIds)
+                ->delete();
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE DRIVER ADVANCE DATE
+    |--------------------------------------------------------------------------
+    |
+    | DriverAdvance casts these fields as date:Y-m-d. Keep null values null,
+    | normalize valid submitted dates to the database date format, and produce
+    | field-specific validation errors for invalid dates.
+    |
+    */
+    protected function normalizeAdvanceDate(
+        mixed $value,
+        string $field
+    ): ?string {
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->format('Y-m-d');
+        }
+
+        $dateString = trim((string) $value);
+
+        if ($dateString === '') {
+            return null;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('!Y-m-d', $dateString);
+
+            if (!$date || $date->format('Y-m-d') !== $dateString) {
+                throw new \InvalidArgumentException('Invalid date format.');
+            }
+
+            return $date->format('Y-m-d');
+        } catch (\Throwable $exception) {
+            throw ValidationException::withMessages([
+                $field => 'The date must be a valid date in YYYY-MM-DD format.',
+            ]);
         }
     }
 
@@ -3214,8 +3646,16 @@ class DutySlipService
 
             'createdBy',
             'updatedBy',
+            'deletedBy',
 
             'workingSheet',
+
+            'driverAdvances',
+            'driverAdvances.driver',
+            'driverAdvances.createdBy',
+            'driverAdvances.updatedBy',
+            'driverAdvances.deletedBy',
+            'approvedDriverAdvances',
 
             'driverAllowances',
             'driverAllowances.allowance',
@@ -3391,6 +3831,26 @@ class DutySlipService
 
                     $dutySlip
                         ->driverExpenses()
+                        ->delete();
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | DELETE LINKED DRIVER ADVANCES (SOFT DELETE)
+                    |--------------------------------------------------------------------------
+                    |
+                    | DriverAdvance uses SoftDeletes and has a deleted_by field.
+                    | Preserve its audit trail instead of physically removing it.
+                    |
+                    */
+
+                    $dutySlip
+                        ->driverAdvances()
+                        ->update([
+                            'deleted_by' => Auth::id(),
+                        ]);
+
+                    $dutySlip
+                        ->driverAdvances()
                         ->delete();
 
 

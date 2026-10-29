@@ -521,6 +521,13 @@ class StoreDutySlipRequest extends FormRequest
                 'max:5120',
             ],
 
+            'request_slip_front_file' => [
+                'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:5120',
+            ],
+
             /*
             |--------------------------------------------------------------------------
             | DUTY SLIP STATUS
@@ -1066,6 +1073,15 @@ class StoreDutySlipRequest extends FormRequest
 
             'duty_slip_back_file.max' =>
                 'Duty slip back file may not exceed 5 MB.',
+
+            'request_slip_front_file.file' =>
+                'Please upload a valid request slip front file.',
+
+            'request_slip_front_file.mimes' =>
+                'Request slip front file must be a PDF, JPG, JPEG, or PNG file.',
+
+            'request_slip_front_file.max' =>
+                'Request slip front file may not exceed 5 MB.',
 
             /*
             |--------------------------------------------------------------------------

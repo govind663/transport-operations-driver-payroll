@@ -172,6 +172,40 @@
         .expense-document-input {
             min-width: 180px;
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Advance Add-More Table
+        |--------------------------------------------------------------------------
+        */
+
+        #driver-advance-table input,
+        #driver-advance-table select {
+            min-width: 110px;
+        }
+
+        #driver-advance-table .advance-amount {
+            min-width: 135px;
+        }
+
+        #driver-advance-table .advance-remarks {
+            min-width: 180px;
+        }
+
+        .driver-advance-summary-note {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .advance-row-status-help {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #6c757d;
+        }
     </style>
 @endpush
 
@@ -237,6 +271,47 @@
                 ],
             ];
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | OLD DRIVER ADVANCES
+        |--------------------------------------------------------------------------
+        |
+        | One Duty Slip can contain multiple advance records. Keep submitted rows
+        | when validation fails so the user does not lose the entered values.
+        |
+        */
+
+        $oldDriverAdvances = old('driver_advances');
+
+        if ($oldDriverAdvances === null) {
+            $oldDriverAdvances = old('advances', []);
+        }
+
+        if (!is_array($oldDriverAdvances)) {
+            $oldDriverAdvances = [];
+        }
+
+        if (empty($oldDriverAdvances)) {
+            $oldDriverAdvances = [
+                [
+                    'amount' => '',
+                    'from_date' => '',
+                    'to_date' => '',
+                    'remarks' => '',
+                    'status' => 'pending',
+                ],
+            ];
+        }
+
+        $driverAdvanceStatuses = [
+            \App\Models\DriverAdvance::STATUS_PENDING => 'Pending',
+            \App\Models\DriverAdvance::STATUS_APPROVED => 'Approved',
+            \App\Models\DriverAdvance::STATUS_REJECTED => 'Rejected',
+            \App\Models\DriverAdvance::STATUS_PAID => 'Paid',
+            \App\Models\DriverAdvance::STATUS_CANCELLED => 'Cancelled',
+        ];
 
 
         /*
@@ -943,6 +1018,45 @@
                                 <div
                                     id="duty-slip-back-file-preview"
                                     class="duty-slip-file-preview"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- ==================================================== --}}
+                        {{-- REQUEST SLIP FRONT FILE                             --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-md-6 mt-3">
+
+                            <div class="form-group">
+
+                                <label for="request_slip_front_file">
+                                    <b>Request Slip Front</b>
+                                </label>
+
+                                <input
+                                    type="file"
+                                    name="request_slip_front_file"
+                                    id="request_slip_front_file"
+                                    class="form-control @error('request_slip_front_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                >
+
+                                <small class="form-helper-text">
+                                    Allowed: PDF, JPG, JPEG &amp; PNG (Maximum 5 MB)
+                                </small>
+
+                                @error('request_slip_front_file')
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                @enderror
+
+                                <div
+                                    id="request-slip-front-file-preview"
+                                    class="duty-slip-file-preview"
+                                    aria-live="polite"
                                 ></div>
 
                             </div>
@@ -2083,6 +2197,180 @@
 
 
                         {{-- ==================================================== --}}
+                        {{-- DRIVER ADVANCE SECTION                                 --}}
+                        {{-- ==================================================== --}}
+
+                        <div class="col-12 mt-4">
+
+                            <h5 class="form-section-title">
+                                Driver Advance
+                            </h5>
+
+                            <hr>
+
+                            <small class="form-helper-text d-block mb-2">
+                                Add one or more advances for this Duty Slip. Each advance is saved separately with its amount, date range, remarks and status.
+                                Driver Advances are not included in the Duty Slip Grand Total.
+                            </small>
+
+                        </div>
+
+                        <div class="col-12">
+
+                            <div class="table-responsive">
+
+                                <table
+                                    class="table table-bordered table-striped"
+                                    id="driver-advance-table"
+                                >
+
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 17%;">Amount</th>
+                                            <th style="width: 16%;">From Date</th>
+                                            <th style="width: 16%;">To Date</th>
+                                            <th style="width: 24%;">Remarks</th>
+                                            <th style="width: 17%;">Status</th>
+                                            <th style="width: 10%;">Action</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="driver-advance-wrapper">
+
+                                        @foreach ($oldDriverAdvances as $index => $row)
+
+                                            @php
+                                                $advanceAmount = $row['amount'] ?? '';
+                                                $advanceFromDate = $row['from_date'] ?? '';
+                                                $advanceToDate = $row['to_date'] ?? '';
+                                                $advanceRemarks = $row['remarks'] ?? '';
+                                                $advanceStatus = $row['status'] ?? 'pending';
+                                            @endphp
+
+                                            <tr class="driver-advance-row" data-index="{{ $index }}">
+
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        name="driver_advances[{{ $index }}][amount]"
+                                                        class="form-control advance-amount"
+                                                        value="{{ $advanceAmount }}"
+                                                        min="0"
+                                                        step="0.01"
+                                                        placeholder="Enter amount"
+                                                        inputmode="decimal"
+                                                        aria-label="Driver advance amount"
+                                                    >
+                                                    <small class="advance-row-status-help">Enter amount in currency.</small>
+                                                    @error("driver_advances.{$index}.amount")
+                                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                                    @enderror
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="date"
+                                                        name="driver_advances[{{ $index }}][from_date]"
+                                                        class="form-control advance-from-date"
+                                                        value="{{ $advanceFromDate }}"
+                                                        aria-label="Driver advance from date"
+                                                    >
+                                                    @error("driver_advances.{$index}.from_date")
+                                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                                    @enderror
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="date"
+                                                        name="driver_advances[{{ $index }}][to_date]"
+                                                        class="form-control advance-to-date"
+                                                        value="{{ $advanceToDate }}"
+                                                        aria-label="Driver advance to date"
+                                                    >
+                                                    @error("driver_advances.{$index}.to_date")
+                                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                                    @enderror
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        name="driver_advances[{{ $index }}][remarks]"
+                                                        class="form-control advance-remarks"
+                                                        value="{{ $advanceRemarks }}"
+                                                        maxlength="1000"
+                                                        placeholder="Optional remarks"
+                                                        aria-label="Driver advance remarks"
+                                                    >
+                                                    @error("driver_advances.{$index}.remarks")
+                                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                                    @enderror
+                                                </td>
+
+                                                <td>
+                                                    <select
+                                                        name="driver_advances[{{ $index }}][status]"
+                                                        class="form-control advance-status"
+                                                        aria-label="Driver advance status"
+                                                    >
+                                                        @foreach ($driverAdvanceStatuses as $statusValue => $statusLabel)
+                                                            <option
+                                                                value="{{ $statusValue }}"
+                                                                {{ (string) $advanceStatus === (string) $statusValue ? 'selected' : '' }}
+                                                            >
+                                                                {{ $statusLabel }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <small class="advance-row-status-help">Defaults to Pending.</small>
+                                                    @error("driver_advances.{$index}.status")
+                                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                                    @enderror
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-danger btn-sm remove-driver-advance"
+                                                        title="Remove driver advance"
+                                                        aria-label="Remove driver advance row"
+                                                    >
+                                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                                    </button>
+                                                </td>
+
+                                            </tr>
+
+                                        @endforeach
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                            <div class="mt-2 d-flex align-items-center flex-wrap">
+                                <button
+                                    type="button"
+                                    id="add-driver-advance"
+                                    class="btn btn-primary btn-sm"
+                                >
+                                    <i class="fa fa-plus" aria-hidden="true"></i>
+                                    Add More Driver Advance
+                                </button>
+
+                                <span class="form-helper-text ml-2 mt-2 mt-sm-0">
+                                    Maximum 50 advance rows per Duty Slip.
+                                </span>
+                            </div>
+
+                            <div id="driver-advance-limit-message" class="text-danger small mt-2" role="status" aria-live="polite"></div>
+
+                        </div>
+
+
+                        {{-- ==================================================== --}}
                         {{-- FINANCIAL SUMMARY                                      --}}
                         {{-- ==================================================== --}}
 
@@ -2175,6 +2463,34 @@
                                                     value="0.00"
                                                     readonly
                                                 >
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="row mt-2">
+
+                                        <div class="col-md-4">
+
+                                            <div class="form-group mb-0">
+
+                                                <label>
+                                                    Total Driver Advances (Separate)
+                                                </label>
+
+                                                <input
+                                                    type="text"
+                                                    id="total-driver-advance"
+                                                    class="form-control"
+                                                    value="0.00"
+                                                    readonly
+                                                >
+
+                                                <small class="driver-advance-summary-note">
+                                                    Informational only. Not included in Grand Total.
+                                                </small>
 
                                             </div>
 
@@ -2356,6 +2672,95 @@
                 </div>
 
             </form>
+
+
+            {{-- ================================================================= --}}
+            {{-- DRIVER ADVANCE TEMPLATE                                            --}}
+            {{-- ================================================================= --}}
+
+            <template id="driver-advance-row-template">
+
+                <tr class="driver-advance-row" data-index="__INDEX__">
+
+                    <td>
+                        <input
+                            type="number"
+                            name="driver_advances[__INDEX__][amount]"
+                            class="form-control advance-amount"
+                            value=""
+                            min="0"
+                            step="0.01"
+                            placeholder="Enter amount"
+                            inputmode="decimal"
+                            aria-label="Driver advance amount"
+                        >
+                        <small class="advance-row-status-help">Enter amount in currency.</small>
+                    </td>
+
+                    <td>
+                        <input
+                            type="date"
+                            name="driver_advances[__INDEX__][from_date]"
+                            class="form-control advance-from-date"
+                            value=""
+                            aria-label="Driver advance from date"
+                        >
+                    </td>
+
+                    <td>
+                        <input
+                            type="date"
+                            name="driver_advances[__INDEX__][to_date]"
+                            class="form-control advance-to-date"
+                            value=""
+                            aria-label="Driver advance to date"
+                        >
+                    </td>
+
+                    <td>
+                        <input
+                            type="text"
+                            name="driver_advances[__INDEX__][remarks]"
+                            class="form-control advance-remarks"
+                            value=""
+                            maxlength="1000"
+                            placeholder="Optional remarks"
+                            aria-label="Driver advance remarks"
+                        >
+                    </td>
+
+                    <td>
+                        <select
+                            name="driver_advances[__INDEX__][status]"
+                            class="form-control advance-status"
+                            aria-label="Driver advance status"
+                        >
+                            @foreach ($driverAdvanceStatuses as $statusValue => $statusLabel)
+                                <option
+                                    value="{{ $statusValue }}"
+                                    {{ $statusValue === \App\Models\DriverAdvance::STATUS_PENDING ? 'selected' : '' }}
+                                >
+                                    {{ $statusLabel }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="advance-row-status-help">Defaults to Pending.</small>
+                    </td>
+
+                    <td class="text-center">
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm remove-driver-advance"
+                            title="Remove driver advance"
+                            aria-label="Remove driver advance row"
+                        >
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </button>
+                    </td>
+
+                </tr>
+
+            </template>
 
 
             {{-- ================================================================= --}}
@@ -2739,5 +3144,4 @@
 @push('scripts')
 
     <script src="{{ asset('backend/assets/js/duty-slips/create.js') }}"></script>
-
 @endpush

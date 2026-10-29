@@ -104,6 +104,7 @@ class DutySlip extends Model
 
         'duty_slip_front_file',
         'duty_slip_back_file',
+        'request_slip_front_file',
 
 
         /*
@@ -430,6 +431,44 @@ class DutySlip extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Driver Advances
+    |--------------------------------------------------------------------------
+    */
+
+    public function driverAdvances(): HasMany
+    {
+        return $this->hasMany(
+            DriverAdvance::class,
+            'duty_slip_id',
+            'id'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Approved Driver Advances
+    |--------------------------------------------------------------------------
+    |
+    | Returns only approved advances associated with this duty slip.
+    |
+    */
+
+    public function approvedDriverAdvances(): HasMany
+    {
+        return $this->hasMany(
+            DriverAdvance::class,
+            'duty_slip_id',
+            'id'
+        )->where(
+            'status',
+            DriverAdvance::STATUS_APPROVED
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Approved Driver Allowances
     |--------------------------------------------------------------------------
     */
@@ -536,6 +575,11 @@ class DutySlip extends Model
     |--------------------------------------------------------------------------
     | Grand Total
     |--------------------------------------------------------------------------
+    |
+    | Preserves the existing business calculation:
+    | Allowance Total + Expense Total.
+    | Driver Advances are maintained separately.
+    |
     */
 
     public function getGrandTotalAttribute(): float

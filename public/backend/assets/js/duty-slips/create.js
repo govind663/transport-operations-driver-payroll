@@ -252,10 +252,11 @@
 
 
             const documentLabel =
-                inputId ===
-                'duty_slip_front_file'
+                inputId === 'duty_slip_front_file'
                     ? 'Duty Slip Front'
-                    : 'Duty Slip Back';
+                    : (inputId === 'duty_slip_back_file'
+                        ? 'Duty Slip Back'
+                        : 'Request Slip Front');
 
 
             const safeFileName =
@@ -452,6 +453,17 @@
                 previewDutySlipFile(
                     'duty_slip_back_file',
                     'duty-slip-back-file-preview'
+                );
+            }
+        );
+
+
+        $('#request_slip_front_file').on(
+            'change',
+            function () {
+                previewDutySlipFile(
+                    'request_slip_front_file',
+                    'request-slip-front-file-preview'
                 );
             }
         );
@@ -2490,3 +2502,179 @@
     });
 
 })(jQuery);
+
+/*
+|--------------------------------------------------------------------------
+| DRIVER ADVANCE ADD-MORE / ROW MANAGEMENT
+|--------------------------------------------------------------------------
+| Keeps Driver Advance rows separate from the allowance + expense Grand Total.
+| Blank advance rows are not submitted as pending advances.
+*/
+(function () {
+    'use strict';
+
+    const wrapper = document.getElementById('driver-advance-wrapper');
+    const addButton = document.getElementById('add-driver-advance');
+    const template = document.getElementById('driver-advance-row-template');
+    const limitMessage = document.getElementById('driver-advance-limit-message');
+    const totalInput = document.getElementById('total-driver-advance');
+    const maxRows = 50;
+
+    if (!wrapper || !addButton || !template || !totalInput) {
+        return;
+    }
+
+    function rows() {
+        return Array.from(wrapper.querySelectorAll('.driver-advance-row'));
+    }
+
+    function rowHasData(row) {
+        const amount = row.querySelector('.advance-amount')?.value.trim() || '';
+        const fromDate = row.querySelector('.advance-from-date')?.value || '';
+        const toDate = row.querySelector('.advance-to-date')?.value || '';
+        const remarks = row.querySelector('.advance-remarks')?.value.trim() || '';
+        const status = row.querySelector('.advance-status')?.value || 'pending';
+
+        return amount !== '' || fromDate !== '' || toDate !== '' || remarks !== '' || status !== 'pending';
+    }
+
+    function syncRowStatus(row) {
+        const status = row.querySelector('.advance-status');
+        if (!status) {
+            return;
+        }
+
+        const hasData = rowHasData(row);
+        status.disabled = !hasData;
+
+        // A fully blank row is not submitted as a pending advance.
+        if (!hasData) {
+            status.value = 'pending';
+        }
+    }
+
+    function updateTotal() {
+        const total = rows().reduce(function (sum, row) {
+            const field = row.querySelector('.advance-amount');
+            const value = field ? Number(field.value) : 0;
+
+            if (Number.isFinite(value) && value > 0) {
+                return sum + value;
+            }
+
+            return sum;
+        }, 0);
+
+        totalInput.value = total.toFixed(2);
+    }
+
+    function updateControls() {
+        const count = rows().length;
+        const atLimit = count >= maxRows;
+        addButton.disabled = atLimit;
+
+        if (limitMessage) {
+            limitMessage.textContent = atLimit
+                ? 'Maximum of 50 Driver Advance rows reached.'
+                : '';
+        }
+    }
+
+    function initializeRow(row) {
+        row.querySelectorAll('.advance-amount, .advance-from-date, .advance-to-date, .advance-remarks, .advance-status')
+            .forEach(function (field) {
+                field.addEventListener('input', function () {
+                    syncRowStatus(row);
+                    updateTotal();
+                });
+                field.addEventListener('change', function () {
+                    syncRowStatus(row);
+                    updateTotal();
+                });
+            });
+
+        const fromDate = row.querySelector('.advance-from-date');
+        const toDate = row.querySelector('.advance-to-date');
+
+        if (fromDate && toDate) {
+            fromDate.addEventListener('change', function () {
+                toDate.min = fromDate.value || '';
+            });
+            toDate.addEventListener('change', function () {
+                if (fromDate.value) {
+                    toDate.min = fromDate.value;
+                }
+            });
+            if (fromDate.value) {
+                toDate.min = fromDate.value;
+            }
+        }
+
+        syncRowStatus(row);
+    }
+
+    addButton.addEventListener('click', function () {
+        const currentRows = rows();
+        if (currentRows.length >= maxRows) {
+            updateControls();
+            return;
+        }
+
+        const nextIndex = currentRows.reduce(function (maxIndex, row) {
+            const index = Number.parseInt(row.dataset.index || '-1', 10);
+            return Number.isFinite(index) ? Math.max(maxIndex, index) : maxIndex;
+        }, -1) + 1;
+
+        const html = template.innerHTML.replace(/__INDEX__/g, String(nextIndex));
+        const temporary = document.createElement('tbody');
+        temporary.innerHTML = html.trim();
+        const newRow = temporary.querySelector('.driver-advance-row');
+
+        if (!newRow) {
+            return;
+        }
+
+        wrapper.appendChild(newRow);
+        initializeRow(newRow);
+        updateControls();
+        updateTotal();
+    });
+
+    wrapper.addEventListener('click', function (event) {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+
+        const button = target.closest('.remove-driver-advance');
+        if (!button) {
+            return;
+        }
+
+        const row = button.closest('.driver-advance-row');
+        if (!row) {
+            return;
+        }
+
+        if (rows().length === 1) {
+            row.querySelectorAll('input').forEach(function (input) {
+                input.value = '';
+            });
+            const status = row.querySelector('.advance-status');
+            if (status) {
+                status.value = 'pending';
+            }
+            syncRowStatus(row);
+        } else {
+            row.remove();
+        }
+
+        updateControls();
+        updateTotal();
+    });
+
+    rows().forEach(initializeRow);
+    updateControls();
+    updateTotal();
+})();
+
