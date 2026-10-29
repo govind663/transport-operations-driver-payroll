@@ -12,6 +12,9 @@ use App\Services\DriverAttendance\DriverAttendanceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class DriverAttendanceController extends Controller
@@ -54,6 +57,19 @@ class DriverAttendanceController extends Controller
         if (!$user instanceof User) {
             abort(403);
         }
+
+        $this->authorizeAttendanceRole($user);
+
+        // Validate optional filters so invalid dates/statuses cannot reach the query.
+        $request->validate([
+            'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+            'attendance_date' => ['nullable', 'date'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'status' => ['nullable', 'string', 'in:' . implode(',', DriverAttendance::STATUSES)],
+            'source' => ['nullable', 'string', 'in:' . implode(',', DriverAttendance::SOURCES)],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -234,32 +250,18 @@ class DriverAttendanceController extends Controller
                 'driver',
                 function ($driverQuery) use ($search) {
 
-                    $driverQuery
-                        ->where(
-                            'first_name',
-                            'like',
-                            "%{$search}%"
-                        )
-                        ->where(
-                            'last_name',
-                            'like',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'driver_code',
-                            'like',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'mobile',
-                            'like',
-                            "%{$search}%"
-                        )
-                        ->orWhere(
-                            'status',
-                            'like',
-                            "%{$search}%"
-                        );
+                    $driverQuery->where(function ($searchQuery) use ($search) {
+                        $searchQuery
+                            ->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhereRaw(
+                                "CONCAT_WS(' ', first_name, last_name) LIKE ?",
+                                ["%{$search}%"]
+                            )
+                            ->orWhere('driver_code', 'like', "%{$search}%")
+                            ->orWhere('mobile', 'like', "%{$search}%")
+                            ->orWhere('status', 'like', "%{$search}%");
+                    });
                 }
             );
         }
@@ -350,6 +352,8 @@ class DriverAttendanceController extends Controller
             abort(403);
         }
 
+        $this->authorizeAttendanceRole($user);
+
         $isDriver = $user->isDriver();
 
 
@@ -428,6 +432,8 @@ class DriverAttendanceController extends Controller
         if (!$user instanceof User) {
             abort(403);
         }
+
+        $this->authorizeAttendanceRole($user);
 
         $data = $request->validated();
 
@@ -654,12 +660,15 @@ class DriverAttendanceController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $data['source'] =
-            DriverAttendance::SOURCE_MANUAL;
+        $data['source'] = DriverAttendance::SOURCE_MANUAL;
 
-        $data['updated_by'] =
-            Auth::id();
-
+        // Once manually edited, detach the row from its source Working Sheet.
+        // Otherwise a later automatic sync could overwrite this manual update.
+        $data['working_sheet_id'] = null;
+        $data['updated_by'] = Auth::id();
+        $data['driver_id'] = (int) ($data['driver_id'] ?? $driverAttendance->driver_id);
+        $data['attendance_date'] = $data['attendance_date']
+            ?? $driverAttendance->getRawOriginal('attendance_date');
 
         /*
         |--------------------------------------------------------------------------
@@ -668,21 +677,53 @@ class DriverAttendanceController extends Controller
         */
 
         if (!$driverAttendance->created_by) {
-
-            $data['created_by'] =
-                Auth::id();
+            $data['created_by'] = Auth::id();
         }
-
 
         /*
         |--------------------------------------------------------------------------
-        | Update Attendance
+        | Prevent Duplicate Attendance
         |--------------------------------------------------------------------------
+        |
+        | The database unique key also applies to soft-deleted rows, so include
+        | trashed records in the conflict check before attempting the update.
+        |
         */
 
-        $driverAttendance->update(
-            $data
-        );
+        try {
+            DB::transaction(function () use (
+                $driverAttendance,
+                $data
+            ) {
+                $duplicateExists = DriverAttendance::withTrashed()
+                    ->where('driver_id', $data['driver_id'])
+                    ->whereDate('attendance_date', $data['attendance_date'])
+                    ->where('id', '!=', $driverAttendance->getKey())
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($duplicateExists) {
+                    throw ValidationException::withMessages([
+                        'attendance_date' => 'An attendance record already exists for this driver on this date.',
+                    ]);
+                }
+
+                $driverAttendance->fill($data);
+                $driverAttendance->save();
+            });
+        } catch (QueryException $exception) {
+            // Convert a concurrent unique-key conflict into a normal form error.
+            if (
+                (string) $exception->getCode() === '23000' &&
+                str_contains($exception->getMessage(), 'driver_attendance_unique')
+            ) {
+                throw ValidationException::withMessages([
+                    'attendance_date' => 'An attendance record already exists for this driver on this date.',
+                ]);
+            }
+
+            throw $exception;
+        }
 
 
         return redirect()
@@ -737,6 +778,19 @@ class DriverAttendanceController extends Controller
     | Can access only his own mapped attendance.
     |
     */
+    protected function authorizeAttendanceRole(User $user): void
+    {
+        if (
+            !$user->isAdmin() &&
+            !$user->isOperations() &&
+            !$user->isAccountant() &&
+            !$user->isDriver()
+        ) {
+            abort(403, 'You are not authorized to manage driver attendance.');
+        }
+    }
+
+
     protected function authorizeDriverAttendance(
         DriverAttendance $driverAttendance
     ): void {
@@ -758,8 +812,9 @@ class DriverAttendanceController extends Controller
         |
         */
 
-        if (!$user->isDriver()) {
+        $this->authorizeAttendanceRole($user);
 
+        if (!$user->isDriver()) {
             return;
         }
 

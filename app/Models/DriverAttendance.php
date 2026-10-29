@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use InvalidArgumentException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -92,9 +95,10 @@ class DriverAttendance extends Model
 
         'attendance_date' => 'date:Y-m-d',
 
-        'in_time' => 'datetime:H:i:s',
+        // Database columns are TIME, so expose time-only strings.
+        'in_time' => 'string',
 
-        'out_time' => 'datetime:H:i:s',
+        'out_time' => 'string',
 
         'total_hours' => 'decimal:2',
 
@@ -105,6 +109,50 @@ class DriverAttendance extends Model
         'updated_by' => 'integer',
 
     ];
+
+
+    /**
+     * Normalize a value for a SQL TIME column.
+     * Supports HH:MM[:SS] strings and DateTime/Carbon values.
+     */
+    public function setInTimeAttribute($value): void
+    {
+        $this->attributes['in_time'] = $this->normalizeTimeValue($value);
+    }
+
+
+    public function setOutTimeAttribute($value): void
+    {
+        $this->attributes['out_time'] = $this->normalizeTimeValue($value);
+    }
+
+
+    protected function normalizeTimeValue($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('H:i:s');
+        }
+
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return (new DateTimeImmutable($value))->format('H:i:s');
+        } catch (\Throwable $exception) {
+            throw new InvalidArgumentException(
+                'Attendance time must be a valid time or datetime value.',
+                0,
+                $exception
+            );
+        }
+    }
 
 
     /*
@@ -119,19 +167,37 @@ class DriverAttendance extends Model
 
     public const STATUS_HALF_DAY = 'half_day';
 
-    public const STATUS_LEAVE = 'leave';
-
-    public const STATUS_WEEKLY_OFF = 'weekly_off';
-
-    public const STATUS_HOLIDAY = 'holiday';
-
-    public const STATUS_ON_DUTY = 'on_duty';
-
-    public const STATUS_COMP_OFF = 'comp_off';
-
     public const STATUS_LATE = 'late';
 
     public const STATUS_EARLY_EXIT = 'early_exit';
+
+    public const STATUS_PRESENT_LATE = 'present_late';
+
+    public const STATUS_PRESENT_EARLY_EXIT = 'present_early_exit';
+
+    public const STATUS_LEAVE = 'leave';
+
+    public const STATUS_HOLIDAY = 'holiday';
+
+    public const STATUS_WEEKLY_OFF = 'weekly_off';
+
+    public const STATUS_RESTRICTED_HOLIDAY = 'restricted_holiday';
+
+    public const STATUS_ON_DUTY = 'on_duty';
+
+    public const STATUS_WORK_FROM_HOME = 'work_from_home';
+
+    public const STATUS_COMP_OFF = 'comp_off';
+
+    public const STATUS_MATERNITY_LEAVE = 'maternity_leave';
+
+    public const STATUS_SICK_LEAVE = 'sick_leave';
+
+    public const STATUS_CASUAL_LEAVE = 'casual_leave';
+
+    public const STATUS_PAID_LEAVE = 'paid_leave';
+
+    public const STATUS_UNPAID_LEAVE = 'unpaid_leave';
 
     public const STATUS_MISSING_PUNCH = 'missing_punch';
 
@@ -152,19 +218,37 @@ class DriverAttendance extends Model
 
         self::STATUS_HALF_DAY,
 
-        self::STATUS_LEAVE,
-
-        self::STATUS_WEEKLY_OFF,
-
-        self::STATUS_HOLIDAY,
-
-        self::STATUS_ON_DUTY,
-
-        self::STATUS_COMP_OFF,
-
         self::STATUS_LATE,
 
         self::STATUS_EARLY_EXIT,
+
+        self::STATUS_PRESENT_LATE,
+
+        self::STATUS_PRESENT_EARLY_EXIT,
+
+        self::STATUS_LEAVE,
+
+        self::STATUS_HOLIDAY,
+
+        self::STATUS_WEEKLY_OFF,
+
+        self::STATUS_RESTRICTED_HOLIDAY,
+
+        self::STATUS_ON_DUTY,
+
+        self::STATUS_WORK_FROM_HOME,
+
+        self::STATUS_COMP_OFF,
+
+        self::STATUS_MATERNITY_LEAVE,
+
+        self::STATUS_SICK_LEAVE,
+
+        self::STATUS_CASUAL_LEAVE,
+
+        self::STATUS_PAID_LEAVE,
+
+        self::STATUS_UNPAID_LEAVE,
 
         self::STATUS_MISSING_PUNCH,
 

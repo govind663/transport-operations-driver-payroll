@@ -47,6 +47,8 @@ class WorkingSheet extends Model
         'base_amount',
         'extra_km_amount',
         'overtime_amount',
+        'allowance_amount',
+        'expense_amount',
         'other_amount',
         'total_amount',
 
@@ -92,6 +94,10 @@ class WorkingSheet extends Model
         'extra_km_amount' => 'decimal:2',
 
         'overtime_amount' => 'decimal:2',
+
+        'allowance_amount' => 'decimal:2',
+
+        'expense_amount' => 'decimal:2',
 
         'other_amount' => 'decimal:2',
 
@@ -405,6 +411,10 @@ class WorkingSheet extends Model
             (float) ($this->extra_km_amount ?? 0)
             +
             (float) ($this->overtime_amount ?? 0)
+            +
+            (float) ($this->allowance_amount ?? 0)
+            +
+            (float) ($this->expense_amount ?? 0)
             +
             (float) ($this->other_amount ?? 0),
             2

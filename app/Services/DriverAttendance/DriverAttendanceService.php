@@ -7,6 +7,7 @@ use App\Models\WorkingSheet;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 use RuntimeException;
 
 class DriverAttendanceService
@@ -56,7 +57,7 @@ class DriverAttendanceService
             */
 
             $workingSheet->loadMissing([
-                'dutySlip',
+                'dutySlip.dutyAssignment',
                 'driver',
             ]);
 
@@ -113,16 +114,82 @@ class DriverAttendanceService
             |
             */
 
-            $attendance = DriverAttendance::query()
-                ->where(
-                    'driver_id',
-                    $workingSheet->driver_id
-                )
-                ->whereDate(
-                    'attendance_date',
-                    $workingSheet->work_date
-                )
+            $driverId = (int) $workingSheet->driver_id;
+
+            $attendanceDate = $workingSheet->work_date instanceof \DateTimeInterface
+                ? $workingSheet->work_date->format('Y-m-d')
+                : Carbon::parse($workingSheet->work_date)->toDateString();
+
+            // Find this sheet's own generated attendance, including soft-deleted rows.
+            // The database unique key still reserves a soft-deleted driver/date pair.
+            $linkedAttendance = DriverAttendance::withTrashed()
+                ->where('working_sheet_id', $workingSheet->id)
+                ->lockForUpdate()
                 ->first();
+
+            if ($linkedAttendance && $linkedAttendance->source !== DriverAttendance::SOURCE_WORKING_SHEET) {
+
+                $sameIdentity =
+                    (int) $linkedAttendance->driver_id === $driverId &&
+                    Carbon::parse($linkedAttendance->attendance_date)->toDateString() === $attendanceDate;
+
+                // A manual/system/import record is authoritative; never overwrite it automatically.
+                if (!$linkedAttendance->trashed() && $sameIdentity) {
+                    return $linkedAttendance->fresh([
+                        'driver',
+                        'workingSheet',
+                        'createdBy',
+                        'updatedBy',
+                    ]) ?? $linkedAttendance;
+                }
+
+                throw new RuntimeException(
+                    'This Working Sheet is linked to a manually managed or non-Working-Sheet attendance. Resolve that attendance before changing the driver or date.'
+                );
+            }
+
+            // Do not overwrite a second attendance row for the target driver/date.
+            $attendanceForDate = DriverAttendance::withTrashed()
+                ->where('driver_id', $driverId)
+                ->whereDate('attendance_date', $attendanceDate)
+                ->when(
+                    $linkedAttendance,
+                    fn ($query) => $query->where('id', '!=', $linkedAttendance->id)
+                )
+                ->lockForUpdate()
+                ->first();
+
+            if ($attendanceForDate) {
+
+                if ($attendanceForDate->trashed()) {
+                    throw new RuntimeException(
+                        'A deleted attendance record already occupies this driver/date. Resolve it before syncing again.'
+                    );
+                }
+
+                if ($attendanceForDate->source === DriverAttendance::SOURCE_WORKING_SHEET) {
+                    throw new RuntimeException(
+                        'Another Working Sheet already has attendance for this driver and date. Resolve the duplicate before saving this sheet.'
+                    );
+                }
+
+                // If this sheet already owns an older generated row, do not leave it stale.
+                if ($linkedAttendance) {
+                    throw new RuntimeException(
+                        'An attendance record already exists for the new driver/date. Resolve it before changing this Working Sheet.'
+                    );
+                }
+
+                // Manual/system/import attendance takes precedence over a new auto-sync.
+                return $attendanceForDate->fresh([
+                    'driver',
+                    'workingSheet',
+                    'createdBy',
+                    'updatedBy',
+                ]) ?? $attendanceForDate;
+            }
+
+            $attendance = $linkedAttendance;
 
 
             /*
@@ -145,10 +212,14 @@ class DriverAttendanceService
             if ($workingSheet->dutySlip) {
 
                 $inTime =
-                    $workingSheet->dutySlip->start_time;
+                    $this->normalizeTimeForStorage(
+                        $workingSheet->dutySlip->start_time
+                    );
 
                 $outTime =
-                    $workingSheet->dutySlip->end_time;
+                    $this->normalizeTimeForStorage(
+                        $workingSheet->dutySlip->end_time
+                    );
             }
 
 
@@ -199,10 +270,10 @@ class DriverAttendanceService
             $attendanceData = [
 
                 'driver_id' =>
-                    $workingSheet->driver_id,
+                    $driverId,
 
                 'attendance_date' =>
-                    $workingSheet->work_date,
+                    $attendanceDate,
 
                 'status' =>
                     $status,
@@ -249,19 +320,65 @@ class DriverAttendanceService
 
             if ($attendance) {
 
-                $attendance->update(
-                    $attendanceData
-                );
+                // This is the same Working Sheet's derived record, so restoring it is safe.
+                if ($attendance->trashed()) {
+                    $attendance->restore();
+                }
+
+                $attendance->fill($attendanceData);
+                $attendance->save();
 
             } else {
 
                 $attendanceData['created_by'] =
                     Auth::id();
 
-                $attendance =
-                    DriverAttendance::create(
-                        $attendanceData
-                    );
+                try {
+                    $attendance = DriverAttendance::create($attendanceData);
+                } catch (QueryException $exception) {
+
+                    // A concurrent request may have inserted the unique driver/date row first.
+                    $racedAttendance = DriverAttendance::withTrashed()
+                        ->where('driver_id', $driverId)
+                        ->whereDate('attendance_date', $attendanceDate)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$racedAttendance) {
+                        throw $exception;
+                    }
+
+                    if ($racedAttendance->trashed()) {
+                        throw new RuntimeException(
+                            'A deleted attendance record already occupies this driver/date. Resolve it before retrying sync.',
+                            0,
+                            $exception
+                        );
+                    }
+
+                    if ($racedAttendance->source === DriverAttendance::SOURCE_WORKING_SHEET) {
+                        if ((int) $racedAttendance->working_sheet_id !== (int) $workingSheet->id) {
+                            throw new RuntimeException(
+                                'Another Working Sheet already has attendance for this driver and date.',
+                                0,
+                                $exception
+                            );
+                        }
+
+                        unset($attendanceData['created_by']);
+                        $racedAttendance->fill($attendanceData);
+                        $racedAttendance->save();
+                        $attendance = $racedAttendance;
+                    } else {
+                        // Preserve manual/system/import attendance created by the concurrent request.
+                        return $racedAttendance->fresh([
+                            'driver',
+                            'workingSheet',
+                            'createdBy',
+                            'updatedBy',
+                        ]) ?? $racedAttendance;
+                    }
+                }
             }
 
 
@@ -387,10 +504,12 @@ class DriverAttendanceService
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $totalHours > 0 &&
-            $totalHours < self::HALF_DAY_HOURS
-        ) {
+        if ($totalHours < self::HALF_DAY_HOURS) {
+
+            return DriverAttendance::STATUS_ABSENT;
+        }
+
+        if ($totalHours < self::FULL_DAY_HOURS) {
 
             return DriverAttendance::STATUS_HALF_DAY;
         }
@@ -562,13 +681,18 @@ class DriverAttendanceService
         |--------------------------------------------------------------------------
         */
 
-        return Carbon::parse(
-            $actualStartTime
-        )->gt(
-            Carbon::parse(
-                $reportingTime
-            )
-        );
+        try {
+            $actualSeconds = $this->timeToSeconds($actualStartTime);
+            $reportingSeconds = $this->timeToSeconds($reportingTime);
+        } catch (RuntimeException $exception) {
+            return false;
+        }
+
+        if ($actualSeconds === null || $reportingSeconds === null) {
+            return false;
+        }
+
+        return $actualSeconds > $reportingSeconds;
     }
 
 
@@ -603,6 +727,12 @@ class DriverAttendanceService
         $expectedEndTime =
             $workingSheet
                 ->dutySlip
+                ->dutyAssignment
+                ?->expected_end_time;
+
+        $actualEndTime =
+            $workingSheet
+                ->dutySlip
                 ->end_time;
 
 
@@ -627,11 +757,64 @@ class DriverAttendanceService
 
         /*
         |--------------------------------------------------------------------------
-        | No Reliable Expected End
+        | Compare Actual End With Expected End
         |--------------------------------------------------------------------------
+        |
+        | If Duty Assignment does not expose expected_end_time, early-exit
+        | cannot be calculated and safely remains false.
+        |
         */
 
-        return false;
+        try {
+            $actualSeconds = $this->timeToSeconds($actualEndTime);
+            $expectedSeconds = $this->timeToSeconds($expectedEndTime);
+        } catch (RuntimeException $exception) {
+            return false;
+        }
+
+        if ($actualSeconds === null || $expectedSeconds === null) {
+            return false;
+        }
+
+        return $actualSeconds < $expectedSeconds;
+    }
+
+
+    /**
+     * Convert TIME or DATETIME input to HH:MM:SS before saving to SQL TIME columns.
+     */
+    protected function normalizeTimeForStorage($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format('H:i:s');
+        } catch (\Throwable $exception) {
+            throw new RuntimeException(
+                'Duty Slip contains an invalid attendance time value.',
+                0,
+                $exception
+            );
+        }
+    }
+
+
+    /**
+     * Convert a TIME or DATETIME input to seconds since midnight.
+     */
+    protected function timeToSeconds($value): ?int
+    {
+        $time = $this->normalizeTimeForStorage($value);
+
+        if ($time === null) {
+            return null;
+        }
+
+        [$hours, $minutes, $seconds] = array_map('intval', explode(':', $time));
+
+        return ($hours * 3600) + ($minutes * 60) + $seconds;
     }
 
 
@@ -653,6 +836,9 @@ class DriverAttendanceService
 
             DriverAttendance::STATUS_HALF_DAY =>
                 'Half day attendance automatically calculated from Working Sheet hours.',
+
+            DriverAttendance::STATUS_ABSENT =>
+                'Attendance hours are below the minimum half-day threshold.',
 
             DriverAttendance::STATUS_LATE =>
                 'Late attendance automatically detected from duty reporting time.',
@@ -869,8 +1055,10 @@ class DriverAttendanceService
             */
 
             $data['working_sheet_id'] =
-                $data['working_sheet_id']
-                ?? null;
+                isset($data['working_sheet_id']) &&
+                $data['working_sheet_id'] !== ''
+                    ? (int) $data['working_sheet_id']
+                    : null;
 
 
             /*
@@ -878,9 +1066,6 @@ class DriverAttendanceService
             | Audit
             |--------------------------------------------------------------------------
             */
-
-            $data['created_by'] =
-                Auth::id();
 
             $data['updated_by'] =
                 Auth::id();
@@ -909,6 +1094,9 @@ class DriverAttendanceService
                         ),
                         2
                     );
+            } else {
+
+                $data['total_hours'] = null;
             }
 
 
@@ -919,7 +1107,7 @@ class DriverAttendanceService
             */
 
             $attendance =
-                DriverAttendance::query()
+                DriverAttendance::withTrashed()
                     ->where(
                         'driver_id',
                         $data['driver_id']
@@ -928,21 +1116,48 @@ class DriverAttendanceService
                         'attendance_date',
                         $data['attendance_date']
                     )
+                    ->lockForUpdate()
                     ->first();
 
 
             if ($attendance) {
 
-                $attendance->update(
-                    $data
-                );
+                // An explicit manual action may restore the unique row for this driver/date.
+                if ($attendance->trashed()) {
+                    $attendance->restore();
+                }
+
+                // Do not rewrite the original creator when editing a row.
+                unset($data['created_by']);
+                $attendance->fill($data);
+                $attendance->save();
 
             } else {
 
-                $attendance =
-                    DriverAttendance::create(
-                        $data
-                    );
+                $data['created_by'] = Auth::id();
+
+                try {
+                    $attendance = DriverAttendance::create($data);
+                } catch (QueryException $exception) {
+                    // Resolve a concurrent insert against the unique driver/date key.
+                    $attendance = DriverAttendance::withTrashed()
+                        ->where('driver_id', $data['driver_id'])
+                        ->whereDate('attendance_date', $data['attendance_date'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$attendance) {
+                        throw $exception;
+                    }
+
+                    if ($attendance->trashed()) {
+                        $attendance->restore();
+                    }
+
+                    unset($data['created_by']);
+                    $attendance->fill($data);
+                    $attendance->save();
+                }
             }
 
 
@@ -957,7 +1172,7 @@ class DriverAttendanceService
                 'workingSheet',
                 'createdBy',
                 'updatedBy',
-            ]);
+            ]) ?? $attendance;
         });
     }
 
@@ -981,7 +1196,7 @@ class DriverAttendanceService
             $workingSheet
         ) {
 
-            return DriverAttendance::query()
+            $records = DriverAttendance::withTrashed()
                 ->where(
                     'working_sheet_id',
                     $workingSheet->id
@@ -990,7 +1205,20 @@ class DriverAttendanceService
                     'source',
                     DriverAttendance::SOURCE_WORKING_SHEET
                 )
-                ->delete();
+                ->lockForUpdate()
+                ->get();
+
+            if ($records->isEmpty()) {
+                return false;
+            }
+
+            // Soft-deleting leaves the unique (driver_id, attendance_date) key occupied.
+            // Only derived Working Sheet rows are permanently removed; manual rows are untouched.
+            foreach ($records as $record) {
+                $record->forceDelete();
+            }
+
+            return true;
         });
     }
 
@@ -1006,7 +1234,8 @@ class DriverAttendanceService
         string $date
     ): bool {
 
-        return DriverAttendance::query()
+        // Include deleted rows because the database unique key still reserves the date.
+        return DriverAttendance::withTrashed()
             ->where(
                 'driver_id',
                 $driverId

@@ -2,11 +2,15 @@
 
 namespace App\Services\WorkingSheet;
 
+use App\Models\DriverAllowance;
+use App\Models\DriverExpense;
+use App\Models\DutySlip;
 use App\Models\WorkingSheet;
 use App\Services\DriverAttendance\DriverAttendanceService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class WorkingSheetService
 {
@@ -78,6 +82,57 @@ class WorkingSheetService
 
     /*
     |--------------------------------------------------------------------------
+    | GENERATE NEXT WORKING SHEET NUMBER
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Generate a number such as WS-2026-0001.
+     * Soft-deleted records are included so their numbers are never reused.
+     */
+    public function generateNextSheetNumber(?int $year = null): string
+    {
+        $year = $year ?? (int) now()->format('Y');
+        $prefix = 'WS-' . $year . '-';
+        $pattern = '/^' . preg_quote($prefix, '/') . '(\d+)$/';
+
+        $existingNumbers = WorkingSheet::withTrashed()
+            ->where('sheet_no', 'like', $prefix . '%')
+            ->pluck('sheet_no');
+
+        $highestNumber = 0;
+
+        foreach ($existingNumbers as $existingNumber) {
+            if (preg_match($pattern, (string) $existingNumber, $matches) === 1) {
+                $highestNumber = max($highestNumber, (int) $matches[1]);
+            }
+        }
+
+        $nextNumber = $highestNumber + 1;
+
+        do {
+            $candidate = $prefix . str_pad(
+                (string) $nextNumber,
+                4,
+                '0',
+                STR_PAD_LEFT
+            );
+
+            $nextNumber++;
+
+            // Check the exact candidate too, including records with unusual
+            // numbering formats or records inserted after the first query.
+            $alreadyExists = WorkingSheet::withTrashed()
+                ->where('sheet_no', $candidate)
+                ->exists();
+        } while ($alreadyExists);
+
+        return $candidate;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
     */
@@ -87,6 +142,17 @@ class WorkingSheetService
     ): WorkingSheet {
 
         return DB::transaction(function () use ($data) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Working Sheet Number
+            |--------------------------------------------------------------------------
+            | The form value is only a preview. Generate the authoritative
+            | number on the server immediately before storing the record.
+            */
+
+            $data['sheet_no'] = $this->generateNextSheetNumber();
+
 
             /*
             |--------------------------------------------------------------------------
@@ -110,23 +176,28 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
-            | Driver
+            | Driver / Duty Slip
             |--------------------------------------------------------------------------
+            |
+            | Resolve the driver from the selected Duty Slip on the server.
+            | Do not rely on the readonly/hidden form fields for ownership.
+            |
             */
 
-            if (
-                isset($data['driver_id']) &&
-                $data['driver_id'] !== ''
-            ) {
+            $resolvedDutySlip = $this->resolveDutySlipDriver(
+                $data['duty_slip_id'] ?? null
+            );
 
-                $data['driver_id'] =
-                    (int) $data['driver_id'];
+            $data['duty_slip_id'] = $resolvedDutySlip['duty_slip_id'];
+            $data['driver_id'] = $resolvedDutySlip['driver_id'];
 
-            } else {
-
-                $data['driver_id'] = null;
-            }
-
+            // Enforce approved allowance/expense totals on the server, rather
+            // than trusting amounts submitted by the browser.
+            $this->applyApprovedAllowanceExpenseTotals(
+                $data,
+                $data['driver_id'],
+                $data['duty_slip_id']
+            );
 
             /*
             |--------------------------------------------------------------------------
@@ -148,14 +219,17 @@ class WorkingSheetService
                 $closingMeter !== ''
             ) {
 
+                if ((float) $closingMeter < (float) $openingMeter) {
+                    throw ValidationException::withMessages([
+                        'closing_meter' => 'Closing meter must be greater than or equal to opening meter.',
+                    ]);
+                }
+
                 $data['total_km'] =
-                    max(
-                        0,
-                        round(
-                            (float) $closingMeter
-                            - (float) $openingMeter,
-                            2
-                        )
+                    round(
+                        (float) $closingMeter
+                        - (float) $openingMeter,
+                        2
                     );
 
             } else {
@@ -238,6 +312,26 @@ class WorkingSheetService
                 );
 
 
+            $allowanceAmount =
+                max(
+                    0,
+                    (float) (
+                        $data['allowance_amount']
+                        ?? 0
+                    )
+                );
+
+
+            $expenseAmount =
+                max(
+                    0,
+                    (float) (
+                        $data['expense_amount']
+                        ?? 0
+                    )
+                );
+
+
             $otherAmount =
                 max(
                     0,
@@ -263,6 +357,12 @@ class WorkingSheetService
             $data['overtime_amount'] =
                 round($overtimeAmount, 2);
 
+            $data['allowance_amount'] =
+                round($allowanceAmount, 2);
+
+            $data['expense_amount'] =
+                round($expenseAmount, 2);
+
             $data['other_amount'] =
                 round($otherAmount, 2);
 
@@ -278,6 +378,8 @@ class WorkingSheetService
                     $baseAmount
                     + $extraKmAmount
                     + $overtimeAmount
+                    + $allowanceAmount
+                    + $expenseAmount
                     + $otherAmount,
                     2
                 );
@@ -340,6 +442,13 @@ class WorkingSheetService
             $data
         ) {
 
+            // Keep the original attendance identity to reconcile it if the
+            // selected driver or work date changes.
+            $originalDriverId = (int) ($workingSheet->driver_id ?? 0);
+            $originalWorkDate = $workingSheet->work_date
+                ? $workingSheet->work_date->format('Y-m-d')
+                : null;
+
             /*
             |--------------------------------------------------------------------------
             | Updated By
@@ -348,26 +457,37 @@ class WorkingSheetService
 
             $data['updated_by'] = Auth::id();
 
+            // Working Sheet numbers are generated during creation and remain immutable.
+            // Ignore any client-submitted sheet_no value during updates.
+            $data['sheet_no'] = $workingSheet->sheet_no;
+
 
             /*
             |--------------------------------------------------------------------------
-            | Driver
+            | Driver / Duty Slip
             |--------------------------------------------------------------------------
+            |
+            | Derive the driver from the selected Duty Slip, even if the
+            | client did not submit driver_id or submitted a stale value.
+            |
             */
 
-            if (
-                array_key_exists(
-                    'driver_id',
-                    $data
-                )
-            ) {
+            $dutySlipId = array_key_exists('duty_slip_id', $data)
+                && $data['duty_slip_id'] !== ''
+                    ? $data['duty_slip_id']
+                    : $workingSheet->duty_slip_id;
 
-                $data['driver_id'] =
-                    $data['driver_id'] !== ''
-                        ? (int) $data['driver_id']
-                        : null;
-            }
+            $resolvedDutySlip = $this->resolveDutySlipDriver($dutySlipId);
 
+            $data['duty_slip_id'] = $resolvedDutySlip['duty_slip_id'];
+            $data['driver_id'] = $resolvedDutySlip['driver_id'];
+
+            // Keep edits aligned with the current approved records as well.
+            $this->applyApprovedAllowanceExpenseTotals(
+                $data,
+                $data['driver_id'],
+                $data['duty_slip_id']
+            );
 
             /*
             |--------------------------------------------------------------------------
@@ -412,14 +532,17 @@ class WorkingSheetService
                 $closingMeter !== ''
             ) {
 
+                if ((float) $closingMeter < (float) $openingMeter) {
+                    throw ValidationException::withMessages([
+                        'closing_meter' => 'Closing meter must be greater than or equal to opening meter.',
+                    ]);
+                }
+
                 $data['total_km'] =
-                    max(
-                        0,
-                        round(
-                            (float) $closingMeter
-                            - (float) $openingMeter,
-                            2
-                        )
+                    round(
+                        (float) $closingMeter
+                        - (float) $openingMeter,
+                        2
                     );
 
             } else {
@@ -523,6 +646,30 @@ class WorkingSheetService
                     );
 
 
+            $allowanceAmount =
+                array_key_exists(
+                    'allowance_amount',
+                    $data
+                )
+                    ? (float) $data['allowance_amount']
+                    : (float) (
+                        $workingSheet->allowance_amount
+                        ?? 0
+                    );
+
+
+            $expenseAmount =
+                array_key_exists(
+                    'expense_amount',
+                    $data
+                )
+                    ? (float) $data['expense_amount']
+                    : (float) (
+                        $workingSheet->expense_amount
+                        ?? 0
+                    );
+
+
             $otherAmount =
                 array_key_exists(
                     'other_amount',
@@ -550,6 +697,12 @@ class WorkingSheetService
             $overtimeAmount =
                 max(0, $overtimeAmount);
 
+            $allowanceAmount =
+                max(0, $allowanceAmount);
+
+            $expenseAmount =
+                max(0, $expenseAmount);
+
             $otherAmount =
                 max(0, $otherAmount);
 
@@ -569,6 +722,12 @@ class WorkingSheetService
             $data['overtime_amount'] =
                 round($overtimeAmount, 2);
 
+            $data['allowance_amount'] =
+                round($allowanceAmount, 2);
+
+            $data['expense_amount'] =
+                round($expenseAmount, 2);
+
             $data['other_amount'] =
                 round($otherAmount, 2);
 
@@ -584,9 +743,40 @@ class WorkingSheetService
                     $baseAmount
                     + $extraKmAmount
                     + $overtimeAmount
+                    + $allowanceAmount
+                    + $expenseAmount
                     + $otherAmount,
                     2
                 );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reconcile Previous Attendance Identity
+            |--------------------------------------------------------------------------
+            |
+            | If this sheet changes driver/date, remove only its linked
+            | working-sheet attendance before generating the new one.
+            |
+            */
+
+            $newDriverId = (int) $data['driver_id'];
+            $newWorkDateValue = array_key_exists('work_date', $data)
+                ? $data['work_date']
+                : $workingSheet->work_date;
+            $newWorkDate = $newWorkDateValue
+                ? (is_string($newWorkDateValue)
+                    ? substr($newWorkDateValue, 0, 10)
+                    : $newWorkDateValue->format('Y-m-d'))
+                : null;
+
+            if (
+                $originalDriverId !== $newDriverId ||
+                $originalWorkDate !== $newWorkDate
+            ) {
+                $this->driverAttendanceService
+                    ->removeWorkingSheetAttendance($workingSheet);
+            }
 
 
             /*
@@ -677,6 +867,9 @@ class WorkingSheetService
             )
         ) {
 
+            $this->driverAttendanceService
+                ->removeWorkingSheetAttendance($workingSheet);
+
             return;
         }
 
@@ -689,6 +882,9 @@ class WorkingSheetService
 
         if (!$workingSheet->driver_id) {
 
+            $this->driverAttendanceService
+                ->removeWorkingSheetAttendance($workingSheet);
+
             return;
         }
 
@@ -700,6 +896,9 @@ class WorkingSheetService
         */
 
         if (!$workingSheet->work_date) {
+
+            $this->driverAttendanceService
+                ->removeWorkingSheetAttendance($workingSheet);
 
             return;
         }
@@ -734,6 +933,20 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
+            | Remove Linked Attendance
+            |--------------------------------------------------------------------------
+            |
+            | Do not leave automatically generated attendance behind when
+            | its source Working Sheet is soft-deleted.
+            |
+            */
+
+            $this->driverAttendanceService
+                ->removeWorkingSheetAttendance($workingSheet);
+
+
+            /*
+            |--------------------------------------------------------------------------
             | Soft Delete
             |--------------------------------------------------------------------------
             |
@@ -745,4 +958,69 @@ class WorkingSheetService
             return $workingSheet->delete();
         });
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RESOLVE DRIVER FROM DUTY SLIP
+    |--------------------------------------------------------------------------
+    |
+    | The selected Duty Slip is the authoritative source. The direct
+    | duty_slips.driver_id is preferred; Duty Assignment is the fallback.
+    |
+    */
+
+    /**
+     * Set financial totals from approved records for the exact driver/Duty Slip.
+     * These values are authoritative; client-submitted totals are ignored.
+     */
+    private function applyApprovedAllowanceExpenseTotals(
+        array &$data,
+        int $driverId,
+        int $dutySlipId
+    ): void {
+        $data['allowance_amount'] = round((float) DriverAllowance::query()
+            ->where('driver_id', $driverId)
+            ->where('duty_slip_id', $dutySlipId)
+            ->where('status', 'approved')
+            ->sum('amount'), 2);
+
+        $data['expense_amount'] = round((float) DriverExpense::query()
+            ->where('driver_id', $driverId)
+            ->where('duty_slip_id', $dutySlipId)
+            ->where('status', 'approved')
+            ->sum('amount'), 2);
+    }
+
+    protected function resolveDutySlipDriver(mixed $dutySlipId): array
+    {
+        if (
+            !is_numeric($dutySlipId) ||
+            (int) $dutySlipId < 1
+        ) {
+            throw ValidationException::withMessages([
+                'duty_slip_id' => 'Please select a valid Duty Slip.',
+            ]);
+        }
+
+        $dutySlip = DutySlip::query()
+            ->with(['dutyAssignment.driver'])
+            ->findOrFail((int) $dutySlipId);
+
+        $driverId = $dutySlip->driver_id
+            ?? $dutySlip->dutyAssignment?->driver_id
+            ?? $dutySlip->dutyAssignment?->driver?->id;
+
+        if (!$driverId) {
+            throw ValidationException::withMessages([
+                'duty_slip_id' => 'The selected Duty Slip does not have an assigned driver.',
+            ]);
+        }
+
+        return [
+            'duty_slip_id' => (int) $dutySlip->id,
+            'driver_id' => (int) $driverId,
+        ];
+    }
+
 }

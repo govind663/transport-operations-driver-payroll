@@ -138,6 +138,35 @@
         cursor: not-allowed;
     }
 
+    /* Allowance / Expense breakdown tables */
+    .detail-table-heading {
+        color: #343a40;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .allowance-expense-table {
+        min-width: 640px;
+        margin-bottom: 0;
+        background: #fff;
+    }
+
+    .allowance-expense-table th,
+    .allowance-expense-table td {
+        vertical-align: middle;
+        font-size: 12px;
+    }
+
+    .allowance-expense-table .record-remarks {
+        min-width: 140px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .record-total-row {
+        background: #f8f9fa;
+    }
+
 </style>
 
 @endpush
@@ -245,7 +274,8 @@
         <form
             action="{{ route('working-sheets.update', $workingSheet->id) }}"
             method="POST"
-            id="working-sheet-form">
+            id="working-sheet-form"
+            data-has-old-input="{{ session()->hasOldInput() ? '1' : '0' }}">
 
             @csrf
 
@@ -298,11 +328,18 @@
                                     type="text"
                                     name="sheet_no"
                                     id="sheet_no"
-                                    class="form-control @error('sheet_no') is-invalid @enderror"
-                                    value="{{ old('sheet_no', $workingSheet->sheet_no) }}"
-                                    placeholder="Enter Working Sheet No."
+                                    class="form-control audit-field @error('sheet_no') is-invalid @enderror"
+                                    required
+                                    value="{{ $workingSheet->sheet_no }}"
+                                    placeholder="Auto-generated Working Sheet No."
                                     maxlength="100"
-                                    autocomplete="off">
+                                    autocomplete="off"
+                                    readonly
+                                    aria-describedby="sheet-no-help">
+
+                                <small id="sheet-no-help" class="text-muted">
+                                    This number was generated when the Working Sheet was created and cannot be changed.
+                                </small>
 
 
                                 @error('sheet_no')
@@ -346,9 +383,12 @@
                                     name="work_date"
                                     id="work_date"
                                     class="form-control @error('work_date') is-invalid @enderror"
+                                    required
                                     value="{{ old(
                                         'work_date',
-                                        optional($workingSheet->work_date)->format('Y-m-d')
+                                        $workingSheet->work_date
+                                            ? \Illuminate\Support\Carbon::parse($workingSheet->work_date)->format('Y-m-d')
+                                            : ''
                                     ) }}">
 
 
@@ -391,7 +431,8 @@
                                 <select
                                     name="status"
                                     id="status"
-                                    class="form-control custom-select2 @error('status') is-invalid @enderror">
+                                    class="form-control custom-select2 @error('status') is-invalid @enderror"
+                                    required>
 
                                     <option value="">
                                         Select Status
@@ -524,7 +565,8 @@
                                 <select
                                     name="duty_slip_id"
                                     id="duty_slip_id"
-                                    class="form-control custom-select2 @error('duty_slip_id') is-invalid @enderror">
+                                    class="form-control custom-select2 @error('duty_slip_id') is-invalid @enderror"
+                                    required>
 
                                     <option value="">
                                         Select Duty Slip
@@ -535,54 +577,158 @@
 
                                         @php
 
-                                            $assignment =
-                                                $dutySlip->dutyAssignment;
+                                            $assignment = $dutySlip->dutyAssignment;
 
-                                            $travelRequest =
-                                                optional($assignment)->travelRequest;
+                                            $travelRequest = optional($assignment)->travelRequest;
 
-                                            $driver =
-                                                optional($assignment)->driver;
+                                            // Prefer the Driver assigned directly to the Duty Slip;
+                                            // fall back to the Duty Assignment for legacy records.
+                                            $directDriver = method_exists($dutySlip, 'driver')
+                                                ? $dutySlip->driver
+                                                : null;
 
-                                            $vehicle =
-                                                optional($assignment)->vehicle;
+                                            $assignmentDriver = optional($assignment)->driver;
 
+                                            $driverId = $dutySlip->getAttribute('driver_id')
+                                                ?: ($directDriver?->id
+                                                    ?: (optional($assignment)->driver_id
+                                                        ?: ($assignmentDriver?->id ?? '')));
 
-                                            $selectedDutySlip =
-                                                old(
-                                                    'duty_slip_id',
-                                                    $workingSheet->duty_slip_id
-                                                ) == $dutySlip->id;
+                                            $driver = $directDriver ?? $assignmentDriver;
 
+                                            if (
+                                                !$driver
+                                                && $driverId
+                                                && isset($drivers)
+                                                && $drivers instanceof \Illuminate\Support\Collection
+                                            ) {
+                                                $driver = $drivers->firstWhere('id', (int) $driverId);
+                                            }
 
-                                            $driverName =
-                                                $driver
-                                                    ? trim(
-                                                        ($driver->first_name ?? '') .
-                                                        ' ' .
-                                                        ($driver->last_name ?? '')
-                                                    )
-                                                    : '';
+                                            if (!$driverId && $driver) {
+                                                $driverId = $driver->id;
+                                            }
 
+                                            // Prefer the vehicle stored directly on duty_slips;
+                                            // keep the assignment fallback for legacy records.
+                                            $directVehicle = method_exists($dutySlip, 'vehicle')
+                                                ? $dutySlip->vehicle
+                                                : null;
 
-                                            $vehicleNumber =
-                                                $vehicle
-                                                    ? (
-                                                        $vehicle->registration_number ??
-                                                        $vehicle->vehicle_number ??
-                                                        $vehicle->vehicle_code ??
-                                                        ''
-                                                    )
-                                                    : '';
+                                            $assignmentVehicle = optional($assignment)->vehicle;
+                                            $vehicle = $directVehicle ?? $assignmentVehicle;
 
+                                            $selectedDutySlip = (string) old(
+                                                'duty_slip_id',
+                                                $workingSheet->duty_slip_id
+                                            ) === (string) $dutySlip->id;
 
-                                            $travelRequestNumber =
-                                                $travelRequest
-                                                    ? (
-                                                        $travelRequest->request_no ??
-                                                        $travelRequest->id
-                                                    )
-                                                    : '';
+                                            // Support common Driver name fields without assuming
+                                            // every installation uses the same display attribute.
+                                            $driverName = '';
+
+                                            if ($driver) {
+                                                $driverName = trim(
+                                                    (string) ($driver->first_name ?? '') . ' ' .
+                                                    (string) ($driver->last_name ?? '')
+                                                );
+
+                                                if ($driverName === '') {
+                                                    $driverName = trim((string) (
+                                                        $driver->name ?? $driver->full_name ?? ''
+                                                    ));
+                                                }
+                                            }
+
+                                            // Vehicle schemas can use different registration column names.
+                                            $vehicleNumber = $vehicle
+                                                ? (string) (
+                                                    $vehicle->registration_number ??
+                                                    $vehicle->registration_no ??
+                                                    $vehicle->vehicle_number ??
+                                                    $vehicle->vehicle_no ??
+                                                    $vehicle->vehicle_code ??
+                                                    ''
+                                                )
+                                                : '';
+
+                                            $travelRequestNumber = $travelRequest
+                                                ? (string) (
+                                                    $travelRequest->request_no ??
+                                                    $travelRequest->request_number ??
+                                                    $travelRequest->travel_request_no ??
+                                                    $travelRequest->id
+                                                )
+                                                : '';
+
+                                            // Duty Slip work details used to auto-fill the edit form
+                                            // when the user selects a different Duty Slip.
+                                            $openingMeterValue = $dutySlip->opening_meter !== null
+                                                ? number_format((float) $dutySlip->opening_meter, 2, '.', '')
+                                                : '';
+
+                                            $closingMeterValue = $dutySlip->closing_meter !== null
+                                                ? number_format((float) $dutySlip->closing_meter, 2, '.', '')
+                                                : '';
+
+                                            $dutySlipTotalKm = $dutySlip->total_km;
+
+                                            if (
+                                                $dutySlipTotalKm === null
+                                                && $dutySlip->opening_meter !== null
+                                                && $dutySlip->closing_meter !== null
+                                                && (float) $dutySlip->closing_meter >= (float) $dutySlip->opening_meter
+                                            ) {
+                                                $dutySlipTotalKm = (float) $dutySlip->closing_meter
+                                                    - (float) $dutySlip->opening_meter;
+                                            }
+
+                                            $totalKmValue = $dutySlipTotalKm !== null
+                                                ? number_format((float) $dutySlipTotalKm, 2, '.', '')
+                                                : '';
+
+                                            // Parse the timestamps explicitly so this view also works
+                                            // if the model returns a date string instead of a Carbon instance.
+                                            $startTime = $dutySlip->getAttribute('start_time');
+                                            $endTime = $dutySlip->getAttribute('end_time');
+
+                                            $startTimeCarbon = $startTime
+                                                ? \Illuminate\Support\Carbon::parse($startTime)
+                                                : null;
+
+                                            $endTimeCarbon = $endTime
+                                                ? \Illuminate\Support\Carbon::parse($endTime)
+                                                : null;
+
+                                            $startTimeValue = $startTimeCarbon
+                                                ? $startTimeCarbon->format('Y-m-d\TH:i:s')
+                                                : '';
+
+                                            $endTimeValue = $endTimeCarbon
+                                                ? $endTimeCarbon->format('Y-m-d\TH:i:s')
+                                                : '';
+
+                                            $totalHoursValue = '';
+
+                                            if (
+                                                $startTimeCarbon
+                                                && $endTimeCarbon
+                                                && $endTimeCarbon->greaterThanOrEqualTo($startTimeCarbon)
+                                            ) {
+                                                $totalHoursValue = number_format(
+                                                    $startTimeCarbon->diffInSeconds($endTimeCarbon) / 3600,
+                                                    2,
+                                                    '.',
+                                                    ''
+                                                );
+                                            }
+
+                                            // overtime_hours does not exist in the supplied duty_slips schema.
+                                            // Keep support for it if a future schema adds this attribute.
+                                            $overtimeHoursValue = $dutySlip->getAttribute('overtime_hours');
+                                            $overtimeHoursValue = $overtimeHoursValue !== null
+                                                ? number_format((float) $overtimeHoursValue, 2, '.', '')
+                                                : '';
 
                                         @endphp
 
@@ -594,11 +740,38 @@
 
                                             data-status="{{ $dutySlip->status ?? '' }}"
 
+                                            data-driver-id="{{ $driver?->id ?? $driverId ?? '' }}"
+
                                             data-driver="{{ $driverName }}"
 
                                             data-vehicle="{{ $vehicleNumber }}"
 
                                             data-travel-request="{{ $travelRequestNumber }}"
+
+
+                                            data-allowance-total="{{ number_format((float) ($dutySlip->working_sheet_allowance_total ?? 0), 2, '.', '') }}"
+
+                                            data-expense-total="{{ number_format((float) ($dutySlip->working_sheet_expense_total ?? 0), 2, '.', '') }}"
+
+                                            data-allowance-records="{{ json_encode($dutySlip->working_sheet_allowance_records ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
+
+                                            data-expense-records="{{ json_encode($dutySlip->working_sheet_expense_records ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
+
+                                            data-date="{{ $dutySlip->duty_date ? \Illuminate\Support\Carbon::parse($dutySlip->duty_date)->format('Y-m-d') : '' }}"
+
+                                            data-opening-meter="{{ $openingMeterValue }}"
+
+                                            data-closing-meter="{{ $closingMeterValue }}"
+
+                                            data-total-km="{{ $totalKmValue }}"
+
+                                            data-start-time="{{ $startTimeValue }}"
+
+                                            data-end-time="{{ $endTimeValue }}"
+
+                                            data-total-hours="{{ $totalHoursValue }}"
+
+                                            data-overtime-hours="{{ $overtimeHoursValue }}"
 
                                             {{ $selectedDutySlip ? 'selected' : '' }}>
 
@@ -638,6 +811,45 @@
 
                                     </span>
 
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- DRIVER DERIVED FROM DUTY SLIP --}}
+                        <div class="col-md-6">
+
+                            <div class="form-group">
+
+                                <label for="driver_name">
+                                    <b>Driver</b>
+                                    <span class="required">*</span>
+                                </label>
+
+                                <input
+                                    type="hidden"
+                                    name="driver_id"
+                                    id="driver_id"
+                                    value="{{ old('driver_id', $workingSheet->driver_id ?? '') }}">
+
+                                <input
+                                    type="text"
+                                    id="driver_name"
+                                    class="form-control"
+                                    value=""
+                                    placeholder="Driver will be selected from Duty Slip"
+                                    readonly>
+
+                                <small class="text-muted">
+                                    Driver is automatically linked from the selected Duty Slip.
+                                </small>
+
+                                @error('driver_id')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
                                 @enderror
 
                             </div>
@@ -900,7 +1112,8 @@
                                     ) }}"
                                     placeholder="Auto calculated from meter"
                                     min="0"
-                                    step="0.01">
+                                    step="0.01"
+                                    readonly>
 
 
                                 <small class="text-muted">
@@ -1041,6 +1254,88 @@
 
                     <hr>
 
+
+                    {{-- ===================================================== --}}
+                    {{-- DRIVER ALLOWANCE / EXPENSE RECORD BREAKDOWN --}}
+                    {{-- All statuses are shown; only Approved rows count in totals. --}}
+                    {{-- ===================================================== --}}
+                    <div class="row mb-4">
+
+                        {{-- DRIVER ALLOWANCE RECORDS --}}
+                        <div class="col-lg-6 mb-4">
+
+                            <h6 class="detail-table-heading">Driver Allowance Records</h6>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered table-striped allowance-expense-table">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Allowance</th>
+                                            <th>Qty</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="allowance-records-body">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">
+                                                Loading allowance records for this Duty Slip...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="record-total-row">
+                                            <th colspan="4">Approved Allowance Total</th>
+                                            <th id="allowance-approved-total">0.00</th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                        </div>
+
+                        {{-- DRIVER EXPENSE RECORDS --}}
+                        <div class="col-lg-6 mb-4">
+
+                            <h6 class="detail-table-heading">Driver Expense Records</h6>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered table-striped allowance-expense-table">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Expense</th>
+                                            <th>Qty</th>
+                                            <th>Rate</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Remarks / Document</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expense-records-body">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">
+                                                Loading expense records for this Duty Slip...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="record-total-row">
+                                            <th colspan="4">Approved Expense Total</th>
+                                            <th id="expense-approved-total">0.00</th>
+                                            <th colspan="2"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
 
                     <div class="calculation-box">
 
@@ -1185,6 +1480,60 @@
 
 
 
+                            {{-- ALLOWANCE AMOUNT --}}
+                            <div class="col-md-4">
+
+                                <div class="form-group">
+
+                                    <label for="allowance_amount"><b>Allowance Amount</b></label>
+
+                                    <input
+                                        type="number"
+                                        name="allowance_amount"
+                                        id="allowance_amount"
+                                        class="form-control amount-input @error('allowance_amount') is-invalid @enderror"
+                                        value="{{ old('allowance_amount', $workingSheet->allowance_amount ?? 0) }}"
+                                        placeholder="0.00"
+                                        min="0"
+                                        step="0.01"
+                                        readonly>
+
+                                    @error('allowance_amount')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- EXPENSE AMOUNT --}}
+                            <div class="col-md-4">
+
+                                <div class="form-group">
+
+                                    <label for="expense_amount"><b>Expense Amount</b></label>
+
+                                    <input
+                                        type="number"
+                                        name="expense_amount"
+                                        id="expense_amount"
+                                        class="form-control amount-input @error('expense_amount') is-invalid @enderror"
+                                        value="{{ old('expense_amount', $workingSheet->expense_amount ?? 0) }}"
+                                        placeholder="0.00"
+                                        min="0"
+                                        step="0.01"
+                                        readonly>
+
+                                    @error('expense_amount')
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+                                    @enderror
+
+                                </div>
+
+                            </div>
+
+
                             {{-- OTHER AMOUNT --}}
                             <div class="col-md-4">
 
@@ -1256,12 +1605,13 @@
                                         ) }}"
                                         placeholder="0.00"
                                         min="0"
-                                        step="0.01">
+                                        step="0.01"
+                                        readonly>
 
 
                                     <small class="text-muted">
 
-                                        Base + Extra KM + Overtime + Other
+                                        Base + Extra KM + Overtime + Allowance + Expense + Other
 
                                     </small>
 
@@ -1539,558 +1889,5 @@
 
 
 @push('scripts')
-
-<script>
-
-$(document).ready(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | DUTY SLIP INFORMATION
-    |--------------------------------------------------------------------------
-    */
-
-    function loadDutySlipInfo()
-    {
-        const selected =
-            $('#duty_slip_id option:selected');
-
-        const dutySlipId =
-            $('#duty_slip_id').val();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | NO DUTY SLIP SELECTED
-        |--------------------------------------------------------------------------
-        */
-
-        if (!dutySlipId) {
-
-            $('#duty-slip-info').hide();
-
-            $('#info-slip-no').text('-');
-            $('#info-status').text('-');
-            $('#info-driver').text('-');
-            $('#info-vehicle').text('-');
-            $('#info-travel-request').text('-');
-
-            return;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | GET DATA FROM SELECTED OPTION
-        |--------------------------------------------------------------------------
-        */
-
-        const slipNo =
-            selected.attr('data-slip-no') || '-';
-
-        const status =
-            selected.attr('data-status') || '-';
-
-        const driver =
-            selected.attr('data-driver') || '';
-
-        const vehicle =
-            selected.attr('data-vehicle') || '';
-
-        const travelRequest =
-            selected.attr('data-travel-request') || '-';
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DISPLAY INFORMATION
-        |--------------------------------------------------------------------------
-        */
-
-        $('#info-slip-no').text(
-            slipNo
-        );
-
-
-        $('#info-status').text(
-            status
-        );
-
-
-        $('#info-driver').text(
-            driver || 'Not Assigned'
-        );
-
-
-        $('#info-vehicle').text(
-            vehicle || 'Not Assigned'
-        );
-
-
-        $('#info-travel-request').text(
-            travelRequest
-        );
-
-
-        $('#duty-slip-info').stop(true, true).slideDown(150);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | DUTY SLIP CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    $('#duty_slip_id').on(
-        'change',
-        loadDutySlipInfo
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIAL DUTY SLIP LOAD
-    |--------------------------------------------------------------------------
-    */
-
-    loadDutySlipInfo();
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL KM CALCULATION
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateTotalKm()
-    {
-        const openingValue =
-            $('#opening_meter').val();
-
-        const closingValue =
-            $('#closing_meter').val();
-
-
-        const opening =
-            parseFloat(openingValue);
-
-        const closing =
-            parseFloat(closingValue);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | BOTH VALUES MUST EXIST
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            openingValue !== '' &&
-            closingValue !== '' &&
-            !isNaN(opening) &&
-            !isNaN(closing)
-        ) {
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLOSING LESS THAN OPENING
-            |--------------------------------------------------------------------------
-            */
-
-            if (closing < opening) {
-
-                $('#total_km').val('');
-
-                return;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CALCULATE KM
-            |--------------------------------------------------------------------------
-            */
-
-            const total =
-                closing - opening;
-
-
-            $('#total_km').val(
-                total.toFixed(2)
-            );
-
-        }
-    }
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | METER CHANGE EVENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $('#opening_meter, #closing_meter').on(
-        'input change',
-        function () {
-
-            calculateTotalKm();
-
-            validateClosingMeter();
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | CLOSING METER VALIDATION
-    |--------------------------------------------------------------------------
-    */
-
-    function validateClosingMeter()
-    {
-        const opening =
-            parseFloat(
-                $('#opening_meter').val()
-            );
-
-
-        const closing =
-            parseFloat(
-                $('#closing_meter').val()
-            );
-
-
-        if (
-            !isNaN(opening) &&
-            !isNaN(closing) &&
-            closing < opening
-        ) {
-
-            $('#closing_meter')
-                .addClass('is-invalid');
-
-        } else {
-
-            $('#closing_meter')
-                .removeClass('is-invalid');
-
-        }
-    }
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOTAL AMOUNT CALCULATION
-    |--------------------------------------------------------------------------
-    */
-
-    function calculateTotalAmount()
-    {
-        const base =
-            parseFloat(
-                $('#base_amount').val()
-            ) || 0;
-
-
-        const extraKm =
-            parseFloat(
-                $('#extra_km_amount').val()
-            ) || 0;
-
-
-        const overtime =
-            parseFloat(
-                $('#overtime_amount').val()
-            ) || 0;
-
-
-        const other =
-            parseFloat(
-                $('#other_amount').val()
-            ) || 0;
-
-
-        const total =
-            base +
-            extraKm +
-            overtime +
-            other;
-
-
-        $('#total_amount').val(
-            total.toFixed(2)
-        );
-    }
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | AMOUNT CHANGE EVENTS
-    |--------------------------------------------------------------------------
-    */
-
-    $('#base_amount, #extra_km_amount, #overtime_amount, #other_amount')
-        .on(
-            'input change',
-            calculateTotalAmount
-        );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | NUMERIC INPUT CLEANUP
-    |--------------------------------------------------------------------------
-    */
-
-    $('.decimal-input, .amount-input').on(
-        'input',
-        function () {
-
-            let value =
-                $(this).val();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | REMOVE INVALID CHARACTERS
-            |--------------------------------------------------------------------------
-            */
-
-            value =
-                value.replace(
-                    /[^0-9.]/g,
-                    ''
-                );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ONLY ONE DECIMAL POINT
-            |--------------------------------------------------------------------------
-            */
-
-            const parts =
-                value.split('.');
-
-
-            if (parts.length > 2) {
-
-                value =
-                    parts[0] +
-                    '.' +
-                    parts.slice(1).join('');
-
-            }
-
-
-            $(this).val(value);
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SHEET NUMBER FORMATTING
-    |--------------------------------------------------------------------------
-    */
-
-    $('#sheet_no').on(
-        'blur',
-        function () {
-
-            $(this).val(
-                $(this)
-                    .val()
-                    .trim()
-                    .toUpperCase()
-            );
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMARKS FORMATTING
-    |--------------------------------------------------------------------------
-    */
-
-    $('#remarks').on(
-        'blur',
-        function () {
-
-            $(this).val(
-                $(this)
-                    .val()
-                    .trim()
-            );
-
-        }
-    );
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIAL CALCULATIONS
-    |--------------------------------------------------------------------------
-    */
-
-    calculateTotalKm();
-
-    calculateTotalAmount();
-
-    validateClosingMeter();
-
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
-    $('#working-sheet-form').on(
-        'submit',
-        function (e) {
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLEAN SHEET NUMBER
-            |--------------------------------------------------------------------------
-            */
-
-            $('#sheet_no').val(
-                $('#sheet_no')
-                    .val()
-                    .trim()
-                    .toUpperCase()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLEAN REMARKS
-            |--------------------------------------------------------------------------
-            */
-
-            $('#remarks').val(
-                $('#remarks')
-                    .val()
-                    .trim()
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | METER VALIDATION
-            |--------------------------------------------------------------------------
-            */
-
-            const opening =
-                parseFloat(
-                    $('#opening_meter').val()
-                );
-
-
-            const closing =
-                parseFloat(
-                    $('#closing_meter').val()
-                );
-
-
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing < opening
-            ) {
-
-                e.preventDefault();
-
-
-                $('#closing_meter')
-                    .addClass('is-invalid')
-                    .focus();
-
-
-                alert(
-                    'Closing meter must be greater than or equal to opening meter.'
-                );
-
-
-                return false;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | RECALCULATE TOTAL KM
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !isNaN(opening) &&
-                !isNaN(closing) &&
-                closing >= opening
-            ) {
-
-                $('#total_km').val(
-                    (
-                        closing -
-                        opening
-                    ).toFixed(2)
-                );
-
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | RECALCULATE TOTAL AMOUNT
-            |--------------------------------------------------------------------------
-            */
-
-            calculateTotalAmount();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PREVENT DOUBLE SUBMISSION
-            |--------------------------------------------------------------------------
-            */
-
-            const submitButton =
-                $('#update-working-sheet');
-
-
-            submitButton
-                .prop(
-                    'disabled',
-                    true
-                )
-                .html(
-                    '<i class="fa fa-spinner fa-spin"></i> Updating Working Sheet...'
-                );
-
-        }
-    );
-
-
-});
-
-</script>
-
+    <script src="{{ asset('backend/assets/js/working-sheets/edit.js') }}" defer></script>
 @endpush
