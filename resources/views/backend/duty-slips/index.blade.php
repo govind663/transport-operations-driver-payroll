@@ -315,11 +315,6 @@
                                 Total KM
                             </th>
 
-                            {{-- Status --}}
-                            <th class="text-wrap">
-                                Status
-                            </th>
-
                             {{-- Remarks --}}
                             <th class="text-wrap">
                                 Remarks
@@ -338,6 +333,11 @@
                             {{-- Driver Advance Total --}}
                             <th class="text-wrap">
                                 Driver Advance (Total)
+                            </th>
+
+                            {{-- Status --}}
+                            <th class="text-wrap">
+                                Status
                             </th>
 
                             {{-- Edit --}}
@@ -406,7 +406,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Driver Code --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     {{ $dutySlip->driver->driver_code ?? '-' }}
@@ -417,7 +416,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Driver Name --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @php
@@ -435,7 +433,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Duty Date --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->duty_date)
@@ -454,12 +451,11 @@
                                 {{-- ========================================= --}}
                                 {{-- Start Time --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->start_time)
 
-                                        {{ $dutySlip->start_time->format('d-m-Y h:i A') }}
+                                        {{ $dutySlip->start_time->format('h:i A') }}
 
                                     @else
 
@@ -473,12 +469,11 @@
                                 {{-- ========================================= --}}
                                 {{-- End Time --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->end_time)
 
-                                        {{ $dutySlip->end_time->format('d-m-Y h:i A') }}
+                                        {{ $dutySlip->end_time->format('h:i A') }}
 
                                     @else
 
@@ -540,14 +535,9 @@
 
                                     @if($dutySlip->total_km !== null)
 
-                                        <span class="badge badge-info">
+                                        <span class="text-dark font-weight-bold">
 
-                                            {{ number_format(
-                                                (float) $dutySlip->total_km,
-                                                2
-                                            ) }}
-
-                                            KM
+                                            {{ number_format((float) $dutySlip->total_km, 2) }}
 
                                         </span>
 
@@ -621,6 +611,83 @@
                                 </td>
                                 --}}
 
+                                {{-- ========================================= --}}
+                                {{-- Remarks --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @if(!empty($dutySlip->remarks))
+
+                                        <span title="{{ $dutySlip->remarks }}">
+
+                                            {{ \Illuminate\Support\Str::limit(
+                                                $dutySlip->remarks,
+                                                40
+                                            ) }}
+
+                                        </span>
+
+                                    @else
+
+                                        -
+
+                                    @endif
+
+                                </td>
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER ALLOWANCE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $allowanceTotal = $dutySlip->driverAllowances
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="text-dark font-weight-bold">
+
+                                        {{ number_format((float) $allowanceTotal, 2) }}
+
+                                    </span>
+
+                                </td>
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER EXPENSE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $expenseTotal = $dutySlip->driverExpenses
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="text-dark font-weight-bold">
+
+                                        {{ number_format((float) $expenseTotal, 2) }}
+
+                                    </span>
+
+                                </td>
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER ADVANCE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $advanceTotal = $dutySlip->driverAdvances
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="text-dark font-weight-bold">
+
+                                        {{ number_format((float) $advanceTotal, 2) }}
+
+                                    </span>
+
+                                </td>
 
                                 {{-- ========================================= --}}
                                 {{-- Status --}}
@@ -666,88 +733,6 @@
                                         <i class="fa {{ $statusIcon }}"></i>
 
                                         {{ ucfirst($status ?? 'Unknown') }}
-
-                                    </span>
-
-                                </td>
-
-
-                                {{-- ========================================= --}}
-                                {{-- Remarks --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    @if(!empty($dutySlip->remarks))
-
-                                        <span title="{{ $dutySlip->remarks }}">
-
-                                            {{ \Illuminate\Support\Str::limit(
-                                                $dutySlip->remarks,
-                                                40
-                                            ) }}
-
-                                        </span>
-
-                                    @else
-
-                                        -
-
-                                    @endif
-
-                                </td>
-
-
-                                {{-- ========================================= --}}
-                                {{-- DRIVER ALLOWANCE TOTAL --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    @php
-                                        $allowanceTotal = $dutySlip->driverAllowances
-                                            ->sum('amount');
-                                    @endphp
-
-                                    <span class="badge badge-info px-3 py-2">
-
-                                        ₹ {{ number_format((float) $allowanceTotal, 2) }}
-
-                                    </span>
-
-                                </td>
-
-
-                                {{-- ========================================= --}}
-                                {{-- DRIVER EXPENSE TOTAL --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    @php
-                                        $expenseTotal = $dutySlip->driverExpenses
-                                            ->sum('amount');
-                                    @endphp
-
-                                    <span class="badge badge-warning px-3 py-2">
-
-                                        ₹ {{ number_format((float) $expenseTotal, 2) }}
-
-                                    </span>
-
-                                </td>
-
-
-                                {{-- ========================================= --}}
-                                {{-- DRIVER ADVANCE TOTAL --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    @php
-                                        $advanceTotal = $dutySlip->driverAdvances
-                                            ->sum('amount');
-                                    @endphp
-
-                                    <span class="badge badge-success px-3 py-2">
-
-                                        ₹ {{ number_format((float) $advanceTotal, 2) }}
 
                                     </span>
 
