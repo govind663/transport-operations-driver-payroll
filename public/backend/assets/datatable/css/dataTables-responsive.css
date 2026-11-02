@@ -1,92 +1,705 @@
+/* =========================================================
+   SEO IMAGE
+========================================================= */
+
 .seo-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 6px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
     object-fit: cover;
+    border: 1px solid #e5e7eb;
 }
 
-/* 🔹 Top Controls Alignment */
-.dataTables_wrapper .dataTables_filter {
-    float: right;
-    text-align: right;
+
+/* =========================================================
+   DATATABLE GENERAL
+========================================================= */
+
+.dataTables_wrapper {
+    width: 100%;
+    clear: both;
+    color: #374151;
+    font-size: 14px;
 }
+
+.dataTables_wrapper .table {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+}
+
+.dataTables_wrapper table.dataTable {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+.dataTables_wrapper table.dataTable th,
+.dataTables_wrapper table.dataTable td {
+    vertical-align: middle !important;
+}
+
+.dataTables_wrapper .row {
+    align-items: center;
+}
+
+
+/* =========================================================
+   TOP CONTROLS
+========================================================= */
+
+.dataTables_wrapper > .row:first-child {
+    margin-bottom: 16px;
+}
+
+.dataTables_wrapper > .row:first-child > [class*="col-"] {
+    min-width: 0;
+}
+
+
+/* =========================================================
+   EXPORT BUTTONS
+========================================================= */
+
+.dataTables_wrapper .dt-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    float: none;
+}
+
+.dataTables_wrapper .dt-buttons .btn,
+.dataTables_wrapper .dt-buttons .dt-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-height: 34px;
+    padding: 6px 13px !important;
+
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+
+    border-radius: 7px !important;
+    margin: 0 !important;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dt-buttons .btn:hover,
+.dataTables_wrapper .dt-buttons .dt-button:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.dataTables_wrapper .dt-buttons .btn:focus,
+.dataTables_wrapper .dt-buttons .dt-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15) !important;
+}
+
+.dataTables_wrapper .dt-buttons .btn:active,
+.dataTables_wrapper .dt-buttons .dt-button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   SEARCH BOX
+========================================================= */
+
+.dataTables_wrapper .dataTables_filter {
+    float: none;
+    width: 100%;
+    text-align: right;
+    margin: 0;
+}
+
+.dataTables_wrapper .dataTables_filter label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+
+    margin: 0;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    width: 230px;
+    max-width: 100%;
+    min-height: 38px;
+
+    padding: 7px 14px;
+    margin-left: 0;
+
+    font-size: 13px;
+    color: #374151;
+    background: #fff;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_filter input::placeholder {
+    color: #9ca3af;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+
+/* =========================================================
+   LENGTH DROPDOWN
+========================================================= */
 
 .dataTables_wrapper .dataTables_length {
-    float: left;
+    float: none;
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
 }
 
-/* 🔥 Pagination RIGHT FIX (Bootstrap 5 Compatible) */
+.dataTables_wrapper .dataTables_length label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    margin: 0;
+    font-weight: 500;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    min-width: 70px;
+    min-height: 35px;
+
+    padding: 5px 25px 5px 9px;
+
+    font-size: 13px;
+    color: #374151;
+    background-color: #fff;
+
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+
+    outline: none;
+    cursor: pointer;
+}
+
+.dataTables_wrapper .dataTables_length select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.dataTables_wrapper table.dataTable thead th {
+    padding: 13px 12px !important;
+
+    background-color: #f3f6fa;
+    color: #374151;
+
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+
+    white-space: nowrap;
+    border-bottom: 1px solid #e5e7eb !important;
+    vertical-align: middle;
+}
+
+.dataTables_wrapper table.dataTable thead th:first-child {
+    border-top-left-radius: 7px;
+}
+
+.dataTables_wrapper table.dataTable thead th:last-child {
+    border-top-right-radius: 7px;
+}
+
+.dataTables_wrapper table.dataTable thead th.text-wrap {
+    white-space: normal !important;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.dataTables_wrapper table.dataTable tbody td {
+    padding: 11px 12px !important;
+
+    color: #4b5563;
+    font-size: 13px;
+
+    vertical-align: middle !important;
+    border-bottom: 1px solid #eef0f3 !important;
+}
+
+.dataTables_wrapper table.dataTable tbody tr {
+    background-color: #fff;
+    transition: background-color 0.15s ease;
+}
+
+.dataTables_wrapper table.dataTable tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.dataTables_wrapper table.dataTable tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+
+/* =========================================================
+   TABLE TEXT / LOCATION
+========================================================= */
+
+.dataTables_wrapper table.dataTable tbody td.location-cell {
+    min-width: 180px;
+    max-width: 260px;
+
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+
+.dataTables_wrapper .location-text {
+    display: inline-block;
+    line-height: 1.5;
+}
+
+.dataTables_wrapper .text-muted {
+    color: #8b95a5 !important;
+}
+
+
+/* =========================================================
+   TABLE BADGES
+========================================================= */
+
+.dataTables_wrapper .badge {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+
+/* =========================================================
+   EMPTY / NO RECORD MESSAGE
+========================================================= */
+
+.dataTables_wrapper table.dataTable tbody td.dataTables_empty {
+    padding: 40px 15px !important;
+
+    color: #8b95a5;
+    font-size: 14px;
+    font-weight: 500;
+
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.dataTables_wrapper .dataTables_empty {
+    text-align: center !important;
+}
+
+
+/* =========================================================
+   PROCESSING MESSAGE
+========================================================= */
+
+.dataTables_wrapper .dataTables_processing {
+    padding: 15px !important;
+
+    background: #fff;
+    color: #374151;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =========================================================
+   BOTTOM CONTROLS
+========================================================= */
+
+.dataTables_wrapper > .row:last-child {
+    margin-top: 14px;
+    align-items: center;
+}
+
+.dataTables_wrapper .dataTables_info {
+    padding-top: 8px !important;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
 .dataTables_wrapper .dataTables_paginate {
-    float: right !important;
+    float: none !important;
+    width: 100%;
+    padding-top: 5px !important;
     text-align: right !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .pagination {
-    justify-content: flex-end !important;
-}
-
-/* 🔹 Buttons Styling */
-.dataTables_wrapper .dt-buttons {
-    float: left;
-}
-
-.dataTables_wrapper .dt-buttons .btn {
-    /* margin-right: 5px; */
-    /* border-radius: 6px; */
-    padding: 5px 12px;
-}
-
-/* 🔹 Length Dropdown */
-.dataTables_wrapper .dataTables_length select {
-    border-radius: 6px;
-    padding: 4px 8px;
-}
-
-/* 🔹 Search Box */
-.dataTables_wrapper .dataTables_filter input {
-    border-radius: 20px;
-    padding: 5px 12px;
-    border: 1px solid #ccc;
-}
-
-/* 🔥 CENTER EMPTY / NO RECORD MESSAGE */
-table.dataTable tbody td.dataTables_empty {
-    text-align: center !important;
-    vertical-align: middle !important;
-    padding: 40px 0 !important;
-    font-size: 16px;
-    color: #888;
-    width: 100% !important;
-}
-
-/* Extra strong force */
-.dataTables_empty {
-    text-align: center !important;
-}
-
-/* 🔹 Table Header */
-/* .table thead th {
-    background-color: #1d3557;
-    color: #fff;
-    font-weight: 500;
-} */
-
-/* 🔹 Pagination Buttons */
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius: 6px !important;
-    margin: 2px;
-}
-
-/* 🔹 Active Page */
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #007bff !important;
-    color: #fff !important;
-    border: none;
-}
-
-/* 🔥 FIX: Bottom Row Alignment */
-.dataTables_wrapper .row:last-child {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end !important;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    margin: 0;
+    padding: 0;
+}
+
+
+/* =========================================================
+   BOOTSTRAP PAGINATION
+========================================================= */
+
+.dataTables_wrapper .dataTables_paginate .page-item {
+    margin: 0;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-link {
+    min-width: 34px;
+    min-height: 34px;
+
+    display: flex;
     align-items: center;
+    justify-content: center;
+
+    padding: 6px 10px;
+
+    color: #4b5563;
+    background: #fff;
+
+    font-size: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 7px !important;
+
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-link:hover {
+    color: #2563eb;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+    color: #fff;
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.dataTables_wrapper .dataTables_paginate .page-item.disabled .page-link {
+    color: #b5bdc8;
+    background: #f9fafb;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   LEGACY DATATABLE PAGINATION
+========================================================= */
+
+.dataTables_wrapper .dataTables_paginate a.paginate_button {
+    display: inline-block;
+
+    min-width: 34px;
+    padding: 6px 10px !important;
+
+    color: #4b5563 !important;
+    background: #fff !important;
+
+    font-size: 12px;
+    text-align: center;
+
+    border: 1px solid #e5e7eb !important;
+    border-radius: 7px !important;
+
+    margin: 2px;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate a.paginate_button:hover {
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+
+.dataTables_wrapper .dataTables_paginate a.paginate_button.current {
+    color: #fff !important;
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+.dataTables_wrapper .dataTables_paginate a.paginate_button.disabled {
+    color: #b5bdc8 !important;
+    background: #f9fafb !important;
+    cursor: not-allowed !important;
+}
+
+
+/* =========================================================
+   DATATABLE RESPONSIVE DETAILS
+========================================================= */
+
+.dataTables_wrapper table.dataTable.dtr-inline.collapsed
+tbody td.dtr-control:before {
+    background-color: #2563eb;
+    border: none;
+    box-shadow: none;
+}
+
+.dataTables_wrapper table.dataTable tbody tr.child {
+    background-color: #f8fafc;
+}
+
+.dataTables_wrapper table.dataTable tbody tr.child td {
+    padding: 12px 16px !important;
+}
+
+.dataTables_wrapper .dtr-details {
+    width: 100%;
+}
+
+.dataTables_wrapper .dtr-details li {
+    padding: 7px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* =========================================================
+   RESPONSIVE SCROLL
+========================================================= */
+
+.dataTables_wrapper .dataTables_scroll {
+    width: 100%;
+}
+
+.dataTables_wrapper .dataTables_scrollBody {
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+
+@media (max-width: 991px) {
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 200px;
+    }
+
+    .dataTables_wrapper .dt-buttons {
+        gap: 6px;
+    }
+
+    .dataTables_wrapper table.dataTable thead th {
+        padding: 11px 10px !important;
+    }
+
+    .dataTables_wrapper table.dataTable tbody td {
+        padding: 10px !important;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+
+@media (max-width: 767px) {
+
+    /* Top controls */
+
+    .dataTables_wrapper > .row:first-child {
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+    .dataTables_wrapper > .row:first-child > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+    }
+
+
+    /* Export buttons */
+
+    .dataTables_wrapper .dt-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 6px;
+    }
+
+    .dataTables_wrapper .dt-buttons .btn,
+    .dataTables_wrapper .dt-buttons .dt-button {
+        min-height: 33px;
+        padding: 6px 10px !important;
+        font-size: 12px;
+    }
+
+
+    /* Search */
+
+    .dataTables_wrapper .dataTables_filter {
+        width: 100%;
+        text-align: left;
+        margin-top: 5px;
+    }
+
+    .dataTables_wrapper .dataTables_filter label {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+
+    /* Length */
+
+    .dataTables_wrapper .dataTables_length {
+        margin-bottom: 10px;
+    }
+
+
+    /* Table */
+
+    .dataTables_wrapper table.dataTable thead th {
+        font-size: 11px;
+        padding: 10px !important;
+    }
+
+    .dataTables_wrapper table.dataTable tbody td {
+        font-size: 12px;
+        padding: 9px !important;
+    }
+
+
+    /* Bottom controls */
+
+    .dataTables_wrapper > .row:last-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .dataTables_wrapper > .row:last-child > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        padding-top: 5px !important;
+        text-align: left;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: left !important;
+        width: 100%;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .pagination {
+        justify-content: flex-start !important;
+    }
+
+}
+
+
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .dataTables_wrapper .dt-buttons {
+        gap: 5px;
+    }
+
+    .dataTables_wrapper .dt-buttons .btn,
+    .dataTables_wrapper .dt-buttons .dt-button {
+        padding: 5px 8px !important;
+        font-size: 11px;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        font-size: 12px;
+    }
+
+}
+
+
+/* =========================================================
+   PRINT STYLING
+========================================================= */
+
+@media print {
+
+    .dataTables_wrapper .dt-buttons,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_paginate,
+    .dataTables_wrapper .dataTables_info {
+        display: none !important;
+    }
+
+    .dataTables_wrapper {
+        width: 100% !important;
+    }
+
+    .dataTables_wrapper table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .dataTables_wrapper table.dataTable thead th,
+    .dataTables_wrapper table.dataTable tbody td {
+        color: #000 !important;
+        background: #fff !important;
+        border: 1px solid #ddd !important;
+    }
+
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .dataTables_wrapper *,
+    .dataTables_wrapper *::before,
+    .dataTables_wrapper *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+
 }

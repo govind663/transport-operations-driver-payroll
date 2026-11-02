@@ -258,80 +258,104 @@
                     {{-- TABLE HEADER --}}
                     {{-- ================================================= --}}
                     <thead>
-
                         <tr>
 
+                            {{-- Sr. No. --}}
                             <th class="text-wrap">
                                 Sr. No.
                             </th>
 
+                            {{-- Slip Number --}}
                             <th class="text-wrap">
                                 Slip No.
                             </th>
 
+                            {{-- Duty Assignment Number --}}
                             <th class="text-wrap">
-                                Duty Assignment
+                                Duty Assignment No.
                             </th>
 
+                            {{-- Driver Code --}}
+                            <th class="text-wrap">
+                                Driver Code
+                            </th>
+
+                            {{-- Driver Name --}}
+                            <th class="text-wrap">
+                                Driver Name
+                            </th>
+
+                            {{-- Duty Date --}}
                             <th class="text-wrap">
                                 Duty Date
                             </th>
 
+                            {{-- Start Time --}}
                             <th class="text-wrap">
                                 Start Time
                             </th>
 
+                            {{-- End Time --}}
                             <th class="text-wrap">
                                 End Time
                             </th>
 
+                            {{-- Opening Meter --}}
                             <th class="text-wrap">
                                 Opening Meter
                             </th>
 
+                            {{-- Closing Meter --}}
                             <th class="text-wrap">
                                 Closing Meter
                             </th>
 
+                            {{-- Total KM --}}
                             <th class="text-wrap">
                                 Total KM
                             </th>
 
-                            {{-- Pickup Location --}}
-                            <th class="text-wrap">
-                                Pickup Location
-                            </th>
-
-                            {{-- Drop Location --}}
-                            <th class="text-wrap">
-                                Drop Location
-                            </th>
-
+                            {{-- Status --}}
                             <th class="text-wrap">
                                 Status
                             </th>
 
+                            {{-- Remarks --}}
                             <th class="text-wrap">
                                 Remarks
                             </th>
 
+                            {{-- Driver Allowance Total --}}
+                            <th class="text-wrap">
+                                Driver Allowance (Total)
+                            </th>
+
+                            {{-- Driver Expense Total --}}
+                            <th class="text-wrap">
+                                Driver Expense (Total)
+                            </th>
+
+                            {{-- Driver Advance Total --}}
+                            <th class="text-wrap">
+                                Driver Advance (Total)
+                            </th>
+
+                            {{-- Edit --}}
                             <th class="text-wrap no-export">
                                 Edit
                             </th>
 
+                            {{-- Delete --}}
                             <th class="text-wrap no-export">
                                 Delete
                             </th>
 
                         </tr>
-
                     </thead>
-
 
                     {{-- ================================================= --}}
                     {{-- TABLE BODY --}}
                     {{-- ================================================= --}}
-
                     <tbody>
 
                         @forelse($dutySlips as $key => $dutySlip)
@@ -352,17 +376,16 @@
                                 {{-- ========================================= --}}
 
                                 <td>
-
                                     <strong class="slip-code">
                                         {{ $dutySlip->slip_no ?? '-' }}
                                     </strong>
-
                                 </td>
 
 
                                 {{-- ========================================= --}}
-                                {{-- Duty Assignment --}}
+                                {{-- Duty Assignment Number --}}
                                 {{-- ========================================= --}}
+
                                 <td>
 
                                     @if($dutySlip->dutyAssignment)
@@ -371,27 +394,40 @@
                                             {{ $dutySlip->dutyAssignment->assignment_no ?? '-' }}
                                         </strong>
 
-                                        @if($dutySlip->dutyAssignment->driver)
-
-                                            <small class="text-muted d-block mt-1">
-                                                <i class="fa fa-user"></i>
-
-                                                Driver:
-                                                {{ $dutySlip->dutyAssignment->driver->driver_code ?? '-' }}
-                                                -
-                                                {{ trim(
-                                                    ($dutySlip->dutyAssignment->driver->first_name ?? '') . ' ' .
-                                                    ($dutySlip->dutyAssignment->driver->last_name ?? '')
-                                                ) ?: '-' }}
-                                            </small>
-
-                                        @endif
-
                                     @else
 
                                         -
 
                                     @endif
+
+                                </td>
+
+
+                                {{-- ========================================= --}}
+                                {{-- Driver Code --}}
+                                {{-- ========================================= --}}
+
+                                <td>
+
+                                    {{ $dutySlip->driver->driver_code ?? '-' }}
+
+                                </td>
+
+
+                                {{-- ========================================= --}}
+                                {{-- Driver Name --}}
+                                {{-- ========================================= --}}
+
+                                <td>
+
+                                    @php
+                                        $driverName = trim(
+                                            ($dutySlip->driver->first_name ?? '') . ' ' .
+                                            ($dutySlip->driver->last_name ?? '')
+                                        );
+                                    @endphp
+
+                                    {{ $driverName ?: '-' }}
 
                                 </td>
 
@@ -423,15 +459,7 @@
 
                                     @if($dutySlip->start_time)
 
-                                        {{ $dutySlip->start_time->format('d-m-Y') }}
-
-                                        <small class="text-muted d-block">
-
-                                            <i class="fa fa-clock-o"></i>
-
-                                            {{ $dutySlip->start_time->format('h:i A') }}
-
-                                        </small>
+                                        {{ $dutySlip->start_time->format('d-m-Y h:i A') }}
 
                                     @else
 
@@ -450,15 +478,7 @@
 
                                     @if($dutySlip->end_time)
 
-                                        {{ $dutySlip->end_time->format('d-m-Y') }}
-
-                                        <small class="text-muted d-block">
-
-                                            <i class="fa fa-clock-o"></i>
-
-                                            {{ $dutySlip->end_time->format('h:i A') }}
-
-                                        </small>
+                                        {{ $dutySlip->end_time->format('d-m-Y h:i A') }}
 
                                     @else
 
@@ -472,7 +492,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Opening Meter --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->opening_meter !== null)
@@ -492,11 +511,9 @@
 
                                 </td>
 
-
                                 {{-- ========================================= --}}
                                 {{-- Closing Meter --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->closing_meter !== null)
@@ -516,11 +533,9 @@
 
                                 </td>
 
-
                                 {{-- ========================================= --}}
                                 {{-- Total KM --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if($dutySlip->total_km !== null)
@@ -548,7 +563,7 @@
                                 {{-- ========================================= --}}
                                 {{-- Pickup Location --}}
                                 {{-- ========================================= --}}
-
+                                {{--
                                 <td class="location-cell">
 
                                     @if(!empty($dutySlip->pickup_location))
@@ -573,12 +588,13 @@
                                     @endif
 
                                 </td>
+                                --}}
 
 
                                 {{-- ========================================= --}}
                                 {{-- Drop Location --}}
                                 {{-- ========================================= --}}
-
+                                {{--
                                 <td class="location-cell">
 
                                     @if(!empty($dutySlip->drop_location))
@@ -603,12 +619,12 @@
                                     @endif
 
                                 </td>
+                                --}}
 
 
                                 {{-- ========================================= --}}
                                 {{-- Status --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @php
@@ -645,8 +661,7 @@
 
                                     @endphp
 
-                                    <span
-                                        class="badge {{ $statusClass }} badge-pill px-3 py-2">
+                                    <span class="badge {{ $statusClass }} badge-pill px-3 py-2">
 
                                         <i class="fa {{ $statusIcon }}"></i>
 
@@ -660,7 +675,6 @@
                                 {{-- ========================================= --}}
                                 {{-- Remarks --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     @if(!empty($dutySlip->remarks))
@@ -682,6 +696,62 @@
 
                                 </td>
 
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER ALLOWANCE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $allowanceTotal = $dutySlip->driverAllowances
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="badge badge-info px-3 py-2">
+
+                                        ₹ {{ number_format((float) $allowanceTotal, 2) }}
+
+                                    </span>
+
+                                </td>
+
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER EXPENSE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $expenseTotal = $dutySlip->driverExpenses
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="badge badge-warning px-3 py-2">
+
+                                        ₹ {{ number_format((float) $expenseTotal, 2) }}
+
+                                    </span>
+
+                                </td>
+
+
+                                {{-- ========================================= --}}
+                                {{-- DRIVER ADVANCE TOTAL --}}
+                                {{-- ========================================= --}}
+                                <td>
+
+                                    @php
+                                        $advanceTotal = $dutySlip->driverAdvances
+                                            ->sum('amount');
+                                    @endphp
+
+                                    <span class="badge badge-success px-3 py-2">
+
+                                        ₹ {{ number_format((float) $advanceTotal, 2) }}
+
+                                    </span>
+
+                                </td>
 
                                 {{-- ========================================= --}}
                                 {{-- Edit --}}
@@ -712,7 +782,6 @@
                                     @endif
 
                                 </td>
-
 
                                 {{-- ========================================= --}}
                                 {{-- Delete --}}
@@ -758,13 +827,13 @@
 
                         @empty
 
-                            {{-- ================================================= --}}
+                            {{-- ========================================= --}}
                             {{-- NO DATA --}}
-                            {{-- ================================================= --}}
+                            {{-- ========================================= --}}
 
                             <tr>
 
-                                <td colspan="15" class="text-center">
+                                <td colspan="18" class="text-center">
                                     No Duty Slips Found
                                 </td>
 
