@@ -612,3 +612,4 @@ class DriverAttendance extends Model
         );
     }
 }
+
