@@ -19,7 +19,7 @@ class PayrollReportService
      */
     public function getReport(
         array $filters = [],
-        int $perPage = 15
+        int $perPage = 10000000000000
     ) {
         $query = $this->buildQuery($filters);
 

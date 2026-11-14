@@ -2,15 +2,20 @@
 
 namespace App\Services\Reports\DriverReport;
 
+use App\Models\Driver;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class DriverReportService
 {
     /**
      * Get Driver Report Listing
      */
-    public function getReport(array $filters = [], int $perPage = 15)
-    {
+    public function getReport(
+        array $filters = [],
+        int $perPage = 10000000000000
+    ): LengthAwarePaginator {
+
         $query = $this->buildQuery($filters);
 
         return $query
@@ -22,44 +27,144 @@ class DriverReportService
     /**
      * Build Driver Report Query
      */
-    protected function buildQuery(array $filters = []): Builder
-    {
+    protected function buildQuery(
+        array $filters = []
+    ): Builder {
+
         /*
         |--------------------------------------------------------------------------
         | Driver Model Query
         |--------------------------------------------------------------------------
-        |
-        | Driver model and its actual relationships/columns will be added
-        | here once the Driver model structure is confirmed.
-        |
         */
 
-        $query = \App\Models\Driver::query();
+        $query = Driver::query();
 
 
         /*
         |--------------------------------------------------------------------------
-        | Search
+        | Search Filter
         |--------------------------------------------------------------------------
+        |
+        | Searchable Fields:
+        | - Driver Code
+        | - First Name
+        | - Last Name
+        | - Full Name
+        | - Father Name
+        | - Mobile
+        | - Alternate Mobile
+        | - Email
+        | - License Number
+        | - City
+        | - State
+        | - Pincode
+        |
         */
+
         if (!empty($filters['search'])) {
 
             $search = trim($filters['search']);
 
-            $query->where(function (Builder $q) use ($search) {
+            if ($search !== '') {
 
-                // Actual searchable columns will be added
-                // according to Driver model.
+                $searchTerm = '%' . $search . '%';
 
-            });
+                $query->where(function (Builder $q) use (
+                    $searchTerm
+                ) {
+
+                    $q->where(
+                        'driver_code',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'first_name',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'last_name',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhereRaw(
+                        "CONCAT_WS(' ', first_name, last_name) LIKE ?",
+                        [$searchTerm]
+                    )
+
+                    ->orWhere(
+                        'father_name',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'mobile',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'alternate_mobile',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'email',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'license_number',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'city',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'state',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'pincode',
+                        'LIKE',
+                        $searchTerm
+                    );
+
+                });
+
+            }
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Status Filter
+        | Employment Status Filter
         |--------------------------------------------------------------------------
+        |
+        | Available Statuses:
+        | - active
+        | - on_leave
+        | - notice_period
+        | - resigned
+        | - terminated
+        | - inactive
+        |
         */
+
         if (
             isset($filters['status']) &&
             $filters['status'] !== ''
@@ -74,25 +179,39 @@ class DriverReportService
 
         /*
         |--------------------------------------------------------------------------
-        | Date From
+        | Date From Filter
         |--------------------------------------------------------------------------
+        |
+        | Filter drivers by joining_date.
+        |
         */
+
         if (!empty($filters['date_from'])) {
 
-            // Actual date column will be added
-            // after checking Driver model.
+            $query->whereDate(
+                'joining_date',
+                '>=',
+                $filters['date_from']
+            );
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Date To
+        | Date To Filter
         |--------------------------------------------------------------------------
+        |
+        | Filter drivers by joining_date.
+        |
         */
+
         if (!empty($filters['date_to'])) {
 
-            // Actual date column will be added
-            // after checking Driver model.
+            $query->whereDate(
+                'joining_date',
+                '<=',
+                $filters['date_to']
+            );
         }
 
 
@@ -101,6 +220,7 @@ class DriverReportService
         | Latest First
         |--------------------------------------------------------------------------
         */
+
         $query->latest();
 
         return $query;
@@ -113,7 +233,15 @@ class DriverReportService
     public function getFilterOptions(): array
     {
         return [
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employment Statuses
+            |--------------------------------------------------------------------------
+            */
+
             'statuses' => $this->getStatuses(),
+
         ];
     }
 
@@ -123,9 +251,6 @@ class DriverReportService
      */
     protected function getStatuses(): array
     {
-        return [
-            'active',
-            'inactive',
-        ];
+        return Driver::EMPLOYMENT_STATUSES;
     }
 }

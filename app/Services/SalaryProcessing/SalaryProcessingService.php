@@ -19,7 +19,7 @@ class SalaryProcessingService
 
     public function getPaginated(
         array $filters = [],
-        int $perPage = 20
+        int $perPage = 10000000000000
     ): LengthAwarePaginator {
 
         $query = SalaryProcessing::query()

@@ -15,7 +15,7 @@ class DutyReportService
      */
     public function getReport(
         array $filters = [],
-        int $perPage = 15
+        int $perPage = 10000000000000
     ) {
         $query = $this->buildQuery($filters);
 
@@ -167,6 +167,14 @@ class DutyReportService
                 |--------------------------------------------------------------------------
                 | Client Search
                 |--------------------------------------------------------------------------
+                |
+                | Duty Assignment
+                |       ↓
+                | Travel Request
+                |       ↓
+                | Client
+                |
+                |--------------------------------------------------------------------------
                 */
 
                 $q->orWhereHas(
@@ -237,13 +245,14 @@ class DutyReportService
         | CLIENT FILTER
         |--------------------------------------------------------------------------
         |
-        | Client is connected through:
+        | Duty Assignment
+        |       ↓
+        | Travel Request
+        |       ↓
+        | Client
         |
-        | duty_assignments
-        |       ↓
-        | travel_requests
-        |       ↓
-        | clients
+        | Client is resolved through the TravelRequest
+        | company_name relationship.
         |
         |--------------------------------------------------------------------------
         */
@@ -254,12 +263,60 @@ class DutyReportService
         ) {
 
             $query->whereHas(
+                'travelRequest.client',
+                function (Builder $clientQuery) use ($filters) {
+
+                    $clientQuery->whereKey(
+                        $filters['client_id']
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE FROM
+        |--------------------------------------------------------------------------
+        |
+        | Travel date is based on travel_requests.travel_from_date.
+        | reporting_time is a TIME column, not a DATE column.
+        |
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_from'])) {
+
+            $query->whereHas(
                 'travelRequest',
                 function (Builder $travelRequestQuery) use ($filters) {
 
-                    $travelRequestQuery->where(
-                        'client_id',
-                        $filters['client_id']
+                    $travelRequestQuery->whereDate(
+                        'travel_from_date',
+                        '>=',
+                        $filters['date_from']
+                    );
+                }
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE TO
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_to'])) {
+
+            $query->whereHas(
+                'travelRequest',
+                function (Builder $travelRequestQuery) use ($filters) {
+
+                    $travelRequestQuery->whereDate(
+                        'travel_from_date',
+                        '<=',
+                        $filters['date_to']
                     );
                 }
             );
@@ -286,47 +343,11 @@ class DutyReportService
 
         /*
         |--------------------------------------------------------------------------
-        | DATE FROM
-        |--------------------------------------------------------------------------
-        |
-        | Duty date is based on reporting_time.
-        |
-        |--------------------------------------------------------------------------
-        */
-
-        if (!empty($filters['date_from'])) {
-
-            $query->whereDate(
-                'reporting_time',
-                '>=',
-                $filters['date_from']
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | DATE TO
-        |--------------------------------------------------------------------------
-        */
-
-        if (!empty($filters['date_to'])) {
-
-            $query->whereDate(
-                'reporting_time',
-                '<=',
-                $filters['date_to']
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
         | LATEST FIRST
         |--------------------------------------------------------------------------
         */
 
-        $query->orderByDesc('reporting_time')
+        $query->orderByDesc('assigned_at')
             ->orderByDesc('id');
 
 
@@ -399,7 +420,7 @@ class DutyReportService
     protected function getClients()
     {
         return Client::query()
-            ->where('status', 1)
+            ->active()
             ->orderBy('company_name')
             ->get([
                 'id',

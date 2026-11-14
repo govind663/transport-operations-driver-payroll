@@ -315,7 +315,6 @@
                         data-title="Driver Reports"
                     >
 
-
                         {{-- ================================================= --}}
                         {{-- TABLE HEADER --}}
                         {{-- ================================================= --}}
@@ -328,46 +327,37 @@
                                     Sr. No.
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Driver Code
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Driver Name
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Mobile
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Email
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Joining Date
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Leaving Date
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Status
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Created At
                                 </th>
-
 
                                 <th class="text-wrap no-export">
                                     View
@@ -386,8 +376,96 @@
 
                             @forelse($drivers as $key => $driver)
 
-                                <tr>
+                                @php
 
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | DRIVER EXIT DATE
+                                    |--------------------------------------------------------------------------
+                                    */
+
+                                    $leavingDate =
+                                        $driver->last_working_date
+                                        ?? $driver->termination_date
+                                        ?? $driver->resignation_date;
+
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | DRIVER STATUS
+                                    |--------------------------------------------------------------------------
+                                    */
+
+                                    $status = $driver->status;
+
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | STATUS BADGE CLASS
+                                    |--------------------------------------------------------------------------
+                                    */
+
+                                    $statusClass = match ($status) {
+
+                                        'active' =>
+                                            'badge-success',
+
+                                        'on_leave' =>
+                                            'badge-warning',
+
+                                        'notice_period' =>
+                                            'badge-info',
+
+                                        'resigned' =>
+                                            'badge-secondary',
+
+                                        'terminated' =>
+                                            'badge-danger',
+
+                                        'inactive' =>
+                                            'badge-dark',
+
+                                        default =>
+                                            'badge-secondary',
+
+                                    };
+
+
+                                    /*
+                                    |--------------------------------------------------------------------------
+                                    | STATUS ICON
+                                    |--------------------------------------------------------------------------
+                                    */
+
+                                    $statusIcon = match ($status) {
+
+                                        'active' =>
+                                            'fa-check-circle',
+
+                                        'on_leave' =>
+                                            'fa-clock-o',
+
+                                        'notice_period' =>
+                                            'fa-bell',
+
+                                        'resigned' =>
+                                            'fa-sign-out',
+
+                                        'terminated' =>
+                                            'fa-times-circle',
+
+                                        'inactive' =>
+                                            'fa-ban',
+
+                                        default =>
+                                            'fa-info-circle',
+
+                                    };
+
+                                @endphp
+
+
+                                <tr>
 
                                     {{-- ===================================== --}}
                                     {{-- SR NO --}}
@@ -408,11 +486,19 @@
 
                                     <td>
 
-                                        <strong class="driver-code text-dark">
+                                        @if(!empty($driver->driver_code))
 
-                                            {{ $driver->driver_code ?? '-' }}
+                                            <strong class="driver-code text-dark">
 
-                                        </strong>
+                                                {{ $driver->driver_code }}
+
+                                            </strong>
+
+                                        @else
+
+                                            -
+
+                                        @endif
 
                                     </td>
 
@@ -425,7 +511,7 @@
 
                                         <strong class="driver-name text-dark">
 
-                                            {{ $driver->first_name . ' ' . $driver->last_name ?? '-' }}
+                                            {{ $driver->full_name ?: '-' }}
 
                                         </strong>
 
@@ -511,11 +597,11 @@
 
                                     <td>
 
-                                        @if($driver->leaving_date)
+                                        @if($leavingDate)
 
                                             <span class="date-text">
 
-                                                {{ $driver->leaving_date->format('d-m-Y') }}
+                                                {{ $leavingDate->format('d-m-Y') }}
 
                                             </span>
 
@@ -534,59 +620,13 @@
 
                                     <td>
 
-                                        @php
-
-                                            $status = $driver->status;
-
-                                            $statusClass = match ($status) {
-
-                                                'active' =>
-                                                    'badge-success',
-
-                                                'inactive' =>
-                                                    'badge-danger',
-
-                                                'on_leave' =>
-                                                    'badge-warning',
-
-                                                default =>
-                                                    'badge-secondary',
-
-                                            };
-
-
-                                            $statusIcon = match ($status) {
-
-                                                'active' =>
-                                                    'fa-check-circle',
-
-                                                'inactive' =>
-                                                    'fa-times-circle',
-
-                                                'on_leave' =>
-                                                    'fa-clock-o',
-
-                                                default =>
-                                                    'fa-info-circle',
-
-                                            };
-
-                                        @endphp
-
-
                                         <span
                                             class="badge {{ $statusClass }} badge-pill px-3 py-2"
                                         >
 
                                             <i class="fa {{ $statusIcon }}"></i>
 
-                                            {{ ucfirst(
-                                                str_replace(
-                                                    '_',
-                                                    ' ',
-                                                    $status ?? 'Unknown'
-                                                )
-                                            ) }}
+                                            {{ $driver->status_label ?? 'Unknown' }}
 
                                         </span>
 
@@ -606,7 +646,6 @@
                                                 {{ $driver->created_at->format('d-m-Y') }}
 
                                             </span>
-
 
                                             <small class="text-muted d-block">
 
@@ -629,9 +668,7 @@
 
                                     <td class="no-export">
 
-                                        @if(
-                                            Route::has('driver-management.show')
-                                        )
+                                        @if(Route::has('driver-management.show'))
 
                                             <a
                                                 href="{{ route(
@@ -677,13 +714,11 @@
                                                 class="fa fa-users fa-2x text-muted mb-3"
                                             ></i>
 
-
                                             <h5 class="text-muted">
 
                                                 No Drivers Found
 
                                             </h5>
-
 
                                             <p class="text-muted mb-0">
 

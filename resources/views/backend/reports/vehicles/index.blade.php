@@ -486,7 +486,6 @@
 
             </div>
 
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
@@ -515,12 +514,12 @@
 
 
                                 <th class="text-wrap">
-                                    Registration No.
+                                    Vehicle No.
                                 </th>
 
 
                                 <th class="text-wrap">
-                                    Vehicle
+                                    Vehicle Name
                                 </th>
 
 
@@ -621,22 +620,48 @@
 
                                     <td>
 
+                                        @php
+
+                                            $vehicleDisplayName = trim(
+                                                ($vehicle->manufacturer ?? '') . ' ' .
+                                                ($vehicle->model ?? '')
+                                            );
+
+                                            if ($vehicleDisplayName === '') {
+
+                                                $vehicleDisplayName =
+                                                    $vehicle->vehicle_number
+                                                    ?? $vehicle->registration_number
+                                                    ?? '-';
+                                            }
+
+                                        @endphp
+
                                         <strong class="vehicle-name text-dark">
 
-                                            {{ $vehicle->vehicle_name
-                                                ?? $vehicle->name
-                                                ?? '-' }}
+                                            {{ $vehicleDisplayName }}
 
                                         </strong>
 
-
-                                        @if(!empty($vehicle->vehicle_code))
+                                        @if(!empty($vehicle->vehicle_number))
 
                                             <small class="text-muted d-block mt-1">
 
-                                                <i class="fa fa-id-card"></i>
+                                                <i class="fa fa-car"></i>
 
-                                                {{ $vehicle->vehicle_code }}
+                                                Vehicle No: {{ $vehicle->vehicle_number }}
+
+                                            </small>
+
+                                        @endif
+
+                                        @if(!empty($vehicle->manufacturing_year))
+
+                                            <small class="text-muted d-block mt-1">
+
+                                                <i class="fa fa-calendar"></i>
+
+                                                Year: {{ $vehicle->manufacturing_year }}
 
                                             </small>
 

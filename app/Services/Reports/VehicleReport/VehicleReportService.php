@@ -4,10 +4,12 @@ namespace App\Services\Reports\VehicleReport;
 
 use App\Models\Client;
 use App\Models\Driver;
+use App\Models\DutyAssignment;
 use App\Models\VehicleCategory;
 use App\Models\VehicleManagement;
 use App\Models\VehicleType;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class VehicleReportService
 {
@@ -16,8 +18,9 @@ class VehicleReportService
      */
     public function getReport(
         array $filters = [],
-        int $perPage = 15
-    ) {
+        int $perPage = 10000000000000
+    ): LengthAwarePaginator {
+
         $query = $this->buildQuery($filters);
 
         return $query
@@ -32,6 +35,12 @@ class VehicleReportService
     protected function buildQuery(
         array $filters = []
     ): Builder {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Model Query
+        |--------------------------------------------------------------------------
+        */
 
         $query = VehicleManagement::query();
 
@@ -55,7 +64,7 @@ class VehicleReportService
         |
         | Search by vehicle number, registration number,
         | chassis number, engine number, manufacturer,
-        | model, color and remarks.
+        | model, color, remarks, category and type.
         |
         */
 
@@ -63,56 +72,97 @@ class VehicleReportService
 
             $search = trim($filters['search']);
 
-            $query->where(function (Builder $q) use ($search) {
+            if ($search !== '') {
 
-                $q->where(
-                    'vehicle_number',
-                    'like',
-                    "%{$search}%"
-                )
+                $searchTerm = '%' . $search . '%';
 
-                ->orWhere(
-                    'registration_number',
-                    'like',
-                    "%{$search}%"
-                )
+                $query->where(function (Builder $q) use (
+                    $searchTerm
+                ) {
 
-                ->orWhere(
-                    'chassis_number',
-                    'like',
-                    "%{$search}%"
-                )
+                    $q->where(
+                        'vehicle_number',
+                        'LIKE',
+                        $searchTerm
+                    )
 
-                ->orWhere(
-                    'engine_number',
-                    'like',
-                    "%{$search}%"
-                )
+                    ->orWhere(
+                        'registration_number',
+                        'LIKE',
+                        $searchTerm
+                    )
 
-                ->orWhere(
-                    'manufacturer',
-                    'like',
-                    "%{$search}%"
-                )
+                    ->orWhere(
+                        'chassis_number',
+                        'LIKE',
+                        $searchTerm
+                    )
 
-                ->orWhere(
-                    'model',
-                    'like',
-                    "%{$search}%"
-                )
+                    ->orWhere(
+                        'engine_number',
+                        'LIKE',
+                        $searchTerm
+                    )
 
-                ->orWhere(
-                    'color',
-                    'like',
-                    "%{$search}%"
-                )
+                    ->orWhere(
+                        'manufacturer',
+                        'LIKE',
+                        $searchTerm
+                    )
 
-                ->orWhere(
-                    'remarks',
-                    'like',
-                    "%{$search}%"
-                );
-            });
+                    ->orWhere(
+                        'model',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'color',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhere(
+                        'remarks',
+                        'LIKE',
+                        $searchTerm
+                    )
+
+                    ->orWhereHas(
+                        'vehicleCategory',
+                        function (Builder $categoryQuery) use (
+                            $searchTerm
+                        ) {
+                            $categoryQuery->where(
+                                'name',
+                                'LIKE',
+                                $searchTerm
+                            )->orWhere(
+                                'code',
+                                'LIKE',
+                                $searchTerm
+                            );
+                        }
+                    )
+
+                    ->orWhereHas(
+                        'vehicleType',
+                        function (Builder $typeQuery) use (
+                            $searchTerm
+                        ) {
+                            $typeQuery->where(
+                                'name',
+                                'LIKE',
+                                $searchTerm
+                            )->orWhere(
+                                'code',
+                                'LIKE',
+                                $searchTerm
+                            );
+                        }
+                    );
+                });
+            }
         }
 
 
@@ -157,27 +207,74 @@ class VehicleReportService
         | DRIVER FILTER
         |--------------------------------------------------------------------------
         |
-        | NOTE:
-        | vehicle_management table does NOT contain driver_id.
-        |
-        | Driver filtering will be implemented through
-        | DutyAssignment once the complete DutyAssignment /
-        | TravelRequest relationship structure is available.
+        | vehicle_management does not contain driver_id.
+        | The relationship is available through duty_assignments.vehicle_id
+        | and duty_assignments.driver_id.
         |
         */
+
+        if (
+            isset($filters['driver_id']) &&
+            $filters['driver_id'] !== ''
+        ) {
+
+            $vehicleIds = DutyAssignment::query()
+                ->select('vehicle_id')
+                ->whereNotNull('vehicle_id')
+                ->where(
+                    'driver_id',
+                    $filters['driver_id']
+                );
+
+            $query->whereIn(
+                'id',
+                $vehicleIds
+            );
+        }
+
 
         /*
         |--------------------------------------------------------------------------
         | CLIENT FILTER
         |--------------------------------------------------------------------------
         |
-        | NOTE:
-        | vehicle_management table does NOT contain client_id.
-        |
-        | Client filtering will be implemented through
-        | DutyAssignment / TravelRequest relationship.
+        | vehicle_management and travel_requests do not contain client_id.
+        | Client association is matched using:
+        | clients.company_name = travel_requests.company_name
+        | and duty_assignments connects travel_requests to vehicles.
         |
         */
+
+        if (
+            isset($filters['client_id']) &&
+            $filters['client_id'] !== ''
+        ) {
+
+            $clientCompanyNames = Client::query()
+                ->select('company_name')
+                ->whereKey($filters['client_id'])
+                ->whereNotNull('company_name');
+
+            $vehicleIds = DutyAssignment::query()
+                ->select('vehicle_id')
+                ->whereNotNull('vehicle_id')
+                ->whereHas(
+                    'travelRequest',
+                    function (Builder $travelRequestQuery) use (
+                        $clientCompanyNames
+                    ) {
+                        $travelRequestQuery->whereIn(
+                            'company_name',
+                            $clientCompanyNames
+                        );
+                    }
+                );
+
+            $query->whereIn(
+                'id',
+                $vehicleIds
+            );
+        }
 
 
         /*
@@ -203,10 +300,7 @@ class VehicleReportService
         | DATE FROM FILTER
         |--------------------------------------------------------------------------
         |
-        | vehicle_management does not have a dedicated
-        | vehicle date column.
-        |
-        | created_at is therefore used.
+        | VehicleManagement has created_at as its available record date.
         |
         */
 
@@ -243,7 +337,6 @@ class VehicleReportService
         */
 
         $query->latest('id');
-
 
         return $query;
     }
@@ -310,7 +403,7 @@ class VehicleReportService
     protected function getCategories()
     {
         return VehicleCategory::query()
-            ->where('status', 1)
+            ->active()
             ->orderBy('name')
             ->get([
                 'id',
@@ -326,7 +419,7 @@ class VehicleReportService
     protected function getTypes()
     {
         return VehicleType::query()
-            ->where('status', 1)
+            ->active()
             ->orderBy('name')
             ->get([
                 'id',
@@ -343,7 +436,7 @@ class VehicleReportService
     protected function getDrivers()
     {
         return Driver::query()
-            ->where('status', 'active')
+            ->active()
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get([
@@ -361,7 +454,7 @@ class VehicleReportService
     protected function getClients()
     {
         return Client::query()
-            ->where('status', 1)
+            ->active()
             ->orderBy('company_name')
             ->get([
                 'id',

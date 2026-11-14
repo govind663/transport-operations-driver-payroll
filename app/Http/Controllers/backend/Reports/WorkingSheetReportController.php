@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\backend\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Services\Reports\WorkingSheetReport\WorkingSheetReportService;
 use Illuminate\Http\Request;
 
@@ -34,6 +35,7 @@ class WorkingSheetReportController extends Controller
         | Report Filters
         |--------------------------------------------------------------------------
         */
+
         $filters = $request->only([
             'search',
             'driver_id',
@@ -50,6 +52,7 @@ class WorkingSheetReportController extends Controller
         | Working Sheet Report
         |--------------------------------------------------------------------------
         */
+
         $workingSheets = $this->workingSheetReportService->getReport(
             $filters,
             15
@@ -61,8 +64,28 @@ class WorkingSheetReportController extends Controller
         | Filter Options
         |--------------------------------------------------------------------------
         */
+
         $filterOptions = $this->workingSheetReportService
             ->getFilterOptions();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Active Clients
+        |--------------------------------------------------------------------------
+        |
+        | Load active clients for the Client filter dropdown.
+        |
+        */
+
+        $filterOptions['clients'] = Client::query()
+            ->active()
+            ->select([
+                'id',
+                'company_name',
+            ])
+            ->orderBy('company_name')
+            ->get();
 
 
         /*
@@ -70,7 +93,9 @@ class WorkingSheetReportController extends Controller
         | Return View
         |--------------------------------------------------------------------------
         */
-        return view('backend.reports.working-sheets.index',
+
+        return view(
+            'backend.reports.working-sheets.index',
             compact(
                 'workingSheets',
                 'filters',

@@ -16,7 +16,7 @@ class ExpenseService
     */
 
     public function getExpenses(
-        int $perPage = 20
+        int $perPage = 10000000000000
     ): LengthAwarePaginator {
 
         return Expense::query()

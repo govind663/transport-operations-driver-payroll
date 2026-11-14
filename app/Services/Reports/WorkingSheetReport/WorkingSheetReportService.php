@@ -15,7 +15,7 @@ class WorkingSheetReportService
      */
     public function getReport(
         array $filters = [],
-        int $perPage = 15
+        int $perPage = 10000000000000
     ) {
         $query = $this->buildQuery($filters);
 
@@ -36,7 +36,9 @@ class WorkingSheetReportService
             ->with([
                 'dutySlip.driver',
                 'dutySlip.vehicle',
-                'dutySlip.client',
+                'dutySlip.dutyAssignment.driver',
+                'dutySlip.dutyAssignment.vehicle',
+                'dutySlip.dutyAssignment.travelRequest.client',
             ]);
 
 
@@ -92,13 +94,12 @@ class WorkingSheetReportService
                     function (Builder $dutySlipQuery) use ($search) {
 
                         /*
-                        | Duty Slip Number
-                        |
-                        | Assuming duty_slips table has duty_slip_no.
+                        | Actual database column:
+                        | duty_slips.slip_no
                         */
 
                         $dutySlipQuery->where(
-                            'duty_slip_no',
+                            'slip_no',
                             'like',
                             '%' . $search . '%'
                         );
@@ -114,6 +115,47 @@ class WorkingSheetReportService
 
                 $q->orWhereHas(
                     'dutySlip.driver',
+                    function (Builder $driverQuery) use ($search) {
+
+                        $driverQuery->where(
+                            'driver_code',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $driverQuery->orWhere(
+                            'first_name',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $driverQuery->orWhere(
+                            'last_name',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $driverQuery->orWhere(
+                            'mobile',
+                            'like',
+                            '%' . $search . '%'
+                        );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Driver Search Through Duty Assignment
+                |--------------------------------------------------------------------------
+                |
+                | Fallback for older Duty Slips where driver_id
+                | is available through Duty Assignment.
+                |
+                */
+
+                $q->orWhereHas(
+                    'dutySlip.dutyAssignment.driver',
                     function (Builder $driverQuery) use ($search) {
 
                         $driverQuery->where(
@@ -182,12 +224,61 @@ class WorkingSheetReportService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Client Search
+                | Vehicle Search Through Duty Assignment
                 |--------------------------------------------------------------------------
                 */
 
                 $q->orWhereHas(
-                    'dutySlip.client',
+                    'dutySlip.dutyAssignment.vehicle',
+                    function (Builder $vehicleQuery) use ($search) {
+
+                        $vehicleQuery->where(
+                            'vehicle_number',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $vehicleQuery->orWhere(
+                            'registration_number',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $vehicleQuery->orWhere(
+                            'manufacturer',
+                            'like',
+                            '%' . $search . '%'
+                        );
+
+                        $vehicleQuery->orWhere(
+                            'model',
+                            'like',
+                            '%' . $search . '%'
+                        );
+                    }
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Client Search
+                |--------------------------------------------------------------------------
+                |
+                | Working Sheet
+                |      ↓
+                | Duty Slip
+                |      ↓
+                | Duty Assignment
+                |      ↓
+                | Travel Request
+                |      ↓
+                | Client
+                |
+                |--------------------------------------------------------------------------
+                */
+
+                $q->orWhereHas(
+                    'dutySlip.dutyAssignment.travelRequest.client',
                     function (Builder $clientQuery) use ($search) {
 
                         $clientQuery->where(
@@ -236,9 +327,20 @@ class WorkingSheetReportService
                 'dutySlip',
                 function (Builder $dutySlipQuery) use ($filters) {
 
+                    $driverId = $filters['driver_id'];
+
                     $dutySlipQuery->where(
                         'driver_id',
-                        $filters['driver_id']
+                        $driverId
+                    )->orWhereHas(
+                        'dutyAssignment',
+                        function (Builder $assignmentQuery) use ($driverId) {
+
+                            $assignmentQuery->where(
+                                'driver_id',
+                                $driverId
+                            );
+                        }
                     );
                 }
             );
@@ -268,9 +370,20 @@ class WorkingSheetReportService
                 'dutySlip',
                 function (Builder $dutySlipQuery) use ($filters) {
 
+                    $vehicleId = $filters['vehicle_id'];
+
                     $dutySlipQuery->where(
                         'vehicle_id',
-                        $filters['vehicle_id']
+                        $vehicleId
+                    )->orWhereHas(
+                        'dutyAssignment',
+                        function (Builder $assignmentQuery) use ($vehicleId) {
+
+                            $assignmentQuery->where(
+                                'vehicle_id',
+                                $vehicleId
+                            );
+                        }
                     );
                 }
             );
@@ -286,7 +399,14 @@ class WorkingSheetReportService
         |      ↓
         | duty_slips
         |      ↓
-        | client_id
+        | duty_assignments
+        |      ↓
+        | travel_requests
+        |      ↓
+        | clients
+        |
+        | Client ID is matched through the TravelRequest
+        | client relationship, not duty_slips.client_id.
         |
         |--------------------------------------------------------------------------
         */
@@ -297,11 +417,10 @@ class WorkingSheetReportService
         ) {
 
             $query->whereHas(
-                'dutySlip',
-                function (Builder $dutySlipQuery) use ($filters) {
+                'dutySlip.dutyAssignment.travelRequest.client',
+                function (Builder $clientQuery) use ($filters) {
 
-                    $dutySlipQuery->where(
-                        'client_id',
+                    $clientQuery->whereKey(
                         $filters['client_id']
                     );
                 }
@@ -438,7 +557,7 @@ class WorkingSheetReportService
     protected function getClients()
     {
         return Client::query()
-            ->where('status', 1)
+            ->active()
             ->orderBy('company_name')
             ->get([
                 'id',

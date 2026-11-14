@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TravelRequest extends Model
 {
@@ -176,6 +177,20 @@ class TravelRequest extends Model
         return $this->hasOne(
             DutyAssignment::class,
             'travel_request_id'
+        );
+    }
+
+    /**
+     * Client associated with this travel request.
+     *
+     * TravelRequest.company_name matches Client.company_name.
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(
+            Client::class,
+            'company_name',
+            'company_name'
         );
     }
 }

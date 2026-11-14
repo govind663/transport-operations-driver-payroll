@@ -44,7 +44,7 @@ class WorkingSheetService
     */
 
     public function getWorkingSheets(
-        int $perPage = 20
+        int $perPage = 10000000000000
     ): LengthAwarePaginator {
 
         return WorkingSheet::query()

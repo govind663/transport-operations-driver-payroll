@@ -16,7 +16,7 @@ class AllowanceService
     */
 
     public function getAllowances(
-        int $perPage = 20
+        int $perPage = 10000000000000
     ): LengthAwarePaginator {
 
         return Allowance::query()

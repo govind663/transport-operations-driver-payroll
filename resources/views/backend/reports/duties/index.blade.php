@@ -6,7 +6,6 @@
 
 @endsection
 
-
 @push('styles')
 
 <link
@@ -50,13 +49,11 @@
 
 @endpush
 
-
 @section('content')
 
 <div class="pd-ltr-20 xs-pd-20-10">
 
     <div class="min-height-200px">
-
 
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
@@ -80,7 +77,7 @@
 
                     <p class="mb-0">
 
-                        View date-wise duty details,
+                        View date-wise duty assignment details,
                         driver, vehicle, client and duty status.
 
                     </p>
@@ -90,7 +87,6 @@
             </div>
 
         </div>
-
 
         {{-- ========================================================= --}}
         {{-- FILTER CARD --}}
@@ -106,7 +102,6 @@
 
                 </h4>
 
-
                 <form
                     method="GET"
                     action="{{ route('reports.duties.index') }}"
@@ -115,7 +110,6 @@
                 >
 
                     <div class="row">
-
 
                         {{-- ================================================= --}}
                         {{-- SEARCH --}}
@@ -132,13 +126,12 @@
                             <input
                                 type="text"
                                 name="search"
-                                value="{{ request('search') }}"
+                                value="{{ $filters['search'] ?? '' }}"
                                 class="form-control"
-                                placeholder="Duty no, driver, vehicle..."
+                                placeholder="Assignment no, driver, vehicle..."
                             >
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- DRIVER --}}
@@ -163,17 +156,16 @@
 
                                 </option>
 
-
                                 @foreach(
                                     ($filterOptions['drivers'] ?? []) as $driver
                                 )
 
                                     <option
                                         value="{{ $driver->id }}"
-                                        {{ request('driver_id') == $driver->id ? 'selected' : '' }}
+                                        {{ (string) ($filters['driver_id'] ?? '') === (string) $driver->id ? 'selected' : '' }}
                                     >
 
-                                        {{ $driver->first_name ?? '-' }} {{ $driver->last_name ?? '-' }}
+                                        {{ $driver->first_name ?? '-' }} {{ $driver->last_name ?? '' }}
 
                                         @if(!empty($driver->driver_code))
 
@@ -189,7 +181,6 @@
                             </select>
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- VEHICLE --}}
@@ -214,17 +205,19 @@
 
                                 </option>
 
-
                                 @foreach(
                                     ($filterOptions['vehicles'] ?? []) as $vehicle
                                 )
 
                                     <option
                                         value="{{ $vehicle->id }}"
-                                        {{ request('vehicle_id') == $vehicle->id ? 'selected' : '' }}
+                                        {{ (string) ($filters['vehicle_id'] ?? '') === (string) $vehicle->id ? 'selected' : '' }}
                                     >
 
-                                        {{ $vehicle->registration_number ?? $vehicle->vehicle_number ?? $vehicle->name ?? '-' }}
+                                        {{ $vehicle->registration_number
+                                            ?? $vehicle->vehicle_number
+                                            ?? $vehicle->name
+                                            ?? '-' }}
 
                                     </option>
 
@@ -233,7 +226,6 @@
                             </select>
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- CLIENT --}}
@@ -258,14 +250,13 @@
 
                                 </option>
 
-
                                 @foreach(
                                     ($filterOptions['clients'] ?? []) as $client
                                 )
 
                                     <option
                                         value="{{ $client->id }}"
-                                        {{ request('client_id') == $client->id ? 'selected' : '' }}
+                                        {{ (string) ($filters['client_id'] ?? '') === (string) $client->id ? 'selected' : '' }}
                                     >
 
                                         {{ $client->company_name ?? $client->name ?? '-' }}
@@ -277,7 +268,6 @@
                             </select>
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- STATUS --}}
@@ -302,14 +292,13 @@
 
                                 </option>
 
-
                                 @foreach(
                                     ($filterOptions['statuses'] ?? []) as $status
                                 )
 
                                     <option
                                         value="{{ $status }}"
-                                        {{ request('status') == $status ? 'selected' : '' }}
+                                        {{ ($filters['status'] ?? '') === $status ? 'selected' : '' }}
                                     >
 
                                         {{ ucfirst(
@@ -328,7 +317,6 @@
 
                         </div>
 
-
                         {{-- ================================================= --}}
                         {{-- DATE FROM --}}
                         {{-- ================================================= --}}
@@ -344,12 +332,11 @@
                             <input
                                 type="date"
                                 name="date_from"
-                                value="{{ request('date_from') }}"
+                                value="{{ $filters['date_from'] ?? '' }}"
                                 class="form-control"
                             >
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- DATE TO --}}
@@ -366,12 +353,11 @@
                             <input
                                 type="date"
                                 name="date_to"
-                                value="{{ request('date_to') }}"
+                                value="{{ $filters['date_to'] ?? '' }}"
                                 class="form-control"
                             >
 
                         </div>
-
 
                         {{-- ================================================= --}}
                         {{-- BUTTONS --}}
@@ -389,7 +375,6 @@
                                 Filter
 
                             </button>
-
 
                             <a
                                 href="{{ route('reports.duties.index') }}"
@@ -412,13 +397,11 @@
 
         </div>
 
-
         {{-- ========================================================= --}}
         {{-- DUTY REPORT LIST CARD --}}
         {{-- ========================================================= --}}
 
         <div class="card-box mb-30">
-
 
             {{-- ===================================================== --}}
             {{-- CARD HEADER --}}
@@ -434,7 +417,6 @@
 
                     </h4>
 
-
                     <span class="badge badge-primary">
 
                         Total :
@@ -446,7 +428,6 @@
                 </div>
 
             </div>
-
 
             {{-- ===================================================== --}}
             {{-- TABLE --}}
@@ -461,7 +442,6 @@
                         data-title="Duty Reports"
                     >
 
-
                         {{-- ================================================= --}}
                         {{-- TABLE HEADER --}}
                         {{-- ================================================= --}}
@@ -474,51 +454,41 @@
                                     Sr. No.
                                 </th>
 
-
                                 <th class="text-wrap">
-                                    Duty No.
+                                    Assignment No.
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Duty Date
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Driver
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Vehicle
                                 </th>
 
-
                                 <th class="text-wrap">
                                     Client
                                 </th>
 
-
                                 <th class="text-wrap">
-                                    Duty Start
+                                    Assigned At
                                 </th>
 
-
                                 <th class="text-wrap">
-                                    Duty End
+                                    Reporting Time
                                 </th>
 
-
                                 <th class="text-wrap">
-                                    Duty Hours
+                                    Reporting Location
                                 </th>
-
 
                                 <th class="text-wrap">
                                     Status
                                 </th>
-
 
                                 <th class="text-wrap no-export">
                                     View
@@ -537,6 +507,32 @@
 
                             @forelse($duties as $key => $duty)
 
+                                @php
+
+                                    $travelRequest = $duty->travelRequest;
+
+                                    $travelFromDate = $travelRequest?->travel_from_date;
+
+                                    $travelToDate = $travelRequest?->travel_to_date;
+
+                                    $assignedAt = $duty->assigned_at;
+
+                                    $reportingTime = $duty->reporting_time;
+
+                                    $driverName = trim(
+                                        ($duty->driver->first_name ?? '') . ' ' .
+                                        ($duty->driver->last_name ?? '')
+                                    );
+
+                                    $vehicleNumber = $duty->vehicle->registration_number
+                                        ?? $duty->vehicle->vehicle_number
+                                        ?? $duty->vehicle->name
+                                        ?? null;
+
+                                    $client = $travelRequest?->client;
+
+                                @endphp
+
                                 <tr>
 
 
@@ -554,16 +550,14 @@
 
 
                                     {{-- ===================================== --}}
-                                    {{-- DUTY NUMBER --}}
+                                    {{-- ASSIGNMENT NUMBER --}}
                                     {{-- ===================================== --}}
 
                                     <td>
 
                                         <strong class="duty-number text-dark">
 
-                                            {{ $duty->duty_no
-                                                ?? $duty->duty_number
-                                                ?? '-' }}
+                                            {{ $duty->assignment_no ?? '-' }}
 
                                         </strong>
 
@@ -576,11 +570,18 @@
 
                                     <td>
 
-                                        @if($duty->duty_date)
+                                        @if($travelFromDate)
 
                                             <span class="date-text">
 
-                                                {{ $duty->duty_date->format('d-m-Y') }}
+                                                {{ \Illuminate\Support\Carbon::parse($travelFromDate)->format('d-m-Y') }}
+
+                                                @if($travelToDate && \Illuminate\Support\Carbon::parse($travelFromDate)->toDateString() !== \Illuminate\Support\Carbon::parse($travelToDate)->toDateString())
+
+                                                    -
+                                                    {{ \Illuminate\Support\Carbon::parse($travelToDate)->format('d-m-Y') }}
+
+                                                @endif
 
                                             </span>
 
@@ -603,7 +604,7 @@
 
                                             <strong class="text-dark">
 
-                                                {{ $duty->driver->name ?? '-' }}
+                                                {{ $driverName !== '' ? $driverName : '-' }}
 
                                             </strong>
 
@@ -639,10 +640,7 @@
 
                                             <strong class="vehicle-number text-dark">
 
-                                                {{ $duty->vehicle->registration_number
-                                                    ?? $duty->vehicle->vehicle_number
-                                                    ?? $duty->vehicle->name
-                                                    ?? '-' }}
+                                                {{ $vehicleNumber ?? '-' }}
 
                                             </strong>
 
@@ -661,13 +659,21 @@
 
                                     <td>
 
-                                        @if($duty->client)
+                                        @if($client)
 
                                             <strong class="text-dark">
 
-                                                {{ $duty->client->company_name
-                                                    ?? $duty->client->name
+                                                {{ $client->company_name
+                                                    ?? $client->name
                                                     ?? '-' }}
+
+                                            </strong>
+
+                                        @elseif($travelRequest && !empty($travelRequest->company_name))
+
+                                            <strong class="text-dark">
+
+                                                {{ $travelRequest->company_name }}
 
                                             </strong>
 
@@ -681,16 +687,16 @@
 
 
                                     {{-- ===================================== --}}
-                                    {{-- DUTY START --}}
+                                    {{-- ASSIGNED AT --}}
                                     {{-- ===================================== --}}
 
                                     <td>
 
-                                        @if($duty->duty_start)
+                                        @if($assignedAt)
 
-                                            <span class="time-text">
+                                            <span class="date-text">
 
-                                                {{ $duty->duty_start }}
+                                                {{ \Illuminate\Support\Carbon::parse($assignedAt)->format('d-m-Y h:i A') }}
 
                                             </span>
 
@@ -704,16 +710,16 @@
 
 
                                     {{-- ===================================== --}}
-                                    {{-- DUTY END --}}
+                                    {{-- REPORTING TIME --}}
                                     {{-- ===================================== --}}
 
                                     <td>
 
-                                        @if($duty->duty_end)
+                                        @if($reportingTime)
 
                                             <span class="time-text">
 
-                                                {{ $duty->duty_end }}
+                                                {{ \Illuminate\Support\Carbon::parse($reportingTime)->format('h:i A') }}
 
                                             </span>
 
@@ -727,32 +733,14 @@
 
 
                                     {{-- ===================================== --}}
-                                    {{-- DUTY HOURS --}}
+                                    {{-- REPORTING LOCATION --}}
                                     {{-- ===================================== --}}
 
                                     <td>
 
-                                        @if(
-                                            isset($duty->duty_hours)
-                                            && $duty->duty_hours !== null
-                                        )
+                                        @if(!empty($duty->reporting_location))
 
-                                            <span class="badge badge-info">
-
-                                                {{ $duty->duty_hours }}
-
-                                            </span>
-
-                                        @elseif(
-                                            isset($duty->total_hours)
-                                            && $duty->total_hours !== null
-                                        )
-
-                                            <span class="badge badge-info">
-
-                                                {{ $duty->total_hours }}
-
-                                            </span>
+                                            {{ $duty->reporting_location }}
 
                                         @else
 
@@ -781,14 +769,20 @@
                                                 'assigned' =>
                                                     'badge-primary',
 
+                                                'accepted' =>
+                                                    'badge-info',
+
+                                                'started' =>
+                                                    'badge-info',
+
                                                 'pending' =>
                                                     'badge-warning',
 
-                                                'cancelled' =>
+                                                'rejected' =>
                                                     'badge-danger',
 
-                                                'in_progress' =>
-                                                    'badge-info',
+                                                'cancelled' =>
+                                                    'badge-danger',
 
                                                 default =>
                                                     'badge-secondary',
@@ -804,14 +798,20 @@
                                                 'assigned' =>
                                                     'fa-user',
 
+                                                'accepted' =>
+                                                    'fa-check',
+
+                                                'started' =>
+                                                    'fa-spinner',
+
                                                 'pending' =>
                                                     'fa-clock-o',
 
+                                                'rejected' =>
+                                                    'fa-ban',
+
                                                 'cancelled' =>
                                                     'fa-times-circle',
-
-                                                'in_progress' =>
-                                                    'fa-spinner',
 
                                                 default =>
                                                     'fa-info-circle',
