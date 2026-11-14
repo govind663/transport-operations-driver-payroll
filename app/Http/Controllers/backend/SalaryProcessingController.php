@@ -49,7 +49,6 @@ class SalaryProcessingController extends Controller
     | INDEX
     |--------------------------------------------------------------------------
     */
-
     public function index(Request $request): View
     {
         $user = Auth::user();
@@ -160,6 +159,19 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Payroll Records
+        |--------------------------------------------------------------------------
+        |
+        | Keep payrollReport available for existing report data
+        | and expose payrolls for the Blade listing.
+        |
+        */
+
+        $payrolls = $payrollReport;
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Filter Options
         |--------------------------------------------------------------------------
         */
@@ -240,10 +252,10 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return view(
-            'backend.reports.payroll.index',
+        return view('backend.reports.payroll.index',
             compact(
                 'payrollReport',
+                'payrolls',
                 'filterOptions',
                 'isAdmin',
                 'isOperations',
@@ -252,7 +264,6 @@ class SalaryProcessingController extends Controller
             )
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
