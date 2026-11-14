@@ -1416,18 +1416,6 @@
                                 </th>
 
                                 <th class="text-wrap">
-                                    Duty Slip Number
-                                </th>
-
-                                <th class="text-wrap">
-                                    Travel Request Number
-                                </th>
-
-                                <th class="text-wrap">
-                                    Working Sheet Number
-                                </th>
-
-                                <th class="text-wrap">
                                     Status
                                 </th>
 
@@ -1602,48 +1590,6 @@
 
                                         @endif
 
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- DUTY SLIP NUMBER --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-                                        @if($attendanceDutySlip && $attendanceDutySlip->slip_no)
-                                            <strong class="text-dark">{{ $attendanceDutySlip->slip_no }}</strong>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- TRAVEL REQUEST NUMBER --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-                                        @if($attendanceTravelRequest && $attendanceTravelRequest->request_no)
-                                            <strong class="text-dark">{{ $attendanceTravelRequest->request_no }}</strong>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- WORKING SHEET NUMBER --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-                                        @if($attendanceWorkingSheet)
-                                            <strong class="text-dark">
-                                                {{ $attendanceWorkingSheet->sheet_no ?? '-' }}
-                                            </strong>
-
-                                            @if($attendanceWorkingSheet->total_km !== null)
-                                                <small class="text-muted d-block mt-1">
-                                                    <i class="fa fa-road"></i>
-                                                    {{ number_format((float) $attendanceWorkingSheet->total_km, 2) }} KM
-                                                </small>
-                                            @endif
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
                                     </td>
 
                                     {{-- ===================================== --}}

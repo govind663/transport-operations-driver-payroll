@@ -3160,7 +3160,7 @@
                         {{-- DRIVER ADVANCE                                         --}}
                         {{-- ===================================================== --}}
 
-                        <div class="col-12 mt-4">
+                        {{-- <div class="col-12 mt-4">
 
                             <h5 class="form-section-title">
                                 Driver Advance
@@ -3337,7 +3337,7 @@
 
                             <div id="driver-advance-limit-message" class="text-danger small mt-2" role="status" aria-live="polite"></div>
 
-                        </div>
+                        </div> --}}
 
 
                         {{-- ===================================================== --}}

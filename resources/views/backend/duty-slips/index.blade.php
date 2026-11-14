@@ -330,11 +330,6 @@
                                 Driver Expense (Total)
                             </th>
 
-                            {{-- Driver Advance Total --}}
-                            <th class="text-wrap">
-                                Driver Advance (Total)
-                            </th>
-
                             {{-- Status --}}
                             <th class="text-wrap">
                                 Status
@@ -666,24 +661,6 @@
                                     <span class="text-dark font-weight-bold">
 
                                         {{ number_format((float) $expenseTotal, 2) }}
-
-                                    </span>
-
-                                </td>
-
-                                {{-- ========================================= --}}
-                                {{-- DRIVER ADVANCE TOTAL --}}
-                                {{-- ========================================= --}}
-                                <td>
-
-                                    @php
-                                        $advanceTotal = $dutySlip->driverAdvances
-                                            ->sum('amount');
-                                    @endphp
-
-                                    <span class="text-dark font-weight-bold">
-
-                                        {{ number_format((float) $advanceTotal, 2) }}
 
                                     </span>
 

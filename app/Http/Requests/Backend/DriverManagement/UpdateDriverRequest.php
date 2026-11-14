@@ -103,6 +103,13 @@ class UpdateDriverRequest extends FormRequest
                 'before_or_equal:today',
             ],
 
+            'monthly_gross_salary' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+            ],
+
             'status' => [
                 'required',
                 'string',
@@ -577,6 +584,15 @@ class UpdateDriverRequest extends FormRequest
 
             'joining_date.before_or_equal' =>
                 'Joining date cannot be a future date.',
+
+            'monthly_gross_salary.numeric' =>
+                'Monthly gross salary must be a valid number.',
+
+            'monthly_gross_salary.min' =>
+                'Monthly gross salary cannot be negative.',
+
+            'monthly_gross_salary.max' =>
+                'Monthly gross salary cannot exceed 9,999,999,999.99.',
 
             'status.required' =>
                 'Please select driver employment status.',

@@ -612,6 +612,7 @@
                 </div>
 
                 <div class="row">
+
                     {{-- Joining Date --}}
                     <div class="col-md-3">
 
@@ -620,13 +621,11 @@
                             <label>
 
                                 <b>
-
                                     Joining Date
 
                                     <span class="text-danger">
                                         *
                                     </span>
-
                                 </b>
 
                             </label>
@@ -639,6 +638,50 @@
                                 value="{{ old('joining_date', $driver->joining_date ? \Carbon\Carbon::parse($driver->joining_date)->format('Y-m-d') : '') }}">
 
                             @error('joining_date')
+
+                                <span class="invalid-feedback d-block">
+
+                                    <strong>
+                                        {{ $message }}
+                                    </strong>
+
+                                </span>
+
+                            @enderror
+
+                        </div>
+
+                    </div>
+
+                    {{-- Monthly Gross Salary --}}
+                    <div class="col-md-3">
+
+                        <div class="form-group">
+
+                            <label for="monthly_gross_salary">
+
+                                <b>
+                                    Monthly Salary (₹)
+                                </b>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                name="monthly_gross_salary"
+                                id="monthly_gross_salary"
+                                class="form-control @error('monthly_gross_salary') is-invalid @enderror"
+                                value="{{ old('monthly_gross_salary', $driver->monthly_gross_salary) }}"
+                                placeholder="Enter monthly gross salary"
+                                min="0"
+                                max="9999999999.99"
+                                step="0.01">
+
+                            <small class="text-muted">
+                                Enter driver's monthly gross salary in INR.
+                            </small>
+
+                            @error('monthly_gross_salary')
 
                                 <span class="invalid-feedback d-block">
 
@@ -773,6 +816,7 @@
                         </div>
 
                     </div>
+
                 </div>
 
                 {{-- ========================================================= --}}
@@ -1181,7 +1225,7 @@
                     <hr>
 
                 </div>
-                
+
                 <div class="row">
 
                     {{-- ========================================================= --}}

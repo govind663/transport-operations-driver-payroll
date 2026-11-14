@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Backend\WorkingSheet;
 
+use App\Models\WorkingSheet;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -224,11 +225,11 @@ class UpdateWorkingSheetRequest extends FormRequest
             'status' => [
                 'required',
                 Rule::in([
-                    'draft',
-                    'submitted',
-                    'approved',
-                    'rejected',
-                    'completed',
+                    WorkingSheet::STATUS_DRAFT,
+                    WorkingSheet::STATUS_SUBMITTED,
+                    WorkingSheet::STATUS_APPROVED,
+                    WorkingSheet::STATUS_REJECTED,
+                    WorkingSheet::STATUS_COMPLETED,
                 ]),
             ],
 

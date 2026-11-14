@@ -13,7 +13,6 @@
     | Working Sheet
     |--------------------------------------------------------------------------
     */
-
     .section-title {
         color: #023a85 !important;
         font-weight: 600;
@@ -110,7 +109,6 @@
 
 @endpush
 
-
 @section('content')
 
 <div class="pd-ltr-20 xs-pd-20-10">
@@ -120,6 +118,7 @@
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
+
         <div class="page-header">
 
             <div class="row">
@@ -128,9 +127,7 @@
 
                     <div class="title">
 
-                        <h4>
-                            Create Working Sheet
-                        </h4>
+                        <h4>Create Working Sheet</h4>
 
                     </div>
 
@@ -140,25 +137,17 @@
 
                             <li class="breadcrumb-item">
 
-                                <a href="{{ route('admin.dashboard') }}">
-                                    Dashboard
-                                </a>
+                                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
 
                             </li>
 
                             <li class="breadcrumb-item">
 
-                                <a href="{{ route('working-sheets.index') }}">
-                                    Working Sheets
-                                </a>
+                                <a href="{{ route('working-sheets.index') }}">Working Sheets</a>
 
                             </li>
 
-                            <li class="breadcrumb-item active">
-
-                                Create Working Sheet
-
-                            </li>
+                            <li class="breadcrumb-item active">Create Working Sheet</li>
 
                         </ol>
 
@@ -173,6 +162,7 @@
         {{-- ========================================================= --}}
         {{-- FORM --}}
         {{-- ========================================================= --}}
+
         <form action="{{ route('working-sheets.store') }}"
             method="POST"
             id="working-sheet-form">
@@ -184,24 +174,26 @@
                 {{-- ===================================================== --}}
                 {{-- BASIC INFORMATION --}}
                 {{-- ===================================================== --}}
+
                 <div class="form-section">
 
-                    <h5 class="section-title">
-                        <b>Working Sheet Information</b>
-                    </h5>
+                    <h5 class="section-title"><b>Working Sheet Information</b></h5>
 
                     <hr>
 
                     <div class="row">
-
                         {{-- Working Sheet Number --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label for="sheet_no">
+
                                     <b>Working Sheet No.</b>
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -218,28 +210,32 @@
                                     aria-describedby="sheet-no-help">
 
                                 <small id="sheet-no-help" class="text-muted">
+
                                     Working Sheet number is generated automatically.
+
                                 </small>
 
                                 @error('sheet_no')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Work Date --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
                                 <label for="work_date">
                                     <b>Work Date</b>
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <input
@@ -251,15 +247,14 @@
                                     required>
 
                                 @error('work_date')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
-
 
                         {{-- Status --}}
                         <div class="col-md-4">
@@ -281,13 +276,13 @@
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_DRAFT }}"
-                                        {{ old('status', 'draft') === \App\Models\WorkingSheet::STATUS_DRAFT ? 'selected' : '' }}>
+                                        {{ old('status') === \App\Models\WorkingSheet::STATUS_DRAFT ? 'selected' : '' }}>
                                         Draft
                                     </option>
 
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_SUBMITTED }}"
-                                        {{ old('status') === \App\Models\WorkingSheet::STATUS_SUBMITTED ? 'selected' : '' }}>
+                                        {{ old('status', \App\Models\WorkingSheet::STATUS_SUBMITTED) === \App\Models\WorkingSheet::STATUS_SUBMITTED ? 'selected' : '' }}>
                                         Submitted
                                     </option>
 
@@ -325,28 +320,28 @@
 
                 </div>
 
-
                 {{-- ===================================================== --}}
                 {{-- DUTY SLIP INFORMATION --}}
                 {{-- ===================================================== --}}
+
                 <div class="form-section">
 
-                    <h5 class="section-title">
-                        <b>Duty Slip Information</b>
-                    </h5>
+                    <h5 class="section-title"><b>Duty Slip Information</b></h5>
 
                     <hr>
 
                     <div class="row">
-
                         {{-- Duty Slip --}}
+
                         <div class="col-md-6">
 
                             <div class="form-group">
 
                                 <label for="duty_slip_id">
                                     <b>Duty Slip</b>
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 <select
@@ -355,16 +350,12 @@
                                     class="form-control custom-select2 @error('duty_slip_id') is-invalid @enderror"
                                     required>
 
-                                    <option value="">
-                                        Select Duty Slip
-                                    </option>
+                                    <option value="">Select Duty Slip</option>
 
                                     @foreach($dutySlips as $dutySlip)
 
                                         @php
-
                                             $assignment = $dutySlip->dutyAssignment;
-
                                             $travelRequest = optional($assignment)->travelRequest;
 
                                             // Prefer the Vehicle assigned directly to the Duty Slip;
@@ -383,7 +374,7 @@
                                                 ?? '';
 
                                             // If the Duty Slip has a driver_id but no loaded relation,
-                                            // resolve the model so the name can still be displayed.
+                                            // resolve the model so the name and salary can be displayed.
                                             if (!$driver && $driverId) {
                                                 $driver = \App\Models\Driver::find($driverId);
                                             }
@@ -408,44 +399,31 @@
                                                 )
                                                 : '';
 
-                                            $selectedDutySlip =
-                                                old('duty_slip_id') == $dutySlip->id;
+                                            $selectedDutySlip = old('duty_slip_id') == $dutySlip->id;
+
+                                            // Monthly salary is used by create.js to show daily Base Amount.
+                                            $monthlyGrossSalary = (float) ($driver?->monthly_gross_salary ?? 0);
 
                                         @endphp
 
                                         <option
                                             value="{{ $dutySlip->id }}"
-
                                             data-slip-no="{{ $dutySlip->slip_no ?? $dutySlip->id }}"
-
                                             data-status="{{ $dutySlip->status ?? '' }}"
-
                                             data-driver-id="{{ $driverId }}"
-
                                             data-driver="{{ $driverName }}"
-
+                                            data-monthly-gross-salary="{{ number_format($monthlyGrossSalary, 2, '.', '') }}"
                                             data-vehicle="{{ $vehicleNumber }}"
-
                                             data-travel-request="{{ $travelRequest ? ($travelRequest->request_no ?? $travelRequest->id) : '' }}"
-
                                             data-allowance-total="{{ number_format((float) ($dutySlip->working_sheet_allowance_total ?? 0), 2, '.', '') }}"
-
                                             data-expense-total="{{ number_format((float) ($dutySlip->working_sheet_expense_total ?? 0), 2, '.', '') }}"
-
                                             data-allowance-records='@json($dutySlip->working_sheet_allowance_records ?? [])'
-
                                             data-expense-records='@json($dutySlip->working_sheet_expense_records ?? [])'
-
                                             data-date="{{ optional($dutySlip->duty_date)->format('Y-m-d') }}"
-
                                             data-opening-meter="{{ $dutySlip->opening_meter ?? '' }}"
-
                                             data-closing-meter="{{ $dutySlip->closing_meter ?? '' }}"
-
                                             data-total-km="{{ $dutySlip->total_km ?? '' }}"
-
                                             data-start-time="{{ optional($dutySlip->start_time)->format('Y-m-d\TH:i:s') }}"
-
                                             data-end-time="{{ optional($dutySlip->end_time)->format('Y-m-d\TH:i:s') }}"
 
                                             {{ $selectedDutySlip ? 'selected' : '' }}>
@@ -453,13 +431,13 @@
                                             {{ $dutySlip->slip_no ?? 'Duty Slip #' . $dutySlip->id }}
 
                                             @if($driver)
-                                                -
-                                                {{ $driverName }}
+                                                - {{ $driverName }}
+
                                             @endif
 
                                             @if($vehicle)
-                                                -
-                                                {{ $vehicleNumber }}
+                                                - {{ $vehicleNumber }}
+
                                             @endif
 
                                         </option>
@@ -469,27 +447,31 @@
                                 </select>
 
                                 @error('duty_slip_id')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Driver --}}
+
                         <div class="col-md-6">
 
                             <div class="form-group">
 
                                 <label for="driver_id">
+
                                     <b>Driver</b>
+
                                     <span class="required">*</span>
+
                                 </label>
 
                                 {{-- Driver is automatically derived from Duty Slip --}}
+
                                 <input
                                     type="hidden"
                                     name="driver_id"
@@ -505,13 +487,15 @@
                                     readonly>
 
                                 <small class="text-muted">
+
                                     Driver is automatically linked from the selected Duty Slip.
+
                                 </small>
 
                                 @error('driver_id')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
@@ -520,91 +504,57 @@
 
                     </div>
 
-
                     {{-- Duty Slip Details --}}
-                    <div
-                        id="duty-slip-info"
-                        class="duty-slip-info"
-                        style="display:none;">
+
+                    <div id="duty-slip-info" class="duty-slip-info" style="display:none;">
 
                         <div class="row">
-
                             {{-- Duty Slip --}}
+
                             <div class="col-md-2">
 
-                                <div class="info-label">
-                                    Duty Slip
-                                </div>
+                                <div class="info-label">Duty Slip</div>
 
-                                <div
-                                    class="info-value"
-                                    id="info-slip-no">
-                                    -
-                                </div>
+                                <div class="info-value" id="info-slip-no">-</div>
 
                             </div>
-
 
                             {{-- Status --}}
+
                             <div class="col-md-2">
 
-                                <div class="info-label">
-                                    Status
-                                </div>
+                                <div class="info-label">Status</div>
 
-                                <div
-                                    class="info-value"
-                                    id="info-status">
-                                    -
-                                </div>
+                                <div class="info-value" id="info-status">-</div>
 
                             </div>
-
 
                             {{-- Driver --}}
+
                             <div class="col-md-3">
 
-                                <div class="info-label">
-                                    Driver
-                                </div>
+                                <div class="info-label">Driver</div>
 
-                                <div
-                                    class="info-value"
-                                    id="info-driver">
-                                    -
-                                </div>
+                                <div class="info-value" id="info-driver">-</div>
 
                             </div>
-
 
                             {{-- Vehicle --}}
+
                             <div class="col-md-3">
 
-                                <div class="info-label">
-                                    Vehicle
-                                </div>
+                                <div class="info-label">Vehicle</div>
 
-                                <div
-                                    class="info-value"
-                                    id="info-vehicle">
-                                    -
-                                </div>
-
+                                <div class="info-value" id="info-vehicle">-</div>
                             </div>
 
-
                             {{-- Travel Request --}}
+
                             <div class="col-md-2">
 
-                                <div class="info-label">
-                                    Travel Request
-                                </div>
+                                <div class="info-label">Travel Request</div>
 
-                                <div
-                                    class="info-value"
-                                    id="info-travel-request">
-                                    -
-                                </div>
+                                <div class="info-value" id="info-travel-request">-</div>
 
                             </div>
 
@@ -614,28 +564,24 @@
 
                 </div>
 
-
                 {{-- ===================================================== --}}
                 {{-- METER & WORKING DETAILS --}}
                 {{-- ===================================================== --}}
+
                 <div class="form-section">
 
-                    <h5 class="section-title">
-                        <b>Meter & Working Details</b>
-                    </h5>
+                    <h5 class="section-title"><b>Meter & Working Details</b></h5>
 
                     <hr>
 
                     <div class="row">
-
                         {{-- Opening Meter --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
-                                <label for="opening_meter">
-                                    <b>Opening Meter</b>
-                                </label>
+                                <label for="opening_meter"><b>Opening Meter</b></label>
 
                                 <input
                                     type="number"
@@ -648,24 +594,22 @@
                                     step="0.01">
 
                                 @error('opening_meter')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Closing Meter --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
-                                <label for="closing_meter">
-                                    <b>Closing Meter</b>
-                                </label>
+                                <label for="closing_meter"><b>Closing Meter</b></label>
 
                                 <input
                                     type="number"
@@ -678,24 +622,22 @@
                                     step="0.01">
 
                                 @error('closing_meter')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Total KM --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
-                                <label for="total_km">
-                                    <b>Total KM</b>
-                                </label>
+                                <label for="total_km"><b>Total KM</b></label>
 
                                 <input
                                     type="number"
@@ -708,29 +650,25 @@
                                     step="0.01"
                                     readonly>
 
-                                <small class="text-muted">
-                                    Closing Meter - Opening Meter
-                                </small>
+                                <small class="text-muted">Closing Meter - Opening Meter</small>
 
                                 @error('total_km')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Total Hours --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
-                                <label for="total_hours">
-                                    <b>Total Hours</b>
-                                </label>
+                                <label for="total_hours"><b>Total Hours</b></label>
 
                                 <input
                                     type="number"
@@ -743,24 +681,22 @@
                                     step="0.01">
 
                                 @error('total_hours')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
 
                         </div>
 
-
                         {{-- Overtime Hours --}}
+
                         <div class="col-md-4">
 
                             <div class="form-group">
 
-                                <label for="overtime_hours">
-                                    <b>Overtime Hours</b>
-                                </label>
+                                <label for="overtime_hours"><b>Overtime Hours</b></label>
 
                                 <input
                                     type="number"
@@ -773,9 +709,9 @@
                                     step="0.01">
 
                                 @error('overtime_hours')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
@@ -786,15 +722,13 @@
 
                 </div>
 
-
                 {{-- ===================================================== --}}
                 {{-- AMOUNT DETAILS --}}
                 {{-- ===================================================== --}}
+
                 <div class="form-section">
 
-                    <h5 class="section-title">
-                        <b>Amount Details</b>
-                    </h5>
+                    <h5 class="section-title"><b>Amount Details</b></h5>
 
                     <hr>
 
@@ -803,78 +737,135 @@
                     {{-- All statuses are displayed for admin review. Only --}}
                     {{-- Approved rows contribute to the amount inputs. --}}
                     {{-- ===================================================== --}}
+
                     <div class="row mb-4">
 
                         {{-- Driver Allowance Records --}}
+
                         <div class="col-lg-6 mb-4">
 
                             <h6 class="detail-table-heading">Driver Allowance Records</h6>
 
                             <div class="table-responsive">
+
                                 <table class="table table-sm table-bordered table-striped allowance-expense-table">
+
                                     <thead class="thead-light">
                                         <tr>
+
                                             <th>#</th>
+
                                             <th>Allowance</th>
+
                                             <th>Qty</th>
+
                                             <th>Rate</th>
+
                                             <th>Amount</th>
+
                                             <th>Status</th>
+
                                             <th>Remarks</th>
+
                                         </tr>
+
                                     </thead>
+
                                     <tbody id="allowance-records-body">
+
                                         <tr>
+
                                             <td colspan="7" class="text-center text-muted">
+
                                                 Select a Duty Slip to view allowance records.
+
                                             </td>
+
                                         </tr>
+
                                     </tbody>
+
                                     <tfoot>
+
                                         <tr class="record-total-row">
+
                                             <th colspan="4">Approved Allowance Total</th>
+
                                             <th id="allowance-approved-total">0.00</th>
+
                                             <th colspan="2"></th>
+
                                         </tr>
+
                                     </tfoot>
+
                                 </table>
+
                             </div>
 
                         </div>
 
                         {{-- Driver Expense Records --}}
+
                         <div class="col-lg-6 mb-4">
 
                             <h6 class="detail-table-heading">Driver Expense Records</h6>
 
                             <div class="table-responsive">
+
                                 <table class="table table-sm table-bordered table-striped allowance-expense-table">
+
                                     <thead class="thead-light">
+
                                         <tr>
+
                                             <th>#</th>
+
                                             <th>Expense</th>
+
                                             <th>Qty</th>
+
                                             <th>Rate</th>
+
                                             <th>Amount</th>
+
                                             <th>Status</th>
+
                                             <th>Remarks / Document</th>
+
                                         </tr>
+
                                     </thead>
+
                                     <tbody id="expense-records-body">
                                         <tr>
+
                                             <td colspan="7" class="text-center text-muted">
+
                                                 Select a Duty Slip to view expense records.
+
                                             </td>
+
                                         </tr>
+
                                     </tbody>
+
                                     <tfoot>
+
                                         <tr class="record-total-row">
+
                                             <th colspan="4">Approved Expense Total</th>
+
                                             <th id="expense-approved-total">0.00</th>
+
                                             <th colspan="2"></th>
+
                                         </tr>
+
                                     </tfoot>
+
                                 </table>
+
                             </div>
 
                         </div>
@@ -885,13 +876,16 @@
 
                         <div class="row">
 
-                            {{-- Base Amount --}}
+                            {{-- Base Amount / Day --}}
+
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
                                     <label for="base_amount">
-                                        <b>Base Amount</b>
+
+                                        <b>Base Amount / Day (₹)</b>
+
                                     </label>
 
                                     <input
@@ -899,30 +893,35 @@
                                         name="base_amount"
                                         id="base_amount"
                                         class="form-control amount-input @error('base_amount') is-invalid @enderror"
-                                        value="{{ old('base_amount', 0) }}"
-                                        placeholder="0.00"
+                                        value="{{ old('base_amount', '0.00') }}"
+                                        placeholder="Auto calculated per day"
                                         min="0"
-                                        step="0.01">
+                                        step="0.01"
+                                        readonly>
+
+                                    <small id="base-amount-help" class="text-muted">
+
+                                        Select Duty Slip and Work Date to calculate daily base amount.
+
+                                    </small>
 
                                     @error('base_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Extra KM Amount --}}
+
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
-                                    <label for="extra_km_amount">
-                                        <b>Extra KM Amount</b>
-                                    </label>
+                                    <label for="extra_km_amount"><b>Extra KM Amount</b></label>
 
                                     <input
                                         type="number"
@@ -935,24 +934,22 @@
                                         step="0.01">
 
                                     @error('extra_km_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Overtime Amount --}}
+
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
-                                    <label for="overtime_amount">
-                                        <b>Overtime Amount</b>
-                                    </label>
+                                    <label for="overtime_amount"><b>Overtime Amount</b></label>
 
                                     <input
                                         type="number"
@@ -965,24 +962,22 @@
                                         step="0.01">
 
                                     @error('overtime_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Allowance Amount --}}
+
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
-                                    <label for="allowance_amount">
-                                        <b>Allowance Amount</b>
-                                    </label>
+                                    <label for="allowance_amount"><b>Allowance Amount</b></label>
 
                                     <input
                                         type="number"
@@ -996,24 +991,21 @@
                                         readonly>
 
                                     @error('allowance_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Expense Amount --}}
-                            <div class="col-md-4">
 
+                            <div class="col-md-4">
                                 <div class="form-group">
 
-                                    <label for="expense_amount">
-                                        <b>Expense Amount</b>
-                                    </label>
+                                    <label for="expense_amount"><b>Expense Amount</b></label>
 
                                     <input
                                         type="number"
@@ -1027,24 +1019,22 @@
                                         readonly>
 
                                     @error('expense_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Other Amount --}}
+
                             <div class="col-md-4">
 
                                 <div class="form-group">
 
-                                    <label for="other_amount">
-                                        <b>Other Amount</b>
-                                    </label>
+                                    <label for="other_amount"><b>Other Amount</b></label>
 
                                     <input
                                         type="number"
@@ -1057,24 +1047,22 @@
                                         step="0.01">
 
                                     @error('other_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
 
                             </div>
 
-
                             {{-- Total Amount --}}
+
                             <div class="col-md-8">
 
                                 <div class="form-group total-amount-box">
 
-                                    <label for="total_amount">
-                                        <b>Total Amount</b>
-                                    </label>
+                                    <label for="total_amount"><b>Total Amount</b></label>
 
                                     <input
                                         type="number"
@@ -1088,13 +1076,15 @@
                                         readonly>
 
                                     <small class="text-muted">
+
                                         Base + Extra KM + Overtime + Allowance + Expense + Other
+
                                     </small>
 
                                     @error('total_amount')
-                                        <span class="invalid-feedback d-block">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
+
+                                        <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                     @enderror
 
                                 </div>
@@ -1107,15 +1097,13 @@
 
                 </div>
 
-
                 {{-- ===================================================== --}}
                 {{-- REMARKS --}}
                 {{-- ===================================================== --}}
+
                 <div class="form-section">
 
-                    <h5 class="section-title">
-                        <b>Remarks</b>
-                    </h5>
+                    <h5 class="section-title"><b>Remarks</b></h5>
 
                     <hr>
 
@@ -1125,9 +1113,7 @@
 
                             <div class="form-group">
 
-                                <label for="remarks">
-                                    <b>Remarks</b>
-                                </label>
+                                <label for="remarks"><b>Remarks</b></label>
 
                                 <textarea
                                     name="remarks"
@@ -1137,14 +1123,12 @@
                                     class="form-control @error('remarks') is-invalid @enderror"
                                     placeholder="Enter remarks if required">{{ old('remarks') }}</textarea>
 
-                                <small class="text-muted">
-                                    Maximum 2000 characters.
-                                </small>
+                                <small class="text-muted">Maximum 2000 characters.</small>
 
                                 @error('remarks')
-                                    <span class="invalid-feedback d-block">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+
+                                    <span class="invalid-feedback d-block"><strong>{{ $message }}</strong></span>
+
                                 @enderror
 
                             </div>
@@ -1155,21 +1139,20 @@
 
                 </div>
 
-
                 {{-- ===================================================== --}}
                 {{-- ACTION BUTTONS --}}
                 {{-- ===================================================== --}}
+
                 <div class="row">
 
                     <div class="col-12">
 
                         <div class="text-right mt-3">
 
-                            <a
-                                href="{{ route('working-sheets.index') }}"
-                                class="btn btn-danger">
+                            <a href="{{ route('working-sheets.index') }}" class="btn btn-danger">
 
                                 <i class="fa fa-times"></i>
+
                                 Cancel
 
                             </a>
@@ -1180,6 +1163,7 @@
                                 class="btn btn-success">
 
                                 <i class="fa fa-save"></i>
+
                                 Save Working Sheet
 
                             </button>
@@ -1196,16 +1180,13 @@
 
     </div>
 
-
     <x-backend.footer />
 
 </div>
 
 @endsection
 
-
 @push('scripts')
-
     <script src="{{ asset('backend/assets/js/working-sheets/create.js') }}" defer></script>
 
 @endpush

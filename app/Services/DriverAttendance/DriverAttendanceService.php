@@ -1247,5 +1247,3 @@ class DriverAttendanceService
             ->exists();
     }
 }
-
-

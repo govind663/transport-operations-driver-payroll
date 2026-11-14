@@ -206,9 +206,16 @@ class Driver extends Model
 
         /*
         |--------------------------------------------------------------------------
+        | Compensation
+        |--------------------------------------------------------------------------
+        */
+        'monthly_gross_salary',
+
+        /*
+        |--------------------------------------------------------------------------
         | Contact Information
         |--------------------------------------------------------------------------
-        */ 
+        */
         'mobile',
         'alternate_mobile',
         'email',
@@ -275,6 +282,7 @@ class Driver extends Model
     protected $casts = [
 
         'id' => 'integer',
+        'monthly_gross_salary' => 'decimal:2',
 
         /*
         |--------------------------------------------------------------------------
@@ -619,7 +627,10 @@ class Driver extends Model
         }
 
 
-        if ($this->license_expiry_date->isPast()) {
+        // A date-only expiry is valid through the end of its expiry date.
+        // Comparing it with now()->isPast() incorrectly marks today's date expired
+        // because the cast date is normalized to midnight.
+        if ($this->license_expiry_date->lt(today())) {
 
             return 'Expired';
         }
@@ -627,7 +638,7 @@ class Driver extends Model
 
         if (
             $this->license_expiry_date
-                ->lte(now()->addDays(30))
+                ->lte(today()->addDays(30))
         ) {
 
             return 'Expiring Soon';

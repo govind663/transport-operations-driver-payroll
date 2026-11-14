@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalHours = document.getElementById('total_hours');
     const overtimeHours = document.getElementById('overtime_hours');
     const baseAmount = document.getElementById('base_amount');
+    const baseAmountHelp = document.getElementById('base-amount-help');
     const extraKmAmount = document.getElementById('extra_km_amount');
     const overtimeAmount = document.getElementById('overtime_amount');
     const allowanceAmount = document.getElementById('allowance_amount');
@@ -241,6 +242,114 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
+    | DAILY BASE AMOUNT CALCULATION
+    |--------------------------------------------------------------------------
+    | Daily Base Amount = Driver Monthly Gross Salary / Calendar Days in the
+    | selected Work Date month. The monthly salary is supplied on the selected
+    | Duty Slip option through data-monthly-gross-salary.
+    |
+    | This is a frontend display calculation only. The backend must calculate
+    | and save the authoritative historical Base Amount snapshot.
+    |--------------------------------------------------------------------------
+    */
+
+    function calculateDailyBaseAmount() {
+        if (!baseAmount) {
+            return 0;
+        }
+
+        const selectedOption = getSelectedDutySlipOption();
+
+        if (!selectedOption || !selectedOption.value || !workDate || !workDate.value) {
+            baseAmount.value = '0.00';
+
+            if (baseAmountHelp) {
+                baseAmountHelp.textContent =
+                    'Select Duty Slip and Work Date to calculate daily base amount.';
+            }
+
+            calculateTotalAmount();
+            return 0;
+        }
+
+        const monthlySalary = Number.parseFloat(
+            selectedOption.dataset.monthlyGrossSalary || '0'
+        );
+
+        if (!Number.isFinite(monthlySalary) || monthlySalary <= 0) {
+            baseAmount.value = '0.00';
+
+            if (baseAmountHelp) {
+                baseAmountHelp.textContent =
+                    'Monthly gross salary is not configured for the selected driver.';
+            }
+
+            calculateTotalAmount();
+            return 0;
+        }
+
+        const dateParts = String(workDate.value).split('-');
+
+        if (dateParts.length !== 3) {
+            baseAmount.value = '0.00';
+
+            if (baseAmountHelp) {
+                baseAmountHelp.textContent = 'Please select a valid Work Date.';
+            }
+
+            calculateTotalAmount();
+            return 0;
+        }
+
+        const year = Number.parseInt(dateParts[0], 10);
+        const month = Number.parseInt(dateParts[1], 10);
+        const day = Number.parseInt(dateParts[2], 10);
+
+        if (
+            !Number.isInteger(year) ||
+            !Number.isInteger(month) ||
+            !Number.isInteger(day) ||
+            month < 1 ||
+            month > 12 ||
+            day < 1 ||
+            day > 31
+        ) {
+            baseAmount.value = '0.00';
+
+            if (baseAmountHelp) {
+                baseAmountHelp.textContent = 'Please select a valid Work Date.';
+            }
+
+            calculateTotalAmount();
+            return 0;
+        }
+
+        // The day argument 0 returns the final calendar day of the previous month.
+        // Passing the selected month (1-12) therefore gives the days in that month.
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        if (!daysInMonth) {
+            baseAmount.value = '0.00';
+            calculateTotalAmount();
+            return 0;
+        }
+
+        const dailyAmount = monthlySalary / daysInMonth;
+        baseAmount.value = dailyAmount.toFixed(2);
+
+        if (baseAmountHelp) {
+            baseAmountHelp.textContent =
+                '₹' + monthlySalary.toFixed(2) +
+                ' monthly gross salary ÷ ' + daysInMonth +
+                ' calendar days = ₹' + dailyAmount.toFixed(2) + ' per day.';
+        }
+
+        calculateTotalAmount();
+        return dailyAmount;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | NORMALIZE DATE FOR HTML DATE INPUT
     |--------------------------------------------------------------------------
     | HTML input[type=date] requires YYYY-MM-DD. Support this format and the
@@ -302,6 +411,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setText(infoVehicle, '-', '-');
             setText(infoTravelRequest, '-', '-');
             renderAllowanceExpenseTables(null);
+            calculateDailyBaseAmount();
             return;
         }
 
@@ -347,6 +457,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         renderAllowanceExpenseTables(selectedOption);
+        calculateDailyBaseAmount();
     }
 
     /*
@@ -542,6 +653,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (expenseAmount && (overwrite || !expenseAmount.value.trim())) {
             expenseAmount.value = sourceExpenseTotal;
         }
+
+        // The selected Work Date may have changed above, so recalculate the
+        // daily salary allocation using the final date and selected driver.
+        calculateDailyBaseAmount();
         calculateTotalAmount();
     }
 
@@ -580,6 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (allowanceAmount) allowanceAmount.value = '0.00';
             if (expenseAmount) expenseAmount.value = '0.00';
+            calculateDailyBaseAmount();
             calculateTotalAmount();
             return;
         }
@@ -591,6 +707,7 @@ document.addEventListener('DOMContentLoaded', function () {
         */
 
         populateWorkDetailsFromDutySlip(selectedOption, true);
+        calculateDailyBaseAmount();
     }
 
     /*
@@ -627,7 +744,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!workDate || !dutySlipSelect) return;
 
         const requestedDate = normalizeDateForInput(workDate.value || '');
-        if (!requestedDate) return;
+        if (!requestedDate) {
+            calculateDailyBaseAmount();
+            return;
+        }
 
         const currentOption = getSelectedDutySlipOption();
         const driverId =
@@ -637,7 +757,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // The form does not have a separate Driver selector, so the user must
         // choose a Duty Slip first to identify which driver's history to match.
-        if (!driverId) return;
+        if (!driverId) {
+            calculateDailyBaseAmount();
+            return;
+        }
+
+        // The selected driver's per-day allocation also changes when the user
+        // changes the date to another month, even before a matching slip is found.
+        calculateDailyBaseAmount();
 
         const matches = Array.from(dutySlipSelect.options).filter(function (option) {
             return option.value &&
@@ -674,6 +801,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Refill aggregates for the already selected matching slip.
             populateWorkDetailsFromDutySlip(matchedOption, true);
             updateDutySlipDetails();
+            calculateDailyBaseAmount();
         }
     }
 
@@ -868,6 +996,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /*
     |--------------------------------------------------------------------------
+    | INITIAL LOAD - DAILY BASE AMOUNT
+    |--------------------------------------------------------------------------
+    */
+
+    calculateDailyBaseAmount();
+
+    /*
+    |--------------------------------------------------------------------------
     | INITIAL LOAD - TOTAL AMOUNT
     |--------------------------------------------------------------------------
     */
@@ -1047,6 +1183,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 */
 
                 calculateTotalKm('', true);
+
+                /*
+                |------------------------------------------------------------------
+                | RECALCULATE DAILY BASE AMOUNT
+                |------------------------------------------------------------------
+                */
+
+                calculateDailyBaseAmount();
 
                 /*
                 |------------------------------------------------------------------

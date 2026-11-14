@@ -18,7 +18,6 @@ class DriverManagementController extends Controller
      */
     protected DriverManagementService $driverService;
 
-
     /**
      * Constructor
      */
@@ -27,7 +26,6 @@ class DriverManagementController extends Controller
     ) {
         $this->driverService = $driverService;
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -44,7 +42,6 @@ class DriverManagementController extends Controller
         );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CREATE
@@ -56,31 +53,31 @@ class DriverManagementController extends Controller
         return view('backend.driver-management.create');
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
     */
+
     public function store(
         StoreDriverRequest $request
     ): RedirectResponse {
-    
+
         try {
-    
+
             $this->driverService->store(
                 $request->validated()
             );
-    
+
             return redirect()
                 ->route('driver-management.index')
                 ->with(
                     'message',
                     'Driver created successfully.'
                 );
-    
+
         } catch (\Throwable $e) {
-    
+
             Log::error(
                 'Driver creation failed.',
                 [
@@ -92,7 +89,7 @@ class DriverManagementController extends Controller
                     'trace' => $e->getTraceAsString(),
                 ]
             );
-    
+
             return back()
                 ->withInput()
                 ->with(
@@ -102,25 +99,21 @@ class DriverManagementController extends Controller
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SHOW
     |--------------------------------------------------------------------------
     */
-
     public function show(
         string $id
     ): View {
 
-        $driver =
-            $this->driverService->findById($id);
+        $driver = $this->driverService->findById($id);
 
         return view('backend.driver-management.show',
             compact('driver')
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -134,7 +127,9 @@ class DriverManagementController extends Controller
 
         $driver = $this->driverService->findById($id);
 
-        return view('backend.driver-management.edit', compact('driver'));
+        return view('backend.driver-management.edit',
+            compact('driver')
+        );
     }
 
     /*
@@ -150,8 +145,7 @@ class DriverManagementController extends Controller
 
         try {
 
-            $driver =
-                $this->driverService->findById($id);
+            $driver = $this->driverService->findById($id);
 
             $this->driverService->update(
                 $driver,
@@ -185,7 +179,6 @@ class DriverManagementController extends Controller
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DELETE
@@ -198,12 +191,9 @@ class DriverManagementController extends Controller
 
         try {
 
-            $driver =
-                $this->driverService->findById($id);
+            $driver = $this->driverService->findById($id);
 
-            $this->driverService->delete(
-                $driver
-            );
+            $this->driverService->delete($driver);
 
             return redirect()
                 ->route('driver-management.index')

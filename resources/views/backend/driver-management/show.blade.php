@@ -608,23 +608,17 @@
             </div>
 
             <div class="row">
+
                 {{-- Joining Date --}}
                 <div class="col-md-3">
 
                     <div class="form-group">
 
                         <label>
-
                             <b>
-
                                 Joining Date
-
-                                <span class="text-danger">
-                                    *
-                                </span>
-
+                                <span class="text-danger">*</span>
                             </b>
-
                         </label>
 
                         <input
@@ -636,15 +630,45 @@
                             value="{{ old('joining_date', $driver->joining_date ? \Carbon\Carbon::parse($driver->joining_date)->format('Y-m-d') : '') }}">
 
                         @error('joining_date')
-
                             <span class="invalid-feedback d-block">
-
-                                <strong>
-                                    {{ $message }}
-                                </strong>
-
+                                <strong>{{ $message }}</strong>
                             </span>
+                        @enderror
 
+                    </div>
+
+                </div>
+
+                {{-- Monthly Gross Salary --}}
+                <div class="col-md-3">
+
+                    <div class="form-group">
+
+                        <label>
+                            <b>
+                                Monthly Gross Salary (₹)
+                            </b>
+                        </label>
+
+                        <input
+                            type="number"
+                            name="monthly_gross_salary"
+                            id="monthly_gross_salary"
+                            class="form-control @error('monthly_gross_salary') is-invalid @enderror"
+                            value="{{ old('monthly_gross_salary', $driver->monthly_gross_salary) }}"
+                            min="0"
+                            max="9999999999.99"
+                            step="0.01"
+                            readonly>
+
+                        <small class="text-muted">
+                            Driver's monthly gross salary.
+                        </small>
+
+                        @error('monthly_gross_salary')
+                            <span class="invalid-feedback d-block">
+                                <strong>{{ $message }}</strong>
+                            </span>
                         @enderror
 
                     </div>
@@ -657,11 +681,9 @@
                     <div class="form-group">
 
                         <label>
-
                             <b>
                                 Resignation Date
                             </b>
-
                         </label>
 
                         <input
@@ -677,15 +699,9 @@
                         </small>
 
                         @error('resignation_date')
-
                             <span class="invalid-feedback d-block">
-
-                                <strong>
-                                    {{ $message }}
-                                </strong>
-
+                                <strong>{{ $message }}</strong>
                             </span>
-
                         @enderror
 
                     </div>
@@ -698,11 +714,9 @@
                     <div class="form-group">
 
                         <label>
-
                             <b>
                                 Last Working Date
                             </b>
-
                         </label>
 
                         <input
@@ -718,15 +732,9 @@
                         </small>
 
                         @error('last_working_date')
-
                             <span class="invalid-feedback d-block">
-
-                                <strong>
-                                    {{ $message }}
-                                </strong>
-
+                                <strong>{{ $message }}</strong>
                             </span>
-
                         @enderror
 
                     </div>
@@ -739,11 +747,9 @@
                     <div class="form-group">
 
                         <label>
-
                             <b>
                                 Termination Date
                             </b>
-
                         </label>
 
                         <input
@@ -759,20 +765,15 @@
                         </small>
 
                         @error('termination_date')
-
                             <span class="invalid-feedback d-block">
-
-                                <strong>
-                                    {{ $message }}
-                                </strong>
-
+                                <strong>{{ $message }}</strong>
                             </span>
-
                         @enderror
 
                     </div>
 
                 </div>
+
             </div>
 
             {{-- ========================================================= --}}
@@ -1189,7 +1190,7 @@
                 <hr>
 
             </div>
-            
+
             <div class="row">
 
                 {{-- ========================================================= --}}
@@ -3189,7 +3190,7 @@
 
                                             <div
                                                 class="existing-nominee-profile mt-3">
-                                                
+
                                                 <img
                                                     src="{{ $nomineeProfileImageUrl }}"
                                                     alt="Nominee Profile"

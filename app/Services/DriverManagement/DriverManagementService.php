@@ -8,6 +8,7 @@ use App\Services\User\UserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class DriverManagementService
 {
@@ -1330,6 +1331,58 @@ class DriverManagementService
     protected function normalizeDriverData(
         array &$data
     ): void {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Gross Salary
+        |--------------------------------------------------------------------------
+        | Optional for existing drivers. A blank value clears the salary; an
+        | omitted key during update leaves the saved salary unchanged.
+        | The database column is DECIMAL(12, 2), so values are normalized to
+        | two decimal places and checked against its supported range.
+        */
+
+        if (array_key_exists('monthly_gross_salary', $data)) {
+
+            $monthlyGrossSalary = $data['monthly_gross_salary'];
+
+            if (
+                $monthlyGrossSalary === null ||
+                (is_string($monthlyGrossSalary) && trim($monthlyGrossSalary) === '')
+            ) {
+
+                $data['monthly_gross_salary'] = null;
+
+            } elseif (!is_numeric($monthlyGrossSalary)) {
+
+                throw ValidationException::withMessages([
+                    'monthly_gross_salary' => 'Monthly gross salary must be a valid numeric amount.',
+                ]);
+
+            } else {
+
+                $normalizedSalary = round((float) $monthlyGrossSalary, 2);
+
+                if (
+                    !is_finite($normalizedSalary) ||
+                    $normalizedSalary < 0 ||
+                    $normalizedSalary > 9999999999.99
+                ) {
+
+                    throw ValidationException::withMessages([
+                        'monthly_gross_salary' => 'Monthly gross salary must be between 0 and 9,999,999,999.99.',
+                    ]);
+                }
+
+                $data['monthly_gross_salary'] = number_format(
+                    $normalizedSalary,
+                    2,
+                    '.',
+                    ''
+                );
+            }
+        }
+
 
         /*
         |--------------------------------------------------------------------------

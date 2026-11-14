@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Backend\WorkingSheet;
 
+use App\Models\WorkingSheet;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,18 @@ class StoreWorkingSheetRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Set default values before validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (!$this->filled('status')) {
+            $this->merge([
+                'status' => WorkingSheet::STATUS_SUBMITTED,
+            ]);
+        }
     }
 
     /**
@@ -203,11 +216,11 @@ class StoreWorkingSheetRequest extends FormRequest
             'status' => [
                 'required',
                 Rule::in([
-                    'draft',
-                    'submitted',
-                    'approved',
-                    'rejected',
-                    'completed',
+                    WorkingSheet::STATUS_DRAFT,
+                    WorkingSheet::STATUS_SUBMITTED,
+                    WorkingSheet::STATUS_APPROVED,
+                    WorkingSheet::STATUS_REJECTED,
+                    WorkingSheet::STATUS_COMPLETED,
                 ]),
             ],
 

@@ -92,6 +92,13 @@ class StoreDriverRequest extends FormRequest
                 'before_or_equal:today',
             ],
 
+            'monthly_gross_salary' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:9999999999.99',
+            ],
+
             'status' => [
                 'required',
                 'string',
@@ -546,6 +553,15 @@ class StoreDriverRequest extends FormRequest
             'joining_date.before_or_equal' =>
                 'Joining date cannot be a future date.',
 
+            'monthly_gross_salary.numeric' =>
+                'Monthly gross salary must be a valid number.',
+
+            'monthly_gross_salary.min' =>
+                'Monthly gross salary cannot be negative.',
+
+            'monthly_gross_salary.max' =>
+                'Monthly gross salary cannot exceed 9,999,999,999.99.',
+
             'status.required' =>
                 'Please select driver employment status.',
 
@@ -554,7 +570,7 @@ class StoreDriverRequest extends FormRequest
 
             'status.in' =>
                 'Invalid driver employment status selected.',
-            
+
             'pf_status.required' =>
                 'Please select PF status.',
 

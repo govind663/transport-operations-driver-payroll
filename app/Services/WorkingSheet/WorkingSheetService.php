@@ -171,7 +171,7 @@ class WorkingSheetService
 
             $data['status'] =
                 $data['status']
-                ?? WorkingSheet::STATUS_DRAFT;
+                ?? WorkingSheet::STATUS_SUBMITTED;
 
 
             /*
@@ -441,13 +441,6 @@ class WorkingSheetService
             $workingSheet,
             $data
         ) {
-
-            // Keep the original attendance identity to reconcile it if the
-            // selected driver or work date changes.
-            $originalDriverId = (int) ($workingSheet->driver_id ?? 0);
-            $originalWorkDate = $workingSheet->work_date
-                ? $workingSheet->work_date->format('Y-m-d')
-                : null;
 
             /*
             |--------------------------------------------------------------------------
@@ -752,35 +745,6 @@ class WorkingSheetService
 
             /*
             |--------------------------------------------------------------------------
-            | Reconcile Previous Attendance Identity
-            |--------------------------------------------------------------------------
-            |
-            | If this sheet changes driver/date, remove only its linked
-            | working-sheet attendance before generating the new one.
-            |
-            */
-
-            $newDriverId = (int) $data['driver_id'];
-            $newWorkDateValue = array_key_exists('work_date', $data)
-                ? $data['work_date']
-                : $workingSheet->work_date;
-            $newWorkDate = $newWorkDateValue
-                ? (is_string($newWorkDateValue)
-                    ? substr($newWorkDateValue, 0, 10)
-                    : $newWorkDateValue->format('Y-m-d'))
-                : null;
-
-            if (
-                $originalDriverId !== $newDriverId ||
-                $originalWorkDate !== $newWorkDate
-            ) {
-                $this->driverAttendanceService
-                    ->removeWorkingSheetAttendance($workingSheet);
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
             | Update Working Sheet
             |--------------------------------------------------------------------------
             */
@@ -795,28 +759,6 @@ class WorkingSheetService
             */
 
             $workingSheet->refresh();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Load Duty Slip
-            |--------------------------------------------------------------------------
-            */
-
-            $workingSheet->load([
-                'dutySlip',
-            ]);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Driver Attendance Sync
-            |--------------------------------------------------------------------------
-            */
-
-            $this->syncDriverAttendance(
-                $workingSheet
-            );
 
 
             /*

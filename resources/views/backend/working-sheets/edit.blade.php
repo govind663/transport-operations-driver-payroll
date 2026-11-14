@@ -275,7 +275,10 @@
             action="{{ route('working-sheets.update', $workingSheet->id) }}"
             method="POST"
             id="working-sheet-form"
-            data-has-old-input="{{ session()->hasOldInput() ? '1' : '0' }}">
+            data-has-old-input="{{ session()->hasOldInput() ? '1' : '0' }}"
+            data-original-driver-id="{{ $workingSheet->driver_id ?? '' }}"
+            data-original-work-date="{{ $workingSheet->work_date ? \Illuminate\Support\Carbon::parse($workingSheet->work_date)->format('Y-m-d') : '' }}"
+            data-original-base-amount="{{ number_format((float) ($workingSheet->base_amount ?? 0), 2, '.', '') }}">
 
             @csrf
 
@@ -304,7 +307,6 @@
 
 
                     <div class="row">
-
 
                         {{-- SHEET NUMBER --}}
                         <div class="col-md-4">
@@ -358,8 +360,6 @@
 
                         </div>
 
-
-
                         {{-- WORK DATE --}}
                         <div class="col-md-4">
 
@@ -408,8 +408,6 @@
 
                         </div>
 
-
-
                         {{-- STATUS --}}
                         <div class="col-md-4">
 
@@ -417,16 +415,11 @@
 
                                 <label for="status">
 
-                                    <b>
-                                        Status
-                                    </b>
+                                    <b>Status</b>
 
-                                    <span class="required">
-                                        *
-                                    </span>
+                                    <span class="required">*</span>
 
                                 </label>
-
 
                                 <select
                                     name="status"
@@ -438,61 +431,41 @@
                                         Select Status
                                     </option>
 
-
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_DRAFT }}"
-                                        {{ old(
-                                            'status',
-                                            $workingSheet->status
-                                        ) === \App\Models\WorkingSheet::STATUS_DRAFT ? 'selected' : '' }}>
+                                        {{ old('status', $workingSheet->status) === \App\Models\WorkingSheet::STATUS_DRAFT ? 'selected' : '' }}>
 
                                         Draft
 
                                     </option>
 
-
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_SUBMITTED }}"
-                                        {{ old(
-                                            'status',
-                                            $workingSheet->status
-                                        ) === \App\Models\WorkingSheet::STATUS_SUBMITTED ? 'selected' : '' }}>
+                                        {{ old('status', $workingSheet->status) === \App\Models\WorkingSheet::STATUS_SUBMITTED ? 'selected' : '' }}>
 
                                         Submitted
 
                                     </option>
 
-
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_APPROVED }}"
-                                        {{ old(
-                                            'status',
-                                            $workingSheet->status
-                                        ) === \App\Models\WorkingSheet::STATUS_APPROVED ? 'selected' : '' }}>
+                                        {{ old('status', $workingSheet->status) === \App\Models\WorkingSheet::STATUS_APPROVED ? 'selected' : '' }}>
 
                                         Approved
 
                                     </option>
 
-
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_REJECTED }}"
-                                        {{ old(
-                                            'status',
-                                            $workingSheet->status
-                                        ) === \App\Models\WorkingSheet::STATUS_REJECTED ? 'selected' : '' }}>
+                                        {{ old('status', $workingSheet->status) === \App\Models\WorkingSheet::STATUS_REJECTED ? 'selected' : '' }}>
 
                                         Rejected
 
                                     </option>
 
-
                                     <option
                                         value="{{ \App\Models\WorkingSheet::STATUS_COMPLETED }}"
-                                        {{ old(
-                                            'status',
-                                            $workingSheet->status
-                                        ) === \App\Models\WorkingSheet::STATUS_COMPLETED ? 'selected' : '' }}>
+                                        {{ old('status', $workingSheet->status) === \App\Models\WorkingSheet::STATUS_COMPLETED ? 'selected' : '' }}>
 
                                         Completed
 
@@ -500,15 +473,10 @@
 
                                 </select>
 
-
                                 @error('status')
 
                                     <span class="invalid-feedback d-block">
-
-                                        <strong>
-                                            {{ $message }}
-                                        </strong>
-
+                                        <strong>{{ $message }}</strong>
                                     </span>
 
                                 @enderror
@@ -609,6 +577,12 @@
                                                 $driverId = $driver->id;
                                             }
 
+                                            // Ensure the selected Duty Slip can expose the assigned
+                                            // driver's salary even when its relation was not eager loaded.
+                                            if (!$driver && $driverId) {
+                                                $driver = \App\Models\Driver::find($driverId);
+                                            }
+
                                             // Prefer the vehicle stored directly on duty_slips;
                                             // keep the assignment fallback for legacy records.
                                             $directVehicle = method_exists($dutySlip, 'vehicle')
@@ -639,6 +613,12 @@
                                                     ));
                                                 }
                                             }
+
+                                            // Driver monthly gross salary is sent to the frontend
+                                            // for daily Base Amount preview when the Duty Slip or date changes.
+                                            $monthlyGrossSalary = (float) (
+                                                $driver?->monthly_gross_salary ?? 0
+                                            );
 
                                             // Vehicle schemas can use different registration column names.
                                             $vehicleNumber = $vehicle
@@ -743,6 +723,8 @@
                                             data-driver-id="{{ $driver?->id ?? $driverId ?? '' }}"
 
                                             data-driver="{{ $driverName }}"
+
+                                            data-monthly-gross-salary="{{ number_format($monthlyGrossSalary, 2, '.', '') }}"
 
                                             data-vehicle="{{ $vehicleNumber }}"
 
@@ -1350,7 +1332,7 @@
                                     <label for="base_amount">
 
                                         <b>
-                                            Base Amount
+                                            Base Amount / Day (₹)
                                         </b>
 
                                     </label>
@@ -1365,9 +1347,17 @@
                                             'base_amount',
                                             $workingSheet->base_amount
                                         ) }}"
-                                        placeholder="0.00"
+                                        placeholder="Saved daily base amount"
                                         min="0"
-                                        step="0.01">
+                                        step="0.01"
+                                        readonly
+                                        aria-describedby="base-amount-help">
+
+                                    <small
+                                        id="base-amount-help"
+                                        class="text-muted">
+                                        This saved daily amount is a historical snapshot. It is recalculated when the Duty Slip or Work Date changes.
+                                    </small>
 
 
                                     @error('base_amount')

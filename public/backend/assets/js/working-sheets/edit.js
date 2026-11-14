@@ -34,6 +34,7 @@
         const overtimeHours = document.getElementById('overtime_hours');
 
         const baseAmount = document.getElementById('base_amount');
+        const baseAmountHelp = document.getElementById('base-amount-help');
         const extraKmAmount = document.getElementById('extra_km_amount');
         const overtimeAmount = document.getElementById('overtime_amount');
         const allowanceAmount = document.getElementById('allowance_amount');
@@ -61,12 +62,210 @@
         let submitting = false;
 
         // ---------------------------------------------------------------------
+        // ORIGINAL SAVED SNAPSHOT IDENTITY
+        // ---------------------------------------------------------------------
+        // The saved Base Amount is a historical snapshot. Do not overwrite it
+        // merely because this edit form is opened after a driver's salary has
+        // changed. Recalculate only when the resolved driver or Work Date is
+        // different from the values stored on the existing Working Sheet.
+        // These original values are supplied by the edit Blade form.
+        const originalDriverId = String(
+            form.dataset.originalDriverId || (driverIdInput ? driverIdInput.value : '') || ''
+        );
+
+        const originalWorkDate = normalizeDateForInput(
+            form.dataset.originalWorkDate || (workDate ? workDate.value : '')
+        );
+
+        const originalBaseAmountValue = Number.parseFloat(
+            form.dataset.originalBaseAmount || (baseAmount ? baseAmount.value : '0')
+        );
+
+        const originalBaseAmount = Number.isFinite(originalBaseAmountValue) && originalBaseAmountValue >= 0
+            ? originalBaseAmountValue
+            : 0;
+
+        // ---------------------------------------------------------------------
         // HELPERS
         // ---------------------------------------------------------------------
         function setText(element, value, fallback) {
             if (element) {
                 element.textContent = value || fallback || '-';
             }
+        }
+
+        function numericValue(input) {
+            if (!input || String(input.value).trim() === '') {
+                return null;
+            }
+
+            const value = Number.parseFloat(input.value);
+            return Number.isFinite(value) ? value : null;
+        }
+
+        function hasValue(input) {
+            return Boolean(input) && String(input.value).trim() !== '';
+        }
+
+        function getSelectedOption() {
+            if (!dutySlipSelect || dutySlipSelect.selectedIndex < 0) {
+                return null;
+            }
+
+            return dutySlipSelect.options[dutySlipSelect.selectedIndex] || null;
+        }
+
+        function removeInvalidMeterState() {
+            if (closingMeter) {
+                closingMeter.classList.remove('is-invalid');
+            }
+        }
+
+        function normalizeDateForInput(value) {
+            if (!value) return '';
+
+            const dateValue = String(value).trim();
+
+            // Already in the date-input format.
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+                return dateValue;
+            }
+
+            // Convert DD-MM-YYYY or DD/MM/YYYY to YYYY-MM-DD.
+            const dmy = dateValue.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+            if (dmy) {
+                return dmy[3] + '-' + dmy[2] + '-' + dmy[1];
+            }
+
+            // If the source is a datetime, retain its date portion.
+            const isoDateTime = dateValue.match(/^(\d{4}-\d{2}-\d{2})[T ]/);
+            if (isoDateTime) {
+                return isoDateTime[1];
+            }
+
+            return '';
+        }
+
+        // ---------------------------------------------------------------------
+        // TOTAL AMOUNT
+        // ---------------------------------------------------------------------
+        function calculateTotalAmount() {
+            if (!totalAmount) return;
+
+            const sum = amountInputs.reduce(function (total, input) {
+                const value = numericValue(input);
+                return total + (value !== null && value >= 0 ? value : 0);
+            }, 0);
+
+            totalAmount.value = sum.toFixed(2);
+        }
+
+        // ---------------------------------------------------------------------
+        // DAILY BASE AMOUNT - HISTORICAL SNAPSHOT RULE
+        // ---------------------------------------------------------------------
+        /**
+         * Calculate daily Base Amount using:
+         * monthly_gross_salary / actual calendar days in selected Work Date month.
+         *
+         * Existing saved snapshot is retained when the original driver and date
+         * are unchanged. It is recalculated only when either identity changes.
+         */
+        function updateDailyBaseAmount() {
+            if (!baseAmount) return;
+
+            const selectedOption = getSelectedOption();
+            const selectedDriverId = String(
+                (selectedOption && selectedOption.dataset.driverId) ||
+                (driverIdInput && driverIdInput.value) ||
+                ''
+            );
+            const selectedWorkDate = normalizeDateForInput(workDate ? workDate.value : '');
+
+            const driverChanged = selectedDriverId !== originalDriverId;
+            const workDateChanged = selectedWorkDate !== originalWorkDate;
+            const identityChanged = driverChanged || workDateChanged;
+
+            // Preserve the stored historical snapshot on ordinary edits.
+            if (!identityChanged) {
+                baseAmount.value = originalBaseAmount.toFixed(2);
+
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent =
+                        'Saved daily Base Amount snapshot: ₹' + originalBaseAmount.toFixed(2) +
+                        '. It remains unchanged unless the Driver or Work Date changes.';
+                }
+
+                calculateTotalAmount();
+                return true;
+            }
+
+            if (!selectedOption || !selectedOption.value || !selectedDriverId || !selectedWorkDate) {
+                baseAmount.value = '0.00';
+
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent =
+                        'Select a valid Duty Slip and Work Date to calculate the daily Base Amount.';
+                }
+
+                calculateTotalAmount();
+                return false;
+            }
+
+            const monthlyGrossSalary = Number.parseFloat(
+                selectedOption.dataset.monthlyGrossSalary || '0'
+            );
+
+            if (!Number.isFinite(monthlyGrossSalary) || monthlyGrossSalary <= 0) {
+                baseAmount.value = '0.00';
+
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent =
+                        'Monthly gross salary is not configured for the selected driver.';
+                }
+
+                calculateTotalAmount();
+                return false;
+            }
+
+            const dateParts = selectedWorkDate.split('-').map(Number);
+            const year = dateParts[0];
+            const month = dateParts[1];
+
+            if (!year || !month || month < 1 || month > 12) {
+                baseAmount.value = '0.00';
+
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent = 'Please select a valid Work Date.';
+                }
+
+                calculateTotalAmount();
+                return false;
+            }
+
+            // new Date(year, month, 0) returns the final day of the selected month.
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            if (!daysInMonth) {
+                baseAmount.value = '0.00';
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent = 'Unable to determine calendar days for the selected month.';
+                }
+                calculateTotalAmount();
+                return false;
+            }
+
+            const dailyAmount = Number((monthlyGrossSalary / daysInMonth).toFixed(2));
+            baseAmount.value = dailyAmount.toFixed(2);
+
+            if (baseAmountHelp) {
+                baseAmountHelp.textContent =
+                    '₹' + monthlyGrossSalary.toFixed(2) +
+                    ' monthly gross salary ÷ ' + daysInMonth +
+                    ' calendar days = ₹' + dailyAmount.toFixed(2) + ' per day.';
+            }
+
+            calculateTotalAmount();
+            return true;
         }
 
         // ---------------------------------------------------------------------
@@ -150,6 +349,7 @@
                         ? detailText + ' | Document: ' + record.document_file
                         : 'Document: ' + record.document_file;
                 }
+
                 createTableCell(row, detailText, 'record-remarks');
                 tbody.appendChild(row);
             });
@@ -182,33 +382,6 @@
             if (expenseAmount) expenseAmount.value = expenseTotal.toFixed(2);
 
             calculateTotalAmount();
-        }
-
-        function numericValue(input) {
-            if (!input || String(input.value).trim() === '') {
-                return null;
-            }
-
-            const value = Number.parseFloat(input.value);
-            return Number.isFinite(value) ? value : null;
-        }
-
-        function hasValue(input) {
-            return Boolean(input) && String(input.value).trim() !== '';
-        }
-
-        function getSelectedOption() {
-            if (!dutySlipSelect || dutySlipSelect.selectedIndex < 0) {
-                return null;
-            }
-
-            return dutySlipSelect.options[dutySlipSelect.selectedIndex] || null;
-        }
-
-        function removeInvalidMeterState() {
-            if (closingMeter) {
-                closingMeter.classList.remove('is-invalid');
-            }
         }
 
         // ---------------------------------------------------------------------
@@ -347,30 +520,8 @@
             if (expenseAmount && shouldFill(expenseAmount)) {
                 expenseAmount.value = sourceExpenseTotal;
             }
+
             calculateTotalAmount();
-        }
-
-        function normalizeDateForInput(value) {
-            if (!value) return '';
-
-            // Already in the date-input format.
-            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-                return value;
-            }
-
-            // Convert DD-MM-YYYY or DD/MM/YYYY to YYYY-MM-DD.
-            const dmy = value.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
-            if (dmy) {
-                return dmy[3] + '-' + dmy[2] + '-' + dmy[1];
-            }
-
-            // If the source is a datetime, retain its date portion.
-            const isoDateTime = value.match(/^(\d{4}-\d{2}-\d{2})[T ]/);
-            if (isoDateTime) {
-                return isoDateTime[1];
-            }
-
-            return '';
         }
 
         // ---------------------------------------------------------------------
@@ -431,12 +582,20 @@
                 if (overtimeHours) overtimeHours.value = '';
                 if (allowanceAmount) allowanceAmount.value = '0.00';
                 if (expenseAmount) expenseAmount.value = '0.00';
+                if (baseAmount) baseAmount.value = '0.00';
+                if (baseAmountHelp) {
+                    baseAmountHelp.textContent = 'Select a Duty Slip and Work Date to calculate daily Base Amount.';
+                }
                 calculateTotalAmount();
                 removeInvalidMeterState();
                 return;
             }
 
             populateWorkDetailsFromDutySlip(selected, true);
+
+            // Recalculate only if the selected driver or resulting Work Date
+            // differs from the original Working Sheet identity.
+            updateDailyBaseAmount();
         }
 
         if (dutySlipSelect) {
@@ -457,7 +616,10 @@
             if (!workDate || !dutySlipSelect) return;
 
             const requestedDate = normalizeDateForInput(workDate.value || '');
-            if (!requestedDate) return;
+            if (!requestedDate) {
+                updateDailyBaseAmount();
+                return;
+            }
 
             const currentOption = getSelectedOption();
             const driverId =
@@ -467,7 +629,10 @@
 
             // The Driver is derived from the Duty Slip; without a selected slip
             // there is no driver ID available for this date lookup.
-            if (!driverId) return;
+            if (!driverId) {
+                updateDailyBaseAmount();
+                return;
+            }
 
             const matches = Array.from(dutySlipSelect.options).filter(function (option) {
                 return option.value &&
@@ -480,7 +645,13 @@
                 renderAllowanceExpenseTables(null);
                 if (allowanceAmount) allowanceAmount.value = '0.00';
                 if (expenseAmount) expenseAmount.value = '0.00';
+
+                // The selected driver's salary can still be previewed for the
+                // chosen month, but the form's existing date/slip validation
+                // will prevent saving until a matching Duty Slip is selected.
+                updateDailyBaseAmount();
                 calculateTotalAmount();
+
                 window.alert(
                     'No Duty Slip was found for this driver on the selected Work Date. Please choose a date with a Duty Slip or select the correct Duty Slip.'
                 );
@@ -504,6 +675,7 @@
             } else {
                 populateWorkDetailsFromDutySlip(matchedOption, true);
                 loadDutySlipInfo();
+                updateDailyBaseAmount();
             }
         }
 
@@ -512,19 +684,8 @@
         }
 
         // ---------------------------------------------------------------------
-        // TOTAL AMOUNT
+        // TOTAL AMOUNT EVENTS
         // ---------------------------------------------------------------------
-        function calculateTotalAmount() {
-            if (!totalAmount) return;
-
-            const sum = amountInputs.reduce(function (total, input) {
-                const value = numericValue(input);
-                return total + (value !== null && value >= 0 ? value : 0);
-            }, 0);
-
-            totalAmount.value = sum.toFixed(2);
-        }
-
         amountInputs.forEach(function (input) {
             input.addEventListener('input', calculateTotalAmount);
             input.addEventListener('change', calculateTotalAmount);
@@ -535,6 +696,11 @@
         // ---------------------------------------------------------------------
         document.querySelectorAll('.decimal-input, .amount-input').forEach(function (input) {
             input.addEventListener('input', function () {
+                // Base Amount is an automatically calculated readonly snapshot.
+                if (input === baseAmount && baseAmount.readOnly) {
+                    return;
+                }
+
                 let value = this.value.replace(/[^0-9.]/g, '');
                 const firstDot = value.indexOf('.');
 
@@ -594,6 +760,12 @@
 
         // Calculate from meters when possible; otherwise preserve the saved total.
         calculateTotalKm({ preserveIncompleteValue: true });
+
+        // Keep the original Base Amount snapshot on an ordinary edit-page load.
+        // If old input contains a changed driver/date after validation failed,
+        // calculateDailyBaseAmount will detect that difference and preview the
+        // correct new amount without altering the backend's historical record.
+        updateDailyBaseAmount();
         calculateTotalAmount();
 
         // ---------------------------------------------------------------------
@@ -647,6 +819,9 @@
                 return;
             }
 
+            // Final UI calculation. The backend remains authoritative and
+            // independently calculates/snapshots Base Amount before saving.
+            updateDailyBaseAmount();
             calculateTotalAmount();
 
             submitting = true;
