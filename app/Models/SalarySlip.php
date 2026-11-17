@@ -42,21 +42,28 @@ class SalarySlip extends Model
         'period_from',
         'period_to',
 
-        // Attendance / Working Details
+        // Attendance Details
         'total_working_days',
         'present_days',
         'absent_days',
         'paid_days',
-        'overtime_hours',
 
-        // Earnings
+        // Working Details
+        'overtime_hours',
+        'total_duty_days',
+        'total_km',
+
+        // Salary / Working Sheet Earnings
         'basic_salary',
         'allowance_amount',
         'overtime_amount',
+        'working_sheet_base_amount',
+        'extra_km_amount',
+        'expense_reimbursement_amount',
+        'working_sheet_other_amount',
+        'working_sheet_total_amount',
         'bonus_amount',
         'other_earnings',
-
-        // Gross Salary
         'gross_salary',
 
         // Deductions
@@ -64,9 +71,9 @@ class SalarySlip extends Model
         'loan_deduction',
         'penalty_deduction',
         'other_deductions',
-
-        // Total / Net Salary
         'total_deductions',
+
+        // Final Salary
         'net_salary',
 
         // Payment
@@ -105,104 +112,56 @@ class SalarySlip extends Model
     {
         return [
 
-            /*
-            |--------------------------------------------------------------------------
-            | Dates
-            |--------------------------------------------------------------------------
-            */
+            // IDs
+            'id' => 'integer',
+            'salary_processing_id' => 'integer',
+            'driver_id' => 'integer',
+            'generated_by' => 'integer',
+            'issued_by' => 'integer',
 
+            // Dates / Timestamps
             'period_from' => 'date:Y-m-d',
-
             'period_to' => 'date:Y-m-d',
-
             'payment_date' => 'date:Y-m-d',
-
             'issued_at' => 'datetime',
-
             'created_at' => 'datetime',
-
             'updated_at' => 'datetime',
-
             'deleted_at' => 'datetime',
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Salary Period
-            |--------------------------------------------------------------------------
-            */
-
+            // Salary Period
             'salary_month' => 'integer',
-
             'salary_year' => 'integer',
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Attendance / Working
-            |--------------------------------------------------------------------------
-            */
-
+            // Attendance / Working Details
             'total_working_days' => 'decimal:2',
-
             'present_days' => 'decimal:2',
-
             'absent_days' => 'decimal:2',
-
             'paid_days' => 'decimal:2',
-
             'overtime_hours' => 'decimal:2',
+            'total_duty_days' => 'decimal:2',
+            'total_km' => 'decimal:2',
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Earnings
-            |--------------------------------------------------------------------------
-            */
-
+            // Earnings
             'basic_salary' => 'decimal:2',
-
             'allowance_amount' => 'decimal:2',
-
             'overtime_amount' => 'decimal:2',
-
+            'working_sheet_base_amount' => 'decimal:2',
+            'extra_km_amount' => 'decimal:2',
+            'expense_reimbursement_amount' => 'decimal:2',
+            'working_sheet_other_amount' => 'decimal:2',
+            'working_sheet_total_amount' => 'decimal:2',
             'bonus_amount' => 'decimal:2',
-
             'other_earnings' => 'decimal:2',
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Gross Salary
-            |--------------------------------------------------------------------------
-            */
-
             'gross_salary' => 'decimal:2',
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Deductions
-            |--------------------------------------------------------------------------
-            */
-
+            // Deductions
             'advance_deduction' => 'decimal:2',
-
             'loan_deduction' => 'decimal:2',
-
             'penalty_deduction' => 'decimal:2',
-
             'other_deductions' => 'decimal:2',
-
             'total_deductions' => 'decimal:2',
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Net Salary
-            |--------------------------------------------------------------------------
-            */
-
+            // Net Salary
             'net_salary' => 'decimal:2',
         ];
     }
@@ -220,14 +179,13 @@ class SalarySlip extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
-
     /*
     |--------------------------------------------------------------------------
     | Legacy / Compatibility Status
     |--------------------------------------------------------------------------
     |
     | Kept for backward compatibility.
-    | Payment should normally be handled using payment_status.
+    | Payment should normally be tracked through payment_status.
     |
     */
 
@@ -423,61 +381,89 @@ class SalarySlip extends Model
     */
 
     /**
-     * Total additional earnings.
+     * Return the Working Sheet amount stored in the salary slip.
+     *
+     * The combined amount is authoritative when it is populated. When it is
+     * zero, the component columns are used as a fallback for older or
+     * partially populated records.
+     */
+    public function calculateWorkingSheetTotalAmount(): float
+    {
+        $storedTotal = (float) ($this->working_sheet_total_amount ?? 0);
+
+        if ($storedTotal != 0.0) {
+            return round($storedTotal, 2);
+        }
+
+        return round(
+            (float) ($this->working_sheet_base_amount ?? 0)
+            + (float) ($this->extra_km_amount ?? 0)
+            + (float) ($this->overtime_amount ?? 0)
+            + (float) ($this->allowance_amount ?? 0)
+            + (float) ($this->expense_reimbursement_amount ?? 0)
+            + (float) ($this->working_sheet_other_amount ?? 0),
+            2
+        );
+    }
+
+
+    /**
+     * Total additional earnings excluding basic salary.
+     *
+     * Working Sheet component amounts are already represented by
+     * working_sheet_total_amount, so they are not added again individually.
      */
     public function getTotalEarningsAttribute(): float
     {
         return round(
-            (float) $this->allowance_amount
-            + (float) $this->overtime_amount
-            + (float) $this->bonus_amount
-            + (float) $this->other_earnings,
+            $this->calculateWorkingSheetTotalAmount()
+            + (float) ($this->bonus_amount ?? 0)
+            + (float) ($this->other_earnings ?? 0),
             2
         );
     }
 
 
     /**
-     * Calculated gross salary.
+     * Calculate gross salary without double-counting Working Sheet items.
      */
     public function getCalculatedGrossSalaryAttribute(): float
     {
         return round(
-            (float) $this->basic_salary
-            + (float) $this->allowance_amount
-            + (float) $this->overtime_amount
-            + (float) $this->bonus_amount
-            + (float) $this->other_earnings,
+            (float) ($this->basic_salary ?? 0)
+            + $this->calculateWorkingSheetTotalAmount()
+            + (float) ($this->bonus_amount ?? 0)
+            + (float) ($this->other_earnings ?? 0),
             2
         );
     }
 
 
     /**
-     * Calculated total deductions.
+     * Calculate total deductions.
      */
     public function getCalculatedTotalDeductionsAttribute(): float
     {
         return round(
-            (float) $this->advance_deduction
-            + (float) $this->loan_deduction
-            + (float) $this->penalty_deduction
-            + (float) $this->other_deductions,
+            (float) ($this->advance_deduction ?? 0)
+            + (float) ($this->loan_deduction ?? 0)
+            + (float) ($this->penalty_deduction ?? 0)
+            + (float) ($this->other_deductions ?? 0),
             2
         );
     }
 
 
     /**
-     * Calculated net salary.
+     * Calculate net salary from calculated gross and deductions.
      */
     public function getCalculatedNetSalaryAttribute(): float
     {
         return max(
             0,
             round(
-                (float) $this->gross_salary
-                - (float) $this->total_deductions,
+                $this->calculated_gross_salary
+                - $this->calculated_total_deductions,
                 2
             )
         );
@@ -490,10 +476,19 @@ class SalarySlip extends Model
     |--------------------------------------------------------------------------
     */
 
+    public function getFormattedBasicSalaryAttribute(): string
+    {
+        return '₹' . number_format(
+            (float) ($this->basic_salary ?? 0),
+            2
+        );
+    }
+
+
     public function getFormattedGrossSalaryAttribute(): string
     {
         return '₹' . number_format(
-            (float) $this->gross_salary,
+            (float) ($this->gross_salary ?? 0),
             2
         );
     }
@@ -502,7 +497,7 @@ class SalarySlip extends Model
     public function getFormattedTotalDeductionsAttribute(): string
     {
         return '₹' . number_format(
-            (float) $this->total_deductions,
+            (float) ($this->total_deductions ?? 0),
             2
         );
     }
@@ -511,7 +506,7 @@ class SalarySlip extends Model
     public function getFormattedNetSalaryAttribute(): string
     {
         return '₹' . number_format(
-            (float) $this->net_salary,
+            (float) ($this->net_salary ?? 0),
             2
         );
     }
@@ -669,7 +664,7 @@ class SalarySlip extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Salary Month Scope
+    | Salary Period Scopes
     |--------------------------------------------------------------------------
     */
 
@@ -679,14 +674,20 @@ class SalarySlip extends Model
         int $year
     ) {
         return $query
-            ->where(
-                'salary_month',
-                $month
-            )
-            ->where(
-                'salary_year',
-                $year
-            );
+            ->where('salary_month', $month)
+            ->where('salary_year', $year);
+    }
+
+
+    /**
+     * Alias for period-based filtering.
+     */
+    public function scopeForPeriod(
+        $query,
+        int $month,
+        int $year
+    ) {
+        return $this->scopeForMonth($query, $month, $year);
     }
 
 
@@ -736,5 +737,30 @@ class SalarySlip extends Model
             ->latest('salary_year')
             ->latest('salary_month')
             ->latest('id');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Issue Helper
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Mark the generated salary slip as issued.
+     */
+    public function markAsIssued(?int $userId = null): bool
+    {
+        $this->status = self::STATUS_ISSUED;
+
+        if ($userId !== null) {
+            $this->issued_by = $userId;
+        }
+
+        if (!$this->issued_at) {
+            $this->issued_at = now();
+        }
+
+        return $this->save();
     }
 }

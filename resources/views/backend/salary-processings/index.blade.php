@@ -63,11 +63,9 @@
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -117,7 +115,7 @@
 
                 @if(!$isDriver)
 
-                    <div class="col-md-6 col-sm-12 text-right">
+                    {{-- <div class="col-md-6 col-sm-12 text-right hidden">
 
                         <a
                             href="{{ route('salary-processing.create') }}"
@@ -130,7 +128,7 @@
 
                         </a>
 
-                    </div>
+                    </div> --}}
 
                 @endif
 
@@ -138,11 +136,9 @@
 
         </div>
 
-
         {{-- ========================================================= --}}
         {{-- FILTER CARD --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
 
             <div class="pd-20">
@@ -418,18 +414,289 @@
 
         </div>
 
+        {{-- ========================================================= --}}
+        {{-- AUTOMATIC MONTHLY PAYROLL GENERATION --}}
+        {{-- ========================================================= --}}
+        @if($canGeneratePayroll)
+
+            <div class="card-box mb-30">
+
+                <div class="pd-20">
+
+                    <h4 class="text-blue h4 mb-2">
+
+                        <i class="fa fa-calculator"></i>
+
+                        Automatic Monthly Payroll Generation
+
+                    </h4>
+
+                    <p class="text-muted mb-20">
+
+                        Select salary month, year and optionally a driver.
+                        Leave driver selection empty to generate payroll
+                        for all eligible drivers.
+
+                    </p>
+
+                    <form
+                        action="{{ route('salary-processing.generate-monthly') }}"
+                        method="POST"
+                        id="generateMonthlyPayrollForm"
+                        class="form-horizontal"
+                        style="border: 1px solid #023a85; padding: 20px; border-radius: 6px;"
+                    >
+
+                        @csrf
+
+                        <div class="row">
+
+                            {{-- SALARY MONTH --}}
+
+                            <div class="col-md-3 col-sm-6 mb-20">
+
+                                <label>
+                                    Salary Month <span class="text-danger">*</span>
+                                </label>
+
+                                <select
+                                    name="salary_month"
+                                    class="form-control"
+                                    required
+                                >
+
+                                    @foreach($months as $monthNumber => $monthName)
+
+                                        <option
+                                            value="{{ $monthNumber }}"
+                                            {{ old('salary_month', $currentMonth) == $monthNumber ? 'selected' : '' }}
+                                        >
+                                            {{ $monthName }}
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                                @error('salary_month')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+
+                            </div>
+
+
+                            {{-- SALARY YEAR --}}
+
+                            <div class="col-md-3 col-sm-6 mb-20">
+
+                                <label>
+                                    Salary Year <span class="text-danger">*</span>
+                                </label>
+
+                                <select
+                                    name="salary_year"
+                                    class="form-control"
+                                    required
+                                >
+
+                                    @for($year = $currentYear - 5; $year <= $currentYear + 1; $year++)
+
+                                        <option
+                                            value="{{ $year }}"
+                                            {{ old('salary_year', $currentYear) == $year ? 'selected' : '' }}
+                                        >
+                                            {{ $year }}
+                                        </option>
+
+                                    @endfor
+
+                                </select>
+
+                                @error('salary_year')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+
+                            </div>
+
+
+                            {{-- OPTIONAL DRIVER --}}
+
+                            <div class="col-md-3 col-sm-6 mb-20">
+
+                                <label>Driver (Optional)</label>
+
+                                <select
+                                    name="driver_id"
+                                    class="form-control custom-select2"
+                                >
+
+                                    <option value="">
+                                        All Eligible Drivers
+                                    </option>
+
+                                    @foreach($drivers as $driver)
+
+                                        <option
+                                            value="{{ $driver->id }}"
+                                            {{ old('driver_id') == $driver->id ? 'selected' : '' }}
+                                        >
+
+                                            {{ $driver->first_name }}
+                                            {{ $driver->last_name }}
+
+                                            @if(!empty($driver->driver_code))
+                                                - {{ $driver->driver_code }}
+                                            @endif
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                                @error('driver_id')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+
+                            </div>
+
+
+                            {{-- GENERATE BUTTON --}}
+
+                            <div class="col-md-3 col-sm-6 mb-20 d-flex align-items-end">
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-success btn-block"
+                                >
+
+                                    <i class="fa fa-cogs"></i>
+
+                                    Generate Monthly Payroll
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        @endif
+
+        {{-- ========================================================= --}}
+        {{-- PAYROLL GENERATION RESULT --}}
+        {{-- ========================================================= --}}
+        @if(session('message'))
+
+            <div class="alert alert-success alert-dismissible fade show">
+
+                <i class="fa fa-check-circle"></i>
+
+                {{ session('message') }}
+
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+
+            </div>
+
+        @endif
+
+        @if(session('error'))
+
+            <div class="alert alert-danger alert-dismissible fade show">
+
+                <i class="fa fa-exclamation-circle"></i>
+
+                {{ session('error') }}
+
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+
+            </div>
+
+        @endif
+
+        @if(session('payroll_generation_result'))
+
+            @php
+                $generationResult = session('payroll_generation_result');
+            @endphp
+
+            <div class="card-box mb-30">
+
+                <div class="pd-20">
+
+                    <h5 class="text-blue">
+                        Payroll Generation Summary
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+
+                            <div class="alert alert-success mb-2">
+
+                                <strong>Generated:</strong>
+
+                                {{ $generationResult['generated_count'] ?? 0 }}
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="alert alert-warning mb-2">
+
+                                <strong>Skipped:</strong>
+
+                                {{ $generationResult['skipped_count'] ?? 0 }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    @if(!empty($generationResult['skipped']))
+
+                        <h6 class="mt-3">Skipped Drivers</h6>
+
+                        <ul class="mb-0">
+
+                            @foreach($generationResult['skipped'] as $skipped)
+
+                                <li>
+                                    {{ is_array($skipped) ? json_encode($skipped) : $skipped }}
+                                </li>
+
+                            @endforeach
+
+                        </ul>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        @endif
 
         {{-- ========================================================= --}}
         {{-- SALARY PROCESSING LIST --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
-
 
             {{-- ===================================================== --}}
             {{-- CARD HEADER --}}
             {{-- ===================================================== --}}
-
             <div class="pd-20">
 
                 <div class="d-flex justify-content-between align-items-center">
@@ -453,7 +720,7 @@
 
                         Total :
 
-                        {{ $salaryProcessings->total() }}
+                        {{ $payrolls->total() }}
 
                     </span>
 
@@ -461,15 +728,11 @@
 
             </div>
 
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
-
             <div class="pb-20">
-
                 <div class="table-responsive">
-
                     <table
                         class="table hover multiple-select-row data-table-export1 nowrap p-3"
                         data-title="Salary Processing"
@@ -478,7 +741,6 @@
                         {{-- ================================================= --}}
                         {{-- TABLE HEADER --}}
                         {{-- ================================================= --}}
-
                         <thead>
 
                             <tr>
@@ -595,47 +857,40 @@
 
                         </thead>
 
-
                         {{-- ================================================= --}}
                         {{-- TABLE BODY --}}
                         {{-- ================================================= --}}
-
                         <tbody>
 
-                            @forelse($salaryProcessings as $key => $processing)
+                            @forelse($payrolls as $key => $processing)
 
                                 <tr>
-
 
                                     {{-- ===================================== --}}
                                     {{-- SR NO --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         {{
-                                            ($salaryProcessings->currentPage() - 1)
-                                            * $salaryProcessings->perPage()
+                                            ($payrolls->currentPage() - 1)
+                                            * $payrolls->perPage()
                                             + $key
                                             + 1
                                         }}
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- DRIVER --}}
                                     {{-- ===================================== --}}
-
                                     @if(!$isDriver)
-
                                         <td>
 
                                             @if($processing->driver)
 
                                                 <strong class="text-dark">
 
-                                                    {{ $processing->driver->name ?? '-' }}
+                                                    {{ $processing->driver->first_name ?? '-' }} {{ $processing->driver->last_name ?? '-' }}
 
                                                 </strong>
 
@@ -672,14 +927,11 @@
                                             @endif
 
                                         </td>
-
                                     @endif
-
 
                                     {{-- ===================================== --}}
                                     {{-- PROCESSING NO --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         @if(!empty($processing->processing_no))
@@ -718,11 +970,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- SALARY PERIOD --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         @if(
@@ -798,11 +1048,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- WORKING DAYS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         @php
@@ -827,11 +1075,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- PRESENT DAYS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <span class="badge badge-success">
@@ -850,11 +1096,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- ABSENT DAYS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <span class="badge badge-danger">
@@ -873,11 +1117,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- PAID DAYS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <span class="badge badge-primary">
@@ -896,16 +1138,12 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- GROSS SALARY --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <span class="amount-text">
-
-                                            ₹
 
                                             {{
                                                 number_format(
@@ -921,16 +1159,12 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- TOTAL DEDUCTIONS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <span class="amount-text text-danger">
-
-                                            ₹
 
                                             {{
                                                 number_format(
@@ -946,16 +1180,12 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- NET SALARY --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         <strong class="amount-text text-success">
-
-                                            ₹
 
                                             {{
                                                 number_format(
@@ -971,11 +1201,9 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- STATUS --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         @php
@@ -1061,7 +1289,6 @@
                                     {{-- ===================================== --}}
                                     {{-- PROCESSED BY --}}
                                     {{-- ===================================== --}}
-
                                     <td>
 
                                         @if($processing->processedBy)
@@ -1088,7 +1315,6 @@
                                     {{-- ===================================== --}}
                                     {{-- EDIT --}}
                                     {{-- ===================================== --}}
-
                                     <td class="no-export">
 
                                         @if(!$isDriver)
@@ -1131,7 +1357,6 @@
                                     {{-- ===================================== --}}
                                     {{-- DELETE --}}
                                     {{-- ===================================== --}}
-
                                     <td class="no-export">
 
                                         @if(!$isDriver)
@@ -1179,7 +1404,6 @@
                                 {{-- ========================================= --}}
                                 {{-- NO DATA --}}
                                 {{-- ========================================= --}}
-
                                 <tr>
 
                                     <td
@@ -1230,21 +1454,6 @@
                     </table>
 
                 </div>
-
-
-                {{-- ===================================================== --}}
-                {{-- PAGINATION --}}
-                {{-- ===================================================== --}}
-
-                @if($salaryProcessings->hasPages())
-
-                    <div class="pd-20">
-
-                        {{ $salaryProcessings->links() }}
-
-                    </div>
-
-                @endif
 
             </div>
 

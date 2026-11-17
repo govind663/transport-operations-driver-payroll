@@ -58,16 +58,23 @@ class SalaryProcessing extends Model
         'absent_days',
         'paid_days',
         'overtime_hours',
+        'total_duty_days',
+        'total_km',
 
         /*
         |--------------------------------------------------------------------------
-        | Earnings
+        | Earnings / Working Sheet Breakdown
         |--------------------------------------------------------------------------
         */
 
         'basic_salary',
         'allowance_amount',
         'overtime_amount',
+        'working_sheet_base_amount',
+        'extra_km_amount',
+        'expense_reimbursement_amount',
+        'working_sheet_other_amount',
+        'working_sheet_total_amount',
         'bonus_amount',
         'other_earnings',
         'gross_salary',
@@ -125,6 +132,8 @@ class SalaryProcessing extends Model
         'processed_by',
         'approved_by',
         'paid_by',
+        'created_by',
+        'updated_by',
     ];
 
 
@@ -149,12 +158,27 @@ class SalaryProcessing extends Model
 
             /*
             |--------------------------------------------------------------------------
+            | Primary / Foreign Keys
+            |--------------------------------------------------------------------------
+            */
+
+            'id' => 'integer',
+            'driver_id' => 'integer',
+            'processed_by' => 'integer',
+            'approved_by' => 'integer',
+            'paid_by' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
+            'deleted_by' => 'integer',
+
+            /*
+            |--------------------------------------------------------------------------
             | Salary Period
             |--------------------------------------------------------------------------
             */
 
             'salary_month' => 'integer',
-            'salary_year'  => 'integer',
+            'salary_year' => 'integer',
 
             /*
             |--------------------------------------------------------------------------
@@ -163,24 +187,30 @@ class SalaryProcessing extends Model
             */
 
             'total_working_days' => 'decimal:2',
-            'present_days'       => 'decimal:2',
-            'absent_days'        => 'decimal:2',
-            'paid_days'          => 'decimal:2',
-
+            'present_days' => 'decimal:2',
+            'absent_days' => 'decimal:2',
+            'paid_days' => 'decimal:2',
             'overtime_hours' => 'decimal:2',
+            'total_duty_days' => 'decimal:2',
+            'total_km' => 'decimal:2',
 
             /*
             |--------------------------------------------------------------------------
-            | Earnings
+            | Earnings / Working Sheet Breakdown
             |--------------------------------------------------------------------------
             */
 
-            'basic_salary'     => 'decimal:2',
+            'basic_salary' => 'decimal:2',
             'allowance_amount' => 'decimal:2',
-            'overtime_amount'  => 'decimal:2',
-            'bonus_amount'     => 'decimal:2',
-            'other_earnings'   => 'decimal:2',
-            'gross_salary'     => 'decimal:2',
+            'overtime_amount' => 'decimal:2',
+            'working_sheet_base_amount' => 'decimal:2',
+            'extra_km_amount' => 'decimal:2',
+            'expense_reimbursement_amount' => 'decimal:2',
+            'working_sheet_other_amount' => 'decimal:2',
+            'working_sheet_total_amount' => 'decimal:2',
+            'bonus_amount' => 'decimal:2',
+            'other_earnings' => 'decimal:2',
+            'gross_salary' => 'decimal:2',
 
             /*
             |--------------------------------------------------------------------------
@@ -189,10 +219,10 @@ class SalaryProcessing extends Model
             */
 
             'advance_deduction' => 'decimal:2',
-            'loan_deduction'    => 'decimal:2',
+            'loan_deduction' => 'decimal:2',
             'penalty_deduction' => 'decimal:2',
-            'other_deductions'  => 'decimal:2',
-            'total_deductions'  => 'decimal:2',
+            'other_deductions' => 'decimal:2',
+            'total_deductions' => 'decimal:2',
 
             /*
             |--------------------------------------------------------------------------
@@ -266,7 +296,6 @@ class SalaryProcessing extends Model
         self::STATUS_PAID,
 
         self::STATUS_CANCELLED,
-
     ];
 
 
@@ -320,6 +349,42 @@ class SalaryProcessing extends Model
         return $this->belongsTo(
             User::class,
             'paid_by'
+        );
+    }
+
+
+    /**
+     * User who created the salary processing record.
+     */
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'created_by'
+        );
+    }
+
+
+    /**
+     * User who last updated the salary processing record.
+     */
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'updated_by'
+        );
+    }
+
+
+    /**
+     * User who soft-deleted the salary processing record.
+     */
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'deleted_by'
         );
     }
 
@@ -491,27 +556,65 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | Working Sheet Calculations
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Calculate the Working Sheet total from its stored breakdown fields.
+     *
+     * working_sheet_total_amount is the aggregate snapshot. The breakdown
+     * fields are included here only when that aggregate has not been set.
+     * This prevents the aggregate and its components from being counted twice.
+     */
+    public function calculateWorkingSheetTotalAmount(): float
+    {
+        return round(
+            (float) ($this->working_sheet_base_amount ?? 0)
+            + (float) ($this->extra_km_amount ?? 0)
+            + (float) ($this->allowance_amount ?? 0)
+            + (float) ($this->overtime_amount ?? 0)
+            + (float) ($this->expense_reimbursement_amount ?? 0)
+            + (float) ($this->working_sheet_other_amount ?? 0),
+            2
+        );
+    }
+
+
+    /**
+     * Return the saved Working Sheet total, or derive it from the breakdown
+     * when the saved total is zero or has not yet been populated.
+     */
+    public function getCalculatedWorkingSheetTotalAmountAttribute(): float
+    {
+        $savedTotal = (float) ($this->working_sheet_total_amount ?? 0);
+
+        return $savedTotal > 0
+            ? round($savedTotal, 2)
+            : $this->calculateWorkingSheetTotalAmount();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Salary Calculations
     |--------------------------------------------------------------------------
     */
 
     /**
      * Calculate gross salary.
+     *
+     * The Working Sheet amount is included once as a combined total.
+     * Its allowance/overtime and other breakdown amounts are not added again.
      */
     public function calculateGrossSalary(): float
     {
-        return (float) (
-
+        return round(
             (float) ($this->basic_salary ?? 0)
-
-            + (float) ($this->allowance_amount ?? 0)
-
-            + (float) ($this->overtime_amount ?? 0)
-
+            + $this->calculated_working_sheet_total_amount
             + (float) ($this->bonus_amount ?? 0)
-
-            + (float) ($this->other_earnings ?? 0)
-
+            + (float) ($this->other_earnings ?? 0),
+            2
         );
     }
 
@@ -521,16 +624,12 @@ class SalaryProcessing extends Model
      */
     public function calculateTotalDeductions(): float
     {
-        return (float) (
-
+        return round(
             (float) ($this->advance_deduction ?? 0)
-
             + (float) ($this->loan_deduction ?? 0)
-
             + (float) ($this->penalty_deduction ?? 0)
-
-            + (float) ($this->other_deductions ?? 0)
-
+            + (float) ($this->other_deductions ?? 0),
+            2
         );
     }
 
@@ -540,14 +639,13 @@ class SalaryProcessing extends Model
      */
     public function calculateNetSalary(): float
     {
-        return max(
-
-            0,
-
-            $this->calculateGrossSalary()
-
-            - $this->calculateTotalDeductions()
-
+        return round(
+            max(
+                0,
+                $this->calculateGrossSalary()
+                - $this->calculateTotalDeductions()
+            ),
+            2
         );
     }
 
@@ -670,7 +768,11 @@ class SalaryProcessing extends Model
             $this->calculateTotalDeductions();
 
         $this->net_salary =
-            $this->calculateNetSalary();
+            max(
+                0,
+                (float) $this->gross_salary
+                - (float) $this->total_deductions
+            );
 
         return $this;
     }

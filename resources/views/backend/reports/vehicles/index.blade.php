@@ -9,10 +9,7 @@
 
 @push('styles')
 
-<link
-    rel="stylesheet"
-    href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}"
->
+<link rel="stylesheet" href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}">
 
 <style>
 

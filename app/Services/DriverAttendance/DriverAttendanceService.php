@@ -31,7 +31,6 @@ class DriverAttendanceService
      */
     protected const HALF_DAY_HOURS = 4.00;
 
-
     /*
     |--------------------------------------------------------------------------
     | SYNC FROM WORKING SHEET
@@ -41,7 +40,6 @@ class DriverAttendanceService
     | from a Working Sheet.
     |
     */
-
     public function syncFromWorkingSheet(
         WorkingSheet $workingSheet
     ): DriverAttendance {
@@ -397,13 +395,11 @@ class DriverAttendanceService
         });
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DETERMINE STATUS
     |--------------------------------------------------------------------------
     */
-
     protected function determineStatus(
         WorkingSheet $workingSheet,
         $inTime = null,
@@ -618,13 +614,11 @@ class DriverAttendanceService
         return DriverAttendance::STATUS_PENDING;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CHECK LATE
     |--------------------------------------------------------------------------
     */
-
     protected function isLate(
         WorkingSheet $workingSheet
     ): bool {
@@ -695,13 +689,11 @@ class DriverAttendanceService
         return $actualSeconds > $reportingSeconds;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CHECK EARLY EXIT
     |--------------------------------------------------------------------------
     */
-
     protected function isEarlyExit(
         WorkingSheet $workingSheet
     ): bool {
@@ -779,7 +771,6 @@ class DriverAttendanceService
         return $actualSeconds < $expectedSeconds;
     }
 
-
     /**
      * Convert TIME or DATETIME input to HH:MM:SS before saving to SQL TIME columns.
      */
@@ -800,7 +791,6 @@ class DriverAttendanceService
         }
     }
 
-
     /**
      * Convert a TIME or DATETIME input to seconds since midnight.
      */
@@ -817,13 +807,11 @@ class DriverAttendanceService
         return ($hours * 3600) + ($minutes * 60) + $seconds;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GENERATE REMARKS
     |--------------------------------------------------------------------------
     */
-
     protected function generateRemarks(
         WorkingSheet $workingSheet,
         string $status
@@ -857,13 +845,11 @@ class DriverAttendanceService
         };
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET DRIVER ATTENDANCE
     |--------------------------------------------------------------------------
     */
-
     public function getDriverAttendance(
         int $driverId,
         string $date
@@ -887,13 +873,11 @@ class DriverAttendanceService
             ->first();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET ATTENDANCE FOR DATE
     |--------------------------------------------------------------------------
     */
-
     public function getAttendanceForDate(
         string $date
     ) {
@@ -918,13 +902,11 @@ class DriverAttendanceService
             ->get();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET DRIVER ATTENDANCE HISTORY
     |--------------------------------------------------------------------------
     */
-
     public function getDriverAttendanceHistory(
         int $driverId,
         ?string $fromDate = null,
@@ -992,7 +974,6 @@ class DriverAttendanceService
             ->get();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | MARK MANUAL ATTENDANCE
@@ -1001,7 +982,6 @@ class DriverAttendanceService
     | Used by HR / Admin for manual attendance.
     |
     */
-
     public function markManualAttendance(
         array $data
     ): DriverAttendance {
@@ -1176,7 +1156,6 @@ class DriverAttendanceService
         });
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DELETE / REMOVE WORKING SHEET ATTENDANCE
@@ -1187,7 +1166,6 @@ class DriverAttendanceService
     | no longer remain as confirmed attendance.
     |
     */
-
     public function removeWorkingSheetAttendance(
         WorkingSheet $workingSheet
     ): bool {
@@ -1222,13 +1200,11 @@ class DriverAttendanceService
         });
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CHECK EXISTING ATTENDANCE
     |--------------------------------------------------------------------------
     */
-
     public function hasAttendance(
         int $driverId,
         string $date

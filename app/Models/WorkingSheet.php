@@ -106,6 +106,8 @@ class WorkingSheet extends Model
         'created_by' => 'integer',
 
         'updated_by' => 'integer',
+
+        'deleted_by' => 'integer',
     ];
 
 
@@ -206,6 +208,20 @@ class WorkingSheet extends Model
         return $this->belongsTo(
             User::class,
             'updated_by'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deleted By
+    |--------------------------------------------------------------------------
+    */
+    public function deletedBy()
+    {
+        return $this->belongsTo(
+            User::class,
+            'deleted_by'
         );
     }
 

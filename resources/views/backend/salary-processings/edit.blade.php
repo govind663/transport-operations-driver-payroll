@@ -68,604 +68,346 @@
     @endif
 
 
+
+    {{-- Payroll Edit Form --}}
+    @php
+        $isLocked = in_array($salaryProcessing->status, [
+            \App\Models\SalaryProcessing::STATUS_APPROVED,
+            \App\Models\SalaryProcessing::STATUS_PAID,
+            \App\Models\SalaryProcessing::STATUS_CANCELLED,
+        ]);
+    @endphp
+
+    @if ($isLocked)
+        <div class="alert alert-warning">
+            <i class="fas fa-lock"></i>
+            <strong>Payroll Locked!</strong>
+            Approved, paid or cancelled payroll cannot be edited.
+        </div>
+    @endif
+
     <form method="POST"
-          action="{{ route('salary-processing.update', $salaryProcessing->id) }}">
+        action="{{ route('salary-processing.update', $salaryProcessing->id) }}">
 
         @csrf
-
         @method('PUT')
 
-
-        {{-- ========================================================= --}}
         {{-- Driver & Salary Period --}}
-        {{-- ========================================================= --}}
-
         <div class="card mb-4">
-
             <div class="card-header">
-                <h5 class="mb-0">
-                    Driver & Salary Period
-                </h5>
+                <h5 class="mb-0">Driver & Salary Period</h5>
             </div>
 
             <div class="card-body">
-
                 <div class="row">
 
-                    {{-- Driver --}}
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Driver <span class="text-danger">*</span>
-                        </label>
-
-                        <select name="driver_id"
-                                class="form-control"
-                                {{ $isDriver ?? false ? 'disabled' : '' }}>
-
-                            <option value="">
-                                Select Driver
-                            </option>
-
-                            @foreach ($drivers as $driver)
-
-                                <option value="{{ $driver->id }}"
-                                    {{ old('driver_id', $salaryProcessing->driver_id) == $driver->id ? 'selected' : '' }}>
-
-                                    {{ $driver->driver_code }}
-                                    -
-                                    {{ $driver->first_name }}
-                                    {{ $driver->last_name }}
-
-                                </option>
-
-                            @endforeach
-
-                        </select>
-
-                        @if ($isDriver ?? false)
-
-                            <input type="hidden"
-                                   name="driver_id"
-                                   value="{{ $salaryProcessing->driver_id }}">
-
-                        @endif
-
-                        @error('driver_id')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
+                        <label class="form-label">Driver</label>
+                        <input type="text" class="form-control"
+                            value="{{ $salaryProcessing->driver->driver_code }} - {{ $salaryProcessing->driver->first_name }} {{ $salaryProcessing->driver->last_name }}"
+                            readonly>
                     </div>
 
-
-                    {{-- Salary Month --}}
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-                            Salary Month <span class="text-danger">*</span>
-                        </label>
-
-                        <select name="salary_month"
-                                class="form-control">
-
-                            @for ($month = 1; $month <= 12; $month++)
-
-                                <option value="{{ $month }}"
-                                    {{ old('salary_month', $salaryProcessing->salary_month) == $month ? 'selected' : '' }}>
-
-                                    {{ date('F', mktime(0, 0, 0, $month, 1)) }}
-
-                                </option>
-
-                            @endfor
-
-                        </select>
-
-                        @error('salary_month')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Salary Month</label>
+                        <input type="text" class="form-control"
+                            value="{{ date('F', mktime(0, 0, 0, $salaryProcessing->salary_month, 1)) }}"
+                            readonly>
                     </div>
 
-
-                    {{-- Salary Year --}}
-                    <div class="col-md-2 mb-3">
-
-                        <label class="form-label">
-                            Salary Year <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="number"
-                               name="salary_year"
-                               class="form-control"
-                               min="2000"
-                               max="2100"
-                               value="{{ old('salary_year', $salaryProcessing->salary_year) }}">
-
-                        @error('salary_year')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Salary Year</label>
+                        <input type="text" class="form-control"
+                            value="{{ $salaryProcessing->salary_year }}"
+                            readonly>
                     </div>
 
-
-                    {{-- Status --}}
-                    <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-                            Status <span class="text-danger">*</span>
-                        </label>
-
-                        <select name="status"
-                                class="form-control">
-
-                            @foreach ($statuses as $status)
-
-                                <option value="{{ $status }}"
-                                    {{ old('status', $salaryProcessing->status) == $status ? 'selected' : '' }}>
-
-                                    {{ ucwords(str_replace('_', ' ', $status)) }}
-
-                                </option>
-
-                            @endforeach
-
-                        </select>
-
-                        @error('status')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Payroll Status</label>
+                        <input type="text" class="form-control"
+                            value="{{ ucfirst($salaryProcessing->status) }}"
+                            readonly>
                     </div>
 
                 </div>
-
-
-                <div class="row">
-
-                    {{-- Period From --}}
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Period From <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="date"
-                               name="period_from"
-                               class="form-control"
-                               value="{{ old('period_from', optional($salaryProcessing->period_from)->format('Y-m-d')) }}">
-
-                        @error('period_from')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
-                    </div>
-
-
-                    {{-- Period To --}}
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Period To <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="date"
-                               name="period_to"
-                               class="form-control"
-                               value="{{ old('period_to', optional($salaryProcessing->period_to)->format('Y-m-d')) }}">
-
-                        @error('period_to')
-                            <div class="text-danger small">
-                                {{ $message }}
-                            </div>
-                        @enderror
-
-                    </div>
-
-                </div>
-
             </div>
-
         </div>
 
-
-        {{-- ========================================================= --}}
-        {{-- Attendance / Working --}}
-        {{-- ========================================================= --}}
-
+        {{-- Attendance & Working --}}
         <div class="card mb-4">
-
             <div class="card-header">
-                <h5 class="mb-0">
-                    Attendance & Working
-                </h5>
+                <h5 class="mb-0">Attendance & Working</h5>
             </div>
 
             <div class="card-body">
-
                 <div class="row">
 
                     <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-                            Total Days
-                        </label>
-
-                        <input type="number"
-                               name="total_days"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('total_days', $salaryProcessing->total_days) }}">
-
+                        <label class="form-label">Total Working Days</label>
+                        <input type="number" name="total_working_days"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('total_working_days', $salaryProcessing->total_working_days) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-                            Present Days
-                        </label>
-
-                        <input type="number"
-                               name="present_days"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('present_days', $salaryProcessing->present_days) }}">
-
+                        <label class="form-label">Present Days</label>
+                        <input type="number" name="present_days"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('present_days', $salaryProcessing->present_days) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-3 mb-3">
-
-                        <label class="form-label">
-                            Absent Days
-                        </label>
-
-                        <input type="number"
-                               name="absent_days"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('absent_days', $salaryProcessing->absent_days) }}">
-
+                        <label class="form-label">Absent Days</label>
+                        <input type="number" name="absent_days"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('absent_days', $salaryProcessing->absent_days) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-3 mb-3">
+                        <label class="form-label">Paid Days</label>
+                        <input type="number" name="paid_days"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('paid_days', $salaryProcessing->paid_days) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
-                        <label class="form-label">
-                            Leave Days
-                        </label>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Total Duty Days</label>
+                        <input type="number" name="total_duty_days"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('total_duty_days', $salaryProcessing->total_duty_days) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
-                        <input type="number"
-                               name="leave_days"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('leave_days', $salaryProcessing->leave_days) }}">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Total KM</label>
+                        <input type="number" name="total_km"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('total_km', $salaryProcessing->total_km) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Overtime Hours</label>
+                        <input type="number" name="overtime_hours"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('overtime_hours', $salaryProcessing->overtime_hours) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
                 </div>
-
-
-                <div class="row">
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Total Hours
-                        </label>
-
-                        <input type="number"
-                               name="total_hours"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('total_hours', $salaryProcessing->total_hours) }}">
-
-                    </div>
-
-
-                    <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Overtime Hours
-                        </label>
-
-                        <input type="number"
-                               name="overtime_hours"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('overtime_hours', $salaryProcessing->overtime_hours) }}">
-
-                    </div>
-
-                </div>
-
             </div>
-
         </div>
 
-
-        {{-- ========================================================= --}}
         {{-- Earnings --}}
-        {{-- ========================================================= --}}
-
         <div class="card mb-4">
-
             <div class="card-header">
-                <h5 class="mb-0">
-                    Earnings
-                </h5>
+                <h5 class="mb-0">Earnings</h5>
             </div>
 
             <div class="card-body">
-
                 <div class="row">
 
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Basic Salary <span class="text-danger">*</span>
-                        </label>
-
-                        <input type="number"
-                               name="basic_salary"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('basic_salary', $salaryProcessing->basic_salary) }}">
-
+                        <label class="form-label">Basic Salary</label>
+                        <input type="number" name="basic_salary"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('basic_salary', $salaryProcessing->basic_salary) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Allowance
-                        </label>
-
-                        <input type="number"
-                               name="allowance_amount"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('allowance_amount', $salaryProcessing->allowance_amount) }}">
-
+                        <label class="form-label">Working Sheet Base Amount</label>
+                        <input type="number" name="working_sheet_base_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('working_sheet_base_amount', $salaryProcessing->working_sheet_base_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Overtime Amount
-                        </label>
-
-                        <input type="number"
-                               name="overtime_amount"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('overtime_amount', $salaryProcessing->overtime_amount) }}">
-
+                        <label class="form-label">Extra KM Amount</label>
+                        <input type="number" name="extra_km_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('extra_km_amount', $salaryProcessing->extra_km_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Bonus
-                        </label>
-
-                        <input type="number"
-                               name="bonus_amount"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('bonus_amount', $salaryProcessing->bonus_amount) }}">
-
+                        <label class="form-label">Allowance Amount</label>
+                        <input type="number" name="allowance_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('allowance_amount', $salaryProcessing->allowance_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
                     <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Other Earnings
-                        </label>
-
-                        <input type="number"
-                               name="other_earnings"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('other_earnings', $salaryProcessing->other_earnings) }}">
-
+                        <label class="form-label">Overtime Amount</label>
+                        <input type="number" name="overtime_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('overtime_amount', $salaryProcessing->overtime_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Expense Reimbursement</label>
+                        <input type="number" name="expense_reimbursement_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('expense_reimbursement_amount', $salaryProcessing->expense_reimbursement_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
                     <div class="col-md-4 mb-3">
+                        <label class="form-label">Working Sheet Other Amount</label>
+                        <input type="number" name="working_sheet_other_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('working_sheet_other_amount', $salaryProcessing->working_sheet_other_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
-                        <label class="form-label">
-                            Gross Salary
-                        </label>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Bonus</label>
+                        <input type="number" name="bonus_amount"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('bonus_amount', $salaryProcessing->bonus_amount) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
-                        <input type="number"
-                               name="gross_salary"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('gross_salary', $salaryProcessing->gross_salary) }}">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Other Earnings</label>
+                        <input type="number" name="other_earnings"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('other_earnings', $salaryProcessing->other_earnings) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Gross Salary</label>
+                        <input type="number" name="gross_salary"
+                            class="form-control"
+                            value="{{ $salaryProcessing->gross_salary }}"
+                            readonly>
                         <small class="text-muted">
-                            Automatically calculated on update.
+                            Automatically calculated by payroll service.
                         </small>
-
                     </div>
 
                 </div>
-
             </div>
-
         </div>
 
-
-        {{-- ========================================================= --}}
         {{-- Deductions --}}
-        {{-- ========================================================= --}}
-
         <div class="card mb-4">
-
             <div class="card-header">
-                <h5 class="mb-0">
-                    Deductions
-                </h5>
+                <h5 class="mb-0">Deductions</h5>
             </div>
 
             <div class="card-body">
-
                 <div class="row">
 
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Advance
-                        </label>
-
-                        <input type="number"
-                               name="advance_amount"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('advance_amount', $salaryProcessing->advance_amount) }}">
-
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Advance Deduction</label>
+                        <input type="number" name="advance_deduction"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('advance_deduction', $salaryProcessing->advance_deduction) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Deduction
-                        </label>
-
-                        <input type="number"
-                               name="deduction_amount"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('deduction_amount', $salaryProcessing->deduction_amount) }}">
-
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Loan Deduction</label>
+                        <input type="number" name="loan_deduction"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('loan_deduction', $salaryProcessing->loan_deduction) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
-
-                    <div class="col-md-4 mb-3">
-
-                        <label class="form-label">
-                            Other Deductions
-                        </label>
-
-                        <input type="number"
-                               name="other_deductions"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('other_deductions', $salaryProcessing->other_deductions) }}">
-
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Penalty Deduction</label>
+                        <input type="number" name="penalty_deduction"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('penalty_deduction', $salaryProcessing->penalty_deduction) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
                     </div>
 
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Other Deductions</label>
+                        <input type="number" name="other_deductions"
+                            min="0" step="0.01"
+                            class="form-control"
+                            value="{{ old('other_deductions', $salaryProcessing->other_deductions) }}"
+                            {{ $isLocked ? 'readonly' : '' }}>
+                    </div>
 
                     <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Total Deductions
-                        </label>
-
-                        <input type="number"
-                               name="total_deductions"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('total_deductions', $salaryProcessing->total_deductions) }}">
-
+                        <label class="form-label">Total Deductions</label>
+                        <input type="number" name="total_deductions"
+                            class="form-control"
+                            value="{{ $salaryProcessing->total_deductions }}"
+                            readonly>
                     </div>
 
-
                     <div class="col-md-6 mb-3">
-
-                        <label class="form-label">
-                            Net Salary
-                        </label>
-
-                        <input type="number"
-                               name="net_salary"
-                               step="0.01"
-                               min="0"
-                               class="form-control"
-                               value="{{ old('net_salary', $salaryProcessing->net_salary) }}">
-
+                        <label class="form-label">Net Salary</label>
+                        <input type="number" name="net_salary"
+                            class="form-control"
+                            value="{{ $salaryProcessing->net_salary }}"
+                            readonly>
                     </div>
 
                 </div>
-
             </div>
-
         </div>
 
-
-        {{-- ========================================================= --}}
         {{-- Remarks --}}
-        {{-- ========================================================= --}}
-
         <div class="card mb-4">
-
             <div class="card-header">
-                <h5 class="mb-0">
-                    Remarks
-                </h5>
+                <h5 class="mb-0">Remarks</h5>
             </div>
 
             <div class="card-body">
-
                 <textarea name="remarks"
-                          rows="4"
-                          class="form-control"
-                          maxlength="2000"
-                          placeholder="Enter remarks">{{ old('remarks', $salaryProcessing->remarks) }}</textarea>
-
+                        rows="4"
+                        class="form-control"
+                        maxlength="2000"
+                        {{ $isLocked ? 'readonly' : '' }}>{{ old('remarks', $salaryProcessing->remarks) }}</textarea>
             </div>
-
         </div>
 
-
-        {{-- ========================================================= --}}
         {{-- Actions --}}
-        {{-- ========================================================= --}}
-
         <div class="d-flex justify-content-end gap-2 mb-5">
 
             <a href="{{ route('salary-processing.index') }}"
-               class="btn btn-secondary">
-
+            class="btn btn-secondary">
                 Cancel
-
             </a>
 
-            <button type="submit"
-                    class="btn btn-primary">
-
-                <i class="fas fa-save"></i>
-                Update Salary Processing
-
-            </button>
+            @if (!$isLocked)
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Update Payroll
+                </button>
+            @endif
 
         </div>
 

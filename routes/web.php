@@ -298,7 +298,7 @@ Route::prefix('admin')
             'travel-requests/import',
             [TravelRequestController::class, 'import']
         )->name('travel-requests.import');
-        
+
         Route::resource(
             'travel-requests',
             TravelRequestController::class
@@ -354,11 +354,19 @@ Route::prefix('admin')
         | Salary Processing
         |--------------------------------------------------------------------------
         */
+
+        // Monthly Payroll Generation
+        Route::post(
+            'salary-processing/generate-monthly',
+            [SalaryProcessingController::class, 'generateMonthly']
+        )->name('salary-processing.generate-monthly');
+
+        // Salary Processing Resource
         Route::resource(
             'salary-processing',
             SalaryProcessingController::class
         );
-        
+
 
         /*
         |--------------------------------------------------------------------------

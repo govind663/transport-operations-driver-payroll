@@ -19,16 +19,13 @@ class WorkingSheetService
     | Driver Attendance Service
     |--------------------------------------------------------------------------
     */
-
     protected DriverAttendanceService $driverAttendanceService;
-
 
     /*
     |--------------------------------------------------------------------------
     | Constructor
     |--------------------------------------------------------------------------
     */
-
     public function __construct(
         DriverAttendanceService $driverAttendanceService
     ) {
@@ -36,13 +33,11 @@ class WorkingSheetService
             $driverAttendanceService;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GET WORKING SHEETS
     |--------------------------------------------------------------------------
     */
-
     public function getWorkingSheets(
         int $perPage = 10000000000000
     ): LengthAwarePaginator {
@@ -58,13 +53,11 @@ class WorkingSheetService
             ->paginate($perPage);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | FIND WORKING SHEET
     |--------------------------------------------------------------------------
     */
-
     public function findById(
         string|int $id
     ): WorkingSheet {
@@ -79,13 +72,11 @@ class WorkingSheetService
             ->findOrFail($id);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GENERATE NEXT WORKING SHEET NUMBER
     |--------------------------------------------------------------------------
     */
-
     /**
      * Generate a number such as WS-2026-0001.
      * Soft-deleted records are included so their numbers are never reused.
@@ -130,13 +121,11 @@ class WorkingSheetService
         return $candidate;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
     */
-
     public function store(
         array $data
     ): WorkingSheet {
@@ -776,7 +765,6 @@ class WorkingSheetService
         });
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | SYNC DRIVER ATTENDANCE
@@ -786,7 +774,6 @@ class WorkingSheetService
     | reaches a valid attendance state.
     |
     */
-
     protected function syncDriverAttendance(
         WorkingSheet $workingSheet
     ): void {
@@ -858,13 +845,11 @@ class WorkingSheetService
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | DELETE
     |--------------------------------------------------------------------------
     */
-
     public function delete(
         WorkingSheet $workingSheet
     ): bool {
@@ -872,6 +857,19 @@ class WorkingSheetService
         return DB::transaction(function () use (
             $workingSheet
         ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Set Deleted By
+            |--------------------------------------------------------------------------
+            |
+            | Store the user ID who is deleting this Working Sheet.
+            |
+            */
+
+            $workingSheet->deleted_by = Auth::id();
+            $workingSheet->save();
+
 
             /*
             |--------------------------------------------------------------------------
@@ -893,14 +891,12 @@ class WorkingSheetService
             |--------------------------------------------------------------------------
             |
             | WorkingSheet uses SoftDeletes.
-            | No deleted_by column exists in current table.
             |
             */
 
             return $workingSheet->delete();
         });
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -911,7 +907,6 @@ class WorkingSheetService
     | duty_slips.driver_id is preferred; Duty Assignment is the fallback.
     |
     */
-
     /**
      * Set financial totals from approved records for the exact driver/Duty Slip.
      * These values are authoritative; client-submitted totals are ignored.
