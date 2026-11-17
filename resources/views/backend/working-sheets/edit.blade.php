@@ -1802,21 +1802,6 @@
 
                             </a>
 
-
-
-                            {{-- VIEW --}}
-                            <a
-                                href="{{ route('working-sheets.show', $workingSheet->id) }}"
-                                class="btn btn-info">
-
-                                <i class="fa fa-eye"></i>
-
-                                View
-
-                            </a>
-
-
-
                             {{-- UPDATE --}}
                             <button
                                 type="submit"
