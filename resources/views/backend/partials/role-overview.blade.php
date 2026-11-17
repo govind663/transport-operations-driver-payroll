@@ -2683,7 +2683,6 @@
 {{-- =========================================================
     CLIENT-FRIENDLY DASHBOARD HEADER
 ========================================================= --}}
-
 <section class="dashboard-welcome-panel dashboard-header" aria-labelledby="dashboard-page-title">
     <div class="d-flex align-items-center justify-content-between flex-wrap">
         <div class="dashboard-welcome-main">
@@ -2715,8 +2714,7 @@
 {{-- =========================================================
     DASHBOARD AT-A-GLANCE SUMMARY
 ========================================================= --}}
-
-<div class="dashboard-summary-strip" aria-label="Dashboard summary">
+{{-- <div class="dashboard-summary-strip" aria-label="Dashboard summary">
     <div class="dashboard-summary-item">
         <div class="dashboard-summary-icon" aria-hidden="true"><svg class="dashboard-business-icon" viewBox="0 0 24 24" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4M4 20h17"/><rect x="7" y="12" width="3" height="5"/><rect x="13" y="8" width="3" height="9"/><rect x="19" y="5" width="2" height="12"/></g></svg></div>
         <div class="dashboard-summary-copy">
@@ -2738,12 +2736,11 @@
             <span class="dashboard-summary-label">Metrics with a module link</span>
         </div>
     </div>
-</div>
+</div> --}}
 
 {{-- =========================================================
     SEARCH, FILTERS AND RESULT COUNT
 ========================================================= --}}
-
 <section class="dashboard-controls" aria-label="Find transport business metrics">
     <div class="dashboard-controls-top">
         <div>
@@ -2974,7 +2971,7 @@
     $dashboardDonutCircumference = 251.2;
     $dashboardMaxSectionCount = max(1, (int) $dashboardSections->max(function ($items) { return count($items); }));
 @endphp
-<section class="dashboard-visual-overview" aria-label="Graphical dashboard overview">
+{{-- <section class="dashboard-visual-overview" aria-label="Graphical dashboard overview">
     <div class="dashboard-visual-card">
         <h3 class="dashboard-visual-heading">Metric distribution</h3>
         <p class="dashboard-visual-subtitle">How the available dashboard metrics are grouped by workflow.</p>
@@ -3021,15 +3018,13 @@
             @endforeach
         </div>
     </div>
-</section>
-
-
+</section> --}}
 
 
 {{-- =========================================================
     PRIORITY ACTION CENTER + ROLE-SCOPED QUICK ACTIONS
 ========================================================= --}}
-<div class="dashboard-widget-grid">
+{{-- <div class="dashboard-widget-grid">
     <section class="dashboard-widget-panel" aria-labelledby="dashboard-priority-title">
         <div class="dashboard-widget-header">
             <div class="dashboard-widget-heading">
@@ -3137,13 +3132,13 @@
             @endif
         </div>
     </section>
-</div>
+</div> --}}
 
 {{-- =========================================================
     TODAY'S OPERATIONS BOARD
 ========================================================= --}}
 @if(in_array($role, ['admin', 'operations', 'driver'], true))
-    <section class="dashboard-widget-panel dashboard-widget-panel-full" aria-labelledby="dashboard-today-title">
+    {{-- <section class="dashboard-widget-panel dashboard-widget-panel-full" aria-labelledby="dashboard-today-title">
         <div class="dashboard-widget-header">
             <div class="dashboard-widget-heading">
                 <span class="dashboard-widget-heading-icon is-purple" aria-hidden="true"><i class="fa fa-calendar-check-o"></i></span>
@@ -3193,13 +3188,13 @@
                 </div>
             @endif
         </div>
-    </section>
+    </section> --}}
 @endif
 
 {{-- =========================================================
     PERFORMANCE TRENDS + REPORTING RANGE
 ========================================================= --}}
-<section class="dashboard-widget-panel dashboard-widget-panel-full" aria-labelledby="dashboard-trends-title">
+{{-- <section class="dashboard-widget-panel dashboard-widget-panel-full" aria-labelledby="dashboard-trends-title">
     <div class="dashboard-widget-header">
         <div class="dashboard-widget-heading">
             <span class="dashboard-widget-heading-icon" aria-hidden="true"><i class="fa fa-line-chart"></i></span>
@@ -3317,7 +3312,7 @@
         </div>
         <div class="dashboard-data-note"><i class="fa fa-info-circle" aria-hidden="true"></i><span>The selected reporting period applies to date-based activity, duty, attendance, claims, payroll and audit metrics, as well as the charts and admin activity feed. Master inventory and current vehicle/driver readiness remain live snapshots; the Needs Attention panel also shows current queues so urgent work is never hidden by a date filter.</span></div>
     </div>
-</section>
+</section> --}}
 
 {{-- =========================================================
     MODEL-DRIVEN ACTIVITY REPORT AND ROLE-AWARE USER DIRECTORY
@@ -3329,7 +3324,7 @@
             'activity_q', 'activity_date_from', 'activity_date_to', 'activity_location', 'page',
         ]);
     @endphp
-    <section class="dashboard-widget-panel dashboard-widget-panel-full dashboard-audit-report-panel" aria-labelledby="dashboard-activity-title">
+    {{-- <section class="dashboard-widget-panel dashboard-widget-panel-full dashboard-audit-report-panel" aria-labelledby="dashboard-activity-title">
         <div class="dashboard-widget-header">
             <div class="dashboard-widget-heading">
                 <span class="dashboard-widget-heading-icon is-success" aria-hidden="true"><i class="fa fa-history"></i></span>
@@ -3467,7 +3462,7 @@
                 <div class="dashboard-data-note"><i class="fa fa-info-circle" aria-hidden="true"></i><span>This table displays up to 100 most recent matching UserHistory records in the selected dashboard reporting period. Precise coordinates appear only when they were explicitly shared and saved.</span></div>
             <?php endif; ?>
         </div>
-    </section>
+    </section> --}}
 <?php endif; ?>
 
 <?php if (in_array($role, ['admin', 'operations', 'accountant'], true)): ?>
@@ -3477,7 +3472,7 @@
             'user_registered_to', 'user_activity_period', 'page', 'user_page',
         ]);
     @endphp
-    <section class="dashboard-widget-panel dashboard-widget-panel-full dashboard-user-directory-panel" aria-labelledby="dashboard-user-directory-title">
+    {{-- <section class="dashboard-widget-panel dashboard-widget-panel-full dashboard-user-directory-panel" aria-labelledby="dashboard-user-directory-title">
         <div class="dashboard-widget-header">
             <div class="dashboard-widget-heading">
                 <span class="dashboard-widget-heading-icon is-success" aria-hidden="true"><i class="fa fa-users"></i></span>
@@ -3666,17 +3661,8 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> --}}
 <?php endif; ?>
-
-<div class="dashboard-access-note" role="note">
-    <i class="fa fa-info-circle" aria-hidden="true"></i>
-    <div>
-        <strong>Your dashboard, organised by workflow.</strong>
-        Use search to find a metric and filter the visible business cards. The workflow cards stay expanded for quick scanning.
-        Values come from the DashboardService. Cards without a configured module route remain informational.
-    </div>
-</div>
 
 
 <script>
