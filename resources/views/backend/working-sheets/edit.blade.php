@@ -234,33 +234,6 @@
 
                 </div>
 
-
-                {{-- HEADER ACTIONS --}}
-                <div class="col-md-4 col-sm-12 text-right">
-
-                    <a
-                        href="{{ route('working-sheets.show', $workingSheet->id) }}"
-                        class="btn btn-info">
-
-                        <i class="fa fa-eye"></i>
-
-                        View
-
-                    </a>
-
-
-                    <a
-                        href="{{ route('working-sheets.index') }}"
-                        class="btn btn-secondary">
-
-                        <i class="fa fa-list"></i>
-
-                        All Working Sheets
-
-                    </a>
-
-                </div>
-
             </div>
 
         </div>
