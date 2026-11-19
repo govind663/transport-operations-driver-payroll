@@ -165,7 +165,6 @@
     {{-- ================================================================ --}}
     {{-- DASHBOARD --}}
     {{-- ================================================================ --}}
-
     <li>
 
         <a href="{{ route('admin.dashboard') }}"
@@ -463,7 +462,6 @@
                 {{-- ================================================== --}}
 
                 @if($isAdmin || $isOperations || $isAccountant)
-
                     <li>
 
                         <a href="{{ route('travel-requests.index') }}"
@@ -474,18 +472,28 @@
                         </a>
 
                     </li>
-
                 @endif
 
+                {{-- ================================================== --}}
+                {{-- MY DUTIES --}}
+                {{-- DRIVER ONLY --}}
+                {{-- ================================================== --}}
+                @if($isDriver)
+                    <li>
+                        <a href="{{ route('duty-assignments.index') }}"
+                           class="{{ request()->routeIs('duty-assignments.*') ? 'active' : '' }}">
 
+                            My Duties
+
+                        </a>
+                    </li>
+                @endif
 
                 {{-- ================================================== --}}
                 {{-- DUTY ASSIGNMENTS --}}
                 {{-- ADMIN / OPERATIONS --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations)
-
                     <li>
 
                         <a href="{{ route('duty-assignments.index') }}"
@@ -504,20 +512,14 @@
                         </a>
 
                     </li>
-
                 @endif
-
-
 
                 {{-- ================================================== --}}
                 {{-- DUTY SLIPS --}}
                 {{-- ALL ROLES --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations || $isAccountant || $isDriver)
-
                     <li>
-
                         <a href="{{ route('duty-slips.index') }}"
                            class="{{ request()->routeIs('duty-slips.*') ? 'active' : '' }}">
 
@@ -537,15 +539,11 @@
 
                 @endif
 
-
-
                 {{-- ================================================== --}}
                 {{-- WORKING SHEETS --}}
                 {{-- ALL ROLES --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations || $isAccountant || $isDriver)
-
                     <li>
 
                         <a href="{{ route('working-sheets.index') }}"
@@ -567,15 +565,11 @@
 
                 @endif
 
-
-
                 {{-- ================================================== --}}
                 {{-- DRIVER ATTENDANCE --}}
                 {{-- ALL ROLES --}}
                 {{-- ================================================== --}}
-
                 @if($isAdmin || $isOperations || $isAccountant || $isDriver)
-
                     <li>
 
                         <a href="{{ route('driver-attendances.index') }}"
@@ -594,29 +588,6 @@
                         </a>
 
                     </li>
-
-                @endif
-
-
-
-                {{-- ================================================== --}}
-                {{-- MY DUTIES --}}
-                {{-- DRIVER ONLY --}}
-                {{-- ================================================== --}}
-
-                @if($isDriver)
-
-                    <li>
-
-                        <a href="{{ route('duty-assignments.index') }}"
-                           class="{{ request()->routeIs('duty-assignments.*') ? 'active' : '' }}">
-
-                            My Duties
-
-                        </a>
-
-                    </li>
-
                 @endif
 
             </ul>
