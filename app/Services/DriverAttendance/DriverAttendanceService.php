@@ -69,7 +69,7 @@ class DriverAttendanceService
             if (!$workingSheet->driver_id) {
 
                 throw new RuntimeException(
-                    'Driver is required to create driver attendance.'
+                    'Please select a driver before saving this Working Sheet.'
                 );
             }
 
@@ -83,7 +83,7 @@ class DriverAttendanceService
             if (!$workingSheet->driver) {
 
                 throw new RuntimeException(
-                    'Selected driver does not exist.'
+                    'The selected driver is no longer available. Please refresh the page and select a valid driver.'
                 );
             }
 
@@ -97,7 +97,7 @@ class DriverAttendanceService
             if (!$workingSheet->work_date) {
 
                 throw new RuntimeException(
-                    'Work date is required to create driver attendance.'
+                    'Please select a work date before saving this Working Sheet.'
                 );
             }
 
@@ -117,6 +117,8 @@ class DriverAttendanceService
             $attendanceDate = $workingSheet->work_date instanceof \DateTimeInterface
                 ? $workingSheet->work_date->format('Y-m-d')
                 : Carbon::parse($workingSheet->work_date)->toDateString();
+
+            $formattedAttendanceDate = Carbon::parse($attendanceDate)->format('d M Y');
 
             // Find this sheet's own generated attendance, including soft-deleted rows.
             // The database unique key still reserves a soft-deleted driver/date pair.
@@ -142,7 +144,7 @@ class DriverAttendanceService
                 }
 
                 throw new RuntimeException(
-                    'This Working Sheet is linked to a manually managed or non-Working-Sheet attendance. Resolve that attendance before changing the driver or date.'
+                    'This Working Sheet is linked to an existing manually entered or imported attendance record. Please review that attendance before changing the driver or work date.'
                 );
             }
 
@@ -161,20 +163,20 @@ class DriverAttendanceService
 
                 if ($attendanceForDate->trashed()) {
                     throw new RuntimeException(
-                        'A deleted attendance record already occupies this driver/date. Resolve it before syncing again.'
+                        "An archived attendance record already exists for this driver on {$formattedAttendanceDate}. Please contact your administrator to resolve it before saving."
                     );
                 }
 
                 if ($attendanceForDate->source === DriverAttendance::SOURCE_WORKING_SHEET) {
                     throw new RuntimeException(
-                        'Another Working Sheet already has attendance for this driver and date. Resolve the duplicate before saving this sheet.'
+                        "Attendance for this driver on {$formattedAttendanceDate} is already recorded in another Working Sheet. Please check the existing Working Sheet before saving."
                     );
                 }
 
                 // If this sheet already owns an older generated row, do not leave it stale.
                 if ($linkedAttendance) {
                     throw new RuntimeException(
-                        'An attendance record already exists for the new driver/date. Resolve it before changing this Working Sheet.'
+                        "An attendance record already exists for this driver on {$formattedAttendanceDate}. Please review the existing attendance before changing this Working Sheet."
                     );
                 }
 
@@ -348,7 +350,7 @@ class DriverAttendanceService
 
                     if ($racedAttendance->trashed()) {
                         throw new RuntimeException(
-                            'A deleted attendance record already occupies this driver/date. Resolve it before retrying sync.',
+                            "An archived attendance record already exists for this driver on {$formattedAttendanceDate}. Please contact your administrator to resolve it before trying again.",
                             0,
                             $exception
                         );
@@ -357,7 +359,7 @@ class DriverAttendanceService
                     if ($racedAttendance->source === DriverAttendance::SOURCE_WORKING_SHEET) {
                         if ((int) $racedAttendance->working_sheet_id !== (int) $workingSheet->id) {
                             throw new RuntimeException(
-                                'Another Working Sheet already has attendance for this driver and date.',
+                                "Attendance for this driver on {$formattedAttendanceDate} has already been added through another Working Sheet. Please refresh the page and check the existing record.",
                                 0,
                                 $exception
                             );
@@ -771,9 +773,14 @@ class DriverAttendanceService
         return $actualSeconds < $expectedSeconds;
     }
 
-    /**
-     * Convert TIME or DATETIME input to HH:MM:SS before saving to SQL TIME columns.
-     */
+        /*
+    |--------------------------------------------------------------------------
+    | DETERMINE TIME FOR SQL STORAGE
+    |--------------------------------------------------------------------------
+    |
+    | Convert TIME or DATETIME input to HH:MM:SS before saving to SQL TIME columns.
+    |
+    */
     protected function normalizeTimeForStorage($value): ?string
     {
         if ($value === null || $value === '') {
@@ -784,7 +791,7 @@ class DriverAttendanceService
             return Carbon::parse($value)->format('H:i:s');
         } catch (\Throwable $exception) {
             throw new RuntimeException(
-                'Duty Slip contains an invalid attendance time value.',
+                'The Duty Slip start or end time is invalid. Please check the Duty Slip timing and try again.',
                 0,
                 $exception
             );
@@ -999,7 +1006,7 @@ class DriverAttendanceService
             ) {
 
                 throw new RuntimeException(
-                    'Driver is required for manual attendance.'
+                    'Please select a driver before marking attendance.'
                 );
             }
 
@@ -1009,7 +1016,7 @@ class DriverAttendanceService
             ) {
 
                 throw new RuntimeException(
-                    'Attendance date is required.'
+                    'Please select an attendance date before saving attendance.'
                 );
             }
 
@@ -1131,7 +1138,11 @@ class DriverAttendanceService
                     }
 
                     if ($attendance->trashed()) {
-                        $attendance->restore();
+                        throw new RuntimeException(
+                            'An archived attendance record already exists for this driver and date. Please contact your administrator to resolve it.',
+                            0,
+                            $exception
+                        );
                     }
 
                     unset($data['created_by']);

@@ -45,37 +45,118 @@
 <script src="{{ asset('backend/assets/vendors/scripts/steps-setting.js') }}"></script>
 
 
-{{-- ================= TOASTR CLEAN ================= --}}
+{{-- ================= TOASTR GLOBAL NOTIFICATIONS ================= --}}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // Ensure Toastr library is loaded.
+    if (typeof toastr === 'undefined') {
+        console.error('Toastr library is not loaded.');
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOASTR CONFIGURATION
+    |--------------------------------------------------------------------------
+    */
 
     toastr.options = {
         positionClass: "toast-top-right",
         closeButton: true,
         progressBar: true,
         preventDuplicates: true,
+        newestOnTop: true,
         showDuration: "300",
         hideDuration: "1000",
-        timeOut: "4000",
-        extendedTimeOut: "800",
+        timeOut: "6000",
+        extendedTimeOut: "1000",
         showMethod: "fadeIn",
-        hideMethod: "fadeOut"
+        hideMethod: "fadeOut",
+        escapeHtml: true
     };
 
-    @if(Session::has('message'))
-        toastr.success(@json(session('message')));
+
+    /*
+    |--------------------------------------------------------------------------
+    | SUCCESS MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    @if (Session::has('message'))
+
+        toastr.success(
+            @json(session('message')),
+            'Success'
+        );
+
     @endif
 
-    @if(Session::has('error'))
-        toastr.error(@json(session('error')));
+
+    /*
+    |--------------------------------------------------------------------------
+    | SESSION ERROR MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    @if (Session::has('error'))
+
+        toastr.error(
+            @json(session('error')),
+            'Unable to Complete Request'
+        );
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION ERROR MESSAGE
+    |--------------------------------------------------------------------------
+    |
+    | Handles Laravel ValidationException errors.
+    | Only the first validation message is displayed.
+    | Avoids showing the same error twice when session('error')
+    | is already available.
+    |
+    */
+
+    @elseif ($errors->any())
+
+        toastr.error(
+            @json($errors->first()),
+            'Please Check Your Details'
+        );
+
     @endif
 
-    @if(Session::has('info'))
-        toastr.info(@json(session('info')));
+
+    /*
+    |--------------------------------------------------------------------------
+    | INFORMATION MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    @if (Session::has('info'))
+
+        toastr.info(
+            @json(session('info')),
+            'Information'
+        );
+
     @endif
 
-    @if(Session::has('warning'))
-        toastr.warning(@json(session('warning')));
+
+    /*
+    |--------------------------------------------------------------------------
+    | WARNING MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    @if (Session::has('warning'))
+
+        toastr.warning(
+            @json(session('warning')),
+            'Warning'
+        );
+
     @endif
 
 });

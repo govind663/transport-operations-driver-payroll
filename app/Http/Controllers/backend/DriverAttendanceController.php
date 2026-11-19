@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use RuntimeException;
 
 class DriverAttendanceController extends Controller
 {
@@ -377,7 +378,7 @@ class DriverAttendanceController extends Controller
 
                 abort(
                     403,
-                    'Your user account is not mapped with a driver.'
+                    'Your user account is not linked to a driver profile. Please contact your administrator.'
                 );
             }
 
@@ -455,7 +456,7 @@ class DriverAttendanceController extends Controller
 
                 abort(
                     403,
-                    'Your user account is not mapped with a driver.'
+                    'Your user account is not linked to a driver profile. Please contact your administrator.'
                 );
             }
 
@@ -470,17 +471,45 @@ class DriverAttendanceController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $this->driverAttendanceService
-            ->markManualAttendance(
-                $data
-            );
+        try {
+
+            $this->driverAttendanceService
+                ->markManualAttendance(
+                    $data
+                );
+
+        } catch (ValidationException $exception) {
+
+            $errors = $exception->errors();
+            $message = collect($errors)->flatten()->first()
+                ?? 'Please review the attendance details and try again.';
+
+            return back()
+                ->withInput()
+                ->withErrors($errors)
+                ->with('error', $message);
+
+        } catch (RuntimeException $exception) {
+
+            return back()
+                ->withInput()
+                ->with('error', $exception->getMessage());
+
+        } catch (QueryException $exception) {
+
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'We could not save this attendance right now. Please try again. If the issue continues, contact your administrator.');
+        }
 
 
         return redirect()
             ->route('driver-attendances.index')
             ->with(
                 'message',
-                'Driver attendance created successfully.'
+                'Driver attendance has been created successfully.'
             );
     }
 
@@ -519,7 +548,7 @@ class DriverAttendanceController extends Controller
         );
     }
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | EDIT
     |--------------------------------------------------------------------------
@@ -568,7 +597,7 @@ class DriverAttendanceController extends Controller
 
                 abort(
                     403,
-                    'Your user account is not mapped with a driver.'
+                    'Your user account is not linked to a driver profile. Please contact your administrator.'
                 );
             }
 
@@ -645,7 +674,7 @@ class DriverAttendanceController extends Controller
 
                 abort(
                     403,
-                    'Your user account is not mapped with a driver.'
+                    'Your user account is not linked to a driver profile. Please contact your administrator.'
                 );
             }
 
@@ -704,25 +733,47 @@ class DriverAttendanceController extends Controller
 
                 if ($duplicateExists) {
                     throw ValidationException::withMessages([
-                        'attendance_date' => 'An attendance record already exists for this driver on this date.',
+                        'attendance_date' => 'Attendance for the selected driver and date is already recorded. Please choose another date or review the existing attendance record.',
                     ]);
                 }
 
                 $driverAttendance->fill($data);
                 $driverAttendance->save();
             });
+
+        } catch (ValidationException $exception) {
+
+            $errors = $exception->errors();
+            $message = collect($errors)->flatten()->first()
+                ?? 'Please review the attendance details and try again.';
+
+            return back()
+                ->withInput()
+                ->withErrors($errors)
+                ->with('error', $message);
+
         } catch (QueryException $exception) {
-            // Convert a concurrent unique-key conflict into a normal form error.
+
+            // Convert a concurrent unique-key conflict into a normal form error and toast.
             if (
                 (string) $exception->getCode() === '23000' &&
                 str_contains($exception->getMessage(), 'driver_attendance_unique')
             ) {
-                throw ValidationException::withMessages([
-                    'attendance_date' => 'An attendance record already exists for this driver on this date.',
-                ]);
+                $message = 'Attendance for the selected driver and date is already recorded. Please choose another date or review the existing attendance record.';
+
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'attendance_date' => $message,
+                    ])
+                    ->with('error', $message);
             }
 
-            throw $exception;
+            report($exception);
+
+            return back()
+                ->withInput()
+                ->with('error', 'We could not update this attendance right now. Please try again. If the issue continues, contact your administrator.');
         }
 
 
@@ -730,7 +781,7 @@ class DriverAttendanceController extends Controller
             ->route('driver-attendances.index')
             ->with(
                 'message',
-                'Driver attendance updated successfully.'
+                'Driver attendance has been updated successfully.'
             );
     }
 
@@ -754,14 +805,24 @@ class DriverAttendanceController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $driverAttendance->delete();
+        try {
+
+            $driverAttendance->delete();
+
+        } catch (QueryException $exception) {
+
+            report($exception);
+
+            return back()
+                ->with('error', 'We could not delete this attendance right now. Please try again. If the issue continues, contact your administrator.');
+        }
 
 
         return redirect()
             ->route('driver-attendances.index')
             ->with(
                 'message',
-                'Driver attendance deleted successfully.'
+                'Driver attendance has been deleted successfully.'
             );
     }
 
@@ -832,7 +893,7 @@ class DriverAttendanceController extends Controller
 
             abort(
                 403,
-                'Your user account is not mapped with a driver.'
+                'Your user account is not linked to a driver profile. Please contact your administrator.'
             );
         }
 
@@ -850,7 +911,7 @@ class DriverAttendanceController extends Controller
 
             abort(
                 403,
-                'You are not authorized to access this attendance record.'
+                'You do not have permission to access this attendance record.'
             );
         }
     }
