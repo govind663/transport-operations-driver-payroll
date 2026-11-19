@@ -868,10 +868,10 @@ class UpdateDutySlipRequest extends FormRequest
             */
 
             'root.string' =>
-                'Root must be valid text.',
+                'Route must be valid text.',
 
             'root.max' =>
-                'Root may not exceed 2000 characters.',
+                'Route may not exceed 2000 characters.',
 
             /*
             |--------------------------------------------------------------------------

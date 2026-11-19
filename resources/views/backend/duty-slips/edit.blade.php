@@ -1927,14 +1927,14 @@
                         </div>
 
                         {{-- ==================================================== --}}
-                        {{-- ROOT --}}
+                        {{-- ROUTE --}}
                         {{-- ==================================================== --}}
                         <div class="col-12">
 
                             <div class="form-group">
 
-                                <label for="root">
-                                    <b>Root</b>
+                                <label for="route">
+                                    <b>Route</b>
                                 </label>
 
                                 <textarea
@@ -1942,7 +1942,7 @@
                                     id="root"
                                     rows="3"
                                     class="form-control @error('root') is-invalid @enderror"
-                                    placeholder="Enter Root / Route Details"
+                                    placeholder="Enter Route Details"
                                     maxlength="2000"
                                 >{{ old('root', $dutySlip->root ?? '') }}</textarea>
 
@@ -1953,7 +1953,7 @@
                                 @enderror
 
                                 <small class="form-helper-text">
-                                    Enter route details or additional root information
+                                    Enter route details or additional route information
                                     (Maximum 2000 characters).
                                 </small>
 
