@@ -418,7 +418,6 @@
             {{-- ================================================================= --}}
             {{-- PAGE HEADER                                                        --}}
             {{-- ================================================================= --}}
-
             <div class="page-header">
 
                 <div class="row">
@@ -476,7 +475,6 @@
             {{-- ================================================================= --}}
             {{-- VALIDATION ERRORS                                                  --}}
             {{-- ================================================================= --}}
-
             @if ($errors->any())
 
                 <div class="alert alert-danger">
@@ -1690,7 +1688,6 @@
                         {{-- ===================================================== --}}
                         {{-- TRIP INFORMATION                                       --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
@@ -1703,11 +1700,9 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
                         {{-- START DATE                                             --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-3">
 
                             <div class="form-group">
@@ -1746,11 +1741,9 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
                         {{-- START TIME                                             --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-3">
 
                             <div class="form-group">
@@ -1789,11 +1782,9 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
                         {{-- END DATE                                               --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-3">
 
                             <div class="form-group">
@@ -1832,11 +1823,9 @@
 
                         </div>
 
-
                         {{-- ===================================================== --}}
                         {{-- END TIME                                               --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-md-3">
 
                             <div class="form-group">
@@ -1875,11 +1864,106 @@
 
                         </div>
 
+                        {{-- ==================================================== --}}
+                        {{-- PICKUP LOCATION --}}
+                        {{-- ==================================================== --}}
+                        <div class="col-md-6">
+
+                            <div class="form-group">
+
+                                <label for="pickup_location">
+                                    <b>Pickup Location</b>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="pickup_location"
+                                    id="pickup_location"
+                                    class="form-control @error('pickup_location') is-invalid @enderror"
+                                    value="{{ old('pickup_location', $dutySlip->pickup_location ?? '') }}"
+                                    placeholder="Enter Pickup Location"
+                                    maxlength="500"
+                                >
+
+                                @error('pickup_location')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- DROP LOCATION --}}
+                        {{-- ==================================================== --}}
+                        <div class="col-md-6">
+
+                            <div class="form-group">
+
+                                <label for="drop_location">
+                                    <b>Drop Location</b>
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="drop_location"
+                                    id="drop_location"
+                                    class="form-control @error('drop_location') is-invalid @enderror"
+                                    value="{{ old('drop_location', $dutySlip->drop_location ?? '') }}"
+                                    placeholder="Enter Drop Location"
+                                    maxlength="500"
+                                >
+
+                                @error('drop_location')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                            </div>
+
+                        </div>
+
+                        {{-- ==================================================== --}}
+                        {{-- ROOT --}}
+                        {{-- ==================================================== --}}
+                        <div class="col-12">
+
+                            <div class="form-group">
+
+                                <label for="root">
+                                    <b>Root</b>
+                                </label>
+
+                                <textarea
+                                    name="root"
+                                    id="root"
+                                    rows="3"
+                                    class="form-control @error('root') is-invalid @enderror"
+                                    placeholder="Enter Root / Route Details"
+                                    maxlength="2000"
+                                >{{ old('root', $dutySlip->root ?? '') }}</textarea>
+
+                                @error('root')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
+
+                                <small class="form-helper-text">
+                                    Enter route details or additional root information
+                                    (Maximum 2000 characters).
+                                </small>
+
+                            </div>
+
+                        </div>
 
                         {{-- ===================================================== --}}
                         {{-- KILOMETER INFORMATION                                  --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">
@@ -3484,7 +3568,6 @@
                         {{-- ===================================================== --}}
                         {{-- REMARKS                                               --}}
                         {{-- ===================================================== --}}
-
                         <div class="col-12 mt-3">
 
                             <h5 class="form-section-title">

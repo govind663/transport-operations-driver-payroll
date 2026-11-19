@@ -1154,6 +1154,29 @@ class DutySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | NORMALIZE ROOT
+        |--------------------------------------------------------------------------
+        |
+        | Root is a saved Duty Slip field, not a form-only field.
+        | Preserve multiline text and convert blank input to null.
+        |
+        */
+
+        if (array_key_exists('root', $data)) {
+
+            if ($data['root'] !== null) {
+
+                $root = trim((string) $data['root']);
+
+                $data['root'] = $root !== ''
+                    ? $root
+                    : null;
+            }
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
         | REMOVE FORM-ONLY / DISPLAY-ONLY FIELDS
         |--------------------------------------------------------------------------
         |
@@ -1164,6 +1187,7 @@ class DutySlipController extends Controller
         | - vehicle_id
         | - vehicle_type_id
         | - duty_assignment_id
+        | - root (saved directly on duty_slips)
         | - driver_advances (child payload consumed by DutySlipService)
         |
         */

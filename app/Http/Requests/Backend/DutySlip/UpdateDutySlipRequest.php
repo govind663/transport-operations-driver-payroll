@@ -126,6 +126,28 @@ class UpdateDutySlipRequest extends FormRequest
 
         /*
         |--------------------------------------------------------------------------
+        | ROOT
+        |--------------------------------------------------------------------------
+        |
+        | Root is an optional multiline text field like Remarks.
+        | Trim surrounding whitespace and convert blank input to null.
+        |
+        */
+
+        if ($this->exists('root')) {
+            $root = $this->input('root');
+
+            if (is_string($root)) {
+                $root = trim($root);
+
+                $data['root'] = $root !== ''
+                    ? $root
+                    : null;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | MERGE NORMALIZED DATA
         |--------------------------------------------------------------------------
         */
@@ -288,6 +310,21 @@ class UpdateDutySlipRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:500',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROOT
+            |--------------------------------------------------------------------------
+            |
+            | Optional multiline text stored in duty_slips.root.
+            |
+            */
+
+            'root' => [
+                'nullable',
+                'string',
+                'max:2000',
             ],
 
             /*
@@ -823,6 +860,18 @@ class UpdateDutySlipRequest extends FormRequest
 
             'drop_location.max' =>
                 'Drop location may not exceed 500 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROOT
+            |--------------------------------------------------------------------------
+            */
+
+            'root.string' =>
+                'Root must be valid text.',
+
+            'root.max' =>
+                'Root may not exceed 2000 characters.',
 
             /*
             |--------------------------------------------------------------------------

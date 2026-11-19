@@ -103,6 +103,25 @@ class StoreDutySlipRequest extends FormRequest
 
         /*
         |--------------------------------------------------------------------------
+        | NORMALIZE ROOT
+        |--------------------------------------------------------------------------
+        |
+        | Root is an optional multiline text field like Remarks.
+        | Trim surrounding whitespace and store empty input as null.
+        |
+        */
+
+        if ($this->exists('root')) {
+            $value = $this->input('root');
+
+            if (is_string($value)) {
+                $value = trim($value);
+                $data['root'] = $value !== '' ? $value : null;
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | MERGE NORMALIZED VALUES
         |--------------------------------------------------------------------------
         */
@@ -551,6 +570,21 @@ class StoreDutySlipRequest extends FormRequest
             */
 
             'remarks' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROOT
+            |--------------------------------------------------------------------------
+            |
+            | Optional multiline Root text, using the same length limit as Remarks.
+            |
+            */
+
+            'root' => [
                 'nullable',
                 'string',
                 'max:2000',
@@ -1106,6 +1140,18 @@ class StoreDutySlipRequest extends FormRequest
 
             'remarks.max' =>
                 'Remarks may not exceed 2000 characters.',
+
+            /*
+            |--------------------------------------------------------------------------
+            | ROOT
+            |--------------------------------------------------------------------------
+            */
+
+            'root.string' =>
+                'Root must be valid text.',
+
+            'root.max' =>
+                'Root may not exceed 2000 characters.',
         ];
     }
 }

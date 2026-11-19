@@ -407,6 +407,20 @@ class DutySlipService
 
                     /*
                     |--------------------------------------------------------------------------
+                    | NORMALIZE ROOT
+                    |--------------------------------------------------------------------------
+                    |
+                    | Root is stored directly in the duty_slips table.
+                    | Trim surrounding whitespace and convert an empty value to null.
+                    |
+                    */
+
+                    if (array_key_exists('root', $data)) {
+                        $data['root'] = $this->nullableString($data['root']);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
                     | REMOVE CHILD DATA
                     |--------------------------------------------------------------------------
                     */
@@ -430,6 +444,7 @@ class DutySlipService
                     | Do not remove:
                     | - pickup_location
                     | - drop_location
+                    | - root
                     | - vehicle_type (until it has been resolved below)
                     |
                     | Passenger and fuel fields are removed because this
@@ -956,6 +971,21 @@ class DutySlipService
 
                     /*
                     |--------------------------------------------------------------------------
+                    | NORMALIZE ROOT
+                    |--------------------------------------------------------------------------
+                    |
+                    | Root is saved directly in the duty_slips table.
+                    | If it is submitted, trim surrounding whitespace and convert
+                    | an empty value to null. If omitted, preserve the existing value.
+                    |
+                    */
+
+                    if (array_key_exists('root', $data)) {
+                        $data['root'] = $this->nullableString($data['root']);
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
                     | REMOVE CHILD DATA
                     |--------------------------------------------------------------------------
                     */
@@ -975,7 +1005,7 @@ class DutySlipService
                     |--------------------------------------------------------------------------
                     |
                     | IMPORTANT:
-                    | Do not remove pickup_location or drop_location.
+                    | Do not remove pickup_location, drop_location or root.
                     | Do not remove vehicle_type before resolving the legacy
                     | vehicle type fallback below.
                     |
