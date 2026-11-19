@@ -1,188 +1,58 @@
 @extends('backend.layouts.master')
 
 @section('title')
-
-    @if($isDriver)
-
-        My Attendance
-
-    @else
-
-        Driver Attendance
-
-    @endif
-
+    {{ $isDriver ? 'My Attendance' : 'Driver Attendance' }}
 @endsection
-
 
 @push('styles')
 
 @if(!$isDriver)
-<link
-    rel="stylesheet"
-    href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}"
->
+<link rel="stylesheet" href="{{ asset('backend/assets/datatable/css/dataTables-responsive.css') }}">
 @endif
 
 <style>
-
-    .table td,
-    .table th {
-        vertical-align: middle;
-    }
-
-    .driver-code {
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .attendance-time {
-        font-weight: 600;
-    }
-
-    .amount-text {
-        font-weight: 600;
-    }
-
-    .filter-card {
-        background: #f8f9fa;
-        border-radius: 6px;
-    }
-
-    .attendance-calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 8px;
-    }
-
-    .attendance-calendar-weekday {
-        padding: 10px 6px;
-        text-align: center;
-        font-weight: 700;
-        color: #495057;
-        background: #f1f3f5;
-        border-radius: 5px;
-    }
-
-    .attendance-day-card {
-        min-height: 145px;
-        padding: 10px;
-        border: 1px solid #e5e7eb;
-        border-radius: 7px;
-        background: #fff;
-        overflow-wrap: anywhere;
-    }
-
-    .attendance-day-card.is-other-month {
-        background: #f8f9fa;
-        color: #adb5bd;
-        border-style: dashed;
-    }
-
-    .attendance-day-number {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-
-    .attendance-day-card.is-today {
-        border-color: #007bff;
-        box-shadow: 0 0 0 1px rgba(0, 123, 255, .12);
-    }
-
-    .attendance-day-details {
-        font-size: 12px;
-        line-height: 1.45;
-    }
-
-    .attendance-calendar-summary {
-        height: 100%;
-        border: 1px solid #e9ecef;
-        border-radius: 7px;
-        padding: 14px;
-        background: #fff;
-    }
-
-    .attendance-calendar-summary .summary-value {
-        display: block;
-        font-size: 22px;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-
-    @media (max-width: 767.98px) {
-        .attendance-calendar-grid {
-            gap: 4px;
-        }
-
-        .attendance-day-card {
-            min-height: 112px;
-            padding: 6px;
-        }
-
-        .attendance-calendar-weekday {
-            padding: 7px 2px;
-            font-size: 11px;
-        }
-
-        .attendance-day-details {
-            font-size: 10px;
-        }
-
-        .attendance-day-card .badge {
-            white-space: normal;
-            font-size: 9px;
-        }
-    }
-
-    @media (max-width: 420px) {
-        .attendance-day-card {
-            min-height: 96px;
-            padding: 4px;
-        }
-
-        .attendance-day-number {
-            margin-bottom: 5px;
-            font-size: 12px;
-        }
-    }
-
-
     /* ================================================================
-       Attendance page UI/UX refresh
-       ================================================================ */
+       DRIVER ATTENDANCE - DESIGN SYSTEM
+    ================================================================ */
     .driver-attendance-page {
-        --attendance-primary: #2457a7;
-        --attendance-border: #e8edf5;
-        --attendance-muted: #718096;
+        --da-primary: #2457a7;
+        --da-primary-dark: #193f7d;
+        --da-primary-soft: #edf4ff;
+        --da-border: #e7edf5;
+        --da-muted: #718096;
+        --da-text: #344054;
+        --da-success: #16834a;
+        --da-danger: #c43c48;
+        --da-warning: #a66b13;
+        --da-info: #1684a5;
     }
 
     .driver-attendance-page .page-header {
         margin-bottom: 22px;
-        padding: 22px 24px;
-        background: linear-gradient(115deg, #ffffff 0%, #f5f8ff 100%);
-        border: 1px solid var(--attendance-border);
-        border-radius: 14px;
+        padding: 23px 25px;
+        background: linear-gradient(115deg, #ffffff 0%, #f4f8ff 100%);
+        border: 1px solid var(--da-border);
+        border-radius: 15px;
         box-shadow: 0 5px 18px rgba(26, 47, 84, .045);
     }
 
     .driver-attendance-page .page-header h4 {
         margin-bottom: 7px;
+        color: var(--da-primary);
         font-size: 22px;
-        font-weight: 700;
-        letter-spacing: -.25px;
+        font-weight: 750;
+        letter-spacing: -.3px;
     }
 
     .driver-attendance-page .page-header p {
-        color: var(--attendance-muted);
+        margin-bottom: 0;
+        color: var(--da-muted);
         line-height: 1.55;
     }
 
     .driver-attendance-page .card-box {
         overflow: hidden;
-        border: 1px solid var(--attendance-border);
+        border: 1px solid var(--da-border);
         border-radius: 14px;
         box-shadow: 0 7px 24px rgba(26, 47, 84, .055);
     }
@@ -192,9 +62,9 @@
     }
 
     .driver-attendance-page .btn {
-        border-radius: 7px;
-        font-weight: 600;
-        transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease;
+        border-radius: 8px;
+        font-weight: 650;
+        transition: transform .16s ease, box-shadow .16s ease;
     }
 
     .driver-attendance-page .btn:hover {
@@ -202,40 +72,149 @@
         box-shadow: 0 4px 10px rgba(31, 55, 92, .12);
     }
 
-    .driver-attendance-page .attendance-filter-form {
-        padding: 22px;
-        border: 1px solid var(--attendance-border) !important;
-        border-radius: 11px;
-        background: #fbfcff;
-    }
-
-    .driver-attendance-page .attendance-filter-form label {
-        margin-bottom: 7px;
-        color: #344054;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .driver-attendance-page .attendance-filter-form .form-control {
-        min-height: 42px;
+    .driver-attendance-page .form-control {
+        min-height: 41px;
         border-color: #dce3ee;
-        border-radius: 7px;
-        background-color: #fff;
+        border-radius: 8px;
+        background: #fff;
         box-shadow: none;
     }
 
-    .driver-attendance-page .attendance-filter-form .form-control:focus {
+    .driver-attendance-page .form-control:focus {
         border-color: #7da5e8;
         box-shadow: 0 0 0 3px rgba(36, 87, 167, .09);
     }
 
-    .driver-attendance-page .driver-calendar-toolbar {
+    .driver-attendance-page .alert {
+        border-radius: 9px;
+        line-height: 1.55;
+    }
+
+    /* ================================================================
+       DRIVER HEADER
+    ================================================================ */
+    .driver-welcome-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 16px 19px;
+        border: 1px solid #dce8f9;
+        border-radius: 12px;
+        background: linear-gradient(110deg, #f4f8ff 0%, #ffffff 100%);
+    }
+
+    .driver-welcome-strip .welcome-icon {
+        display: inline-flex;
+        width: 42px;
+        height: 42px;
+        flex: 0 0 42px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: #e4efff;
+        color: var(--da-primary);
+        font-size: 18px;
+    }
+
+    .driver-welcome-strip .welcome-title {
+        color: #26364b;
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    .driver-welcome-strip .welcome-subtitle {
+        margin-top: 3px;
+        color: var(--da-muted);
+        font-size: 11px;
+    }
+
+    .driver-welcome-strip .welcome-month {
+        color: var(--da-primary);
+        font-size: 12px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    /* ================================================================
+       MANAGEMENT VIEW SWITCHER
+    ================================================================ */
+    .attendance-view-switcher {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 4px;
+        border: 1px solid #e1e8f2;
+        border-radius: 9px;
+        background: #f7f9fc;
+    }
+
+    .attendance-view-switcher a {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 14px;
+        border-radius: 7px;
+        color: #667085;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+
+    .attendance-view-switcher a:hover {
+        color: var(--da-primary);
+        background: #fff;
+    }
+
+    .attendance-view-switcher a.active {
+        color: #fff;
+        background: var(--da-primary);
+        box-shadow: 0 3px 8px rgba(36, 87, 167, .2);
+    }
+
+    /* ================================================================
+       FILTERS
+    ================================================================ */
+    .attendance-filter-form {
+        padding: 22px;
+        border: 1px solid var(--da-border);
+        border-radius: 11px;
+        background: #fbfcff;
+    }
+
+    .attendance-filter-form label,
+    .management-calendar-filter label {
+        display: block;
+        margin-bottom: 7px;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .attendance-filter-form .form-control,
+    .management-calendar-filter .form-control {
+        background: #fff;
+    }
+
+    .management-calendar-filter {
+        padding: 17px;
+        border: 1px solid var(--da-border);
+        border-radius: 10px;
+        background: #fbfcff;
+    }
+
+    /* ================================================================
+       CALENDAR TOOLBAR
+    ================================================================ */
+    .driver-calendar-toolbar {
         gap: 14px;
         padding-bottom: 18px;
         border-bottom: 1px solid #edf1f7;
     }
 
-    .driver-attendance-page .driver-section-eyebrow {
+    .driver-section-eyebrow {
         display: inline-block;
         margin-bottom: 6px;
         color: #718096;
@@ -244,237 +223,507 @@
         letter-spacing: 1.1px;
     }
 
-    .driver-attendance-page .driver-calendar-toolbar h4 {
-        font-weight: 700;
+    .driver-calendar-toolbar h4 {
+        color: var(--da-primary);
+        font-weight: 750;
         letter-spacing: -.25px;
     }
 
-    .driver-attendance-page .driver-calendar-navigation {
-        gap: 4px;
+    .driver-calendar-navigation {
+        gap: 5px;
         padding: 5px;
         border: 1px solid #e8edf5;
         border-radius: 10px;
         background: #f8faff;
     }
 
-    .driver-attendance-page .calendar-nav-btn {
+    .calendar-nav-btn {
         display: inline-flex;
-        width: 34px;
-        height: 34px;
+        width: 35px;
+        height: 35px;
         align-items: center;
         justify-content: center;
-        margin: 0 !important;
+        padding: 0;
         border-color: #e0e7f1;
         background: #fff;
     }
 
-    .driver-attendance-page .calendar-month-label {
+    .calendar-month-label {
         min-width: 112px;
         color: #26364b;
         text-align: center;
         font-size: 14px;
-        font-weight: 750;
+        font-weight: 800;
     }
 
-    .driver-attendance-page .calendar-today-btn {
-        margin-left: 8px !important;
+    .calendar-month-picker {
+        width: 145px;
+        min-height: 35px !important;
+        margin-left: 7px;
+        padding: 5px 8px;
+        font-size: 11px;
     }
 
-    .driver-attendance-page .attendance-calendar-summary {
+    /* ================================================================
+       SUMMARY CARDS
+    ================================================================ */
+    .attendance-summary-card {
         position: relative;
-        min-height: 142px;
+        height: 100%;
+        min-height: 132px;
         padding: 17px 18px;
-        border: 1px solid var(--attendance-border);
-        border-radius: 11px;
+        overflow: hidden;
+        border: 1px solid var(--da-border);
+        border-radius: 12px;
         background: #fff;
         box-shadow: 0 3px 12px rgba(26, 47, 84, .035);
         transition: transform .18s ease, box-shadow .18s ease;
     }
 
-    .driver-attendance-page .attendance-calendar-summary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(26, 47, 84, .08);
+    .attendance-summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 9px 21px rgba(26, 47, 84, .085);
     }
 
-    .driver-attendance-page .attendance-calendar-summary .summary-icon {
+    .attendance-summary-card::after {
+        position: absolute;
+        right: -19px;
+        bottom: -28px;
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        background: rgba(36, 87, 167, .035);
+        content: "";
+        pointer-events: none;
+    }
+
+    .attendance-summary-card .summary-icon {
         display: inline-flex;
-        width: 34px;
-        height: 34px;
+        width: 35px;
+        height: 35px;
         align-items: center;
         justify-content: center;
         float: right;
-        border-radius: 9px;
+        border-radius: 10px;
         background: #f1f5fb;
-        color: var(--attendance-primary);
+        color: var(--da-primary);
         font-size: 15px;
     }
 
-    .driver-attendance-page .attendance-calendar-summary .summary-value {
-        margin-top: 8px;
-        font-size: 27px;
+    .attendance-summary-card .summary-label {
+        display: block;
+        padding-top: 4px;
+        color: #667085;
+        font-size: 11px;
         font-weight: 750;
+    }
+
+    .attendance-summary-card .summary-value {
+        display: block;
+        margin-top: 9px;
+        color: #26364b;
+        font-size: 26px;
+        font-weight: 800;
         line-height: 1.1;
     }
 
-    .driver-attendance-page .attendance-calendar-summary > small:first-of-type {
-        padding-top: 4px;
-        font-size: 12px;
-        font-weight: 650;
-    }
-
-    .driver-attendance-page .attendance-calendar-summary .summary-caption {
+    .attendance-summary-card .summary-caption {
         display: block;
-        margin-top: 5px;
+        margin-top: 6px;
         color: #98a2b3;
         font-size: 10px;
+        line-height: 1.35;
     }
 
-    .driver-attendance-page .summary-card-present .summary-icon {
+    .summary-card-present .summary-icon {
         color: #16834a;
         background: #eaf8f0;
     }
 
-    .driver-attendance-page .summary-card-absent .summary-icon {
+    .summary-card-absent .summary-icon {
         color: #c43c48;
         background: #fff0f1;
     }
 
-    .driver-attendance-page .summary-card-unmarked .summary-icon {
+    .summary-card-hours .summary-icon {
+        color: #2457a7;
+        background: #edf4ff;
+    }
+
+    .summary-card-average .summary-icon {
+        color: #1684a5;
+        background: #eaf8fb;
+    }
+
+    .summary-card-exception .summary-icon {
+        color: #b7791f;
+        background: #fff7e6;
+    }
+
+    .summary-card-leave .summary-icon {
+        color: #5676d8;
+        background: #eef2ff;
+    }
+
+    .summary-card-unmarked .summary-icon {
         color: #667085;
         background: #f0f2f5;
     }
 
-    .driver-attendance-page .attendance-calendar-legend {
-        gap: 5px;
+    .summary-card-rate .summary-icon {
+        color: #16834a;
+        background: #eaf8f0;
+    }
+
+    /* ================================================================
+       PRESENT SHARE INDICATOR
+    ================================================================ */
+    .attendance-progress-panel {
+        padding: 16px 18px;
+        border: 1px solid #e4ebf5;
+        border-radius: 11px;
+        background: #fbfcff;
+    }
+
+    .attendance-progress-panel .progress {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #e9eef5;
+    }
+
+    .attendance-progress-panel .progress-bar {
+        border-radius: 20px;
+        background: linear-gradient(90deg, #2c66b8, #39a477);
+    }
+
+    .attendance-progress-panel .progress-label {
+        color: #526176;
+        font-size: 11px;
+        font-weight: 750;
+    }
+
+    .attendance-progress-panel .progress-value {
+        color: var(--da-primary);
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    /* ================================================================
+       CALENDAR LEGEND
+    ================================================================ */
+    .attendance-calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
         padding: 12px 14px 5px;
         border: 1px solid #edf1f7;
         border-radius: 9px;
         background: #fbfcfe;
     }
 
-    .driver-attendance-page .attendance-calendar-legend .badge {
+    .attendance-calendar-legend .badge {
+        margin-bottom: 7px;
         padding: 7px 10px;
         border-radius: 20px;
         font-size: 10px;
-        font-weight: 650;
+        font-weight: 700;
     }
 
-    .driver-attendance-page .attendance-calendar-grid {
+    /* ================================================================
+       CALENDAR GRID
+    ================================================================ */
+    .attendance-calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 9px;
     }
 
-    .driver-attendance-page .attendance-calendar-weekday {
+    .attendance-calendar-weekday {
         padding: 11px 6px;
         border: 1px solid #edf1f7;
         border-radius: 8px;
         background: #f6f8fc;
         color: #64748b;
-        font-size: 11px;
-        letter-spacing: .45px;
+        text-align: center;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .5px;
         text-transform: uppercase;
     }
 
-    .driver-attendance-page .attendance-day-card {
+    .attendance-day-card {
         position: relative;
-        min-height: 136px;
+        display: block;
+        width: 100%;
+        min-height: 137px;
         padding: 11px;
+        overflow: hidden;
         border: 1px solid #e7ecf3;
         border-radius: 10px;
         background: #fff;
+        color: var(--da-text);
+        text-align: left;
+        overflow-wrap: anywhere;
         box-shadow: 0 2px 7px rgba(26, 47, 84, .025);
         transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
-    .driver-attendance-page .attendance-day-card:hover {
-        z-index: 1;
-        transform: translateY(-2px);
-        border-color: #bdcce2;
-        box-shadow: 0 7px 16px rgba(26, 47, 84, .075);
+    button.attendance-day-card {
+        cursor: pointer;
     }
 
-    .driver-attendance-page .attendance-day-card.is-today {
+    button.attendance-day-card:focus {
+        outline: 2px solid #6b9de6;
+        outline-offset: 2px;
+    }
+
+    button.attendance-day-card:hover {
+        z-index: 1;
+        transform: translateY(-2px);
+        border-color: #a9bfdc;
+        box-shadow: 0 8px 17px rgba(26, 47, 84, .085);
+    }
+
+    .attendance-day-card.is-today {
         border: 2px solid #3978d4;
         background: #f7faff;
         box-shadow: 0 0 0 3px rgba(57, 120, 212, .08);
     }
 
-    .driver-attendance-page .attendance-day-number {
-        margin-bottom: 11px;
-        color: #344054;
-        font-size: 13px;
+    .attendance-day-card.is-other-month {
+        min-height: 137px;
+        border-style: dashed;
+        background: #f8f9fb;
+        color: #adb5bd;
+        box-shadow: none;
+        cursor: default;
     }
 
-    .driver-attendance-page .attendance-day-number small {
+    .attendance-day-number {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 5px;
+        margin-bottom: 10px;
+        color: #344054;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .attendance-day-number small {
         padding: 3px 6px;
         border-radius: 20px;
         background: #eaf2ff;
+        color: #2457a7;
         font-size: 9px;
-        font-weight: 700;
+        font-weight: 750;
     }
 
-    .driver-attendance-page .attendance-day-details {
+    .attendance-day-details {
         color: #475467;
-        font-size: 11px;
+        font-size: 10px;
         line-height: 1.55;
     }
 
-    .driver-attendance-page .attendance-day-details .badge {
+    .attendance-day-details .badge {
+        display: inline-block;
+        max-width: 100%;
         padding: 6px 8px;
         border-radius: 6px;
-        font-size: 10px;
-        font-weight: 700;
+        font-size: 9px;
+        font-weight: 750;
         white-space: normal;
         text-align: left;
     }
 
-    .driver-attendance-page .attendance-day-card--success {
+    .attendance-day-card--success {
         border-top: 3px solid #28a36a;
     }
 
-    .driver-attendance-page .attendance-day-card--danger {
+    .attendance-day-card--danger {
         border-top: 3px solid #dc5661;
     }
 
-    .driver-attendance-page .attendance-day-card--warning {
+    .attendance-day-card--warning {
         border-top: 3px solid #e6ad35;
     }
 
-    .driver-attendance-page .attendance-day-card--primary {
+    .attendance-day-card--primary {
         border-top: 3px solid #5676d8;
     }
 
-    .driver-attendance-page .attendance-day-card--info {
+    .attendance-day-card--info {
         border-top: 3px solid #36a5c8;
     }
 
-    .driver-attendance-page .attendance-day-card--secondary,
-    .driver-attendance-page .attendance-day-card--not-marked {
+    .attendance-day-card--secondary,
+    .attendance-day-card--not-marked {
         border-top: 3px solid #b8c0cc;
     }
 
-    .driver-attendance-page .attendance-day-card--not-marked {
+    .attendance-day-card--not-marked {
         background: #fafbfc;
     }
 
-    .driver-attendance-page .attendance-day-card.is-other-month {
-        min-height: 136px;
-        background: #f8f9fb;
-        box-shadow: none;
+    .attendance-day-card--upcoming {
+        border-top: 3px solid #cbd5e1;
+        background: #fafcff;
     }
 
-    .driver-attendance-page .attendance-table-heading {
+    .attendance-day-time {
+        display: block;
+        margin-top: 5px;
+        color: #667085;
+        font-size: 10px;
+        font-weight: 650;
+    }
+
+    .attendance-day-hours {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 5px;
+        padding: 4px 6px;
+        border-radius: 5px;
+        background: #edf4ff;
+        color: #2457a7;
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .attendance-day-sheet {
+        display: block;
+        margin-top: 5px;
+        color: #718096;
+        font-size: 9px;
+    }
+
+    .attendance-day-click-hint {
+        display: block;
+        margin-top: 8px;
+        color: #3978d4;
+        font-size: 9px;
+        font-weight: 750;
+    }
+
+    /* ================================================================
+       MANAGEMENT DAY COUNTS
+    ================================================================ */
+    .attendance-day-counts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px;
+        margin-top: 7px;
+    }
+
+    .attendance-day-counts span {
+        display: block;
+        padding: 4px 5px;
+        border-radius: 5px;
+        background: #f5f7fa;
+        color: #667085;
+        font-size: 9px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .attendance-day-counts .count-present {
+        background: #eaf8f0;
+        color: #16834a;
+    }
+
+    .attendance-day-counts .count-absent {
+        background: #fff0f1;
+        color: #c43c48;
+    }
+
+    .attendance-day-counts .count-exception {
+        background: #fff7e6;
+        color: #a66b13;
+    }
+
+    .attendance-day-counts .count-leave {
+        background: #eef2ff;
+        color: #4c63bc;
+    }
+
+    .attendance-day-counts .count-unmarked {
+        background: #f0f2f5;
+        color: #667085;
+    }
+
+    /* ================================================================
+       DAY DETAIL MODALS
+    ================================================================ */
+    .attendance-day-modal .modal-content {
+        overflow: hidden;
+        border: 0;
+        border-radius: 13px;
+        box-shadow: 0 14px 45px rgba(20, 35, 60, .2);
+    }
+
+    .attendance-day-modal .modal-header {
+        padding: 17px 20px;
+        border-bottom: 1px solid #edf1f7;
+        background: #f7f9fc;
+    }
+
+    .attendance-day-modal .modal-title {
+        color: #26364b;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .attendance-day-modal .modal-body {
+        padding: 18px 20px;
+    }
+
+    .attendance-day-modal .modal-footer {
+        border-top: 1px solid #edf1f7;
+        background: #fbfcfe;
+    }
+
+    .attendance-detail-box {
+        height: 100%;
+        padding: 12px;
+        border: 1px solid #e8edf5;
+        border-radius: 9px;
+        background: #fff;
+    }
+
+    .attendance-detail-box small {
+        display: block;
+        color: #718096;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .attendance-detail-box strong {
+        display: block;
+        margin-top: 5px;
+        color: #26364b;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    /* ================================================================
+       TABLE VIEW
+    ================================================================ */
+    .attendance-table-heading {
         gap: 12px;
     }
 
-    .driver-attendance-page .attendance-table-wrap {
+    .attendance-table-wrap {
         border-top: 1px solid #edf1f7;
     }
 
-    .driver-attendance-page .attendance-management-table {
+    .attendance-management-table {
         margin-bottom: 0;
     }
 
-    .driver-attendance-page .attendance-management-table thead th {
+    .attendance-management-table thead th {
         padding: 14px 12px;
         border-top: 0;
         border-bottom: 1px solid #e7edf5;
@@ -485,9 +734,10 @@
         letter-spacing: .35px;
         text-transform: uppercase;
         white-space: nowrap;
+        vertical-align: middle;
     }
 
-    .driver-attendance-page .attendance-management-table tbody td {
+    .attendance-management-table tbody td {
         padding: 13px 12px;
         border-top: 1px solid #eef1f5;
         color: #344054;
@@ -495,30 +745,43 @@
         vertical-align: middle;
     }
 
-    .driver-attendance-page .attendance-management-table tbody tr:hover {
+    .attendance-management-table tbody tr:hover {
         background: #f9fbff;
     }
 
-    .driver-attendance-page .attendance-action-btn {
+    .attendance-action-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 6px 10px;
     }
 
-    .driver-attendance-page .pagination {
+    .driver-name-cell {
+        min-width: 150px;
+        font-weight: 650;
+    }
+
+    .driver-code,
+    .attendance-time,
+    .amount-text {
+        font-weight: 650;
+    }
+
+    .pagination {
         flex-wrap: wrap;
         gap: 4px;
     }
 
-    .driver-attendance-page .alert {
-        border-radius: 9px;
-        line-height: 1.55;
-    }
-
+    /* ================================================================
+       RESPONSIVE
+    ================================================================ */
     @media (max-width: 991.98px) {
-        .driver-attendance-page .attendance-day-card,
-        .driver-attendance-page .attendance-day-card.is-other-month {
+        .attendance-day-card,
+        .attendance-day-card.is-other-month {
+            min-height: 124px;
+        }
+
+        .attendance-summary-card {
             min-height: 124px;
         }
     }
@@ -529,100 +792,150 @@
         }
 
         .driver-attendance-page .card-box > .pd-20 {
-            padding: 17px;
+            padding: 16px;
         }
 
-        .driver-attendance-page .driver-calendar-toolbar {
+        .driver-welcome-strip {
+            align-items: flex-start;
+            padding: 13px;
+        }
+
+        .driver-calendar-toolbar {
             align-items: flex-start !important;
         }
 
-        .driver-attendance-page .driver-calendar-navigation {
+        .driver-calendar-navigation {
             width: 100%;
             justify-content: center;
         }
 
-        .driver-attendance-page .attendance-calendar-grid {
+        .calendar-month-picker {
+            width: 125px;
+        }
+
+        .attendance-calendar-grid {
             gap: 5px;
         }
 
-        .driver-attendance-page .attendance-calendar-weekday {
+        .attendance-calendar-weekday {
             padding: 8px 2px;
             font-size: 9px;
             letter-spacing: 0;
         }
 
-        .driver-attendance-page .attendance-day-card,
-        .driver-attendance-page .attendance-day-card.is-other-month {
+        .attendance-day-card,
+        .attendance-day-card.is-other-month {
             min-height: 105px;
             padding: 6px;
             border-radius: 7px;
         }
 
-        .driver-attendance-page .attendance-day-number {
+        .attendance-day-number {
             margin-bottom: 7px;
             font-size: 11px;
         }
 
-        .driver-attendance-page .attendance-day-details {
+        .attendance-day-details {
             font-size: 9px;
         }
 
-        .driver-attendance-page .attendance-day-details .badge {
+        .attendance-day-details .badge {
             padding: 4px 5px;
             font-size: 8px;
         }
 
-        .driver-attendance-page .attendance-calendar-summary {
-            min-height: 126px;
-            padding: 13px;
+        .attendance-day-time {
+            font-size: 8px;
         }
 
-        .driver-attendance-page .attendance-calendar-summary .summary-value {
-            font-size: 23px;
+        .attendance-day-hours {
+            padding: 3px 4px;
+            font-size: 8px;
         }
 
-        .driver-attendance-page .attendance-calendar-summary .summary-icon {
+        .attendance-day-sheet,
+        .attendance-day-click-hint {
+            font-size: 8px;
+        }
+
+        .attendance-summary-card {
+            min-height: 117px;
+            padding: 12px;
+        }
+
+        .attendance-summary-card .summary-value {
+            font-size: 22px;
+        }
+
+        .attendance-summary-card .summary-icon {
             width: 29px;
             height: 29px;
             font-size: 12px;
         }
 
-        .driver-attendance-page .attendance-filter-form {
+        .attendance-filter-form {
             padding: 15px;
+        }
+
+        .attendance-view-switcher a {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .attendance-day-counts {
+            gap: 2px;
+        }
+
+        .attendance-day-counts span {
+            padding: 3px;
+            font-size: 8px;
         }
     }
 
     @media (max-width: 420px) {
-        .driver-attendance-page .attendance-calendar-grid {
+        .attendance-calendar-grid {
             gap: 3px;
         }
 
-        .driver-attendance-page .attendance-day-card,
-        .driver-attendance-page .attendance-day-card.is-other-month {
-            min-height: 92px;
+        .attendance-day-card,
+        .attendance-day-card.is-other-month {
+            min-height: 94px;
             padding: 4px;
         }
 
-        .driver-attendance-page .attendance-day-number {
+        .attendance-day-number {
             margin-bottom: 5px;
             font-size: 10px;
         }
 
-        .driver-attendance-page .attendance-day-number small {
+        .attendance-day-number small {
             padding: 2px 4px;
             font-size: 8px;
         }
 
-        .driver-attendance-page .attendance-calendar-legend {
+        .attendance-calendar-legend {
             padding: 9px 9px 3px;
         }
 
-        .driver-attendance-page .attendance-calendar-legend .badge {
+        .attendance-calendar-legend .badge {
             padding: 6px 8px;
             font-size: 9px;
         }
-    }
 
+        .attendance-summary-card .summary-label {
+            font-size: 10px;
+        }
+
+        .attendance-summary-card .summary-caption {
+            font-size: 9px;
+        }
+
+        .driver-welcome-strip .welcome-icon {
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
+        }
+    }
 </style>
 
 @endpush
@@ -633,90 +946,78 @@
 @php
     /*
     |--------------------------------------------------------------------------
-    | Driver Monthly Calendar Data
+    | COMMON MONTH SELECTION
     |--------------------------------------------------------------------------
-    |
-    | The index controller intentionally keeps its existing 20-row paginator
-    | for management users. A monthly calendar must not infer missing days
-    | from that partial page, so the Driver view loads only the authenticated
-    | Driver's records for the selected month.
-    |
-    | This query is read-only and is strictly scoped to the logged-in user's
-    | mapped Driver. No attendance is created or changed here.
-    |
     */
 
-    $driverCalendarMonth = \Carbon\Carbon::now()->startOfMonth();
+    $attendanceCalendarMonth = now()->startOfMonth();
     $requestedCalendarMonth = request()->query('month');
 
     if (
         is_string($requestedCalendarMonth) &&
         preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])$/', $requestedCalendarMonth)
     ) {
-        $parsedCalendarMonth = \Carbon\Carbon::createFromFormat(
-            '!Y-m',
-            $requestedCalendarMonth
-        );
+        try {
+            $parsedCalendarMonth = \Carbon\Carbon::createFromFormat(
+                '!Y-m',
+                $requestedCalendarMonth
+            );
 
-        if ($parsedCalendarMonth instanceof \Carbon\Carbon) {
-            $driverCalendarMonth = $parsedCalendarMonth->startOfMonth();
+            if ($parsedCalendarMonth) {
+                $attendanceCalendarMonth = $parsedCalendarMonth->startOfMonth();
+            }
+        } catch (\Throwable $exception) {
+            $attendanceCalendarMonth = now()->startOfMonth();
         }
     }
 
-    $driverCalendarDriver = null;
-    $driverCalendarAttendances = collect();
+    $attendanceCalendarToday = now()->startOfDay();
 
-    if ($isDriver) {
-        $calendarUser = auth()->user();
-        $driverCalendarDriver = $calendarUser ? $calendarUser->driver : null;
-
-        if ($driverCalendarDriver) {
-            $driverCalendarAttendances = \App\Models\DriverAttendance::query()
-                ->with('workingSheet')
-                ->where('driver_id', $driverCalendarDriver->id)
-                ->whereBetween('attendance_date', [
-                    $driverCalendarMonth->copy()->startOfMonth()->toDateString(),
-                    $driverCalendarMonth->copy()->endOfMonth()->toDateString(),
-                ])
-                ->get()
-                ->keyBy(function ($attendance) {
-                    return \Carbon\Carbon::parse(
-                        $attendance->attendance_date
-                    )->format('Y-m-d');
-                });
-        }
-    }
-
-    $driverCalendarStart = $driverCalendarMonth->copy()
+    $attendanceCalendarStart = $attendanceCalendarMonth->copy()
         ->startOfMonth()
         ->startOfWeek(\Carbon\Carbon::MONDAY);
 
-    $driverCalendarEnd = $driverCalendarMonth->copy()
+    $attendanceCalendarEnd = $attendanceCalendarMonth->copy()
         ->endOfMonth()
         ->endOfWeek(\Carbon\Carbon::SUNDAY);
 
-    $driverCalendarDays = [];
+    $attendanceCalendarDays = [];
 
     for (
-        $calendarDate = $driverCalendarStart->copy();
-        $calendarDate->lte($driverCalendarEnd);
+        $calendarDate = $attendanceCalendarStart->copy();
+        $calendarDate->lte($attendanceCalendarEnd);
         $calendarDate->addDay()
     ) {
-        $driverCalendarDays[] = $calendarDate->copy();
+        $attendanceCalendarDays[] = $calendarDate->copy();
     }
 
-    $driverCalendarMarkedCount = $driverCalendarAttendances->count();
-    $driverCalendarPresentCount = $driverCalendarAttendances->filter(function ($attendance) {
-        return in_array($attendance->status, [
-            'present',
-            'present_late',
-            'present_early_exit',
-        ], true);
-    })->count();
 
-    $driverCalendarAbsentCount = $driverCalendarAttendances->where('status', 'absent')->count();
+    /*
+    |--------------------------------------------------------------------------
+    | ATTENDANCE STATUS CLASSIFICATION
+    |--------------------------------------------------------------------------
+    */
 
-    $driverCalendarLeaveStatuses = [
+    $attendancePresentStatuses = [
+        'present',
+        'present_late',
+        'present_early_exit',
+        'on_duty',
+        'work_from_home',
+    ];
+
+    $attendanceAbsentStatuses = [
+        'absent',
+    ];
+
+    $attendanceExceptionStatuses = [
+        'half_day',
+        'late',
+        'early_exit',
+        'missing_punch',
+    ];
+
+    $attendanceLeaveStatuses = [
         'leave',
         'maternity_leave',
         'sick_leave',
@@ -724,97 +1025,508 @@
         'paid_leave',
         'unpaid_leave',
         'restricted_holiday',
+        'comp_off',
     ];
 
-    $driverCalendarLeaveCount = $driverCalendarAttendances->filter(function ($attendance) use ($driverCalendarLeaveStatuses) {
-        return in_array($attendance->status, $driverCalendarLeaveStatuses, true);
-    })->count();
+    $attendanceOffStatuses = [
+        'holiday',
+        'weekly_off',
+    ];
 
-    $driverCalendarNotMarkedCount = max(
-        0,
-        $driverCalendarMonth->daysInMonth - $driverCalendarMarkedCount
+    $getAttendanceCategory = function ($status) use (
+        $attendancePresentStatuses,
+        $attendanceAbsentStatuses,
+        $attendanceExceptionStatuses,
+        $attendanceLeaveStatuses,
+        $attendanceOffStatuses
+    ) {
+        if (in_array($status, $attendancePresentStatuses, true)) {
+            return 'present';
+        }
+
+        if (in_array($status, $attendanceAbsentStatuses, true)) {
+            return 'absent';
+        }
+
+        if (in_array($status, $attendanceExceptionStatuses, true)) {
+            return 'exception';
+        }
+
+        if (in_array($status, $attendanceLeaveStatuses, true)) {
+            return 'leave';
+        }
+
+        if (in_array($status, $attendanceOffStatuses, true)) {
+            return 'off';
+        }
+
+        return 'other';
+    };
+
+    $getAttendanceStatusMeta = function ($status) use ($getAttendanceCategory) {
+        $category = $getAttendanceCategory($status);
+
+        $meta = [
+            'category' => $category,
+            'label' => ucfirst(str_replace('_', ' ', $status ?? 'Unknown')),
+            'badge' => 'secondary',
+            'icon' => 'fa-info-circle',
+            'card' => 'secondary',
+        ];
+
+        switch ($category) {
+            case 'present':
+                $meta['badge'] = 'success';
+                $meta['icon'] = 'fa-check-circle';
+                $meta['card'] = 'success';
+                break;
+
+            case 'absent':
+                $meta['badge'] = 'danger';
+                $meta['icon'] = 'fa-times-circle';
+                $meta['card'] = 'danger';
+                break;
+
+            case 'exception':
+                $meta['badge'] = 'warning';
+                $meta['icon'] = 'fa-exclamation-circle';
+                $meta['card'] = 'warning';
+                break;
+
+            case 'leave':
+                $meta['badge'] = 'primary';
+                $meta['icon'] = 'fa-calendar';
+                $meta['card'] = 'primary';
+                break;
+
+            case 'off':
+                $meta['badge'] = 'info';
+                $meta['icon'] = 'fa-calendar-o';
+                $meta['card'] = 'info';
+                break;
+
+            default:
+                $meta['badge'] = 'secondary';
+                $meta['icon'] = 'fa-info-circle';
+                $meta['card'] = 'secondary';
+                break;
+        }
+
+        return $meta;
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW SELECTION
+    |--------------------------------------------------------------------------
+    */
+
+    $managementCalendarView = request()->query('view', 'calendar');
+
+    if (!in_array($managementCalendarView, ['calendar', 'table'], true)) {
+        $managementCalendarView = 'calendar';
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DRIVER MONTHLY ATTENDANCE QUERY
+    |--------------------------------------------------------------------------
+    */
+
+    $driverCalendarDriver = null;
+    $driverCalendarAttendances = collect();
+
+    $driverCalendarMarkedCount = 0;
+    $driverCalendarPresentCount = 0;
+    $driverCalendarAbsentCount = 0;
+    $driverCalendarExceptionCount = 0;
+    $driverCalendarLeaveCount = 0;
+    $driverCalendarNotMarkedCount = 0;
+    $driverCalendarDueDays = 0;
+    $driverCalendarTotalHours = 0;
+    $driverCalendarDaysWithHours = 0;
+    $driverCalendarAverageHours = 0;
+    $driverCalendarPresentShare = 0;
+
+    if ($isDriver) {
+        $calendarUser = auth()->user();
+
+        $driverCalendarDriver = $calendarUser
+            ? $calendarUser->driver
+            : null;
+
+        if ($driverCalendarDriver) {
+            $driverCalendarAttendances = \App\Models\DriverAttendance::query()
+                ->with('workingSheet')
+                ->where('driver_id', $driverCalendarDriver->id)
+                ->whereBetween('attendance_date', [
+                    $attendanceCalendarMonth->copy()->startOfMonth()->toDateString(),
+                    $attendanceCalendarMonth->copy()->endOfMonth()->toDateString(),
+                ])
+                ->get()
+                ->keyBy(function ($attendance) {
+                    return \Carbon\Carbon::parse(
+                        $attendance->attendance_date
+                    )->format('Y-m-d');
+                });
+
+            $driverCalendarMarkedCount = $driverCalendarAttendances->count();
+
+            $driverCalendarPresentCount = $driverCalendarAttendances
+                ->filter(function ($attendance) use ($getAttendanceCategory) {
+                    return $getAttendanceCategory($attendance->status) === 'present';
+                })
+                ->count();
+
+            $driverCalendarAbsentCount = $driverCalendarAttendances
+                ->filter(function ($attendance) use ($getAttendanceCategory) {
+                    return $getAttendanceCategory($attendance->status) === 'absent';
+                })
+                ->count();
+
+            $driverCalendarExceptionCount = $driverCalendarAttendances
+                ->filter(function ($attendance) use ($getAttendanceCategory) {
+                    return $getAttendanceCategory($attendance->status) === 'exception';
+                })
+                ->count();
+
+            $driverCalendarLeaveCount = $driverCalendarAttendances
+                ->filter(function ($attendance) use ($getAttendanceCategory) {
+                    return $getAttendanceCategory($attendance->status) === 'leave';
+                })
+                ->count();
+
+            $driverCalendarTotalHours = (float) $driverCalendarAttendances
+                ->sum(function ($attendance) {
+                    return is_numeric($attendance->total_hours)
+                        ? (float) $attendance->total_hours
+                        : 0;
+                });
+
+            $driverCalendarDaysWithHours = $driverCalendarAttendances
+                ->filter(function ($attendance) {
+                    return $attendance->total_hours !== null
+                        && is_numeric($attendance->total_hours);
+                })
+                ->count();
+
+            $driverCalendarAverageHours = $driverCalendarDaysWithHours > 0
+                ? $driverCalendarTotalHours / $driverCalendarDaysWithHours
+                : 0;
+
+            $driverCalendarPresentShare = $driverCalendarMarkedCount > 0
+                ? round(
+                    ($driverCalendarPresentCount / $driverCalendarMarkedCount) * 100
+                )
+                : 0;
+
+            /*
+             * Not Marked is calculated only for elapsed calendar dates.
+             * Future dates are Upcoming, not Not Marked.
+             *
+             * This calculation does not assume weekly-off or holiday rules.
+             */
+            foreach ($attendanceCalendarDays as $calendarDate) {
+                if (
+                    $calendarDate->format('Y-m') ===
+                        $attendanceCalendarMonth->format('Y-m') &&
+                    $calendarDate->format('Y-m-d') <=
+                        $attendanceCalendarToday->toDateString()
+                ) {
+                    $driverCalendarDueDays++;
+                }
+            }
+
+            $driverCalendarMarkedDueCount = $driverCalendarAttendances
+                ->filter(function ($attendance) use ($attendanceCalendarToday) {
+                    return \Carbon\Carbon::parse($attendance->attendance_date)
+                        ->startOfDay()
+                        ->lte($attendanceCalendarToday);
+                })
+                ->count();
+
+            $driverCalendarNotMarkedCount = max(
+                0,
+                $driverCalendarDueDays - $driverCalendarMarkedDueCount
+            );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGEMENT CALENDAR DRIVER COLLECTION
+    |--------------------------------------------------------------------------
+    */
+
+    $managementCalendarDrivers = $drivers ?? collect();
+
+    if (
+        $managementCalendarDrivers instanceof
+        \Illuminate\Pagination\AbstractPaginator
+    ) {
+        $managementCalendarDrivers = $managementCalendarDrivers->getCollection();
+    }
+
+    $managementCalendarDrivers = collect($managementCalendarDrivers);
+
+    $selectedCalendarDriverId = request()->query('calendar_driver_id');
+
+    if (
+        $selectedCalendarDriverId &&
+        !$managementCalendarDrivers->contains(function ($driver) use ($selectedCalendarDriverId) {
+            return (string) $driver->id === (string) $selectedCalendarDriverId;
+        })
+    ) {
+        $selectedCalendarDriverId = null;
+    }
+
+    if ($selectedCalendarDriverId) {
+        $managementCalendarDrivers = $managementCalendarDrivers
+            ->filter(function ($driver) use ($selectedCalendarDriverId) {
+                return (string) $driver->id === (string) $selectedCalendarDriverId;
+            })
+            ->values();
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGEMENT MONTHLY ATTENDANCE QUERY
+    |--------------------------------------------------------------------------
+    */
+
+    $managementCalendarAttendances = collect();
+
+    if (
+        !$isDriver &&
+        $managementCalendarView === 'calendar' &&
+        $managementCalendarDrivers->isNotEmpty()
+    ) {
+        $managementCalendarDriverIds = $managementCalendarDrivers
+            ->pluck('id')
+            ->filter()
+            ->values();
+
+        if ($managementCalendarDriverIds->isNotEmpty()) {
+            $managementCalendarAttendances = \App\Models\DriverAttendance::query()
+                ->with([
+                    'driver',
+                    'workingSheet',
+                    'createdBy',
+                ])
+                ->whereIn('driver_id', $managementCalendarDriverIds->all())
+                ->whereBetween('attendance_date', [
+                    $attendanceCalendarMonth->copy()->startOfMonth()->toDateString(),
+                    $attendanceCalendarMonth->copy()->endOfMonth()->toDateString(),
+                ])
+                ->orderBy('attendance_date')
+                ->orderBy('driver_id')
+                ->get();
+        }
+    }
+
+    $managementCalendarRecordsByDate = $managementCalendarAttendances->groupBy(
+        function ($attendance) {
+            return \Carbon\Carbon::parse(
+                $attendance->attendance_date
+            )->format('Y-m-d');
+        }
     );
 
-    $driverCalendarPreviousMonthUrl = route('driver-attendances.index', [
-        'month' => $driverCalendarMonth->copy()->subMonthNoOverflow()->format('Y-m'),
-    ]);
+    $managementCalendarDaysData = [];
 
-    $driverCalendarNextMonthUrl = route('driver-attendances.index', [
-        'month' => $driverCalendarMonth->copy()->addMonthNoOverflow()->format('Y-m'),
-    ]);
+    $managementCalendarMonthlySummary = [
+        'present' => 0,
+        'absent' => 0,
+        'exception' => 0,
+        'leave' => 0,
+        'not_marked' => 0,
+        'other' => 0,
+        'marked' => 0,
+    ];
 
-    $driverCalendarCurrentMonthUrl = route('driver-attendances.index', [
-        'month' => now()->format('Y-m'),
-    ]);
+    if (!$isDriver && $managementCalendarView === 'calendar') {
+        foreach ($attendanceCalendarDays as $calendarDate) {
+            if (
+                $calendarDate->format('Y-m') !==
+                $attendanceCalendarMonth->format('Y-m')
+            ) {
+                continue;
+            }
+
+            $dateKey = $calendarDate->format('Y-m-d');
+
+            $isAttendanceDue = $dateKey <=
+                $attendanceCalendarToday->toDateString();
+
+            $dateRecords = $managementCalendarRecordsByDate
+                ->get($dateKey, collect())
+                ->keyBy('driver_id');
+
+            $dayRows = collect();
+
+            $dayStats = [
+                'present' => 0,
+                'absent' => 0,
+                'exception' => 0,
+                'leave' => 0,
+                'not_marked' => 0,
+                'other' => 0,
+                'upcoming' => 0,
+                'marked' => 0,
+                'total_drivers' => $managementCalendarDrivers->count(),
+            ];
+
+            foreach ($managementCalendarDrivers as $calendarDriver) {
+                $dayAttendance = $dateRecords->get($calendarDriver->id);
+
+                if ($dayAttendance) {
+                    $dayCategory = $getAttendanceCategory(
+                        $dayAttendance->status
+                    );
+
+                    $dayStats['marked']++;
+                } elseif ($isAttendanceDue) {
+                    $dayCategory = 'not_marked';
+                } else {
+                    $dayCategory = 'upcoming';
+                }
+
+                if (array_key_exists($dayCategory, $dayStats)) {
+                    $dayStats[$dayCategory]++;
+                }
+
+                $dayRows->push([
+                    'driver' => $calendarDriver,
+                    'attendance' => $dayAttendance,
+                    'category' => $dayCategory,
+                ]);
+            }
+
+            $managementCalendarDaysData[$dateKey] = [
+                'date' => $calendarDate->copy(),
+                'rows' => $dayRows,
+                'stats' => $dayStats,
+                'is_due' => $isAttendanceDue,
+            ];
+
+            foreach ([
+                'present',
+                'absent',
+                'exception',
+                'leave',
+                'not_marked',
+                'other',
+                'marked',
+            ] as $summaryKey) {
+                $managementCalendarMonthlySummary[$summaryKey] +=
+                    $dayStats[$summaryKey];
+            }
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MONTH NAVIGATION URLS
+    |--------------------------------------------------------------------------
+    */
+
+    $calendarPreviousMonthQuery = request()->query();
+    $calendarPreviousMonthQuery['month'] = $attendanceCalendarMonth
+        ->copy()
+        ->subMonthNoOverflow()
+        ->format('Y-m');
+
+    $calendarNextMonthQuery = request()->query();
+    $calendarNextMonthQuery['month'] = $attendanceCalendarMonth
+        ->copy()
+        ->addMonthNoOverflow()
+        ->format('Y-m');
+
+    $calendarCurrentMonthQuery = request()->query();
+    $calendarCurrentMonthQuery['month'] = now()->format('Y-m');
+
+    $calendarPreviousMonthUrl = route(
+        'driver-attendances.index',
+        $calendarPreviousMonthQuery
+    );
+
+    $calendarNextMonthUrl = route(
+        'driver-attendances.index',
+        $calendarNextMonthQuery
+    );
+
+    $calendarCurrentMonthUrl = route(
+        'driver-attendances.index',
+        $calendarCurrentMonthQuery
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGEMENT VIEW URLS
+    |--------------------------------------------------------------------------
+    */
+
+    $calendarViewQuery = request()->query();
+    $calendarViewQuery['view'] = 'calendar';
+
+    $tableViewQuery = request()->query();
+    $tableViewQuery['view'] = 'table';
+
+    $managementCalendarUrl = route(
+        'driver-attendances.index',
+        $calendarViewQuery
+    );
+
+    $managementTableUrl = route(
+        'driver-attendances.index',
+        $tableViewQuery
+    );
 @endphp
+
 
 <div class="pd-ltr-20 xs-pd-20-10 driver-attendance-page">
 
     <div class="min-height-200px">
-
 
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
         <div class="page-header">
 
-            <div class="row">
+            <div class="row align-items-center">
 
-                {{-- ================================================= --}}
-                {{-- PAGE TITLE --}}
-                {{-- ================================================= --}}
+                <div class="{{ !$isDriver ? 'col-md-8' : 'col-md-12' }} col-sm-12">
 
-                <div class="col-md-6 col-sm-12">
-
-                    <h4 class="text-blue">
-
-                        @if($isDriver)
-
-                            My Attendance
-
-                        @else
-
-                            Driver Attendance
-
-                        @endif
-
+                    <h4>
+                        {{ $isDriver ? 'My Attendance' : 'Driver Attendance Management' }}
                     </h4>
 
-                    <p class="mb-0">
-
+                    <p>
                         @if($isDriver)
-
-                            View your attendance, working hours
-                            and attendance history.
-
+                            Track your attendance, daily working hours and monthly attendance summary.
                         @else
-
-                            Manage driver attendance, working hours
-                            and attendance records.
-
+                            Monitor attendance across drivers, review daily status and manage records.
                         @endif
-
                     </p>
 
                 </div>
 
-
-                {{-- ================================================= --}}
-                {{-- ADD ATTENDANCE --}}
-                {{-- ================================================= --}}
-
                 @if(!$isDriver)
 
-                    <div class="col-md-6 col-sm-12 text-right">
+                    <div class="col-md-4 col-sm-12 text-md-right mt-3 mt-md-0">
 
                         <a
                             href="{{ route('driver-attendances.create') }}"
-                            class="btn btn-primary">
-
+                            class="btn btn-primary"
+                        >
                             <i class="fa fa-plus"></i>
-
                             Add Driver Attendance
-
                         </a>
 
                     </div>
@@ -825,69 +1537,113 @@
 
         </div>
 
+
+        {{-- ========================================================= --}}
+        {{-- MANAGEMENT VIEW SWITCHER --}}
+        {{-- ========================================================= --}}
         @if(!$isDriver)
 
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-20">
+
+                <div class="mb-2">
+
+                    <h5 class="mb-1 font-weight-bold text-dark">
+                        Attendance Overview
+                    </h5>
+
+                    <small class="text-muted">
+                        Switch between monthly calendar and detailed attendance records.
+                    </small>
+
+                </div>
+
+                <div class="attendance-view-switcher mb-2">
+
+                    <a
+                        href="{{ $managementCalendarUrl }}"
+                        class="{{ $managementCalendarView === 'calendar' ? 'active' : '' }}"
+                    >
+                        <i class="fa fa-calendar"></i>
+                        Calendar View
+                    </a>
+
+                    <a
+                        href="{{ $managementTableUrl }}"
+                        class="{{ $managementCalendarView === 'table' ? 'active' : '' }}"
+                    >
+                        <i class="fa fa-table"></i>
+                        Table View
+                    </a>
+
+                </div>
+
+            </div>
+
+        @endif
+
+
         {{-- ========================================================= --}}
-        {{-- FILTER CARD --}}
+        {{-- MANAGEMENT FILTERS --}}
         {{-- ========================================================= --}}
-        <div class="card-box mb-30">
+        @if(!$isDriver)
 
-            <div class="pd-20">
+            <div class="card-box mb-30">
 
-                <h4 class="text-blue h4 mb-20">
+                <div class="pd-20">
 
-                    Attendance Filters
+                    <h4 class="text-blue h4 mb-20">
+                        <i class="fa fa-filter mr-1"></i>
+                        Attendance Filters
+                    </h4>
 
-                </h4>
+                    <form
+                        method="GET"
+                        action="{{ route('driver-attendances.index') }}"
+                        class="attendance-filter-form"
+                    >
 
+                        <input
+                            type="hidden"
+                            name="view"
+                            value="{{ $managementCalendarView }}"
+                        >
 
-                <form
-                    method="GET"
-                    action="{{ route('driver-attendances.index') }}"
-                    class="form-horizontal attendance-filter-form"
-                    enctype="multipart/form-data"
-                >
-
-                    <div class="row">
-
-
-                        {{-- ================================================= --}}
-                        {{-- SEARCH --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-3 col-sm-6 mb-20">
-
-                            <label>
-
-                                Search
-
-                            </label>
-
+                        @if(request('month'))
                             <input
-                                type="text"
-                                name="search"
-                                value="{{ request('search') }}"
-                                class="form-control"
-                                placeholder="Driver name, code or mobile"
+                                type="hidden"
+                                name="month"
+                                value="{{ request('month') }}"
                             >
+                        @endif
 
-                        </div>
+                        @if(request('calendar_driver_id'))
+                            <input
+                                type="hidden"
+                                name="calendar_driver_id"
+                                value="{{ request('calendar_driver_id') }}"
+                            >
+                        @endif
+
+                        <div class="row">
+
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+
+                                <label>Search</label>
+
+                                <input
+                                    type="text"
+                                    name="search"
+                                    value="{{ request('search') }}"
+                                    class="form-control"
+                                    placeholder="Driver name, code or mobile"
+                                >
+
+                            </div>
 
 
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
 
-                        {{-- ================================================= --}}
-                        {{-- DRIVER --}}
-                        {{-- ================================================= --}}
-
-                        @if(!$isDriver)
-
-                            <div class="col-md-3 col-sm-6 mb-20">
-
-                                <label>
-
-                                    Driver
-
-                                </label>
+                                <label>Driver</label>
 
                                 <select
                                     name="driver_id"
@@ -895,26 +1651,1249 @@
                                 >
 
                                     <option value="">
-
                                         All Drivers
-
                                     </option>
-
 
                                     @foreach($drivers as $driver)
 
                                         <option
                                             value="{{ $driver->id }}"
-                                            {{ request('driver_id') == $driver->id ? 'selected' : '' }}
+                                            {{ (string) request('driver_id') === (string) $driver->id ? 'selected' : '' }}
                                         >
-
-                                            {{ $driver->first_name }} {{ $driver->last_name }}
+                                            {{ $driver->first_name }}
+                                            {{ $driver->last_name }}
 
                                             @if(!empty($driver->driver_code))
+                                                - {{ $driver->driver_code }}
+                                            @endif
+                                        </option>
 
-                                                -
-                                                {{ $driver->driver_code }}
+                                    @endforeach
 
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+
+                                <label>Attendance Date</label>
+
+                                <input
+                                    type="date"
+                                    name="attendance_date"
+                                    value="{{ request('attendance_date') }}"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+
+                                <label>Date From</label>
+
+                                <input
+                                    type="date"
+                                    name="date_from"
+                                    value="{{ request('date_from') }}"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+
+                            <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+
+                                <label>Date To</label>
+
+                                <input
+                                    type="date"
+                                    name="date_to"
+                                    value="{{ request('date_to') }}"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+
+                                <label>Status</label>
+
+                                <select
+                                    name="status"
+                                    class="form-control custom-select2"
+                                >
+
+                                    <option value="">
+                                        All Status
+                                    </option>
+
+                                    @foreach($statuses as $status)
+
+                                        <option
+                                            value="{{ $status }}"
+                                            {{ request('status') === $status ? 'selected' : '' }}
+                                        >
+                                            {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+
+                                <label>Source</label>
+
+                                <select
+                                    name="source"
+                                    class="form-control custom-select2"
+                                >
+
+                                    <option value="">
+                                        All Sources
+                                    </option>
+
+                                    @foreach($sources as $source)
+
+                                        <option
+                                            value="{{ $source }}"
+                                            {{ request('source') === $source ? 'selected' : '' }}
+                                        >
+                                            {{ ucfirst(str_replace('_', ' ', $source)) }}
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="col-lg-6 col-md-8 col-sm-12 mb-3 d-flex align-items-end">
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary mr-2"
+                                >
+                                    <i class="fa fa-search"></i>
+                                    Apply Filters
+                                </button>
+
+                                <a
+                                    href="{{ route('driver-attendances.index', ['view' => $managementCalendarView]) }}"
+                                    class="btn btn-secondary"
+                                >
+                                    <i class="fa fa-refresh"></i>
+                                    Reset
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        @endif
+
+                {{-- ========================================================= --}}
+        {{-- DRIVER PERSONAL ATTENDANCE DASHBOARD --}}
+        {{-- ========================================================= --}}
+        @if($isDriver)
+
+            <div class="card-box mb-30">
+
+                <div class="pd-20">
+
+                    @if(!$driverCalendarDriver)
+
+                        <div class="alert alert-warning mb-0" role="alert">
+
+                            <i class="fa fa-exclamation-triangle mr-1"></i>
+
+                            Your user account is not mapped with a Driver record.
+                            Please contact the administrator.
+
+                        </div>
+
+                    @else
+
+                        {{-- ================================================= --}}
+                        {{-- DRIVER WELCOME STRIP --}}
+                        {{-- ================================================= --}}
+                        <div class="driver-welcome-strip">
+
+                            <div class="d-flex align-items-center">
+
+                                <span class="welcome-icon mr-3">
+                                    <i class="fa fa-id-card-o"></i>
+                                </span>
+
+                                <div>
+
+                                    <div class="welcome-title">
+                                        Welcome, {{ auth()->user()->name ?? 'Driver' }}
+                                    </div>
+
+                                    <div class="welcome-subtitle">
+                                        Your personal attendance dashboard
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="welcome-month">
+                                <i class="fa fa-calendar mr-1"></i>
+                                {{ $attendanceCalendarMonth->format('F Y') }}
+                            </div>
+
+                        </div>
+
+
+                        {{-- ================================================= --}}
+                        {{-- DRIVER CALENDAR TOOLBAR --}}
+                        {{-- ================================================= --}}
+                        <div class="driver-calendar-toolbar d-flex flex-wrap justify-content-between align-items-center mb-20">
+
+                            <div class="mb-3 mb-md-0">
+
+                                <span class="driver-section-eyebrow">
+                                    MONTHLY ATTENDANCE
+                                </span>
+
+                                <h4 class="text-blue h4 mb-1">
+                                    My Attendance Calendar
+                                </h4>
+
+                                <p class="text-muted mb-0">
+                                    Select a date to view your complete attendance details.
+                                </p>
+
+                            </div>
+
+
+                            <div class="d-flex flex-wrap align-items-center">
+
+                                <div class="driver-calendar-navigation d-flex flex-wrap align-items-center">
+
+                                    <a
+                                        href="{{ $calendarPreviousMonthUrl }}"
+                                        class="btn btn-outline-secondary btn-sm calendar-nav-btn"
+                                        aria-label="Previous month"
+                                        title="Previous month"
+                                    >
+                                        <i class="fa fa-chevron-left"></i>
+                                    </a>
+
+                                    <strong class="calendar-month-label mx-2">
+                                        {{ $attendanceCalendarMonth->format('F Y') }}
+                                    </strong>
+
+                                    <a
+                                        href="{{ $calendarNextMonthUrl }}"
+                                        class="btn btn-outline-secondary btn-sm calendar-nav-btn"
+                                        aria-label="Next month"
+                                        title="Next month"
+                                    >
+                                        <i class="fa fa-chevron-right"></i>
+                                    </a>
+
+                                    <a
+                                        href="{{ $calendarCurrentMonthUrl }}"
+                                        class="btn btn-primary btn-sm ml-2"
+                                    >
+                                        Today
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Month Picker --}}
+                        <form
+                            action="{{ route('driver-attendances.index') }}"
+                            method="GET"
+                            class="management-calendar-filter mb-4"
+                        >
+
+                            <div class="row align-items-end">
+
+                                <div class="col-md-4 col-sm-7 mb-2 mb-md-0">
+
+                                    <label for="driver-attendance-month">
+                                        View Attendance Month
+                                    </label>
+
+                                    <input
+                                        type="month"
+                                        id="driver-attendance-month"
+                                        name="month"
+                                        value="{{ $attendanceCalendarMonth->format('Y-m') }}"
+                                        class="form-control"
+                                        max="{{ now()->format('Y-m') }}"
+                                    >
+
+                                </div>
+
+                                <div class="col-md-3 col-sm-5">
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-primary"
+                                    >
+                                        <i class="fa fa-calendar-check-o"></i>
+                                        View Month
+                                    </button>
+
+                                </div>
+
+                                <div class="col-md-5 d-none d-md-block text-md-right">
+
+                                    <small class="text-muted">
+                                        <i class="fa fa-info-circle mr-1"></i>
+                                        Choose a month to review your attendance history.
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+
+                        {{-- ================================================= --}}
+                        {{-- MONTHLY SUMMARY CARDS --}}
+                        {{-- ================================================= --}}
+                        <div class="row mb-2">
+
+                            {{-- Present --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-present">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-check-circle"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Present Days
+                                    </span>
+
+                                    <span class="summary-value text-success">
+                                        {{ $driverCalendarPresentCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Present and duty records
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Total Working Hours --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-hours">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-clock-o"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Total Working Hours
+                                    </span>
+
+                                    <span class="summary-value text-primary">
+                                        {{ number_format($driverCalendarTotalHours, 2) }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Total hours recorded this month
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Average Working Hours --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-average">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-line-chart"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Average Hours
+                                    </span>
+
+                                    <span class="summary-value" style="color:#1684a5;">
+                                        {{ number_format($driverCalendarAverageHours, 2) }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Average per day with recorded hours
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Absent --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-absent">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-times-circle"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Absent Days
+                                    </span>
+
+                                    <span class="summary-value text-danger">
+                                        {{ $driverCalendarAbsentCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Recorded absences
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Exceptions --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-exception">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Exceptions
+                                    </span>
+
+                                    <span class="summary-value" style="color:#a66b13;">
+                                        {{ $driverCalendarExceptionCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Half day, late, early exit or punch issue
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Leave --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-leave">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-calendar"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Leave Days
+                                    </span>
+
+                                    <span class="summary-value" style="color:#5676d8;">
+                                        {{ $driverCalendarLeaveCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Recorded leave entries
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Not Marked --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-unmarked">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-calendar-o"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Not Marked
+                                    </span>
+
+                                    <span class="summary-value text-secondary">
+                                        {{ $driverCalendarNotMarkedCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        No record on elapsed calendar dates
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Marked Records --}}
+                            <div class="col-xl-3 col-md-4 col-6 mb-3">
+
+                                <div class="attendance-summary-card summary-card-rate">
+
+                                    <span class="summary-icon">
+                                        <i class="fa fa-calendar-check-o"></i>
+                                    </span>
+
+                                    <span class="summary-label">
+                                        Marked Records
+                                    </span>
+
+                                    <span class="summary-value" style="color:#16834a;">
+                                        {{ $driverCalendarMarkedCount }}
+                                    </span>
+
+                                    <span class="summary-caption">
+                                        Days with an attendance entry
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- ================================================= --}}
+                        {{-- PRESENT SHARE INDICATOR --}}
+                        {{-- ================================================= --}}
+                        <div class="attendance-progress-panel mb-4">
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                <div>
+
+                                    <strong class="progress-label">
+                                        Present Share of Marked Records
+                                    </strong>
+
+                                    <small class="text-muted d-block mt-1">
+                                        Present records divided by all marked records.
+                                    </small>
+
+                                </div>
+
+                                <span class="progress-value">
+                                    {{ $driverCalendarPresentShare }}%
+                                </span>
+
+                            </div>
+
+                            <div
+                                class="progress"
+                                role="progressbar"
+                                aria-valuenow="{{ $driverCalendarPresentShare }}"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-label="Present share of marked records"
+                            >
+
+                                <div
+                                    class="progress-bar"
+                                    style="width: {{ $driverCalendarPresentShare }}%;"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- ================================================= --}}
+                        {{-- ATTENDANCE CALENDAR LEGEND --}}
+                        {{-- ================================================= --}}
+                        <div class="attendance-calendar-legend mb-3">
+
+                            <span class="badge badge-success">
+                                <i class="fa fa-check-circle mr-1"></i>
+                                Present
+                            </span>
+
+                            <span class="badge badge-danger">
+                                <i class="fa fa-times-circle mr-1"></i>
+                                Absent
+                            </span>
+
+                            <span class="badge badge-warning">
+                                <i class="fa fa-exclamation-circle mr-1"></i>
+                                Half Day / Exception
+                            </span>
+
+                            <span class="badge badge-primary">
+                                <i class="fa fa-calendar mr-1"></i>
+                                Leave
+                            </span>
+
+                            <span class="badge badge-info">
+                                <i class="fa fa-calendar-o mr-1"></i>
+                                Holiday / Weekly Off
+                            </span>
+
+                            <span class="badge badge-secondary">
+                                <i class="fa fa-question-circle mr-1"></i>
+                                Not Marked
+                            </span>
+
+                            <span class="badge badge-light border">
+                                Upcoming
+                            </span>
+
+                        </div>
+
+
+                        {{-- ================================================= --}}
+                        {{-- DRIVER CALENDAR GRID --}}
+                        {{-- ================================================= --}}
+                        <div
+                            class="attendance-calendar-grid"
+                            role="group"
+                            aria-label="Monthly driver attendance calendar"
+                        >
+
+                            @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday)
+
+                                <div class="attendance-calendar-weekday">
+                                    {{ $weekday }}
+                                </div>
+
+                            @endforeach
+
+
+                            @foreach($attendanceCalendarDays as $calendarDay)
+
+                                @php
+                                    $calendarDayKey = $calendarDay->format('Y-m-d');
+
+                                    $isCalendarCurrentMonth =
+                                        $calendarDay->format('Y-m') ===
+                                        $attendanceCalendarMonth->format('Y-m');
+
+                                    $dayAttendance = $isCalendarCurrentMonth
+                                        ? $driverCalendarAttendances->get($calendarDayKey)
+                                        : null;
+
+                                    $isCalendarDayDue =
+                                        $calendarDayKey <=
+                                        $attendanceCalendarToday->toDateString();
+
+                                    if ($dayAttendance) {
+                                        $driverDayMeta = $getAttendanceStatusMeta(
+                                            $dayAttendance->status
+                                        );
+
+                                        $driverDayCategory = $driverDayMeta['category'];
+                                        $driverDayCardClass = $driverDayMeta['card'];
+                                        $driverDayStatusLabel = $driverDayMeta['label'];
+                                        $driverDayBadgeClass = $driverDayMeta['badge'];
+                                    } else {
+                                        $driverDayCategory = $isCalendarDayDue
+                                            ? 'not_marked'
+                                            : 'upcoming';
+
+                                        $driverDayCardClass = $isCalendarDayDue
+                                            ? 'not-marked'
+                                            : 'upcoming';
+
+                                        $driverDayStatusLabel = $isCalendarDayDue
+                                            ? 'Not Marked'
+                                            : 'Upcoming';
+
+                                        $driverDayBadgeClass = $isCalendarDayDue
+                                            ? 'secondary'
+                                            : 'light';
+                                    }
+
+                                    $driverModalId = 'driverAttendanceDayModal' .
+                                        $calendarDay->format('Ymd');
+                                @endphp
+
+
+                                @if(!$isCalendarCurrentMonth)
+
+                                    <div
+                                        class="attendance-day-card is-other-month"
+                                        aria-hidden="true"
+                                    >
+
+                                        <div class="attendance-day-number">
+                                            <span>{{ $calendarDay->day }}</span>
+                                        </div>
+
+                                    </div>
+
+                                @else
+
+                                    <button
+                                        type="button"
+                                        class="attendance-day-card attendance-day-card--{{ $driverDayCardClass }} {{ $calendarDay->isToday() ? 'is-today' : '' }}"
+                                        data-toggle="modal"
+                                        data-target="#{{ $driverModalId }}"
+                                        aria-label="View attendance details for {{ $calendarDay->format('d F Y') }}"
+                                    >
+
+                                        <div class="attendance-day-number">
+
+                                            <span>
+                                                {{ $calendarDay->day }}
+                                            </span>
+
+                                            @if($calendarDay->isToday())
+
+                                                <small>
+                                                    Today
+                                                </small>
+
+                                            @endif
+
+                                        </div>
+
+
+                                        <div class="attendance-day-details">
+
+                                            <span class="badge badge-{{ $driverDayBadgeClass }}">
+
+                                                {{ $driverDayStatusLabel }}
+
+                                            </span>
+
+
+                                            @if($dayAttendance)
+
+                                                @if($dayAttendance->in_time || $dayAttendance->out_time)
+
+                                                    <span class="attendance-day-time">
+
+                                                        <i class="fa fa-clock-o mr-1"></i>
+
+                                                        {{ $dayAttendance->in_time
+                                                            ? \Carbon\Carbon::parse($dayAttendance->in_time)->format('h:i A')
+                                                            : '--' }}
+
+                                                        -
+
+                                                        {{ $dayAttendance->out_time
+                                                            ? \Carbon\Carbon::parse($dayAttendance->out_time)->format('h:i A')
+                                                            : '--' }}
+
+                                                    </span>
+
+                                                @endif
+
+
+                                                @if($dayAttendance->total_hours !== null)
+
+                                                    <span class="attendance-day-hours">
+
+                                                        <i class="fa fa-hourglass-half"></i>
+
+                                                        {{ number_format((float) $dayAttendance->total_hours, 2) }}
+                                                        hrs
+
+                                                    </span>
+
+                                                @endif
+
+
+                                                @if($dayAttendance->workingSheet && $dayAttendance->workingSheet->sheet_no)
+
+                                                    <span class="attendance-day-sheet">
+
+                                                        <i class="fa fa-file-text-o mr-1"></i>
+
+                                                        {{ $dayAttendance->workingSheet->sheet_no }}
+
+                                                    </span>
+
+                                                @endif
+
+                                            @elseif($isCalendarDayDue)
+
+                                                <span class="attendance-day-time">
+                                                    No attendance record
+                                                </span>
+
+                                            @else
+
+                                                <span class="attendance-day-time">
+                                                    Future date
+                                                </span>
+
+                                            @endif
+
+
+                                            <span class="attendance-day-click-hint">
+                                                <i class="fa fa-eye mr-1"></i>
+                                                View Details
+                                            </span>
+
+                                        </div>
+
+                                    </button>
+
+
+                                    {{-- ================================================= --}}
+                                    {{-- DRIVER DAY DETAILS MODAL --}}
+                                    {{-- ================================================= --}}
+                                    <div
+                                        class="modal fade attendance-day-modal"
+                                        id="{{ $driverModalId }}"
+                                        tabindex="-1"
+                                        role="dialog"
+                                        aria-labelledby="{{ $driverModalId }}Label"
+                                        aria-hidden="true"
+                                    >
+
+                                        <div
+                                            class="modal-dialog modal-md modal-dialog-centered"
+                                            role="document"
+                                        >
+
+                                            <div class="modal-content">
+
+                                                <div class="modal-header">
+
+                                                    <div>
+
+                                                        <h5
+                                                            class="modal-title"
+                                                            id="{{ $driverModalId }}Label"
+                                                        >
+
+                                                            <i class="fa fa-calendar-check-o text-primary mr-1"></i>
+
+                                                            My Attendance Details
+
+                                                        </h5>
+
+                                                        <small class="text-muted">
+
+                                                            {{ $calendarDay->format('l, d F Y') }}
+
+                                                        </small>
+
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        class="close"
+                                                        data-dismiss="modal"
+                                                        aria-label="Close"
+                                                    >
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+
+                                                </div>
+
+
+                                                <div class="modal-body">
+
+                                                    @if($dayAttendance)
+
+                                                        <div class="mb-3">
+
+                                                            <small class="text-muted d-block mb-2">
+                                                                Attendance Status
+                                                            </small>
+
+                                                            <span class="badge badge-{{ $driverDayBadgeClass }} px-3 py-2">
+
+                                                                <i class="fa {{ $driverDayMeta['icon'] }} mr-1"></i>
+
+                                                                {{ $driverDayStatusLabel }}
+
+                                                            </span>
+
+                                                        </div>
+
+
+                                                        <div class="row">
+
+                                                            <div class="col-6 mb-3">
+
+                                                                <div class="attendance-detail-box">
+
+                                                                    <small>
+                                                                        In Time
+                                                                    </small>
+
+                                                                    <strong>
+
+                                                                        @if($dayAttendance->in_time)
+
+                                                                            {{ \Carbon\Carbon::parse(
+                                                                                $dayAttendance->in_time
+                                                                            )->format('h:i A') }}
+
+                                                                        @else
+
+                                                                            -
+
+                                                                        @endif
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+
+                                                            <div class="col-6 mb-3">
+
+                                                                <div class="attendance-detail-box">
+
+                                                                    <small>
+                                                                        Out Time
+                                                                    </small>
+
+                                                                    <strong>
+
+                                                                        @if($dayAttendance->out_time)
+
+                                                                            {{ \Carbon\Carbon::parse(
+                                                                                $dayAttendance->out_time
+                                                                            )->format('h:i A') }}
+
+                                                                        @else
+
+                                                                            -
+
+                                                                        @endif
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+
+                                                            <div class="col-6 mb-3">
+
+                                                                <div class="attendance-detail-box">
+
+                                                                    <small>
+                                                                        Total Working Hours
+                                                                    </small>
+
+                                                                    <strong>
+
+                                                                        @if($dayAttendance->total_hours !== null)
+
+                                                                            {{ number_format(
+                                                                                (float) $dayAttendance->total_hours,
+                                                                                2
+                                                                            ) }}
+                                                                            hrs
+
+                                                                        @else
+
+                                                                            -
+
+                                                                        @endif
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+
+                                                            <div class="col-6 mb-3">
+
+                                                                <div class="attendance-detail-box">
+
+                                                                    <small>
+                                                                        Attendance Source
+                                                                    </small>
+
+                                                                    <strong style="font-size:12px;">
+
+                                                                        {{ ucfirst(
+                                                                            str_replace(
+                                                                                '_',
+                                                                                ' ',
+                                                                                $dayAttendance->source ?? 'Unknown'
+                                                                            )
+                                                                        ) }}
+
+                                                                    </strong>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        @if($dayAttendance->workingSheet && $dayAttendance->workingSheet->sheet_no)
+
+                                                            <div class="attendance-detail-box mb-3">
+
+                                                                <small>
+                                                                    Working Sheet Reference
+                                                                </small>
+
+                                                                <strong>
+                                                                    {{ $dayAttendance->workingSheet->sheet_no }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        @endif
+
+
+                                                    @else
+
+                                                        @if($isCalendarDayDue)
+
+                                                            <div class="alert alert-secondary mb-0">
+
+                                                                <i class="fa fa-info-circle mr-1"></i>
+
+                                                                <strong>Not Marked</strong>
+
+                                                                <p class="mb-0 mt-1">
+
+                                                                    No attendance record exists for this date.
+                                                                    This date is not automatically treated as Absent.
+
+                                                                </p>
+
+                                                            </div>
+
+                                                        @else
+
+                                                            <div class="alert alert-info mb-0">
+
+                                                                <i class="fa fa-calendar mr-1"></i>
+
+                                                                <strong>Upcoming Date</strong>
+
+                                                                <p class="mb-0 mt-1">
+
+                                                                    Attendance for this date has not yet become due.
+
+                                                                </p>
+
+                                                            </div>
+
+                                                        @endif
+
+                                                    @endif
+
+                                                </div>
+
+
+                                                <div class="modal-footer">
+
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-secondary"
+                                                        data-dismiss="modal"
+                                                    >
+                                                        Close
+                                                    </button>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                @endif
+
+                            @endforeach
+
+                        </div>
+
+
+                        {{-- ================================================= --}}
+                        {{-- CALENDAR FOOTNOTE --}}
+                        {{-- ================================================= --}}
+                        <div class="text-muted mt-3">
+
+                            <small>
+
+                                <i class="fa fa-info-circle mr-1"></i>
+
+                                Not Marked means no attendance record exists for an elapsed calendar date.
+                                It is not an Absent status. Future dates are shown as Upcoming.
+
+                                The present-share percentage is calculated only from marked records.
+                                It is not a payroll or eligible-working-day attendance percentage.
+
+                            </small>
+
+                        </div>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        @endif
+
+                {{-- ========================================================= --}}
+        {{-- MANAGEMENT ALL DRIVERS CALENDAR --}}
+        {{-- ========================================================= --}}
+        @if(!$isDriver && $managementCalendarView === 'calendar')
+
+            <div class="card-box mb-30">
+
+                <div class="pd-20">
+
+                    {{-- Management Calendar Header --}}
+                    <div class="driver-calendar-toolbar d-flex flex-wrap justify-content-between align-items-center mb-20">
+
+                        <div class="mb-3 mb-md-0">
+
+                            <span class="driver-section-eyebrow">
+                                MANAGEMENT ATTENDANCE OVERVIEW
+                            </span>
+
+                            <h4 class="text-blue h4 mb-1">
+                                All Drivers Monthly Calendar
+                            </h4>
+
+                            <p class="text-muted mb-0">
+                                Review daily attendance of all drivers in one calendar.
+                            </p>
+
+                        </div>
+
+
+                        <div class="driver-calendar-navigation d-flex flex-wrap align-items-center">
+
+                            <a
+                                href="{{ $calendarPreviousMonthUrl }}"
+                                class="btn btn-outline-secondary btn-sm calendar-nav-btn"
+                                aria-label="Previous month"
+                                title="Previous month"
+                            >
+                                <i class="fa fa-chevron-left"></i>
+                            </a>
+
+                            <strong class="calendar-month-label mx-2">
+                                {{ $attendanceCalendarMonth->format('F Y') }}
+                            </strong>
+
+                            <a
+                                href="{{ $calendarNextMonthUrl }}"
+                                class="btn btn-outline-secondary btn-sm calendar-nav-btn"
+                                aria-label="Next month"
+                                title="Next month"
+                            >
+                                <i class="fa fa-chevron-right"></i>
+                            </a>
+
+                            <a
+                                href="{{ $calendarCurrentMonthUrl }}"
+                                class="btn btn-primary btn-sm ml-2"
+                            >
+                                Today
+                            </a>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Management Calendar Filters --}}
+                    <form
+                        action="{{ route('driver-attendances.index') }}"
+                        method="GET"
+                        class="management-calendar-filter mb-4"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="view"
+                            value="calendar"
+                        >
+
+                        <div class="row align-items-end">
+
+                            <div class="col-md-4 col-sm-6 mb-3 mb-md-0">
+
+                                <label for="management-calendar-month">
+                                    Select Month
+                                </label>
+
+                                <input
+                                    type="month"
+                                    id="management-calendar-month"
+                                    name="month"
+                                    value="{{ $attendanceCalendarMonth->format('Y-m') }}"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+
+                            <div class="col-md-5 col-sm-6 mb-3 mb-md-0">
+
+                                <label for="management-calendar-driver">
+                                    Filter by Driver
+                                </label>
+
+                                <select
+                                    name="calendar_driver_id"
+                                    id="management-calendar-driver"
+                                    class="form-control custom-select2"
+                                >
+
+                                    <option value="">
+                                        All Drivers
+                                    </option>
+
+                                    @foreach($drivers as $driver)
+
+                                        <option
+                                            value="{{ $driver->id }}"
+                                            {{ (string) $selectedCalendarDriverId === (string) $driver->id ? 'selected' : '' }}
+                                        >
+
+                                            {{ $driver->first_name }}
+                                            {{ $driver->last_name }}
+
+                                            @if(!empty($driver->driver_code))
+                                                - {{ $driver->driver_code }}
                                             @endif
 
                                         </option>
@@ -925,563 +2904,1013 @@
 
                             </div>
 
+
+                            <div class="col-md-3 col-sm-12">
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary mr-1"
+                                >
+                                    <i class="fa fa-filter"></i>
+                                    Apply
+                                </button>
+
+                                <a
+                                    href="{{ route('driver-attendances.index', ['view' => 'calendar']) }}"
+                                    class="btn btn-secondary"
+                                    title="Reset calendar filters"
+                                >
+                                    <i class="fa fa-refresh"></i>
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+
+                    {{-- ================================================= --}}
+                    {{-- MANAGEMENT MONTHLY SUMMARY --}}
+                    {{-- ================================================= --}}
+                    <div class="row mb-2">
+
+                        <div class="col-xl col-md-4 col-6 mb-3">
+
+                            <div class="attendance-summary-card summary-card-present">
+
+                                <span class="summary-icon">
+                                    <i class="fa fa-check-circle"></i>
+                                </span>
+
+                                <span class="summary-label">
+                                    Present
+                                </span>
+
+                                <span class="summary-value text-success">
+                                    {{ $managementCalendarMonthlySummary['present'] }}
+                                </span>
+
+                                <span class="summary-caption">
+                                    Present driver-days
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-xl col-md-4 col-6 mb-3">
+
+                            <div class="attendance-summary-card summary-card-absent">
+
+                                <span class="summary-icon">
+                                    <i class="fa fa-times-circle"></i>
+                                </span>
+
+                                <span class="summary-label">
+                                    Absent
+                                </span>
+
+                                <span class="summary-value text-danger">
+                                    {{ $managementCalendarMonthlySummary['absent'] }}
+                                </span>
+
+                                <span class="summary-caption">
+                                    Recorded absences
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-xl col-md-4 col-6 mb-3">
+
+                            <div class="attendance-summary-card summary-card-exception">
+
+                                <span class="summary-icon">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                </span>
+
+                                <span class="summary-label">
+                                    Exceptions
+                                </span>
+
+                                <span class="summary-value" style="color:#a66b13;">
+                                    {{ $managementCalendarMonthlySummary['exception'] }}
+                                </span>
+
+                                <span class="summary-caption">
+                                    Half day, late or punch issues
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-xl col-md-4 col-6 mb-3">
+
+                            <div class="attendance-summary-card summary-card-leave">
+
+                                <span class="summary-icon">
+                                    <i class="fa fa-calendar"></i>
+                                </span>
+
+                                <span class="summary-label">
+                                    Leave
+                                </span>
+
+                                <span class="summary-value" style="color:#5676d8;">
+                                    {{ $managementCalendarMonthlySummary['leave'] }}
+                                </span>
+
+                                <span class="summary-caption">
+                                    Recorded leave entries
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-xl col-md-4 col-6 mb-3">
+
+                            <div class="attendance-summary-card summary-card-unmarked">
+
+                                <span class="summary-icon">
+                                    <i class="fa fa-calendar-o"></i>
+                                </span>
+
+                                <span class="summary-label">
+                                    Not Marked
+                                </span>
+
+                                <span class="summary-value text-secondary">
+                                    {{ $managementCalendarMonthlySummary['not_marked'] }}
+                                </span>
+
+                                <span class="summary-caption">
+                                    Missing elapsed driver-day records
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Calendar Context --}}
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+
+                        <div class="text-muted mb-2">
+
+                            <small>
+
+                                <i class="fa fa-users mr-1"></i>
+
+                                Drivers included:
+
+                                <strong>
+                                    {{ $managementCalendarDrivers->count() }}
+                                </strong>
+
+                            </small>
+
+                            <span class="mx-2">|</span>
+
+                            <small>
+
+                                <i class="fa fa-calendar-check-o mr-1"></i>
+
+                                Marked records:
+
+                                <strong>
+                                    {{ $managementCalendarMonthlySummary['marked'] }}
+                                </strong>
+
+                            </small>
+
+                        </div>
+
+
+                        @if($selectedCalendarDriverId)
+
+                            <span class="badge badge-info mb-2">
+                                <i class="fa fa-user mr-1"></i>
+                                Single Driver Filter Applied
+                            </span>
+
                         @endif
 
+                    </div>
 
 
-                        {{-- ================================================= --}}
-                        {{-- EXACT DATE --}}
-                        {{-- ================================================= --}}
+                    {{-- Calendar Legend --}}
+                    <div class="attendance-calendar-legend mb-3">
 
-                        <div class="col-md-2 col-sm-6 mb-20">
+                        <span class="badge badge-success">
+                            Present
+                        </span>
 
-                            <label>
+                        <span class="badge badge-danger">
+                            Absent
+                        </span>
 
-                                Attendance Date
+                        <span class="badge badge-warning">
+                            Half Day / Exceptions
+                        </span>
 
-                            </label>
+                        <span class="badge badge-primary">
+                            Leave
+                        </span>
 
-                            <input
-                                type="date"
-                                name="attendance_date"
-                                value="{{ request('attendance_date') }}"
-                                class="form-control"
-                            >
+                        <span class="badge badge-info">
+                            Holiday / Weekly Off
+                        </span>
 
-                        </div>
+                        <span class="badge badge-secondary">
+                            Not Marked
+                        </span>
 
+                        <span class="badge badge-light border">
+                            Upcoming
+                        </span>
 
-
-                        {{-- ================================================= --}}
-                        {{-- DATE FROM --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-2 col-sm-6 mb-20">
-
-                            <label>
-
-                                Date From
-
-                            </label>
-
-                            <input
-                                type="date"
-                                name="date_from"
-                                value="{{ request('date_from') }}"
-                                class="form-control"
-                            >
-
-                        </div>
-
-
-
-                        {{-- ================================================= --}}
-                        {{-- DATE TO --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-2 col-sm-6 mb-20">
-
-                            <label>
-
-                                Date To
-
-                            </label>
-
-                            <input
-                                type="date"
-                                name="date_to"
-                                value="{{ request('date_to') }}"
-                                class="form-control"
-                            >
-
-                        </div>
-
-
-
-                        {{-- ================================================= --}}
-                        {{-- STATUS --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-2 col-sm-6 mb-20">
-
-                            <label>
-
-                                Status
-
-                            </label>
-
-                            <select
-                                name="status"
-                                class="form-control custom-select2"
-                            >
-
-                                <option value="">
-
-                                    All Status
-
-                                </option>
-
-
-                                @foreach($statuses as $status)
-
-                                    <option
-                                        value="{{ $status }}"
-                                        {{ request('status') == $status ? 'selected' : '' }}
-                                    >
-
-                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
-
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-
-
-                        {{-- ================================================= --}}
-                        {{-- SOURCE --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-2 col-sm-6 mb-20">
-
-                            <label>
-
-                                Source
-
-                            </label>
-
-                            <select
-                                name="source"
-                                class="form-control custom-select2"
-                            >
-
-                                <option value="">
-
-                                    All Sources
-
-                                </option>
-
-
-                                @foreach($sources as $source)
-
-                                    <option
-                                        value="{{ $source }}"
-                                        {{ request('source') == $source ? 'selected' : '' }}
-                                    >
-
-                                        {{ ucfirst(str_replace('_', ' ', $source)) }}
-
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-
-
-                        {{-- ================================================= --}}
-                        {{-- BUTTONS --}}
-                        {{-- ================================================= --}}
-
-                        <div class="col-md-3 col-sm-6 mb-20 d-flex align-items-end">
-
-                            <button
-                                type="submit"
-                                class="btn btn-primary mr-2"
-                            >
-
-                                <i class="fa fa-search"></i>
-
-                                Filter
-
-                            </button>
-
-
-                            <a
-                                href="{{ route('driver-attendances.index') }}"
-                                class="btn btn-secondary"
-                            >
-
-                                <i class="fa fa-refresh"></i>
-
-                                Reset
-
-                            </a>
-
-                        </div>
+                        <small class="text-muted mb-2 ml-md-2">
+                            Click a date to open driver-wise details.
+                        </small>
 
                     </div>
 
-                </form>
 
-            </div>
+                    {{-- ================================================= --}}
+                    {{-- MANAGEMENT CALENDAR GRID --}}
+                    {{-- ================================================= --}}
+                    <div
+                        class="attendance-calendar-grid"
+                        role="group"
+                        aria-label="All drivers monthly attendance calendar"
+                    >
 
-        </div>
+                        @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday)
 
-        @endif
-
-        @if($isDriver)
-
-            {{-- ========================================================= --}}
-            {{-- DRIVER MONTHLY ATTENDANCE CALENDAR --}}
-            {{-- ========================================================= --}}
-            <div class="card-box mb-30">
-
-                <div class="pd-20">
-
-                    <div class="driver-calendar-toolbar d-flex flex-wrap justify-content-between align-items-center mb-20">
-
-                        <div class="mb-3 mb-md-0">
-                            <span class="driver-section-eyebrow">ATTENDANCE OVERVIEW</span>
-                            <h4 class="text-blue h4 mb-1">My Attendance Calendar</h4>
-                            <p class="text-muted mb-0">Your monthly attendance, work hours and daily status at a glance.</p>
-                        </div>
-
-                        <div class="driver-calendar-navigation d-flex flex-wrap align-items-center">
-                            <a href="{{ $driverCalendarPreviousMonthUrl }}" class="btn btn-outline-secondary btn-sm mr-2 mb-2 calendar-nav-btn" aria-label="Previous month" title="Previous month">
-                                <i class="fa fa-chevron-left"></i>
-                            </a>
-
-                            <strong class="calendar-month-label mx-2 mb-2">{{ $driverCalendarMonth->format('F Y') }}</strong>
-
-                            <a href="{{ $driverCalendarNextMonthUrl }}" class="btn btn-outline-secondary btn-sm ml-2 mb-2 calendar-nav-btn" aria-label="Next month" title="Next month">
-                                <i class="fa fa-chevron-right"></i>
-                            </a>
-
-                            <a href="{{ $driverCalendarCurrentMonthUrl }}" class="btn btn-primary btn-sm ml-2 mb-2 calendar-today-btn">
-                                Today
-                            </a>
-                        </div>
-
-                    </div>
-
-                    @if(!$driverCalendarDriver)
-
-                        <div class="alert alert-warning mb-0" role="alert">
-                            Your user account is not mapped with a Driver record. Please contact the administrator.
-                        </div>
-
-                    @else
-
-                        <div class="row mb-3">
-
-                            <div class="col-xl-3 col-md-6 col-6 mb-3">
-                                <div class="attendance-calendar-summary summary-card-marked">
-                                    <span class="summary-icon"><i class="fa fa-calendar-check-o"></i></span>
-                                    <small class="text-muted d-block">Marked Records</small>
-                                    <span class="summary-value text-primary">{{ $driverCalendarMarkedCount }}</span>
-                                    <small class="summary-caption">Attendance entries</small>
-                                </div>
+                            <div class="attendance-calendar-weekday">
+                                {{ $weekday }}
                             </div>
 
-                            <div class="col-xl-3 col-md-6 col-6 mb-3">
-                                <div class="attendance-calendar-summary summary-card-present">
-                                    <span class="summary-icon"><i class="fa fa-check-circle"></i></span>
-                                    <small class="text-muted d-block">Present</small>
-                                    <span class="summary-value text-success">{{ $driverCalendarPresentCount }}</span>
-                                    <small class="summary-caption">Days present</small>
-                                </div>
-                            </div>
+                        @endforeach
 
-                            <div class="col-xl-3 col-md-6 col-6 mb-3">
-                                <div class="attendance-calendar-summary summary-card-absent">
-                                    <span class="summary-icon"><i class="fa fa-times-circle"></i></span>
-                                    <small class="text-muted d-block">Absent</small>
-                                    <span class="summary-value text-danger">{{ $driverCalendarAbsentCount }}</span>
-                                    <small class="summary-caption">Recorded absences</small>
-                                </div>
-                            </div>
 
-                            <div class="col-xl-3 col-md-6 col-6 mb-3">
-                                <div class="attendance-calendar-summary summary-card-unmarked">
-                                    <span class="summary-icon"><i class="fa fa-calendar-o"></i></span>
-                                    <small class="text-muted d-block">Not Marked</small>
-                                    <span class="summary-value text-secondary">{{ $driverCalendarNotMarkedCount }}</span>
-                                    <small class="summary-caption">No record available</small>
-                                </div>
-                            </div>
+                        @foreach($attendanceCalendarDays as $calendarDay)
 
-                        </div>
+                            @php
+                                $managementDateKey = $calendarDay->format('Y-m-d');
 
-                        <div class="attendance-calendar-legend d-flex flex-wrap align-items-center mb-3">
-                            <span class="badge badge-success mr-2 mb-2">Present</span>
-                            <span class="badge badge-danger mr-2 mb-2">Absent</span>
-                            <span class="badge badge-warning mr-2 mb-2">Half Day / Late / Missing Punch</span>
-                            <span class="badge badge-primary mr-2 mb-2">Leave</span>
-                            <span class="badge badge-secondary mr-2 mb-2">Not Marked / Pending</span>
-                        </div>
+                                $isManagementCurrentMonth =
+                                    $calendarDay->format('Y-m') ===
+                                    $attendanceCalendarMonth->format('Y-m');
 
-                        <div class="attendance-calendar-grid" role="group" aria-label="Monthly attendance calendar">
+                                $managementDayData = $isManagementCurrentMonth
+                                    ? ($managementCalendarDaysData[$managementDateKey] ?? null)
+                                    : null;
 
-                            @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $weekday)
-                                <div class="attendance-calendar-weekday">{{ $weekday }}</div>
-                            @endforeach
+                                $managementDayStats = $managementDayData
+                                    ? $managementDayData['stats']
+                                    : null;
 
-                            @foreach($driverCalendarDays as $calendarDay)
+                                $managementDayIsDue = $managementDayData
+                                    ? $managementDayData['is_due']
+                                    : false;
 
-                                @php
-                                    $calendarDayKey = $calendarDay->format('Y-m-d');
-                                    $isCalendarCurrentMonth = $calendarDay->format('Y-m') === $driverCalendarMonth->format('Y-m');
-                                    $dayAttendance = $isCalendarCurrentMonth
-                                        ? $driverCalendarAttendances->get($calendarDayKey)
-                                        : null;
+                                $managementDayCardClass = 'upcoming';
 
-                                    $dayStatusClass = 'secondary';
-
-                                    if ($dayAttendance) {
-                                        $dayStatusClass = match ($dayAttendance->status) {
-                                            'present', 'present_late', 'present_early_exit' => 'success',
-                                            'absent' => 'danger',
-                                            'half_day', 'late', 'early_exit', 'missing_punch', 'unpaid_leave' => 'warning',
-                                            'leave', 'maternity_leave', 'sick_leave', 'casual_leave', 'paid_leave', 'comp_off', 'restricted_holiday' => 'primary',
-                                            'holiday', 'weekly_off', 'on_duty', 'work_from_home' => 'info',
-                                            default => 'secondary',
-                                        };
+                                if ($managementDayStats) {
+                                    if ($managementDayStats['absent'] > 0) {
+                                        $managementDayCardClass = 'danger';
+                                    } elseif ($managementDayStats['not_marked'] > 0) {
+                                        $managementDayCardClass = 'not-marked';
+                                    } elseif ($managementDayStats['exception'] > 0) {
+                                        $managementDayCardClass = 'warning';
+                                    } elseif ($managementDayStats['leave'] > 0) {
+                                        $managementDayCardClass = 'primary';
+                                    } elseif ($managementDayStats['present'] > 0) {
+                                        $managementDayCardClass = 'success';
+                                    } elseif ($managementDayStats['other'] > 0) {
+                                        $managementDayCardClass = 'info';
                                     }
-                                @endphp
+                                }
 
-                                @if(!$isCalendarCurrentMonth)
+                                $managementModalId = 'managementAttendanceDayModal' .
+                                    $calendarDay->format('Ymd');
+                            @endphp
 
-                                    <div class="attendance-day-card is-other-month" aria-hidden="true">
-                                        <div class="attendance-day-number">
-                                            <span>{{ $calendarDay->day }}</span>
-                                        </div>
+
+                            @if(!$isManagementCurrentMonth)
+
+                                <div
+                                    class="attendance-day-card is-other-month"
+                                    aria-hidden="true"
+                                >
+
+                                    <div class="attendance-day-number">
+                                        <span>{{ $calendarDay->day }}</span>
                                     </div>
 
-                                @else
+                                </div>
 
-                                    <div class="attendance-day-card {{ $calendarDay->isToday() ? 'is-today' : '' }} {{ $dayAttendance ? 'attendance-day-card--' . $dayStatusClass : 'attendance-day-card--not-marked' }}">
+                            @else
 
-                                        <div class="attendance-day-number">
-                                            <span>{{ $calendarDay->day }}</span>
+                                <button
+                                    type="button"
+                                    class="attendance-day-card attendance-day-card--{{ $managementDayCardClass }} {{ $calendarDay->isToday() ? 'is-today' : '' }}"
+                                    data-toggle="modal"
+                                    data-target="#{{ $managementModalId }}"
+                                    aria-label="View driver attendance for {{ $calendarDay->format('d F Y') }}"
+                                >
 
-                                            @if($calendarDay->isToday())
-                                                <small class="text-primary">Today</small>
-                                            @endif
-                                        </div>
+                                    <div class="attendance-day-number">
 
-                                        @if($dayAttendance)
+                                        <span>
+                                            {{ $calendarDay->day }}
+                                        </span>
 
-                                            <div class="attendance-day-details">
-                                                <span class="badge badge-{{ $dayStatusClass }} d-inline-block mb-2">
-                                                    {{ ucfirst(str_replace('_', ' ', $dayAttendance->status ?? 'Unknown')) }}
-                                                </span>
+                                        @if($calendarDay->isToday())
 
-                                                @if($dayAttendance->in_time || $dayAttendance->out_time)
-                                                    <div class="text-muted">
-                                                        <i class="fa fa-clock-o"></i>
-                                                        {{ $dayAttendance->in_time ? \Carbon\Carbon::parse($dayAttendance->in_time)->format('h:i A') : '--' }}
-                                                        –
-                                                        {{ $dayAttendance->out_time ? \Carbon\Carbon::parse($dayAttendance->out_time)->format('h:i A') : '--' }}
-                                                    </div>
-                                                @endif
-
-                                                @if($dayAttendance->total_hours !== null)
-                                                    <div class="text-muted mt-1">
-                                                        {{ number_format((float) $dayAttendance->total_hours, 2) }} hrs
-                                                    </div>
-                                                @endif
-
-                                                @if($dayAttendance->workingSheet && $dayAttendance->workingSheet->sheet_no)
-                                                    <div class="text-muted mt-1">
-                                                        <i class="fa fa-file-text-o"></i>
-                                                        {{ $dayAttendance->workingSheet->sheet_no }}
-                                                    </div>
-                                                @endif
-
-                                            </div>
-
-                                        @else
-
-                                            <span class="badge badge-secondary">Not Marked</span>
+                                            <small>
+                                                Today
+                                            </small>
 
                                         @endif
 
                                     </div>
 
-                                @endif
 
-                            @endforeach
+                                    @if($managementDayStats && $managementCalendarDrivers->isNotEmpty())
 
-                        </div>
+                                        <div class="attendance-day-details">
 
-                        <div class="text-muted mt-3">
-                            <small>
-                                Not Marked means no attendance record exists for that date. It is not an Absent status.
-                                Leave records: {{ $driverCalendarLeaveCount }}.
-                            </small>
-                        </div>
+                                            <div class="attendance-day-counts">
 
-                    @endif
+                                                <span class="count-present">
+                                                    P: {{ $managementDayStats['present'] }}
+                                                </span>
+
+                                                <span class="count-absent">
+                                                    A: {{ $managementDayStats['absent'] }}
+                                                </span>
+
+                                                <span class="count-exception">
+                                                    E: {{ $managementDayStats['exception'] }}
+                                                </span>
+
+                                                <span class="count-leave">
+                                                    L: {{ $managementDayStats['leave'] }}
+                                                </span>
+
+                                                <span class="count-unmarked">
+                                                    NM: {{ $managementDayStats['not_marked'] }}
+                                                </span>
+
+                                            </div>
+
+
+                                            @if($managementDayStats['upcoming'] > 0)
+
+                                                <small class="text-muted d-block mt-1">
+
+                                                    Upcoming:
+                                                    {{ $managementDayStats['upcoming'] }}
+
+                                                </small>
+
+                                            @endif
+
+
+                                            @if($managementDayStats['other'] > 0)
+
+                                                <small class="text-info d-block mt-1">
+
+                                                    Other:
+                                                    {{ $managementDayStats['other'] }}
+
+                                                </small>
+
+                                            @endif
+
+                                        </div>
+
+                                    @elseif($managementCalendarDrivers->isEmpty())
+
+                                        <small class="text-muted">
+                                            No drivers available
+                                        </small>
+
+                                    @elseif($managementDayIsDue)
+
+                                        <span class="badge badge-secondary">
+                                            Not Marked
+                                        </span>
+
+                                    @else
+
+                                        <span class="badge badge-light border">
+                                            Upcoming
+                                        </span>
+
+                                    @endif
+
+
+                                    <span class="attendance-day-click-hint">
+                                        <i class="fa fa-eye mr-1"></i>
+                                        View Driver Details
+                                    </span>
+
+                                </button>
+
+
+                                {{-- ================================================= --}}
+                                {{-- MANAGEMENT DATE-WISE DETAILS MODAL --}}
+                                {{-- ================================================= --}}
+                                <div
+                                    class="modal fade attendance-day-modal"
+                                    id="{{ $managementModalId }}"
+                                    tabindex="-1"
+                                    role="dialog"
+                                    aria-labelledby="{{ $managementModalId }}Label"
+                                    aria-hidden="true"
+                                >
+
+                                    <div
+                                        class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+                                        role="document"
+                                    >
+
+                                        <div class="modal-content">
+
+                                            <div class="modal-header">
+
+                                                <div>
+
+                                                    <h5
+                                                        class="modal-title"
+                                                        id="{{ $managementModalId }}Label"
+                                                    >
+
+                                                        <i class="fa fa-calendar-check-o text-primary mr-1"></i>
+
+                                                        Driver Attendance Details
+
+                                                    </h5>
+
+                                                    <small class="text-muted">
+
+                                                        {{ $calendarDay->format('l, d F Y') }}
+
+                                                    </small>
+
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    class="close"
+                                                    data-dismiss="modal"
+                                                    aria-label="Close"
+                                                >
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+
+                                            </div>
+
+
+                                            <div class="modal-body">
+
+                                                @if($managementCalendarDrivers->isEmpty())
+
+                                                    <div class="alert alert-info mb-0">
+
+                                                        No drivers are available for this calendar.
+
+                                                    </div>
+
+                                                @else
+
+                                                    @php
+                                                        $modalDayData = $managementCalendarDaysData[$managementDateKey] ?? null;
+
+                                                        $modalDayRows = $modalDayData
+                                                            ? $modalDayData['rows']
+                                                            : collect();
+
+                                                        $modalDayStats = $modalDayData
+                                                            ? $modalDayData['stats']
+                                                            : [];
+                                                    @endphp
+
+
+                                                    {{-- Modal Summary --}}
+                                                    <div class="row mb-3">
+
+                                                        <div class="col-md col-6 mb-2">
+
+                                                            <div class="attendance-detail-box">
+
+                                                                <small>
+                                                                    Present
+                                                                </small>
+
+                                                                <strong class="text-success">
+                                                                    {{ $modalDayStats['present'] ?? 0 }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="col-md col-6 mb-2">
+
+                                                            <div class="attendance-detail-box">
+
+                                                                <small>
+                                                                    Absent
+                                                                </small>
+
+                                                                <strong class="text-danger">
+                                                                    {{ $modalDayStats['absent'] ?? 0 }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="col-md col-6 mb-2">
+
+                                                            <div class="attendance-detail-box">
+
+                                                                <small>
+                                                                    Exceptions
+                                                                </small>
+
+                                                                <strong style="color:#a66b13;">
+                                                                    {{ $modalDayStats['exception'] ?? 0 }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="col-md col-6 mb-2">
+
+                                                            <div class="attendance-detail-box">
+
+                                                                <small>
+                                                                    Leave
+                                                                </small>
+
+                                                                <strong style="color:#5676d8;">
+                                                                    {{ $modalDayStats['leave'] ?? 0 }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+
+                                                        <div class="col-md col-6 mb-2">
+
+                                                            <div class="attendance-detail-box">
+
+                                                                <small>
+                                                                    Not Marked
+                                                                </small>
+
+                                                                <strong class="text-secondary">
+                                                                    {{ $modalDayStats['not_marked'] ?? 0 }}
+                                                                </strong>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    {{-- Driver-wise Details --}}
+                                                    <div class="table-responsive">
+
+                                                        <table class="table table-bordered table-hover mb-0">
+
+                                                            <thead>
+
+                                                                <tr>
+
+                                                                    <th>Sr. No.</th>
+
+                                                                    <th>Driver</th>
+
+                                                                    <th>In Time</th>
+
+                                                                    <th>Out Time</th>
+
+                                                                    <th>Total Hours</th>
+
+                                                                    <th>Status</th>
+
+                                                                    <th>Source</th>
+
+                                                                </tr>
+
+                                                            </thead>
+
+
+                                                            <tbody>
+
+                                                                @forelse($modalDayRows as $modalKey => $modalRow)
+
+                                                                    @php
+                                                                        $modalDriver = $modalRow['driver'];
+                                                                        $modalAttendance = $modalRow['attendance'];
+                                                                        $modalCategory = $modalRow['category'];
+
+                                                                        if ($modalAttendance) {
+                                                                            $modalMeta = $getAttendanceStatusMeta(
+                                                                                $modalAttendance->status
+                                                                            );
+
+                                                                            $modalStatusLabel = $modalMeta['label'];
+                                                                            $modalStatusClass = $modalMeta['badge'];
+                                                                        } else {
+                                                                            $modalStatusLabel = $modalCategory === 'upcoming'
+                                                                                ? 'Upcoming'
+                                                                                : 'Not Marked';
+
+                                                                            $modalStatusClass = $modalCategory === 'upcoming'
+                                                                                ? 'light'
+                                                                                : 'secondary';
+                                                                        }
+                                                                    @endphp
+
+
+                                                                    <tr>
+
+                                                                        <td>
+                                                                            {{ $modalKey + 1 }}
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            <strong>
+                                                                                {{ trim($modalDriver->first_name . ' ' . $modalDriver->last_name) ?: '-' }}
+                                                                            </strong>
+
+                                                                            @if(!empty($modalDriver->driver_code))
+
+                                                                                <small class="text-muted d-block">
+                                                                                    {{ $modalDriver->driver_code }}
+                                                                                </small>
+
+                                                                            @endif
+
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            @if($modalAttendance && $modalAttendance->in_time)
+
+                                                                                {{ \Carbon\Carbon::parse(
+                                                                                    $modalAttendance->in_time
+                                                                                )->format('h:i A') }}
+
+                                                                            @else
+
+                                                                                -
+
+                                                                            @endif
+
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            @if($modalAttendance && $modalAttendance->out_time)
+
+                                                                                {{ \Carbon\Carbon::parse(
+                                                                                    $modalAttendance->out_time
+                                                                                )->format('h:i A') }}
+
+                                                                            @else
+
+                                                                                -
+
+                                                                            @endif
+
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            @if($modalAttendance && $modalAttendance->total_hours !== null)
+
+                                                                                {{ number_format(
+                                                                                    (float) $modalAttendance->total_hours,
+                                                                                    2
+                                                                                ) }}
+                                                                                hrs
+
+                                                                            @else
+
+                                                                                -
+
+                                                                            @endif
+
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            <span class="badge badge-{{ $modalStatusClass }}">
+
+                                                                                {{ $modalStatusLabel }}
+
+                                                                            </span>
+
+                                                                        </td>
+
+
+                                                                        <td>
+
+                                                                            @if($modalAttendance)
+
+                                                                                {{ ucfirst(
+                                                                                    str_replace(
+                                                                                        '_',
+                                                                                        ' ',
+                                                                                        $modalAttendance->source ?? 'Unknown'
+                                                                                    )
+                                                                                ) }}
+
+                                                                            @else
+
+                                                                                -
+
+                                                                            @endif
+
+                                                                        </td>
+
+                                                                    </tr>
+
+                                                                @empty
+
+                                                                    <tr>
+
+                                                                        <td colspan="7" class="text-center text-muted py-4">
+
+                                                                            No driver details are available for this date.
+
+                                                                        </td>
+
+                                                                    </tr>
+
+                                                                @endforelse
+
+                                                            </tbody>
+
+                                                        </table>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </div>
+
+
+                                            <div class="modal-footer">
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-secondary"
+                                                    data-dismiss="modal"
+                                                >
+                                                    Close
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            @endif
+
+                        @endforeach
+
+                    </div>
+
+
+                    <div class="text-muted mt-3">
+
+                        <small>
+
+                            <i class="fa fa-info-circle mr-1"></i>
+
+                            P = Present, A = Absent, E = Exceptions, L = Leave,
+                            NM = Not Marked. Not Marked is not treated as Absent.
+                            Future dates are shown as Upcoming.
+
+                        </small>
+
+                    </div>
 
                 </div>
 
             </div>
 
-        @else
+        @endif
 
-            {{-- Management users keep the existing paginated attendance table. --}}
+
+        {{-- ========================================================= --}}
+        {{-- MANAGEMENT PAGINATED TABLE VIEW --}}
+        {{-- ========================================================= --}}
+        @if(!$isDriver && $managementCalendarView === 'table')
+
             @php
+                /*
+                 * Keep the existing paginator and load its relationships.
+                 * Calendar data is loaded independently above.
+                 */
                 $attendances->getCollection()->loadMissing([
+                    'driver',
+                    'createdBy',
                     'workingSheet.dutySlip.dutyAssignment.travelRequest',
                 ]);
             @endphp
 
-        {{-- ========================================================= --}}
-        {{-- ATTENDANCE LIST CARD --}}
-        {{-- ========================================================= --}}
-        <div class="card-box mb-30">
 
-            {{-- ===================================================== --}}
-            {{-- CARD HEADER --}}
-            {{-- ===================================================== --}}
-            <div class="pd-20">
+            <div class="card-box mb-30">
 
-                <div class="attendance-table-heading d-flex flex-wrap justify-content-between align-items-center">
+                {{-- Table Header --}}
+                <div class="pd-20">
 
-                    <h4 class="text-blue h4 mb-0">
+                    <div class="attendance-table-heading d-flex flex-wrap justify-content-between align-items-center">
 
-                        @if($isDriver)
+                        <div>
 
-                            My Attendance
+                            <h4 class="text-blue h4 mb-1">
+                                All Driver Attendance Records
+                            </h4>
 
-                        @else
+                            <small class="text-muted">
+                                Detailed attendance records with edit and delete actions.
+                            </small>
 
-                            All Driver Attendance
+                        </div>
 
-                        @endif
+                        <span class="badge badge-primary px-3 py-2">
+                            Total Records: {{ $attendances->total() }}
+                        </span>
 
-                    </h4>
-
-
-                    <span class="badge badge-primary">
-
-                        Total :
-
-                        {{ $attendances->total() }}
-
-                    </span>
+                    </div>
 
                 </div>
 
-            </div>
 
-            {{-- ===================================================== --}}
-            {{-- TABLE --}}
-            {{-- ===================================================== --}}
-            <div class="pb-20">
+                {{-- Attendance Table --}}
+                <div class="pb-20">
 
-                <div class="table-responsive attendance-table-wrap">
+                    <div class="table-responsive attendance-table-wrap">
 
-                    <table class="table hover multiple-select-row data-table-export1 nowrap p-3 attendance-management-table" data-title="Driver Attendance">
+                        <table
+                            class="table hover multiple-select-row data-table-export1 nowrap p-3 attendance-management-table"
+                            data-title="Driver Attendance"
+                        >
 
-                        {{-- ================================================= --}}
-                        {{-- TABLE HEADER --}}
-                        {{-- ================================================= --}}
-                        <thead>
-
-                            <tr>
-
-                                <th class="text-wrap">
-                                    Sr. No.
-                                </th>
-
-                                @if(!$isDriver)
-
-                                    <th class="text-wrap">
-                                        Driver
-                                    </th>
-
-                                @endif
-
-                                <th class="text-wrap">
-                                    Attendance Date
-                                </th>
-
-                                <th class="text-wrap">
-                                    In Time
-                                </th>
-
-                                <th class="text-wrap">
-                                    Out Time
-                                </th>
-
-                                <th class="text-wrap">
-                                    Total Hours
-                                </th>
-
-                                <th class="text-wrap">
-                                    Status
-                                </th>
-
-                                <th class="text-wrap">
-                                    Source
-                                </th>
-
-                                <th class="text-wrap">
-                                    Created By
-                                </th>
-
-                                <th class="text-wrap no-export">
-                                    Edit
-                                </th>
-
-                                <th class="text-wrap no-export">
-                                    Delete
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        {{-- ================================================= --}}
-                        {{-- TABLE BODY --}}
-                        {{-- ================================================= --}}
-                        <tbody>
-
-                            @forelse($attendances as $key => $attendance)
-
-                                @php
-                                    $attendanceWorkingSheet = $attendance->workingSheet;
-                                    $attendanceDutySlip = $attendanceWorkingSheet
-                                        ? $attendanceWorkingSheet->dutySlip
-                                        : null;
-                                    $attendanceDutyAssignment = $attendanceDutySlip
-                                        ? $attendanceDutySlip->dutyAssignment
-                                        : null;
-                                    $attendanceTravelRequest = $attendanceDutyAssignment
-                                        ? $attendanceDutyAssignment->travelRequest
-                                        : null;
-                                @endphp
+                            <thead>
 
                                 <tr>
 
-                                    {{-- ===================================== --}}
-                                    {{-- SR NO --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-                                        {{ ($attendances->currentPage() - 1) * $attendances->perPage() + $key + 1 }}
-                                    </td>
+                                    <th>Sr. No.</th>
+                                    <th>Driver</th>
+                                    <th>Attendance Date</th>
+                                    <th>In Time</th>
+                                    <th>Out Time</th>
+                                    <th>Total Hours</th>
+                                    <th>Status</th>
+                                    <th>Source</th>
+                                    <th>Created By</th>
+                                    <th class="no-export">Edit</th>
+                                    <th class="no-export">Delete</th>
 
-                                    {{-- ===================================== --}}
-                                    {{-- DRIVER --}}
-                                    {{-- ===================================== --}}
-                                    @if(!$isDriver)
+                                </tr>
 
+                            </thead>
+
+
+                            <tbody>
+
+                                @forelse($attendances as $key => $attendance)
+
+                                    @php
+                                        $attendanceWorkingSheet = $attendance->workingSheet;
+
+                                        $attendanceDutySlip = $attendanceWorkingSheet
+                                            ? $attendanceWorkingSheet->dutySlip
+                                            : null;
+
+                                        $attendanceDutyAssignment = $attendanceDutySlip
+                                            ? $attendanceDutySlip->dutyAssignment
+                                            : null;
+
+                                        $attendanceTravelRequest = $attendanceDutyAssignment
+                                            ? $attendanceDutyAssignment->travelRequest
+                                            : null;
+
+                                        $attendanceMeta = $getAttendanceStatusMeta(
+                                            $attendance->status
+                                        );
+
+                                        $attendanceSource = $attendance->source;
+
+                                        $attendanceSourceClass =
+                                            $attendanceSource === 'working_sheet'
+                                                ? 'badge-info'
+                                                : 'badge-secondary';
+                                    @endphp
+
+
+                                    <tr>
+
+                                        {{-- Sr. No. --}}
                                         <td>
+
+                                            {{ ($attendances->currentPage() - 1) * $attendances->perPage() + $key + 1 }}
+
+                                        </td>
+
+
+                                        {{-- Driver --}}
+                                        <td class="driver-name-cell">
 
                                             @if($attendance->driver)
 
                                                 <strong class="text-dark">
 
-                                                    {{ $attendance->driver->first_name . ' ' . $attendance->driver->last_name ?? '-' }}
+                                                    {{ trim(
+                                                        $attendance->driver->first_name . ' ' .
+                                                        $attendance->driver->last_name
+                                                    ) }}
 
                                                 </strong>
+
+                                                @if(!empty($attendance->driver->driver_code))
+
+                                                    <small class="text-muted d-block driver-code">
+
+                                                        {{ $attendance->driver->driver_code }}
+
+                                                    </small>
+
+                                                @endif
+
+                                            @else
+
+                                                <span class="text-muted">
+                                                    Driver Not Available
+                                                </span>
+
+                                            @endif
+
+                                        </td>
+
+
+                                        {{-- Attendance Date --}}
+                                        <td>
+
+                                            @if($attendance->attendance_date)
+
+                                                <strong>
+
+                                                    {{ \Carbon\Carbon::parse(
+                                                        $attendance->attendance_date
+                                                    )->format('d M Y') }}
+
+                                                </strong>
+
+                                                <small class="text-muted d-block">
+
+                                                    {{ \Carbon\Carbon::parse(
+                                                        $attendance->attendance_date
+                                                    )->format('l') }}
+
+                                                </small>
 
                                             @else
 
@@ -1491,259 +3920,153 @@
 
                                         </td>
 
-                                    @endif
 
-                                    {{-- ===================================== --}}
-                                    {{-- ATTENDANCE DATE --}}
-                                    {{-- ===================================== --}}
-                                    <td>
+                                        {{-- In Time --}}
+                                        <td>
 
-                                        @if($attendance->attendance_date)
+                                            @if($attendance->in_time)
 
-                                            <strong>
+                                                <span class="attendance-time">
 
-                                                {{ \Carbon\Carbon::parse(
-                                                    $attendance->attendance_date
-                                                )->format('d-m-Y') }}
+                                                    <i class="fa fa-sign-in text-success mr-1"></i>
 
-                                            </strong>
+                                                    {{ \Carbon\Carbon::parse(
+                                                        $attendance->in_time
+                                                    )->format('h:i A') }}
 
-                                        @else
+                                                </span>
 
-                                            -
+                                            @else
 
-                                        @endif
+                                                -
 
-                                    </td>
+                                            @endif
 
-                                    {{-- ===================================== --}}
-                                    {{-- IN TIME --}}
-                                    {{-- ===================================== --}}
-                                    <td>
+                                        </td>
 
-                                        @if($attendance->in_time)
 
-                                            <span class="attendance-time">
+                                        {{-- Out Time --}}
+                                        <td>
 
-                                                <i class="fa fa-sign-in text-success"></i>
+                                            @if($attendance->out_time)
 
-                                                {{ \Carbon\Carbon::parse(
-                                                    $attendance->in_time
-                                                )->format('h:i A') }}
+                                                <span class="attendance-time">
+
+                                                    <i class="fa fa-sign-out text-danger mr-1"></i>
+
+                                                    {{ \Carbon\Carbon::parse(
+                                                        $attendance->out_time
+                                                    )->format('h:i A') }}
+
+                                                </span>
+
+                                            @else
+
+                                                -
+
+                                            @endif
+
+                                        </td>
+
+
+                                        {{-- Total Hours --}}
+                                        <td>
+
+                                            @if($attendance->total_hours !== null)
+
+                                                <span class="badge badge-info px-2 py-2">
+
+                                                    {{ number_format(
+                                                        (float) $attendance->total_hours,
+                                                        2
+                                                    ) }}
+
+                                                    hrs
+
+                                                </span>
+
+                                            @else
+
+                                                -
+
+                                            @endif
+
+                                        </td>
+
+
+                                        {{-- Status --}}
+                                        <td>
+
+                                            <span class="badge badge-{{ $attendanceMeta['badge'] }} badge-pill px-3 py-2">
+
+                                                <i class="fa {{ $attendanceMeta['icon'] }} mr-1"></i>
+
+                                                {{ $attendanceMeta['label'] }}
 
                                             </span>
 
-                                        @else
+                                        </td>
 
-                                            -
 
-                                        @endif
+                                        {{-- Source --}}
+                                        <td>
 
-                                    </td>
+                                            <span class="badge {{ $attendanceSourceClass }}">
 
-                                    {{-- ===================================== --}}
-                                    {{-- OUT TIME --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-
-                                        @if($attendance->out_time)
-
-                                            <span class="attendance-time">
-
-                                                <i class="fa fa-sign-out text-danger"></i>
-
-                                                {{ \Carbon\Carbon::parse(
-                                                    $attendance->out_time
-                                                )->format('h:i A') }}
-
-                                            </span>
-
-                                        @else
-
-                                            -
-
-                                        @endif
-
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- TOTAL HOURS --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-
-                                        @if($attendance->total_hours !== null)
-
-                                            <span class="badge badge-info">
-
-                                                {{ number_format(
-                                                    (float) $attendance->total_hours,
-                                                    2
+                                                {{ ucfirst(
+                                                    str_replace(
+                                                        '_',
+                                                        ' ',
+                                                        $attendanceSource ?? 'Unknown'
+                                                    )
                                                 ) }}
 
-                                                hrs
-
                                             </span>
 
-                                        @else
-
-                                            -
-
-                                        @endif
-
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- STATUS --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-
-                                        @php
-
-                                            $status =
-                                                $attendance->status;
-
-                                            $statusClass = match ($status) {
-
-                                                'present' =>
-                                                    'badge-success',
-
-                                                'absent' =>
-                                                    'badge-danger',
-
-                                                'half_day' =>
-                                                    'badge-warning',
-
-                                                'leave' =>
-                                                    'badge-primary',
-
-                                                'pending' =>
-                                                    'badge-secondary',
-
-                                                default =>
-                                                    'badge-secondary',
-
-                                            };
+                                        </td>
 
 
-                                            $statusIcon = match ($status) {
+                                        {{-- Created By --}}
+                                        <td>
 
-                                                'present' =>
-                                                    'fa-check-circle',
+                                            @if($attendance->createdBy)
 
-                                                'absent' =>
-                                                    'fa-times-circle',
+                                                <span class="text-dark">
+                                                    {{ $attendance->createdBy->name }}
+                                                </span>
 
-                                                'half_day' =>
-                                                    'fa-adjust',
+                                            @else
 
-                                                'leave' =>
-                                                    'fa-calendar',
+                                                <span class="text-muted">
+                                                    -
+                                                </span>
 
-                                                'pending' =>
-                                                    'fa-clock-o',
+                                            @endif
 
-                                                default =>
-                                                    'fa-info-circle',
-
-                                            };
-
-                                        @endphp
+                                        </td>
 
 
-                                        <span
-                                            class="badge {{ $statusClass }} badge-pill px-3 py-2"
-                                        >
+                                        {{-- Edit --}}
+                                        <td class="no-export">
 
-                                            <i class="fa {{ $statusIcon }}"></i>
-
-                                            {{ ucfirst(
-                                                str_replace(
-                                                    '_',
-                                                    ' ',
-                                                    $status ?? 'Unknown'
-                                                )
-                                            ) }}
-
-                                        </span>
-
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- SOURCE --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-
-                                        @php
-
-                                            $source =
-                                                $attendance->source;
-
-                                            $sourceClass =
-                                                $source === 'working_sheet'
-                                                    ? 'badge-info'
-                                                    : 'badge-secondary';
-
-                                        @endphp
-
-
-                                        <span
-                                            class="badge {{ $sourceClass }}"
-                                        >
-
-                                            {{ ucfirst(
-                                                str_replace(
-                                                    '_',
-                                                    ' ',
-                                                    $source ?? 'Unknown'
-                                                )
-                                            ) }}
-
-                                        </span>
-
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- CREATED BY --}}
-                                    {{-- ===================================== --}}
-                                    <td>
-
-                                        @if($attendance->createdBy)
-
-                                            {{ $attendance->createdBy->name }}
-
-                                        @else
-
-                                            -
-
-                                        @endif
-
-                                    </td>
-
-                                    {{-- ===================================== --}}
-                                    {{-- EDIT --}}
-                                    {{-- ===================================== --}}
-                                    <td class="no-export">
-
-                                        @if(!$isDriver)
                                             <a
                                                 href="{{ route('driver-attendances.edit', $attendance->id) }}"
                                                 class="btn btn-warning btn-sm attendance-action-btn"
                                                 aria-label="Edit attendance"
                                                 title="Edit attendance"
                                             >
+
                                                 <i class="dw dw-pencil-1"></i>
+
                                                 <span>Edit</span>
+
                                             </a>
-                                        @endif
 
-                                    </td>
+                                        </td>
 
-                                    {{-- ===================================== --}}
-                                    {{-- DELETE --}}
-                                    {{-- ===================================== --}}
-                                    <td class="no-export">
 
-                                        @if(!$isDriver)
+                                        {{-- Delete --}}
+                                        <td class="no-export">
 
                                             <form
                                                 action="{{ route(
@@ -1758,97 +4081,70 @@
 
                                                 @method('DELETE')
 
-
                                                 <button
                                                     type="submit"
-                                                    class="btn btn-danger btn-sm"
+                                                    class="btn btn-danger btn-sm attendance-action-btn"
                                                 >
 
                                                     <i class="dw dw-trash"></i>
 
-                                                    Delete
+                                                    <span>Delete</span>
 
                                                 </button>
 
                                             </form>
 
-                                        @else
+                                        </td>
 
-                                            -
+                                    </tr>
 
-                                        @endif
+                                @empty
 
-                                    </td>
+                                    <tr>
 
-                                </tr>
+                                        <td colspan="11" class="text-center py-5">
 
-                            @empty
+                                            <div class="p-3">
 
-                                {{-- ========================================= --}}
-                                {{-- NO DATA --}}
-                                {{-- ========================================= --}}
-                                <tr>
+                                                <i class="fa fa-calendar-times-o fa-3x text-muted mb-3"></i>
 
-                                    <td colspan="14" class="text-center" style="vertical-align: middle;">
-
-                                        <div class="p-4">
-
-                                            <i class="fa fa-calendar-check-o fa-2x text-muted mb-3"></i>
-
-                                            <h5 class="text-muted">
-
-                                                @if($isDriver)
-
-                                                    No Attendance Found
-
-                                                @else
-
+                                                <h5 class="text-muted">
                                                     No Driver Attendance Found
+                                                </h5>
 
-                                                @endif
+                                                <p class="text-muted mb-0">
+                                                    No attendance records match the selected filters.
+                                                </p>
 
-                                            </h5>
+                                            </div>
 
-                                            <p class="text-muted mb-0">
+                                        </td>
 
-                                                No attendance records match
-                                                the selected filters.
+                                    </tr>
 
-                                            </p>
+                                @endforelse
 
-                                        </div>
+                            </tbody>
 
-                                    </td>
-
-                                </tr>
-
-                            @endforelse
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-
-                {{-- ===================================================== --}}
-                {{-- PAGINATION --}}
-                {{-- ===================================================== --}}
-
-                @if($attendances->hasPages())
-
-                    <div class="pd-20">
-
-                        {{ $attendances->links() }}
+                        </table>
 
                     </div>
 
-                @endif
+
+                    {{-- Pagination --}}
+                    @if($attendances->hasPages())
+
+                        <div class="pd-20">
+
+                            {{ $attendances->appends(request()->query())->links() }}
+
+                        </div>
+
+                    @endif
+
+                </div>
 
             </div>
-
-        </div>
 
         @endif
 
@@ -1858,7 +4154,6 @@
     {{-- ========================================================= --}}
     {{-- FOOTER --}}
     {{-- ========================================================= --}}
-
     <x-backend.footer />
 
 </div>
@@ -1866,73 +4161,78 @@
 @endsection
 
 
-
+{{-- ================================================================ --}}
+{{-- JAVASCRIPT --}}
+{{-- ================================================================ --}}
 @push('scripts')
 
-@if(!$isDriver)
+@if(!$isDriver && $managementCalendarView === 'table')
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
 
-document.addEventListener('DOMContentLoaded', function () {
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE CONFIRMATION
+            |--------------------------------------------------------------------------
+            */
 
+            document.querySelectorAll('.delete-form').forEach(function (form) {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Driver Attendance Delete Confirmation
-    |--------------------------------------------------------------------------
-    */
+                form.addEventListener('submit', function (event) {
 
-    document
-        .querySelectorAll('.delete-form')
-        .forEach(function (form) {
+                    event.preventDefault();
 
-            form.addEventListener('submit', function (e) {
+                    if (typeof Swal === 'undefined') {
 
-                e.preventDefault();
+                        if (window.confirm(
+                            'Are you sure you want to delete this attendance record?'
+                        )) {
+                            form.submit();
+                        }
 
-
-                Swal.fire({
-
-                    title: 'Are you sure?',
-
-                    text: 'This attendance record will be moved to trash.',
-
-                    icon: 'warning',
-
-                    showCancelButton: true,
-
-                    confirmButtonColor: '#d33',
-
-                    cancelButtonColor: '#6c757d',
-
-                    confirmButtonText: 'Yes, Delete',
-
-                    cancelButtonText: 'Cancel',
-
-                    reverseButtons: true
-
-                }).then(function (result) {
-
-                    if (result.isConfirmed) {
-
-                        form.submit();
-
+                        return;
                     }
+
+
+                    Swal.fire({
+
+                        title: 'Are you sure?',
+
+                        text: 'This attendance record will be moved to trash.',
+
+                        icon: 'warning',
+
+                        showCancelButton: true,
+
+                        confirmButtonColor: '#d33',
+
+                        cancelButtonColor: '#6c757d',
+
+                        confirmButtonText: 'Yes, Delete',
+
+                        cancelButtonText: 'Cancel',
+
+                        reverseButtons: true
+
+                    }).then(function (result) {
+
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+
+                    });
 
                 });
 
             });
 
         });
+    </script>
 
-
-});
-
-</script>
-
-<script src="{{ asset('backend/assets/datatable/js/datatable-init.js') }}"></script>
+    <script src="{{ asset('backend/assets/datatable/js/datatable-init.js') }}"></script>
 
 @endif
 
