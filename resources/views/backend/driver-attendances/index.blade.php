@@ -921,14 +921,6 @@
 
                 </div>
 
-                {{-- PAGINATION --}}
-
-                @if($attendanceHasPages)
-                    <div class="pd-20">
-                        {{ $attendanceRows->appends(request()->except('page'))->links() }}
-                    </div>
-                @endif
-
             </div>
 
         </div>
