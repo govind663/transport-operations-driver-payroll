@@ -33,6 +33,7 @@ use App\Http\Controllers\backend\Reports\DriverReportController;
 use App\Http\Controllers\backend\Reports\VehicleReportController;
 use App\Http\Controllers\backend\Reports\DutyReportController;
 use App\Http\Controllers\backend\Reports\WorkingSheetReportController;
+use App\Http\Controllers\backend\Reports\AttendanceReportController;
 use App\Http\Controllers\backend\Reports\PayrollReportController;
 use App\Http\Controllers\backend\VehiclePriceController;
 
@@ -429,6 +430,16 @@ Route::prefix('admin')
                     '/working-sheets',
                     [WorkingSheetReportController::class, 'index']
                 )->name('working-sheets.index');
+
+                /*
+                |--------------------------------------------------------------------------
+                | Attendance Reports
+                |--------------------------------------------------------------------------
+                */
+                Route::get(
+                    '/attendances',
+                    [AttendanceReportController::class, 'index']
+                )->name('attendances.index');
 
 
                 /*

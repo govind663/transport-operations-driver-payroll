@@ -677,19 +677,16 @@
 
     @endif
 
-
-
     {{-- ================================================================ --}}
     {{-- REPORTS --}}
-    {{-- ADMIN / OPERATIONS / ACCOUNTANT --}}
-    {{-- DRIVER NOT ALLOWED --}}
+    {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
     {{-- ================================================================ --}}
-
-    @if($canAccessReports)
+    @if($canAccessReports || $isDriver)
 
         <li class="dropdown">
 
-            <a href="javascript:;" class="dropdown-toggle">
+            <a href="javascript:;"
+            class="dropdown-toggle">
 
                 <span class="micon bi bi-bar-chart"></span>
 
@@ -699,9 +696,7 @@
 
             </a>
 
-
             <ul class="submenu {{ $isReportActive ? 'show' : '' }}">
-
 
                 {{-- ================================================== --}}
                 {{-- DRIVER REPORTS --}}
@@ -711,18 +706,15 @@
                 @if($isAdmin || $isOperations)
 
                     <li>
-
                         <a href="{{ route('reports.drivers.index') }}"
-                           class="{{ request()->routeIs('reports.drivers.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('reports.drivers.*') ? 'active' : '' }}">
 
                             Driver Reports
 
                         </a>
-
                     </li>
 
                 @endif
-
 
 
                 {{-- ================================================== --}}
@@ -733,18 +725,15 @@
                 @if($isAdmin || $isOperations)
 
                     <li>
-
                         <a href="{{ route('reports.vehicles.index') }}"
-                           class="{{ request()->routeIs('reports.vehicles.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('reports.vehicles.*') ? 'active' : '' }}">
 
                             Vehicle Reports
 
                         </a>
-
                     </li>
 
                 @endif
-
 
 
                 {{-- ================================================== --}}
@@ -755,40 +744,53 @@
                 @if($isAdmin || $isOperations || $isAccountant)
 
                     <li>
-
                         <a href="{{ route('reports.duties.index') }}"
-                           class="{{ request()->routeIs('reports.duties.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('reports.duties.*') ? 'active' : '' }}">
 
                             Duty Reports
 
                         </a>
-
                     </li>
 
                 @endif
-
 
 
                 {{-- ================================================== --}}
                 {{-- WORKING SHEET REPORTS --}}
-                {{-- ADMIN / OPERATIONS / ACCOUNTANT --}}
+                {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
                 {{-- ================================================== --}}
 
-                @if($isAdmin || $isOperations || $isAccountant)
+                @if($isAdmin || $isOperations || $isAccountant || $isDriver)
 
                     <li>
-
                         <a href="{{ route('reports.working-sheets.index') }}"
-                           class="{{ request()->routeIs('reports.working-sheets.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('reports.working-sheets.*') ? 'active' : '' }}">
 
                             Working Sheet Reports
 
                         </a>
-
                     </li>
 
                 @endif
 
+
+                {{-- ================================================== --}}
+                {{-- ATTENDANCE REPORTS --}}
+                {{-- ADMIN / OPERATIONS / ACCOUNTANT / DRIVER --}}
+                {{-- ================================================== --}}
+
+                @if($isAdmin || $isOperations || $isAccountant || $isDriver)
+
+                    <li>
+                        <a href="{{ route('reports.attendances.index') }}"
+                        class="{{ request()->routeIs('reports.attendances.*') ? 'active' : '' }}">
+
+                            Attendance Reports
+
+                        </a>
+                    </li>
+
+                @endif
 
 
                 {{-- ================================================== --}}
@@ -799,14 +801,12 @@
                 @if($isAdmin || $isAccountant)
 
                     <li>
-
                         <a href="{{ route('reports.payroll.index') }}"
-                           class="{{ request()->routeIs('reports.payroll.*') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('reports.payroll.*') ? 'active' : '' }}">
 
                             Payroll Reports
 
                         </a>
-
                     </li>
 
                 @endif
@@ -818,11 +818,9 @@
     @endif
 
 
-
     {{-- ================================================================ --}}
     {{-- SETTINGS --}}
     {{-- ================================================================ --}}
-
     <li class="dropdown">
 
         <a href="javascript:;" class="dropdown-toggle">
