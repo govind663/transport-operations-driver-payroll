@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\backend;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Http\Requests\Backend\WorkingSheet\StoreWorkingSheetRequest;
 use App\Http\Requests\Backend\WorkingSheet\UpdateWorkingSheetRequest;
 use App\Models\Driver;
@@ -39,13 +40,79 @@ class WorkingSheetController extends Controller
     */
 
     /**
-     * Display a listing of working sheets.
+     * Display a listing of working sheets with role-wise filters.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $workingSheets = $this->workingSheetService->getWorkingSheets();
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Filters
+        |--------------------------------------------------------------------------
+        */
 
-        return view('backend.working-sheets.index', compact('workingSheets'));
+        $filters = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'driver_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'status' => [
+                'nullable',
+                'in:draft,submitted,approved,rejected,completed',
+            ],
+
+            'date_from' => [
+                'nullable',
+                'date',
+            ],
+
+            'date_to' => [
+                'nullable',
+                'date',
+                'after_or_equal:date_from',
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Working Sheets
+        |--------------------------------------------------------------------------
+        */
+
+        $workingSheets = $this->workingSheetService
+            ->getWorkingSheets(
+                filters: $filters
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filter Options
+        |--------------------------------------------------------------------------
+        */
+
+        $filterOptions = $this->workingSheetService
+            ->getFilterOptions();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return View
+        |--------------------------------------------------------------------------
+        */
+
+        return view('backend.working-sheets.index',
+            compact(
+                'workingSheets',
+                'filters',
+                'filterOptions'
+            )
+        );
     }
 
     /*

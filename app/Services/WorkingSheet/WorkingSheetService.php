@@ -2,6 +2,9 @@
 
 namespace App\Services\WorkingSheet;
 
+use App\Models\Driver;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\DriverAllowance;
 use App\Models\DriverExpense;
 use App\Models\DutySlip;
@@ -38,20 +41,245 @@ class WorkingSheetService
     |--------------------------------------------------------------------------
     | GET WORKING SHEETS
     |--------------------------------------------------------------------------
+    |
+    | Admin / Operations / Accountant:
+    | - Can view all Working Sheets.
+    | - Can filter by Driver, Status, Date Range and Search.
+    |
+    | Driver:
+    | - Can view only their own Working Sheets.
+    | - Cannot access another driver's records through filters.
+    |
     */
     public function getWorkingSheets(
-        int $perPage = 10000000000000
+        int $perPage = 10000000000000,
+        array $filters = []
     ): LengthAwarePaginator {
 
-        return WorkingSheet::query()
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'Unauthenticated access.'
+        );
+
+        $isManagementUser =
+            $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant();
+
+        $query = WorkingSheet::query()
             ->with([
                 'dutySlip',
                 'driver',
                 'createdBy',
                 'updatedBy',
-            ])
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | ROLE-WISE ACCESS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->isDriver()) {
+
+            $driver = $user->driver;
+
+            abort_unless(
+                $driver instanceof Driver,
+                403,
+                'Driver profile not found.'
+            );
+
+            $query->where(
+                'driver_id',
+                $driver->id
+            );
+
+        } else {
+
+            abort_unless(
+                $isManagementUser,
+                403,
+                'Unauthorized access.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['search'])) {
+
+            $search = trim($filters['search']);
+
+            $query->where(function (Builder $builder) use ($search) {
+
+                $builder->where(
+                    'sheet_no',
+                    'like',
+                    '%' . $search . '%'
+                );
+
+                $builder->orWhere(
+                    'remarks',
+                    'like',
+                    '%' . $search . '%'
+                );
+
+                $builder->orWhereHas(
+                    'dutySlip',
+                    function (Builder $dutySlipQuery) use ($search) {
+
+                        $dutySlipQuery->where(
+                            'slip_no',
+                            'like',
+                            '%' . $search . '%'
+                        );
+                    }
+                );
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $isManagementUser
+            && !empty($filters['driver_id'])
+        ) {
+
+            $query->where(
+                'driver_id',
+                (int) $filters['driver_id']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['status'])) {
+
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE FROM FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_from'])) {
+
+            $query->whereDate(
+                'work_date',
+                '>=',
+                $filters['date_from']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DATE TO FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_to'])) {
+
+            $query->whereDate(
+                'work_date',
+                '<=',
+                $filters['date_to']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESULT
+        |--------------------------------------------------------------------------
+        */
+
+        return $query
             ->latest('id')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET FILTER OPTIONS
+    |--------------------------------------------------------------------------
+    |
+    | Management users receive all active driver options.
+    | Drivers receive only their own driver profile.
+    |
+    */
+    public function getFilterOptions(): array
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'Unauthenticated access.'
+        );
+
+        $isManagementUser =
+            $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant();
+
+        if ($user->isDriver()) {
+
+            $driver = $user->driver;
+
+            abort_unless(
+                $driver instanceof Driver,
+                403,
+                'Driver profile not found.'
+            );
+
+            $drivers = Driver::query()
+                ->whereKey($driver->id)
+                ->get();
+
+        } else {
+
+            abort_unless(
+                $isManagementUser,
+                403,
+                'Unauthorized access.'
+            );
+
+            $drivers = Driver::query()
+                ->orderBy('id')
+                ->get();
+        }
+
+        return [
+            'drivers' => $drivers,
+
+            'statuses' => [
+                'draft' => 'Draft',
+                'submitted' => 'Submitted',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                'completed' => 'Completed',
+            ],
+        ];
     }
 
     /*

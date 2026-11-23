@@ -29,11 +29,9 @@
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -76,17 +74,260 @@
 
         </div>
 
+        {{-- ========================================================= --}}
+        {{-- WORKING SHEET FILTER CARD --}}
+        {{-- ========================================================= --}}
+        <div class="card-box mb-30 filter-card">
 
+            {{-- Card Header --}}
+
+            <div class="pd-20">
+
+                <h4 class="text-blue h4 mb-0">
+
+                    <i class="fa fa-filter"></i>
+
+                    Filter Working Sheets
+
+                </h4>
+
+                <p class="text-muted mb-0 mt-1">
+
+                    Search and filter working sheets using the available options.
+
+                </p>
+
+            </div>
+
+
+            {{-- Filter Form --}}
+
+            <div class="pd-20 pt-0">
+
+                <form
+                    action="{{ route('working-sheets.index') }}"
+                    method="GET">
+
+                    <div class="row">
+
+                        {{-- Search --}}
+
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="search">
+
+                                    Search
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="search"
+                                    id="search"
+                                    class="form-control"
+                                    placeholder="Sheet No., Duty Slip No. or Remarks"
+                                    value="{{ request('search') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Driver Filter --}}
+
+                        @if(!auth()->user()->isDriver())
+
+                            <div class="col-md-4 col-sm-12">
+
+                                <div class="form-group">
+
+                                    <label for="driver_id">
+
+                                        Driver
+
+                                    </label>
+
+                                    <select
+                                        name="driver_id"
+                                        id="driver_id"
+                                        class="form-control custom-select2">
+
+                                        <option value="">
+
+                                            All Drivers
+
+                                        </option>
+
+                                        @foreach($filterOptions['drivers'] as $driver)
+
+                                            <option
+                                                value="{{ $driver->id }}"
+                                                {{ (string) request('driver_id') === (string) $driver->id ? 'selected' : '' }}>
+
+                                                {{ $driver->first_name ?? '' }}
+                                                {{ $driver->last_name ?? '' }}
+
+                                                @if(!empty($driver->driver_code))
+
+                                                    ({{ $driver->driver_code }})
+
+                                                @endif
+
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        @endif
+
+
+                        {{-- Status Filter --}}
+
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="status">
+
+                                    Status
+
+                                </label>
+
+                                <select
+                                    name="status"
+                                    id="status"
+                                    class="form-control custom-select2">
+
+                                    <option value="">
+
+                                        All Statuses
+
+                                    </option>
+
+                                    @foreach($filterOptions['statuses'] as $statusValue => $statusLabel)
+
+                                        <option
+                                            value="{{ $statusValue }}"
+                                            {{ request('status') === $statusValue ? 'selected' : '' }}>
+
+                                            {{ $statusLabel }}
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Date From --}}
+
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="date_from">
+
+                                    Work Date From
+
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date_from"
+                                    id="date_from"
+                                    class="form-control"
+                                    value="{{ request('date_from') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Date To --}}
+
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="date_to">
+
+                                    Work Date To
+
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date_to"
+                                    id="date_to"
+                                    class="form-control"
+                                    value="{{ request('date_to') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Filter Buttons --}}
+
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label class="d-block">
+
+                                    &nbsp;
+
+                                </label>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary">
+
+                                    <i class="fa fa-search"></i>
+
+                                    Apply Filters
+
+                                </button>
+
+                                <a
+                                    href="{{ route('working-sheets.index') }}"
+                                    class="btn btn-secondary">
+
+                                    <i class="fa fa-refresh"></i>
+
+                                    Reset
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
 
         {{-- ========================================================= --}}
         {{-- WORKING SHEET LIST CARD --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
 
-
             {{-- Card Header --}}
-
             <div class="pd-20">
 
                 <div class="d-flex justify-content-between align-items-center">
@@ -110,12 +351,9 @@
 
             </div>
 
-
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
-
             <div class="pb-20">
 
                 <table
@@ -137,6 +375,10 @@
 
                             <th class="text-wrap">
                                 Sheet No.
+                            </th>
+
+                            <th class="text-wrap">
+                                Driver Name
                             </th>
 
                             <th class="text-wrap">
@@ -223,19 +465,15 @@
                                 {{-- ========================================= --}}
                                 {{-- Sr No --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     {{ $key + 1 }}
 
                                 </td>
 
-
-
                                 {{-- ========================================= --}}
                                 {{-- Sheet Number --}}
                                 {{-- ========================================= --}}
-
                                 <td>
 
                                     <strong class="sheet-code">
@@ -246,7 +484,24 @@
 
                                 </td>
 
+                                {{-- ========================================= --}}
+                                {{-- Driver Name --}}
+                                {{-- ========================================= --}}
+                                <td>
 
+                                    @if($workingSheet->driver)
+
+                                        {{ $workingSheet->driver->first_name ?? '-' }}
+
+                                        {{ $workingSheet->driver->last_name ?? '-' }}
+
+                                    @else
+
+                                        -
+
+                                    @endif
+
+                                </td>
 
                                 {{-- ========================================= --}}
                                 {{-- Duty Slip --}}
@@ -735,7 +990,7 @@
                             <tr>
 
                                 <td
-                                    colspan="19"
+                                    colspan="20"
                                     class="text-center">
 
                                     No Working Sheets Found
