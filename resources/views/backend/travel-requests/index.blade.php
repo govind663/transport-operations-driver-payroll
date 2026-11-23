@@ -1,3 +1,4 @@
+
 @extends('backend.layouts.master')
 
 @section('title')
@@ -47,6 +48,25 @@
         font-size: 13px;
         line-height: 1.6;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER CARD
+    |--------------------------------------------------------------------------
+    */
+
+    .filter-card .form-group {
+        margin-bottom: 15px;
+    }
+
+    .filter-card label {
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .filter-card .form-control {
+        height: 42px;
+    }
 </style>
 
 @endpush
@@ -54,15 +74,24 @@
 
 @section('content')
 
+@php
+    $user = auth()->user();
+
+    $isManagementUser = $user->isAdmin()
+        || $user->isOperations()
+        || $user->isAccountant();
+
+    $isDriver = $user->isDriver();
+@endphp
+
+
 <div class="pd-ltr-20 xs-pd-20-10">
 
     <div class="min-height-200px">
 
-
         {{-- ========================================================= --}}
         {{-- PAGE HEADER --}}
         {{-- ========================================================= --}}
-
         <div class="page-header">
 
             <div class="row">
@@ -84,30 +113,34 @@
                 {{-- Action Buttons --}}
                 <div class="col-md-6 col-sm-12 text-right">
 
-                    {{-- Import Excel --}}
-                    <button
-                        type="button"
-                        class="btn btn-success mr-2"
-                        data-toggle="modal"
-                        data-target="#travelRequestImportModal">
+                    @if($isManagementUser)
 
-                        <i class="fa fa-file-excel-o mr-1"></i>
+                        {{-- Import Excel --}}
+                        <button
+                            type="button"
+                            class="btn btn-success mr-2"
+                            data-toggle="modal"
+                            data-target="#travelRequestImportModal">
 
-                        Import Excel
+                            <i class="fa fa-file-excel-o mr-1"></i>
 
-                    </button>
+                            Import Excel
+
+                        </button>
 
 
-                    {{-- Add Travel Request --}}
-                    <a
-                        href="{{ route('travel-requests.create') }}"
-                        class="btn btn-primary">
+                        {{-- Add Travel Request --}}
+                        <a
+                            href="{{ route('travel-requests.create') }}"
+                            class="btn btn-primary">
 
-                        <i class="fa fa-plus mr-1"></i>
+                            <i class="fa fa-plus mr-1"></i>
 
-                        Add New Travel Request
+                            Add New Travel Request
 
-                    </a>
+                        </a>
+
+                    @endif
 
                 </div>
 
@@ -115,12 +148,256 @@
 
         </div>
 
+        {{-- ========================================================= --}}
+        {{-- TRAVEL REQUEST FILTER CARD --}}
+        {{-- ========================================================= --}}
+        <div class="card-box mb-30 filter-card">
 
+            <div class="pd-20">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+
+                    <h4 class="text-blue h4 mb-0">
+
+                        <i class="fa fa-filter mr-1"></i>
+
+                        Filter Travel Requests
+
+                    </h4>
+
+                </div>
+
+
+                <form
+                    action="{{ route('travel-requests.index') }}"
+                    method="GET">
+
+                    <div class="row">
+
+
+                        {{-- Search --}}
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="search">
+                                    Search
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="search"
+                                    id="search"
+                                    class="form-control"
+                                    placeholder="Request No, Company, Requested By..."
+                                    value="{{ request('search') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Driver Filter --}}
+                        @if($isManagementUser)
+
+                            <div class="col-md-4 col-sm-12">
+
+                                <div class="form-group">
+
+                                    <label for="driver_id">
+                                        Driver
+                                    </label>
+
+                                    <select
+                                        name="driver_id"
+                                        id="driver_id"
+                                        class="form-control custom-select2">
+
+                                        <option value="">
+                                            All Drivers
+                                        </option>
+
+                                        @foreach($filterOptions['drivers'] as $driver)
+
+                                            <option
+                                                value="{{ $driver->id }}"
+                                                {{ request('driver_id') == $driver->id ? 'selected' : '' }}>
+
+                                                {{ trim(
+                                                    ($driver->first_name ?? '') . ' ' .
+                                                    ($driver->last_name ?? '')
+                                                ) ?: 'Driver #' . $driver->id }}
+
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            {{-- Vehicle Filter --}}
+                            <div class="col-md-4 col-sm-12">
+
+                                <div class="form-group">
+
+                                    <label for="vehicle_id">
+                                        Vehicle
+                                    </label>
+
+                                    <select
+                                        name="vehicle_id"
+                                        id="vehicle_id"
+                                        class="form-control custom-select2">
+
+                                        <option value="">
+                                            All Vehicles
+                                        </option>
+
+                                        @foreach($filterOptions['vehicles'] as $vehicle)
+
+                                            <option
+                                                value="{{ $vehicle->id }}"
+                                                {{ request('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+
+                                                Vehicle #{{ $vehicle->id }}
+
+                                            </option>
+
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        @endif
+
+
+                        {{-- Status Filter --}}
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="status">
+                                    Status
+                                </label>
+
+                                <select
+                                    name="status"
+                                    id="status"
+                                    class="form-control custom-select2">
+
+                                    <option value="">
+                                        All Statuses
+                                    </option>
+
+                                    @foreach($filterOptions['statuses'] as $status)
+
+                                        <option
+                                            value="{{ $status }}"
+                                            {{ request('status') == $status ? 'selected' : '' }}>
+
+                                            {{ ucfirst($status) }}
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Date From --}}
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="date_from">
+                                    Travel Date From
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date_from"
+                                    id="date_from"
+                                    class="form-control"
+                                    value="{{ request('date_from') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Date To --}}
+                        <div class="col-md-4 col-sm-12">
+
+                            <div class="form-group">
+
+                                <label for="date_to">
+                                    Travel Date To
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date_to"
+                                    id="date_to"
+                                    class="form-control"
+                                    value="{{ request('date_to') }}">
+
+                            </div>
+
+                        </div>
+
+
+                        {{-- Filter Buttons --}}
+                        <div class="col-12">
+
+                            <div class="form-group mb-0">
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary">
+
+                                    <i class="fa fa-search mr-1"></i>
+
+                                    Apply Filters
+
+                                </button>
+
+
+                                <a
+                                    href="{{ route('travel-requests.index') }}"
+                                    class="btn btn-secondary">
+
+                                    <i class="fa fa-refresh mr-1"></i>
+
+                                    Reset
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
 
         {{-- ========================================================= --}}
         {{-- SUCCESS MESSAGE --}}
         {{-- ========================================================= --}}
-
         @if(session('success'))
 
             <div
@@ -144,14 +421,10 @@
 
         @endif
 
-
-
         {{-- ========================================================= --}}
         {{-- IMPORT ERROR --}}
         {{-- ========================================================= --}}
-
         @if(session('import_error'))
-
             <div
                 class="alert alert-danger alert-dismissible fade show"
                 role="alert">
@@ -177,12 +450,9 @@
 
         @endif
 
-
-
         {{-- ========================================================= --}}
         {{-- TRAVEL REQUEST EXCEL IMPORT MODAL --}}
         {{-- ========================================================= --}}
-
         <div
             class="modal fade"
             id="travelRequestImportModal"
@@ -227,7 +497,6 @@
                     </div>
 
 
-
                     {{-- ================================================= --}}
                     {{-- IMPORT FORM --}}
                     {{-- ================================================= --}}
@@ -268,7 +537,6 @@
                                 </strong>
 
                             </div>
-
 
 
                             {{-- Excel File --}}
@@ -312,7 +580,6 @@
                             </div>
 
 
-
                             {{-- ================================================= --}}
                             {{-- EXPECTED COLUMNS --}}
                             {{-- ================================================= --}}
@@ -341,7 +608,6 @@
                                 </div>
 
 
-
                                 <div class="table-responsive">
 
                                     <table
@@ -351,17 +617,11 @@
 
                                             <tr>
 
-                                                <th>
-                                                    Column
-                                                </th>
+                                                <th>Column</th>
 
-                                                <th>
-                                                    Required
-                                                </th>
+                                                <th>Required</th>
 
-                                                <th>
-                                                    Description
-                                                </th>
+                                                <th>Description</th>
 
                                             </tr>
 
@@ -370,647 +630,326 @@
 
                                         <tbody>
 
-
                                             {{-- Request No --}}
                                             <tr>
-
+                                                <td><code>request_no</code></td>
                                                 <td>
-                                                    <code>request_no</code>
+                                                    <span class="badge badge-danger">Yes</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-danger">
-                                                        Yes
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel Request Number
-                                                </td>
-
+                                                <td>Travel Request Number</td>
                                             </tr>
 
 
                                             {{-- Company --}}
                                             <tr>
-
+                                                <td><code>company_name</code></td>
                                                 <td>
-                                                    <code>company_name</code>
+                                                    <span class="badge badge-danger">Yes</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-danger">
-                                                        Yes
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Client / Company Name
-                                                </td>
-
+                                                <td>Client / Company Name</td>
                                             </tr>
 
 
                                             {{-- Requested By --}}
                                             <tr>
-
+                                                <td><code>requested_by</code></td>
                                                 <td>
-                                                    <code>requested_by</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Requester Name
-                                                </td>
-
+                                                <td>Requester Name</td>
                                             </tr>
 
 
                                             {{-- Employee Email --}}
                                             <tr>
-
+                                                <td><code>employee_email</code></td>
                                                 <td>
-                                                    <code>employee_email</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Employee Email
-                                                </td>
-
+                                                <td>Employee Email</td>
                                             </tr>
 
 
                                             {{-- Travel ID --}}
                                             <tr>
-
+                                                <td><code>travel_id</code></td>
                                                 <td>
-                                                    <code>travel_id</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel ID
-                                                </td>
-
+                                                <td>Travel ID</td>
                                             </tr>
 
 
                                             {{-- Trip ID --}}
                                             <tr>
-
+                                                <td><code>trip_id</code></td>
                                                 <td>
-                                                    <code>trip_id</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Trip ID
-                                                </td>
-
+                                                <td>Trip ID</td>
                                             </tr>
 
 
                                             {{-- Vendor --}}
                                             <tr>
-
+                                                <td><code>vendor_name</code></td>
                                                 <td>
-                                                    <code>vendor_name</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Vendor Name
-                                                </td>
-
+                                                <td>Vendor Name</td>
                                             </tr>
 
 
                                             {{-- Vehicle --}}
                                             <tr>
-
+                                                <td><code>vehicle_type</code></td>
                                                 <td>
-                                                    <code>vehicle_type</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Vehicle Type
-                                                </td>
-
+                                                <td>Vehicle Type</td>
                                             </tr>
 
 
                                             {{-- From Date --}}
                                             <tr>
-
+                                                <td><code>travel_from_date</code></td>
                                                 <td>
-                                                    <code>travel_from_date</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel Start Date
-                                                </td>
-
+                                                <td>Travel Start Date</td>
                                             </tr>
 
 
                                             {{-- To Date --}}
                                             <tr>
-
+                                                <td><code>travel_to_date</code></td>
                                                 <td>
-                                                    <code>travel_to_date</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel End Date
-                                                </td>
-
+                                                <td>Travel End Date</td>
                                             </tr>
 
 
                                             {{-- Pickup Time --}}
                                             <tr>
-
+                                                <td><code>pickup_time</code></td>
                                                 <td>
-                                                    <code>pickup_time</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Pickup Time
-                                                </td>
-
+                                                <td>Pickup Time</td>
                                             </tr>
 
 
                                             {{-- From City --}}
                                             <tr>
-
+                                                <td><code>from_city</code></td>
                                                 <td>
-                                                    <code>from_city</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Starting City
-                                                </td>
-
+                                                <td>Starting City</td>
                                             </tr>
 
 
                                             {{-- Pickup Location --}}
                                             <tr>
-
+                                                <td><code>pickup_location</code></td>
                                                 <td>
-                                                    <code>pickup_location</code>
+                                                    <span class="badge badge-danger">Yes</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-danger">
-                                                        Yes
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Pickup Location
-                                                </td>
-
+                                                <td>Pickup Location</td>
                                             </tr>
 
 
                                             {{-- Drop Location --}}
                                             <tr>
-
+                                                <td><code>drop_location</code></td>
                                                 <td>
-                                                    <code>drop_location</code>
+                                                    <span class="badge badge-danger">Yes</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-danger">
-                                                        Yes
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Drop Location
-                                                </td>
-
+                                                <td>Drop Location</td>
                                             </tr>
 
 
                                             {{-- Release Location --}}
                                             <tr>
-
+                                                <td><code>release_location</code></td>
                                                 <td>
-                                                    <code>release_location</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Release Location
-                                                </td>
-
+                                                <td>Release Location</td>
                                             </tr>
 
 
                                             {{-- Passenger --}}
                                             <tr>
-
+                                                <td><code>passenger_name</code></td>
                                                 <td>
-                                                    <code>passenger_name</code>
+                                                    <span class="badge badge-danger">Yes</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-danger">
-                                                        Yes
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Passenger Name
-                                                </td>
-
+                                                <td>Passenger Name</td>
                                             </tr>
 
 
                                             {{-- Passenger Phone --}}
                                             <tr>
-
+                                                <td><code>passenger_phone</code></td>
                                                 <td>
-                                                    <code>passenger_phone</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Passenger Phone
-                                                </td>
-
+                                                <td>Passenger Phone</td>
                                             </tr>
 
 
                                             {{-- Traveler Mobile --}}
                                             <tr>
-
+                                                <td><code>traveler_mobile</code></td>
                                                 <td>
-                                                    <code>traveler_mobile</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Traveler Mobile
-                                                </td>
-
+                                                <td>Traveler Mobile</td>
                                             </tr>
 
 
                                             {{-- Employee ID --}}
                                             <tr>
-
+                                                <td><code>employee_id</code></td>
                                                 <td>
-                                                    <code>employee_id</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Employee ID
-                                                </td>
-
+                                                <td>Employee ID</td>
                                             </tr>
 
 
                                             {{-- Cost Center --}}
                                             <tr>
-
+                                                <td><code>cost_center</code></td>
                                                 <td>
-                                                    <code>cost_center</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-
-                                                </td>
-
-                                                <td>
-                                                    Cost Center
-                                                </td>
-
+                                                <td>Cost Center</td>
                                             </tr>
 
 
                                             {{-- Car Hire --}}
                                             <tr>
-
+                                                <td><code>car_hire_type</code></td>
                                                 <td>
-                                                    <code>car_hire_type</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Car Hire Type
-                                                </td>
-
+                                                <td>Car Hire Type</td>
                                             </tr>
 
 
                                             {{-- For Use --}}
                                             <tr>
-
+                                                <td><code>for_use</code></td>
                                                 <td>
-                                                    <code>for_use</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Vehicle Usage
-                                                </td>
-
+                                                <td>Vehicle Usage</td>
                                             </tr>
 
 
                                             {{-- GST --}}
                                             <tr>
-
+                                                <td><code>gst_number</code></td>
                                                 <td>
-                                                    <code>gst_number</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    GST Number
-                                                </td>
-
+                                                <td>GST Number</td>
                                             </tr>
 
 
                                             {{-- Reporting --}}
                                             <tr>
-
+                                                <td><code>reporting_address</code></td>
                                                 <td>
-                                                    <code>reporting_address</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Reporting Address
-                                                </td>
-
+                                                <td>Reporting Address</td>
                                             </tr>
 
 
                                             {{-- Release Address --}}
                                             <tr>
-
+                                                <td><code>release_address</code></td>
                                                 <td>
-                                                    <code>release_address</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Release Address
-                                                </td>
-
+                                                <td>Release Address</td>
                                             </tr>
 
 
                                             {{-- Release Time --}}
                                             <tr>
-
+                                                <td><code>release_time</code></td>
                                                 <td>
-                                                    <code>release_time</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Release Time
-                                                </td>
-
+                                                <td>Release Time</td>
                                             </tr>
 
 
                                             {{-- Travel Date Time --}}
                                             <tr>
-
+                                                <td><code>travel_date_time</code></td>
                                                 <td>
-                                                    <code>travel_date_time</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel Date &amp; Time
-                                                </td>
-
+                                                <td>Travel Date &amp; Time</td>
                                             </tr>
 
 
                                             {{-- Passenger Count --}}
                                             <tr>
-
+                                                <td><code>passenger_count</code></td>
                                                 <td>
-                                                    <code>passenger_count</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Number of Passengers
-                                                </td>
-
+                                                <td>Number of Passengers</td>
                                             </tr>
 
 
                                             {{-- Purpose --}}
                                             <tr>
-
+                                                <td><code>purpose</code></td>
                                                 <td>
-                                                    <code>purpose</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Travel Purpose
-                                                </td>
-
+                                                <td>Travel Purpose</td>
                                             </tr>
 
 
                                             {{-- Specific Instruction --}}
                                             <tr>
-
+                                                <td><code>specific_instruction</code></td>
                                                 <td>
-                                                    <code>specific_instruction</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Special Instructions
-                                                </td>
-
+                                                <td>Special Instructions</td>
                                             </tr>
 
 
                                             {{-- Status --}}
                                             <tr>
-
+                                                <td><code>status</code></td>
                                                 <td>
-                                                    <code>status</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
                                                 <td>
                                                     pending / approved / rejected / assigned / completed / cancelled
                                                 </td>
-
                                             </tr>
 
 
                                             {{-- Remarks --}}
                                             <tr>
-
+                                                <td><code>remarks</code></td>
                                                 <td>
-                                                    <code>remarks</code>
+                                                    <span class="badge badge-secondary">No</span>
                                                 </td>
-
-                                                <td>
-                                                    <span class="badge badge-secondary">
-                                                        No
-                                                    </span>
-                                                </td>
-
-                                                <td>
-                                                    Additional Remarks
-                                                </td>
-
+                                                <td>Additional Remarks</td>
                                             </tr>
-
 
                                         </tbody>
 
@@ -1019,7 +958,6 @@
                                 </div>
 
                             </div>
-
 
 
                             {{-- ================================================= --}}
@@ -1047,7 +985,6 @@
                             </div>
 
                         </div>
-
 
 
                         {{-- ================================================= --}}
@@ -1089,14 +1026,10 @@
 
         </div>
 
-
-
         {{-- ========================================================= --}}
         {{-- TRAVEL REQUEST LIST CARD --}}
         {{-- ========================================================= --}}
-
         <div class="card-box mb-30">
-
 
             {{-- Card Header --}}
             <div class="pd-20">
@@ -1119,12 +1052,9 @@
 
             </div>
 
-
-
             {{-- ===================================================== --}}
             {{-- TABLE --}}
             {{-- ===================================================== --}}
-
             <div class="pb-20">
 
                 <div class="table-responsive">
@@ -1133,11 +1063,9 @@
                         class="table hover multiple-select-row data-table-export1 nowrap p-3"
                         data-title="Travel Requests">
 
-
                         {{-- ================================================= --}}
                         {{-- TABLE HEADER --}}
                         {{-- ================================================= --}}
-
                         <thead>
 
                             <tr>
@@ -1198,18 +1126,21 @@
                                     View
                                 </th>
 
-                                <th class="text-wrap no-export">
-                                    Edit
-                                </th>
+                                @if($isManagementUser)
 
-                                <th class="text-wrap no-export">
-                                    Delete
-                                </th>
+                                    <th class="text-wrap no-export">
+                                        Edit
+                                    </th>
+
+                                    <th class="text-wrap no-export">
+                                        Delete
+                                    </th>
+
+                                @endif
 
                             </tr>
 
                         </thead>
-
 
 
                         {{-- ================================================= --}}
@@ -1226,10 +1157,9 @@
                                     {{-- Sr No --}}
                                     <td>
 
-                                        {{ $key+1 }}
+                                        {{ $key + 1 }}
 
                                     </td>
-
 
 
                                     {{-- Request Number --}}
@@ -1242,7 +1172,6 @@
                                         </strong>
 
                                     </td>
-
 
 
                                     {{-- Request Date --}}
@@ -1271,7 +1200,6 @@
                                     </td>
 
 
-
                                     {{-- Company Name --}}
                                     <td>
 
@@ -1282,7 +1210,6 @@
                                         </strong>
 
                                     </td>
-
 
 
                                     {{-- Requested By --}}
@@ -1305,7 +1232,6 @@
                                     </td>
 
 
-
                                     {{-- Passenger Name --}}
                                     <td>
 
@@ -1318,14 +1244,12 @@
                                     </td>
 
 
-
                                     {{-- Passenger Phone --}}
                                     <td>
 
                                         {{ $travelRequest->passenger_phone ?? '-' }}
 
                                     </td>
-
 
 
                                     {{-- Pickup Location --}}
@@ -1342,7 +1266,6 @@
                                     </td>
 
 
-
                                     {{-- Drop Location --}}
                                     <td>
 
@@ -1355,7 +1278,6 @@
                                         </div>
 
                                     </td>
-
 
 
                                     {{-- Travel Date Time --}}
@@ -1386,7 +1308,6 @@
                                     </td>
 
 
-
                                     {{-- Passenger Count --}}
                                     <td>
 
@@ -1399,7 +1320,6 @@
                                         </span>
 
                                     </td>
-
 
 
                                     {{-- Purpose --}}
@@ -1425,7 +1345,6 @@
                                         @endif
 
                                     </td>
-
 
 
                                     {{-- ================================================= --}}
@@ -1504,7 +1423,6 @@
                                     </td>
 
 
-
                                     {{-- ================================================= --}}
                                     {{-- VIEW --}}
                                     {{-- ================================================= --}}
@@ -1527,59 +1445,60 @@
                                     </td>
 
 
-
                                     {{-- ================================================= --}}
                                     {{-- EDIT --}}
                                     {{-- ================================================= --}}
 
-                                    <td class="no-export">
+                                    @if($isManagementUser)
 
-                                        <a
-                                            href="{{ route(
-                                                'travel-requests.edit',
-                                                $travelRequest->id
-                                            ) }}"
-                                            class="btn btn-warning btn-sm">
+                                        <td class="no-export">
 
-                                            <i class="dw dw-pencil-1 mr-1"></i>
+                                            <a
+                                                href="{{ route(
+                                                    'travel-requests.edit',
+                                                    $travelRequest->id
+                                                ) }}"
+                                                class="btn btn-warning btn-sm">
 
-                                            Edit
+                                                <i class="dw dw-pencil-1 mr-1"></i>
 
-                                        </a>
+                                                Edit
 
-                                    </td>
+                                            </a>
+
+                                        </td>
 
 
+                                        {{-- ================================================= --}}
+                                        {{-- DELETE --}}
+                                        {{-- ================================================= --}}
 
-                                    {{-- ================================================= --}}
-                                    {{-- DELETE --}}
-                                    {{-- ================================================= --}}
+                                        <td class="no-export">
 
-                                    <td class="no-export">
+                                            <form
+                                                action="{{ route('travel-requests.destroy', $travelRequest->id) }}"
+                                                method="POST"
+                                                class="delete-form">
 
-                                        <form
-                                            action="{{ route('travel-requests.destroy', $travelRequest->id) }}"
-                                            method="POST"
-                                            class="delete-form">
+                                                @csrf
 
-                                            @csrf
+                                                @method('DELETE')
 
-                                            @method('DELETE')
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-danger btn-sm">
 
-                                            <button
-                                                type="submit"
-                                                class="btn btn-danger btn-sm">
+                                                    <i class="dw dw-trash"></i>
 
-                                                <i class="dw dw-trash"></i>
+                                                    Delete
 
-                                                Delete
+                                                </button>
 
-                                            </button>
+                                            </form>
 
-                                        </form>
+                                        </td>
 
-                                    </td>
-
+                                    @endif
 
                                 </tr>
 
@@ -1593,7 +1512,7 @@
                                 <tr>
 
                                     <td
-                                        colspan="16"
+                                        colspan="{{ $isManagementUser ? 16 : 14 }}"
                                         class="text-center py-4">
 
                                         <i class="fa fa-inbox fa-2x text-muted d-block mb-2"></i>
@@ -1604,8 +1523,16 @@
 
                                         <small class="text-muted d-block mt-1">
 
-                                            Create a new travel request or import
-                                            requests from Excel.
+                                            @if($isManagementUser)
+
+                                                Create a new travel request or import
+                                                requests from Excel.
+
+                                            @else
+
+                                                No travel requests are currently assigned to you.
+
+                                            @endif
 
                                         </small>
 
@@ -1728,9 +1655,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 /*
                 |--------------------------------------------------------------------------
-                | Remove submit listener temporarily
-                |--------------------------------------------------------------------------
-                | form.submit() bypasses submit events and directly submits
+                | Submit Form
                 |--------------------------------------------------------------------------
                 */
 

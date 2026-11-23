@@ -2,7 +2,11 @@
 
 namespace App\Services\TravelRequest;
 
+use App\Models\Driver;
+use App\Models\User;
 use App\Models\TravelRequest;
+use App\Models\VehicleManagement;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +24,94 @@ class TravelRequestService
         'updatedBy',
         'deletedBy',
         'dutyAssignment',
+        'dutyAssignment.driver',
+        'dutyAssignment.vehicle',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHENTICATED USER
+    |--------------------------------------------------------------------------
+    */
+
+    protected function authenticatedUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'Unauthenticated access.'
+        );
+
+        return $user;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGEMENT ACCESS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function isManagementUser(User $user): bool
+    {
+        return $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSIBLE TRAVEL REQUESTS QUERY
+    |--------------------------------------------------------------------------
+    */
+
+    protected function accessibleTravelRequestsQuery(): Builder
+    {
+        $user = $this->authenticatedUser();
+
+        $query = TravelRequest::query()
+            ->with($this->relations);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Management Access
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->isManagementUser($user)) {
+            return $query;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Access
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->isDriver()) {
+
+            $driver = $user->driver;
+
+            abort_unless(
+                $driver instanceof Driver,
+                403,
+                'Driver profile not found.'
+            );
+
+            return $query->whereHas(
+                'dutyAssignment',
+                function (Builder $assignmentQuery) use ($driver) {
+                    $assignmentQuery->where(
+                        'driver_id',
+                        $driver->id
+                    );
+                }
+            );
+        }
+
+        abort(403, 'Unauthorized access.');
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -28,12 +119,204 @@ class TravelRequestService
     |--------------------------------------------------------------------------
     */
 
-    public function getTravelRequests(): Collection
-    {
-        return TravelRequest::query()
-            ->with($this->relations)
+    public function getTravelRequests(
+        array $filters = []
+    ): Collection {
+
+        $user = $this->authenticatedUser();
+
+        $query = $this->accessibleTravelRequestsQuery();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['search'])) {
+
+            $search = trim($filters['search']);
+
+            $query->where(function (Builder $searchQuery) use ($search) {
+
+                $searchQuery
+                    ->where('request_no', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%")
+                    ->orWhere('requested_by', 'like', "%{$search}%");
+
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Filter - Management Only
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->isManagementUser($user) &&
+            !empty($filters['driver_id'])
+        ) {
+
+            $query->whereHas(
+                'dutyAssignment',
+                function (Builder $assignmentQuery) use ($filters) {
+
+                    $assignmentQuery->where(
+                        'driver_id',
+                        $filters['driver_id']
+                    );
+
+                }
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vehicle Filter - Management Only
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $this->isManagementUser($user) &&
+            !empty($filters['vehicle_id'])
+        ) {
+
+            $query->whereHas(
+                'dutyAssignment',
+                function (Builder $assignmentQuery) use ($filters) {
+
+                    $assignmentQuery->where(
+                        'vehicle_id',
+                        $filters['vehicle_id']
+                    );
+
+                }
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['status'])) {
+
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Travel Date From
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_from'])) {
+
+            $query->whereDate(
+                'travel_date_time',
+                '>=',
+                $filters['date_from']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Travel Date To
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_to'])) {
+
+            $query->whereDate(
+                'travel_date_time',
+                '<=',
+                $filters['date_to']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Results
+        |--------------------------------------------------------------------------
+        */
+
+        return $query
             ->latest('id')
             ->get();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET FILTER OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function getFilterOptions(): array
+    {
+        $user = $this->authenticatedUser();
+
+        $drivers = collect();
+        $vehicles = collect();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Management Filter Options
+        |--------------------------------------------------------------------------
+        */
+
+        if ($this->isManagementUser($user)) {
+
+            $drivers = Driver::query()
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get();
+
+            $vehicles = VehicleManagement::query()
+                ->orderBy('id')
+                ->get();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Filter Options
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->isDriver()) {
+
+            $driver = $user->driver;
+
+            abort_unless(
+                $driver instanceof Driver,
+                403,
+                'Driver profile not found.'
+            );
+
+            $drivers = collect([$driver]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Options
+        |--------------------------------------------------------------------------
+        */
+
+        $statuses = TravelRequest::query()
+            ->whereNotNull('status')
+            ->distinct()
+            ->orderBy('status')
+            ->pluck('status');
+
+        return [
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+            'statuses' => $statuses,
+        ];
     }
 
     /*
@@ -46,8 +329,7 @@ class TravelRequestService
         string|int $id
     ): TravelRequest {
 
-        return TravelRequest::query()
-            ->with($this->relations)
+        return $this->accessibleTravelRequestsQuery()
             ->findOrFail($id);
     }
 
@@ -63,23 +345,7 @@ class TravelRequestService
 
         return DB::transaction(function () use ($data) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Created By
-            |--------------------------------------------------------------------------
-            */
-
             $data['created_by'] = Auth::id();
-
-            /*
-            |--------------------------------------------------------------------------
-            | Company Name
-            |--------------------------------------------------------------------------
-            |
-            | company_name is a text field.
-            | No client_id / Client relation is used anymore.
-            |
-            */
 
             if (isset($data['company_name'])) {
                 $data['company_name'] = $this->cleanText(
@@ -87,30 +353,11 @@ class TravelRequestService
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Requested By
-            |--------------------------------------------------------------------------
-            |
-            | requested_by is the external requester name/string.
-            | Do NOT replace it with Auth::id().
-            |
-            */
-
             if (isset($data['requested_by'])) {
                 $data['requested_by'] = $this->cleanText(
                     $data['requested_by']
                 );
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Request Number
-            |--------------------------------------------------------------------------
-            |
-            | Generate automatically when request_no is not provided.
-            |
-            */
 
             if (empty($data['request_no'])) {
 
@@ -124,50 +371,13 @@ class TravelRequestService
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Travel Date & Time
-            |--------------------------------------------------------------------------
-            |
-            | DB requires travel_date_time.
-            |
-            | travel_from_date + pickup_time
-            |
-            | Example:
-            |
-            | 2026-09-10 + 09:30
-            |
-            | becomes:
-            |
-            | 2026-09-10 09:30:00
-            |
-            */
-
             $this->prepareTravelDateTime($data);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Default Status
-            |--------------------------------------------------------------------------
-            */
 
             $data['status'] =
                 $data['status']
                 ?? TravelRequest::STATUS_PENDING;
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create Travel Request
-            |--------------------------------------------------------------------------
-            */
-
             $travelRequest = TravelRequest::create($data);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Return Fresh Model With Relationships
-            |--------------------------------------------------------------------------
-            */
 
             return $travelRequest->fresh($this->relations);
         });
@@ -189,19 +399,7 @@ class TravelRequestService
             $data
         ) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Updated By
-            |--------------------------------------------------------------------------
-            */
-
             $data['updated_by'] = Auth::id();
-
-            /*
-            |--------------------------------------------------------------------------
-            | Company Name
-            |--------------------------------------------------------------------------
-            */
 
             if (array_key_exists('company_name', $data)) {
                 $data['company_name'] = $this->cleanText(
@@ -209,23 +407,11 @@ class TravelRequestService
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Requested By
-            |--------------------------------------------------------------------------
-            */
-
             if (array_key_exists('requested_by', $data)) {
                 $data['requested_by'] = $this->cleanText(
                     $data['requested_by']
                 );
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Request Number
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 isset($data['request_no']) &&
@@ -237,30 +423,12 @@ class TravelRequestService
                 );
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Travel Date & Time
-            |--------------------------------------------------------------------------
-            */
-
             $this->prepareTravelDateTime(
                 $data,
                 $travelRequest
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Update
-            |--------------------------------------------------------------------------
-            */
-
             $travelRequest->update($data);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Return Fresh Model
-            |--------------------------------------------------------------------------
-            */
 
             return $travelRequest->fresh($this->relations);
         });
@@ -280,21 +448,9 @@ class TravelRequestService
             $travelRequest
         ) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Deleted By
-            |--------------------------------------------------------------------------
-            */
-
             $travelRequest->deleted_by = Auth::id();
 
             $travelRequest->save();
-
-            /*
-            |--------------------------------------------------------------------------
-            | Soft Delete
-            |--------------------------------------------------------------------------
-            */
 
             return $travelRequest->delete();
         });
@@ -342,12 +498,6 @@ class TravelRequestService
         ?TravelRequest $travelRequest = null
     ): void {
 
-        /*
-        |--------------------------------------------------------------------------
-        | From Date + Pickup Time
-        |--------------------------------------------------------------------------
-        */
-
         if (
             !empty($data['travel_from_date']) &&
             !empty($data['pickup_time'])
@@ -361,11 +511,6 @@ class TravelRequestService
                 (string) $data['pickup_time']
             );
 
-            /*
-            | If time is H:i, add seconds.
-            | If time is already H:i:s, don't add again.
-            */
-
             if (strlen($time) === 5) {
                 $time .= ':00';
             }
@@ -376,25 +521,9 @@ class TravelRequestService
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Existing travel_date_time Supplied
-        |--------------------------------------------------------------------------
-        */
-
         if (!empty($data['travel_date_time'])) {
             return;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Update Case
-        |--------------------------------------------------------------------------
-        |
-        | If user edits the request without changing date/time,
-        | preserve existing travel_date_time.
-        |
-        */
 
         if (
             $travelRequest &&
@@ -408,12 +537,6 @@ class TravelRequestService
             return;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Fallback Using Travel From Date
-        |--------------------------------------------------------------------------
-        */
-
         if (!empty($data['travel_from_date'])) {
 
             $data['travel_date_time'] =
@@ -423,12 +546,6 @@ class TravelRequestService
 
             return;
         }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Last Fallback
-        |--------------------------------------------------------------------------
-        */
 
         $data['travel_date_time'] =
             now()->format('Y-m-d H:i:s');

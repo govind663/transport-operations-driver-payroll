@@ -41,13 +41,84 @@ class TravelRequestController extends Controller
     /**
      * Display a listing of travel requests.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Filters
+        |--------------------------------------------------------------------------
+        */
+
+        $filters = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'driver_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'vehicle_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'status' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+
+            'date_from' => [
+                'nullable',
+                'date',
+            ],
+
+            'date_to' => [
+                'nullable',
+                'date',
+                'after_or_equal:date_from',
+            ],
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Filtered Travel Requests
+        |--------------------------------------------------------------------------
+        */
+
         $travelRequests = $this->travelRequestService
-            ->getTravelRequests();
+            ->getTravelRequests($filters);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Get Filter Options
+        |--------------------------------------------------------------------------
+        */
+
+        $filterOptions = $this->travelRequestService
+            ->getFilterOptions();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return View
+        |--------------------------------------------------------------------------
+        */
 
         return view('backend.travel-requests.index',
-            compact('travelRequests')
+            compact(
+                'travelRequests',
+                'filters',
+                'filterOptions'
+            )
         );
     }
 
@@ -110,7 +181,8 @@ class TravelRequestController extends Controller
             $travelRequest->id
         );
 
-        return view('backend.travel-requests.show',
+        return view(
+            'backend.travel-requests.show',
             compact('travelRequest')
         );
     }
@@ -133,7 +205,8 @@ class TravelRequestController extends Controller
             $travelRequest->id
         );
 
-        return view('backend.travel-requests.edit',
+        return view(
+            'backend.travel-requests.edit',
             compact('travelRequest')
         );
     }
