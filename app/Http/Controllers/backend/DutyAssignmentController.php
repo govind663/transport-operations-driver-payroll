@@ -8,20 +8,23 @@ use App\Http\Requests\Backend\DutyAssignment\UpdateDutyAssignmentRequest;
 use App\Models\Driver;
 use App\Models\DutyAssignment;
 use App\Models\TravelRequest;
+use App\Models\User;
 use App\Models\VehicleManagement;
 use App\Services\DutyAssignment\DutyAssignmentService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class DutyAssignmentController extends Controller
 {
     /**
-     * Duty Assignment Service
+     * Duty Assignment Service.
      */
     protected DutyAssignmentService $dutyAssignmentService;
 
     /**
-     * Constructor
+     * Constructor.
      */
     public function __construct(
         DutyAssignmentService $dutyAssignmentService
@@ -31,20 +34,126 @@ class DutyAssignmentController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | AUTHORIZATION
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Allow only Admin, Operations and Accountant.
+     */
+    protected function authorizeManagementAccess(): User
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'Unauthenticated access.'
+        );
+
+        abort_unless(
+            $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant(),
+            403,
+            'Unauthorized access.'
+        );
+
+        return $user;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | INDEX
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Display a listing of duty assignments.
+     * Display accessible duty assignments.
+     *
+     * Admin / Operations / Accountant:
+     * - Can view all assignments.
+     * - Can filter by driver and vehicle.
+     *
+     * Driver:
+     * - Can view own assignments only.
+     * - Can use applicable filters.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $dutyAssignments =
-            $this->dutyAssignmentService->getDutyAssignments();
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATE FILTERS
+        |--------------------------------------------------------------------------
+        */
 
-        return view('backend.duty-assignments.index',
-            compact('dutyAssignments')
+        $filters = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'driver_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'vehicle_id' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+
+            'status' => [
+                'nullable',
+                'in:pending,assigned,accepted,rejected,started,completed,cancelled',
+            ],
+
+            'date_from' => [
+                'nullable',
+                'date',
+            ],
+
+            'date_to' => [
+                'nullable',
+                'date',
+                'after_or_equal:date_from',
+            ],
+        ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | GET FILTERED DUTY ASSIGNMENTS
+        |--------------------------------------------------------------------------
+        */
+
+        $dutyAssignments = $this->dutyAssignmentService
+            ->getDutyAssignments($filters);
+
+        /*
+        |--------------------------------------------------------------------------
+        | GET FILTER OPTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        $filterOptions = $this->dutyAssignmentService
+            ->getFilterOptions();
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN VIEW
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'backend.duty-assignments.index',
+            compact(
+                'dutyAssignments',
+                'filters',
+                'filterOptions'
+            )
         );
     }
 
@@ -56,9 +165,13 @@ class DutyAssignmentController extends Controller
 
     /**
      * Show the form for creating a new duty assignment.
+     *
+     * Only management roles can create assignments.
      */
     public function create(): View
     {
+        $this->authorizeManagementAccess();
+
         $travelRequests = TravelRequest::query()
             ->whereIn('status', [
                 TravelRequest::STATUS_PENDING,
@@ -76,7 +189,8 @@ class DutyAssignmentController extends Controller
             ->latest('id')
             ->get();
 
-        return view('backend.duty-assignments.create',
+        return view(
+            'backend.duty-assignments.create',
             compact(
                 'travelRequests',
                 'drivers',
@@ -84,6 +198,7 @@ class DutyAssignmentController extends Controller
             )
         );
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -93,10 +208,14 @@ class DutyAssignmentController extends Controller
 
     /**
      * Store a newly created duty assignment.
+     *
+     * Only management roles can store assignments.
      */
     public function store(
         StoreDutyAssignmentRequest $request
     ): RedirectResponse {
+
+        $this->authorizeManagementAccess();
 
         $this->dutyAssignmentService->store(
             $request->validated()
@@ -118,17 +237,19 @@ class DutyAssignmentController extends Controller
 
     /**
      * Display the specified duty assignment.
+     *
+     * Driver can access only their own assignment.
+     * Management roles can access all assignments.
      */
     public function show(
         DutyAssignment $dutyAssignment
     ): View {
 
-        $dutyAssignment =
-            $this->dutyAssignmentService->findById(
-                $dutyAssignment->id
-            );
+        $dutyAssignment = $this->dutyAssignmentService
+            ->findById($dutyAssignment->id);
 
-        return view('backend.duty-assignments.show',
+        return view(
+            'backend.duty-assignments.show',
             compact('dutyAssignment')
         );
     }
@@ -141,15 +262,17 @@ class DutyAssignmentController extends Controller
 
     /**
      * Show the form for editing the specified duty assignment.
+     *
+     * Only management roles can edit assignments.
      */
     public function edit(
         DutyAssignment $dutyAssignment
     ): View {
 
-        $dutyAssignment =
-            $this->dutyAssignmentService->findById(
-                $dutyAssignment->id
-            );
+        $this->authorizeManagementAccess();
+
+        $dutyAssignment = $this->dutyAssignmentService
+            ->findById($dutyAssignment->id);
 
         $travelRequests = TravelRequest::query()
             ->latest('id')
@@ -163,7 +286,8 @@ class DutyAssignmentController extends Controller
             ->latest('id')
             ->get();
 
-        return view('backend.duty-assignments.edit',
+        return view(
+            'backend.duty-assignments.edit',
             compact(
                 'dutyAssignment',
                 'travelRequests',
@@ -173,6 +297,7 @@ class DutyAssignmentController extends Controller
         );
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | UPDATE
@@ -181,11 +306,15 @@ class DutyAssignmentController extends Controller
 
     /**
      * Update the specified duty assignment.
+     *
+     * Only management roles can update assignments.
      */
     public function update(
         UpdateDutyAssignmentRequest $request,
         DutyAssignment $dutyAssignment
     ): RedirectResponse {
+
+        $this->authorizeManagementAccess();
 
         $this->dutyAssignmentService->update(
             $dutyAssignment,
@@ -208,10 +337,14 @@ class DutyAssignmentController extends Controller
 
     /**
      * Remove the specified duty assignment.
+     *
+     * Only management roles can delete assignments.
      */
     public function destroy(
         DutyAssignment $dutyAssignment
     ): RedirectResponse {
+
+        $this->authorizeManagementAccess();
 
         $this->dutyAssignmentService->delete(
             $dutyAssignment

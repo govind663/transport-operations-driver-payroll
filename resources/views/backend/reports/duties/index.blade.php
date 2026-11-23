@@ -1,3 +1,4 @@
+
 @extends('backend.layouts.master')
 
 @section('title')
@@ -50,6 +51,56 @@
 @endpush
 
 @section('content')
+
+@php
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authenticated User
+    |--------------------------------------------------------------------------
+    */
+
+    $authUser = auth()->user();
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role Detection
+    |--------------------------------------------------------------------------
+    */
+
+    $isDriver = $authUser && $authUser->isDriver();
+
+    $canSelectDriver = $authUser && (
+        $authUser->isAdmin()
+        || $authUser->isOperations()
+        || $authUser->isAccountant()
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authenticated Driver Profile
+    |--------------------------------------------------------------------------
+    */
+
+    $driverProfile = $isDriver
+        ? $authUser->driver
+        : null;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Filter Options
+    |--------------------------------------------------------------------------
+    */
+
+    $drivers = $filterOptions['drivers'] ?? [];
+
+    $vehicles = $filterOptions['vehicles'] ?? [];
+
+    $clients = $filterOptions['clients'] ?? [];
+
+    $statuses = $filterOptions['statuses'] ?? [];
+
+@endphp
 
 <div class="pd-ltr-20 xs-pd-20-10">
 
@@ -134,53 +185,84 @@
                         </div>
 
                         {{-- ================================================= --}}
-                        {{-- DRIVER --}}
+                        {{-- DRIVER FILTER --}}
                         {{-- ================================================= --}}
 
-                        <div class="col-md-2 col-sm-6 mb-20">
+                        @if($canSelectDriver)
 
-                            <label>
+                            <div class="col-md-2 col-sm-6 mb-20">
 
-                                Driver
+                                <label>
 
-                            </label>
+                                    Driver
 
-                            <select
-                                name="driver_id"
-                                class="form-control custom-select2"
-                            >
+                                </label>
 
-                                <option value="">
+                                <select
+                                    name="driver_id"
+                                    class="form-control custom-select2"
+                                >
 
-                                    All Drivers
+                                    <option value="">
 
-                                </option>
-
-                                @foreach(
-                                    ($filterOptions['drivers'] ?? []) as $driver
-                                )
-
-                                    <option
-                                        value="{{ $driver->id }}"
-                                        {{ (string) ($filters['driver_id'] ?? '') === (string) $driver->id ? 'selected' : '' }}
-                                    >
-
-                                        {{ $driver->first_name ?? '-' }} {{ $driver->last_name ?? '' }}
-
-                                        @if(!empty($driver->driver_code))
-
-                                            -
-                                            {{ $driver->driver_code }}
-
-                                        @endif
+                                        All Drivers
 
                                     </option>
 
-                                @endforeach
+                                    @foreach($drivers as $driver)
 
-                            </select>
+                                        <option
+                                            value="{{ $driver->id }}"
+                                            {{ (string) ($filters['driver_id'] ?? '') === (string) $driver->id ? 'selected' : '' }}
+                                        >
 
-                        </div>
+                                            {{ $driver->first_name ?? '-' }}
+                                            {{ $driver->last_name ?? '' }}
+
+                                            @if(!empty($driver->driver_code))
+
+                                                -
+                                                {{ $driver->driver_code }}
+
+                                            @endif
+
+                                        </option>
+
+                                    @endforeach
+
+                                </select>
+
+                            </div>
+
+                        @elseif($isDriver)
+
+                            <div class="col-md-2 col-sm-6 mb-20">
+
+                                <label>
+
+                                    Driver
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ $driverProfile
+                                        ? trim(
+                                            ($driverProfile->first_name ?? '') . ' ' .
+                                            ($driverProfile->last_name ?? '')
+                                        ) . (
+                                            !empty($driverProfile->driver_code)
+                                                ? ' - ' . $driverProfile->driver_code
+                                                : ''
+                                        )
+                                        : 'Driver profile unavailable' }}"
+                                    readonly
+                                >
+
+                            </div>
+
+                        @endif
 
                         {{-- ================================================= --}}
                         {{-- VEHICLE --}}
@@ -205,9 +287,7 @@
 
                                 </option>
 
-                                @foreach(
-                                    ($filterOptions['vehicles'] ?? []) as $vehicle
-                                )
+                                @foreach($vehicles as $vehicle)
 
                                     <option
                                         value="{{ $vehicle->id }}"
@@ -250,9 +330,7 @@
 
                                 </option>
 
-                                @foreach(
-                                    ($filterOptions['clients'] ?? []) as $client
-                                )
+                                @foreach($clients as $client)
 
                                     <option
                                         value="{{ $client->id }}"
@@ -292,9 +370,7 @@
 
                                 </option>
 
-                                @foreach(
-                                    ($filterOptions['statuses'] ?? []) as $status
-                                )
+                                @foreach($statuses as $status)
 
                                     <option
                                         value="{{ $status }}"
@@ -316,6 +392,7 @@
                             </select>
 
                         </div>
+
 
                         {{-- ================================================= --}}
                         {{-- DATE FROM --}}
@@ -498,7 +575,6 @@
 
                         </thead>
 
-
                         {{-- ================================================= --}}
                         {{-- TABLE BODY --}}
                         {{-- ================================================= --}}
@@ -535,7 +611,6 @@
 
                                 <tr>
 
-
                                     {{-- ===================================== --}}
                                     {{-- SR NO --}}
                                     {{-- ===================================== --}}
@@ -547,7 +622,6 @@
                                             + $key + 1 }}
 
                                     </td>
-
 
                                     {{-- ===================================== --}}
                                     {{-- ASSIGNMENT NUMBER --}}
@@ -562,7 +636,6 @@
                                         </strong>
 
                                     </td>
-
 
                                     {{-- ===================================== --}}
                                     {{-- DUTY DATE --}}
@@ -593,7 +666,6 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- DRIVER --}}
                                     {{-- ===================================== --}}
@@ -607,7 +679,6 @@
                                                 {{ $driverName !== '' ? $driverName : '-' }}
 
                                             </strong>
-
 
                                             @if(!empty($duty->driver->driver_code))
 
@@ -628,7 +699,6 @@
                                         @endif
 
                                     </td>
-
 
                                     {{-- ===================================== --}}
                                     {{-- VEHICLE --}}
@@ -651,7 +721,6 @@
                                         @endif
 
                                     </td>
-
 
                                     {{-- ===================================== --}}
                                     {{-- CLIENT --}}
@@ -685,7 +754,6 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- ASSIGNED AT --}}
                                     {{-- ===================================== --}}
@@ -708,7 +776,6 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- REPORTING TIME --}}
                                     {{-- ===================================== --}}
@@ -730,7 +797,6 @@
                                         @endif
 
                                     </td>
-
 
                                     {{-- ===================================== --}}
                                     {{-- REPORTING LOCATION --}}
@@ -789,7 +855,6 @@
 
                                             };
 
-
                                             $statusIcon = match ($status) {
 
                                                 'completed' =>
@@ -820,7 +885,6 @@
 
                                         @endphp
 
-
                                         <span
                                             class="badge {{ $statusClass }} badge-pill px-3 py-2"
                                         >
@@ -839,16 +903,13 @@
 
                                     </td>
 
-
                                     {{-- ===================================== --}}
                                     {{-- VIEW --}}
                                     {{-- ===================================== --}}
 
                                     <td class="no-export">
 
-                                        @if(
-                                            Route::has('duty-assignments.show')
-                                        )
+                                        @if(Route::has('duty-assignments.show'))
 
                                             <a
                                                 href="{{ route(
@@ -894,13 +955,11 @@
                                                 class="fa fa-car fa-2x text-muted mb-3"
                                             ></i>
 
-
                                             <h5 class="text-muted">
 
                                                 No Duties Found
 
                                             </h5>
-
 
                                             <p class="text-muted mb-0">
 
@@ -929,7 +988,6 @@
 
     </div>
 
-
     {{-- ========================================================= --}}
     {{-- FOOTER --}}
     {{-- ========================================================= --}}
@@ -939,7 +997,6 @@
 </div>
 
 @endsection
-
 
 @push('scripts')
 

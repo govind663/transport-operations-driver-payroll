@@ -3,6 +3,9 @@
 namespace App\Services\DutyAssignment;
 
 use App\Models\DutyAssignment;
+use App\Models\Driver;
+use App\Models\User;
+use App\Models\VehicleManagement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -10,23 +13,88 @@ use Illuminate\Support\Facades\DB;
 
 class DutyAssignmentService
 {
+    /**
+     * Get authenticated user.
+     */
+    protected function authenticatedUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'Unauthenticated access.'
+        );
+
+        return $user;
+    }
+
+    /**
+     * Check management role access.
+     */
+    protected function authorizeManagementAccess(): User
+    {
+        $user = $this->authenticatedUser();
+
+        abort_unless(
+            $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant(),
+            403,
+            'Unauthorized access.'
+        );
+
+        return $user;
+    }
+
+    /**
+     * Get authenticated driver's profile.
+     */
+    protected function getAuthenticatedDriver(): Driver
+    {
+        $user = $this->authenticatedUser();
+
+        abort_unless(
+            $user->isDriver(),
+            403,
+            'Only drivers can access this resource.'
+        );
+
+        $driver = $user->driver;
+
+        abort_unless(
+            $driver instanceof Driver,
+            403,
+            'Driver profile not found.'
+        );
+
+        return $driver;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | GET DUTY ASSIGNMENTS
     |--------------------------------------------------------------------------
     |
-    | Role based visibility:
+    | Supports:
+    | - Search
+    | - Driver
+    | - Vehicle
+    | - Status
+    | - Assigned Date From
+    | - Assigned Date To
     |
-    | admin       -> All assignments
-    | operations  -> All assignments
-    | accountant  -> All assignments
-    | driver      -> Only own driver assignments
+    | Driver can only access own assignments.
     |
     */
 
-    public function getDutyAssignments(): Collection
-    {
-        return $this->accessibleDutyAssignmentsQuery()
+    public function getDutyAssignments(
+        array $filters = []
+    ): Collection {
+        return $this->applyFilters(
+            $this->accessibleDutyAssignmentsQuery(),
+            $filters
+        )
             ->with([
                 'travelRequest',
                 'driver',
@@ -40,15 +108,232 @@ class DutyAssignmentService
             ->get();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | APPLY FILTERS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function applyFilters(
+        Builder $query,
+        array $filters = []
+    ): Builder {
+
+        $user = $this->authenticatedUser();
+
+        /*
+        |--------------------------------------------------------------------------
+        | SEARCH
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['search'])) {
+
+            $search = trim($filters['search']);
+
+            $query->where(function (Builder $searchQuery) use ($search) {
+
+                $searchQuery
+                    ->where('assignment_no', 'like', "%{$search}%")
+                    ->orWhere('reporting_location', 'like', "%{$search}%")
+                    ->orWhere('remarks', 'like', "%{$search}%")
+
+                    ->orWhereHas('driver', function (Builder $driverQuery) use ($search) {
+
+                        $driverQuery->where(function (Builder $driverSearch) use ($search) {
+
+                            $driverSearch
+                                ->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%")
+                                ->orWhere('driver_code', 'like', "%{$search}%");
+                        });
+                    })
+
+                    ->orWhereHas('vehicle', function (Builder $vehicleQuery) use ($search) {
+
+                        $vehicleQuery->where(function (Builder $vehicleSearch) use ($search) {
+
+                            $vehicleSearch
+                                ->where('vehicle_number', 'like', "%{$search}%")
+                                ->orWhere('registration_number', 'like', "%{$search}%")
+                                ->orWhere('vehicle_name', 'like', "%{$search}%")
+                                ->orWhere('vehicle_model', 'like', "%{$search}%");
+                        });
+                    })
+
+                    ->orWhereHas('travelRequest', function (Builder $travelQuery) use ($search) {
+
+                        $travelQuery->where(function (Builder $travelSearch) use ($search) {
+
+                            $travelSearch
+                                ->where('request_no', 'like', "%{$search}%")
+                                ->orWhere('passenger_name', 'like', "%{$search}%");
+                        });
+                    });
+            });
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER FILTER
+        |--------------------------------------------------------------------------
+        |
+        | Management roles can select a driver.
+        | Driver cannot change driver_id through request.
+        |
+        */
+
+        if (!$user->isDriver() && !empty($filters['driver_id'])) {
+
+            $query->where(
+                'driver_id',
+                $filters['driver_id']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VEHICLE FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$user->isDriver() && !empty($filters['vehicle_id'])) {
+
+            $query->where(
+                'vehicle_id',
+                $filters['vehicle_id']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS FILTER
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['status'])) {
+
+            $query->where(
+                'status',
+                $filters['status']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASSIGNED DATE FROM
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_from'])) {
+
+            $query->whereDate(
+                'assigned_at',
+                '>=',
+                $filters['date_from']
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | ASSIGNED DATE TO
+        |--------------------------------------------------------------------------
+        */
+
+        if (!empty($filters['date_to'])) {
+
+            $query->whereDate(
+                'assigned_at',
+                '<=',
+                $filters['date_to']
+            );
+        }
+
+        return $query;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET FILTER OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
+    public function getFilterOptions(): array
+    {
+        $user = $this->authenticatedUser();
+
+        $drivers = collect();
+
+        $vehicles = collect();
+
+        /*
+        |--------------------------------------------------------------------------
+        | MANAGEMENT FILTER OPTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $user->isAdmin()
+            || $user->isOperations()
+            || $user->isAccountant()
+        ) {
+
+            $drivers = Driver::query()
+                ->select([
+                    'id',
+                    'driver_code',
+                    'first_name',
+                    'last_name',
+                ])
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get();
+
+            $vehicles = VehicleManagement::query()
+                ->orderBy('id', 'desc')
+                ->get();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER FILTER OPTION
+        |--------------------------------------------------------------------------
+        */
+
+        if ($user->isDriver()) {
+
+            $drivers = collect([
+                $this->getAuthenticatedDriver(),
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATUS OPTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        $statuses = [
+            DutyAssignment::STATUS_PENDING,
+            DutyAssignment::STATUS_ASSIGNED,
+            DutyAssignment::STATUS_ACCEPTED,
+            DutyAssignment::STATUS_REJECTED,
+            DutyAssignment::STATUS_STARTED,
+            DutyAssignment::STATUS_COMPLETED,
+            DutyAssignment::STATUS_CANCELLED,
+        ];
+
+        return [
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+            'statuses' => $statuses,
+        ];
+    }
 
     /*
     |--------------------------------------------------------------------------
     | FIND DUTY ASSIGNMENT
     |--------------------------------------------------------------------------
-    |
-    | Driver can only access own linked assignments.
-    | Other allowed roles can access all assignments.
-    |
     */
 
     public function findById(
@@ -67,7 +352,6 @@ class DutyAssignmentService
             ->findOrFail($id);
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | STORE
@@ -77,20 +361,15 @@ class DutyAssignmentService
     public function store(
         array $data
     ): DutyAssignment {
-        return DB::transaction(function () use ($data) {
+        $user = $this->authorizeManagementAccess();
+
+        return DB::transaction(function () use ($data, $user) {
+
+            $data['created_by'] = $user->id;
 
             /*
             |--------------------------------------------------------------------------
-            | Created By
-            |--------------------------------------------------------------------------
-            */
-
-            $data['created_by'] = Auth::id();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Assignment Number
+            | ASSIGNMENT NUMBER
             |--------------------------------------------------------------------------
             */
 
@@ -101,34 +380,27 @@ class DutyAssignmentService
 
             } else {
 
-                $data['assignment_no'] =
-                    strtoupper(
-                        trim(
-                            $data['assignment_no']
-                        )
-                    );
+                $data['assignment_no'] = strtoupper(
+                    trim($data['assignment_no'])
+                );
             }
-
 
             /*
             |--------------------------------------------------------------------------
-            | Assigned By
+            | ASSIGNED BY
             |--------------------------------------------------------------------------
             */
 
             if (
-                empty($data['assigned_by']) &&
-                !empty($data['driver_id'])
+                empty($data['assigned_by'])
+                && !empty($data['driver_id'])
             ) {
-
-                $data['assigned_by'] =
-                    Auth::id();
+                $data['assigned_by'] = $user->id;
             }
-
 
             /*
             |--------------------------------------------------------------------------
-            | Status
+            | STATUS
             |--------------------------------------------------------------------------
             */
 
@@ -136,22 +408,13 @@ class DutyAssignmentService
                 $data['status']
                 ?? DutyAssignment::STATUS_PENDING;
 
-
             /*
             |--------------------------------------------------------------------------
-            | Create Duty Assignment
+            | CREATE
             |--------------------------------------------------------------------------
             */
 
-            $dutyAssignment =
-                DutyAssignment::create($data);
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Fresh Model
-            |--------------------------------------------------------------------------
-            */
+            $dutyAssignment = DutyAssignment::create($data);
 
             return $dutyAssignment->fresh([
                 'travelRequest',
@@ -165,7 +428,6 @@ class DutyAssignmentService
         });
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | GENERATE ASSIGNMENT NUMBER
@@ -177,14 +439,12 @@ class DutyAssignmentService
         do {
 
             $assignmentNo =
-                'DUTY-' .
-                now()->format('Ymd') .
-                '-' .
-                strtoupper(
+                'DUTY-'
+                . now()->format('Ymd')
+                . '-'
+                . strtoupper(
                     substr(
-                        bin2hex(
-                            random_bytes(4)
-                        ),
+                        bin2hex(random_bytes(4)),
                         0,
                         6
                     )
@@ -192,211 +452,146 @@ class DutyAssignmentService
 
         } while (
             DutyAssignment::withTrashed()
-                ->where(
-                    'assignment_no',
-                    $assignmentNo
-                )
+                ->where('assignment_no', $assignmentNo)
                 ->exists()
         );
 
         return $assignmentNo;
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | UPDATE
     |--------------------------------------------------------------------------
-    |
-    | Driver can update only own accessible assignment.
-    | Admin / Operations / Accountant can update all.
-    |
     */
 
     public function update(
         DutyAssignment $dutyAssignment,
         array $data
     ): DutyAssignment {
-        return DB::transaction(
-            function () use (
-                $dutyAssignment,
-                $data
-            ) {
+        $user = $this->authenticatedUser();
 
-                /*
-                |--------------------------------------------------------------------------
-                | Security Check
-                |--------------------------------------------------------------------------
-                |
-                | Re-fetch assignment using role based scope.
-                |
-                */
+        return DB::transaction(function () use (
+            $dutyAssignment,
+            $data,
+            $user
+        ) {
 
-                $dutyAssignment =
-                    $this->findById(
-                        $dutyAssignment->id
-                    );
+            $dutyAssignment = $this->findById(
+                $dutyAssignment->id
+            );
 
+            if ($user->isDriver()) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Updated By
-                |--------------------------------------------------------------------------
-                */
+                $driver = $this->getAuthenticatedDriver();
 
-                $data['updated_by'] =
-                    Auth::id();
+                $data['driver_id'] = $driver->id;
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Update
-                |--------------------------------------------------------------------------
-                */
-
-                $dutyAssignment->update(
-                    $data
+                unset(
+                    $data['created_by'],
+                    $data['assigned_by'],
+                    $data['deleted_by']
                 );
 
+            } else {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Fresh Model
-                |--------------------------------------------------------------------------
-                */
-
-                return $dutyAssignment->fresh([
-                    'travelRequest',
-                    'driver',
-                    'vehicle',
-                    'assignedBy',
-                    'createdBy',
-                    'updatedBy',
-                    'dutySlip',
-                ]);
+                $this->authorizeManagementAccess();
             }
-        );
-    }
 
+            $data['updated_by'] = $user->id;
+
+            $dutyAssignment->update($data);
+
+            return $dutyAssignment->fresh([
+                'travelRequest',
+                'driver',
+                'vehicle',
+                'assignedBy',
+                'createdBy',
+                'updatedBy',
+                'dutySlip',
+            ]);
+        });
+    }
 
     /*
     |--------------------------------------------------------------------------
     | DELETE
     |--------------------------------------------------------------------------
-    |
-    | Driver can delete only own accessible assignment.
-    | Admin / Operations / Accountant can delete all assignments.
-    |
     */
 
     public function delete(
         DutyAssignment $dutyAssignment
     ): bool {
-        return DB::transaction(
-            function () use (
-                $dutyAssignment
-            ) {
+        $user = $this->authenticatedUser();
 
-                /*
-                |--------------------------------------------------------------------------
-                | Security Check
-                |--------------------------------------------------------------------------
-                */
+        return DB::transaction(function () use (
+            $dutyAssignment,
+            $user
+        ) {
 
-                $dutyAssignment =
-                    $this->findById(
-                        $dutyAssignment->id
-                    );
+            $dutyAssignment = $this->findById(
+                $dutyAssignment->id
+            );
 
+            if ($user->isDriver()) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | Deleted By
-                |--------------------------------------------------------------------------
-                */
+                $this->getAuthenticatedDriver();
 
-                $dutyAssignment->deleted_by =
-                    Auth::id();
+            } else {
 
-
-                $dutyAssignment->save();
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Soft Delete
-                |--------------------------------------------------------------------------
-                */
-
-                return $dutyAssignment->delete();
+                $this->authorizeManagementAccess();
             }
-        );
-    }
 
+            $dutyAssignment->deleted_by = $user->id;
+
+            $dutyAssignment->save();
+
+            return $dutyAssignment->delete();
+        });
+    }
 
     /*
     |--------------------------------------------------------------------------
     | ACCESSIBLE DUTY ASSIGNMENTS QUERY
     |--------------------------------------------------------------------------
-    |
-    | Centralized role based visibility.
-    |
     */
 
     protected function accessibleDutyAssignmentsQuery(): Builder
     {
-        $user = Auth::user();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Base Query
-        |--------------------------------------------------------------------------
-        */
+        $user = $this->authenticatedUser();
 
         $query = DutyAssignment::query();
 
-
         /*
         |--------------------------------------------------------------------------
-        | DRIVER ROLE
+        | DRIVER
         |--------------------------------------------------------------------------
-        |
-        | Only assignments linked to the authenticated user's
-        | Driver master record.
-        |
-        | drivers.user_id = auth user id
-        |
         */
 
-        if (
-            $user &&
-            $user->role === 'driver'
-        ) {
+        if ($user->isDriver()) {
 
-            $query->whereHas(
-                'driver',
-                function (Builder $driverQuery) use ($user) {
+            $driver = $this->getAuthenticatedDriver();
 
-                    $driverQuery->where(
-                        'user_id',
-                        $user->id
-                    );
-                }
+            return $query->where(
+                'driver_id',
+                $driver->id
             );
         }
 
-
         /*
         |--------------------------------------------------------------------------
-        | ADMIN / OPERATIONS / ACCOUNTANT
+        | MANAGEMENT ROLES
         |--------------------------------------------------------------------------
-        |
-        | No restriction.
-        | All Duty Assignments are returned.
-        |
         */
 
+        abort_unless(
+            $user->isAdmin()
+                || $user->isOperations()
+                || $user->isAccountant(),
+            403,
+            'You are not authorized to access duty assignments.'
+        );
 
         return $query;
     }

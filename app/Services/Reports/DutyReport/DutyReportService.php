@@ -2,16 +2,33 @@
 
 namespace App\Services\Reports\DutyReport;
 
+use App\Models\User;
 use App\Models\Client;
 use App\Models\Driver;
 use App\Models\DutyAssignment;
 use App\Models\VehicleManagement;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class DutyReportService
 {
+    /*
+    |--------------------------------------------------------------------------
+    | GET DUTY REPORT
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Duty Report Listing
+     * Get Duty Report Listing.
+     *
+     * Admin / Operations / Accountant:
+     * - Can view all drivers' duty assignments.
+     * - Can filter by any driver.
+     *
+     * Driver:
+     * - Can view only their own duty assignments.
+     * - Cannot access another driver's duties.
+     * - Supplied driver_id filter is ignored.
      */
     public function getReport(
         array $filters = [],
@@ -25,12 +42,35 @@ class DutyReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | BUILD DUTY REPORT QUERY
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Build Duty Report Query
+     * Build Duty Report Query.
      */
     protected function buildQuery(
         array $filters = []
     ): Builder {
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUTHORIZATION
+        |--------------------------------------------------------------------------
+        */
+
+        $user = $this->getAuthorizedUser();
+
+        $isDriver = $user->role === User::ROLE_DRIVER;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BASE QUERY
+        |--------------------------------------------------------------------------
+        */
 
         $query = DutyAssignment::query()
             ->with([
@@ -38,6 +78,46 @@ class DutyReportService
                 'vehicle',
                 'travelRequest.client',
             ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER ACCESS RESTRICTION
+        |--------------------------------------------------------------------------
+        */
+
+        if ($isDriver) {
+
+            /*
+             * Driver can only access their own duty assignments.
+             * Ignore driver_id supplied through request filters.
+             */
+
+            $driver = $this->getAuthenticatedDriver($user);
+
+            $query->where(
+                'driver_id',
+                $driver->id
+            );
+
+        } else {
+
+            /*
+             * Admin / Operations / Accountant
+             * can select any driver.
+             */
+
+            if (
+                isset($filters['driver_id']) &&
+                $filters['driver_id'] !== ''
+            ) {
+
+                $query->where(
+                    'driver_id',
+                    $filters['driver_id']
+                );
+            }
+        }
 
 
         /*
@@ -51,9 +131,14 @@ class DutyReportService
         | - Remarks
         | - Driver Code
         | - Driver Name
+        | - Driver Mobile
         | - Vehicle Number
         | - Registration Number
+        | - Manufacturer
+        | - Vehicle Model
         | - Client Company Name
+        | - Client Code
+        | - Contact Person
         |
         |--------------------------------------------------------------------------
         */
@@ -66,7 +151,7 @@ class DutyReportService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Duty Assignment Fields
+                | DUTY ASSIGNMENT FIELDS
                 |--------------------------------------------------------------------------
                 */
 
@@ -91,7 +176,7 @@ class DutyReportService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Driver Search
+                | DRIVER SEARCH
                 |--------------------------------------------------------------------------
                 */
 
@@ -128,7 +213,7 @@ class DutyReportService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Vehicle Search
+                | VEHICLE SEARCH
                 |--------------------------------------------------------------------------
                 */
 
@@ -165,7 +250,7 @@ class DutyReportService
 
                 /*
                 |--------------------------------------------------------------------------
-                | Client Search
+                | CLIENT SEARCH
                 |--------------------------------------------------------------------------
                 |
                 | Duty Assignment
@@ -206,24 +291,6 @@ class DutyReportService
 
         /*
         |--------------------------------------------------------------------------
-        | DRIVER FILTER
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            isset($filters['driver_id']) &&
-            $filters['driver_id'] !== ''
-        ) {
-
-            $query->where(
-                'driver_id',
-                $filters['driver_id']
-            );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
         | VEHICLE FILTER
         |--------------------------------------------------------------------------
         */
@@ -245,14 +312,8 @@ class DutyReportService
         | CLIENT FILTER
         |--------------------------------------------------------------------------
         |
-        | Duty Assignment
-        |       ↓
-        | Travel Request
-        |       ↓
-        | Client
-        |
-        | Client is resolved through the TravelRequest
-        | company_name relationship.
+        | Client is resolved through:
+        | Duty Assignment -> Travel Request -> Client
         |
         |--------------------------------------------------------------------------
         */
@@ -351,34 +412,104 @@ class DutyReportService
             ->orderByDesc('id');
 
 
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN QUERY
+        |--------------------------------------------------------------------------
+        */
+
         return $query;
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET FILTER OPTIONS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Duty Report Filter Options
+     * Get Duty Report Filter Options.
+     *
+     * Driver:
+     * - Receives only their own Driver profile.
+     *
+     * Admin / Operations / Accountant:
+     * - Receive all active Driver profiles.
+     *
+     * Vehicle, Client and Status options retain
+     * the existing report filter structure.
      */
     public function getFilterOptions(): array
     {
+        /*
+        |--------------------------------------------------------------------------
+        | AUTHORIZATION
+        |--------------------------------------------------------------------------
+        */
+
+        $user = $this->getAuthorizedUser();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN FILTER OPTIONS
+        |--------------------------------------------------------------------------
+        */
+
         return [
-            'drivers' => $this->getDrivers(),
+
+            'drivers' => $this->getDrivers($user),
 
             'vehicles' => $this->getVehicles(),
 
             'clients' => $this->getClients(),
 
             'statuses' => $this->getStatuses(),
+
         ];
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET DRIVERS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Active Drivers
+     * Get Driver Options.
+     *
+     * Driver:
+     * - Only their own Driver profile.
+     *
+     * Other authorized roles:
+     * - All active Drivers.
      */
-    protected function getDrivers()
+    protected function getDrivers(User $user)
     {
-        return Driver::query()
-            ->where('status', 'active')
+        $query = Driver::query();
+
+        if ($user->role === User::ROLE_DRIVER) {
+
+            $driver = $this->getAuthenticatedDriver($user);
+
+            /*
+             * Restrict Driver filter to authenticated Driver profile.
+             */
+
+            $query->whereKey($driver->id);
+
+        } else {
+
+            /*
+             * Preserve existing active Driver filter options.
+             */
+
+            $query->where('status', 'active');
+        }
+
+        return $query
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get([
@@ -390,8 +521,14 @@ class DutyReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET ACTIVE VEHICLES
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Active Vehicles
+     * Get Active Vehicles.
      */
     protected function getVehicles()
     {
@@ -414,8 +551,14 @@ class DutyReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET ACTIVE CLIENTS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Active Clients
+     * Get Active Clients.
      */
     protected function getClients()
     {
@@ -431,8 +574,14 @@ class DutyReportService
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET AVAILABLE DUTY STATUSES
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Get Available Duty Statuses
+     * Get Available Duty Statuses.
      */
     protected function getStatuses(): array
     {
@@ -445,5 +594,80 @@ class DutyReportService
             'completed',
             'cancelled',
         ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHORIZED USER
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get authenticated user and verify Duty Report access.
+     *
+     * Allowed Roles:
+     * - Admin
+     * - Operations
+     * - Accountant
+     * - Driver
+     */
+    private function getAuthorizedUser(): User
+    {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User,
+            403,
+            'You are not authorized to access this report.'
+        );
+
+        $hasReportAccess = in_array(
+            $user->role,
+            [
+                User::ROLE_ADMIN,
+                User::ROLE_OPERATIONS,
+                User::ROLE_ACCOUNTANT,
+                User::ROLE_DRIVER,
+            ],
+            true
+        );
+
+        abort_unless(
+            $hasReportAccess,
+            403,
+            'You are not authorized to access this report.'
+        );
+
+        return $user;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHENTICATED DRIVER
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Resolve authenticated user's Driver profile.
+     */
+    private function getAuthenticatedDriver(User $user): Driver
+    {
+        abort_unless(
+            $user->role === User::ROLE_DRIVER,
+            403,
+            'Unauthorized driver access.'
+        );
+
+        $driver = $user->driver;
+
+        abort_unless(
+            $driver instanceof Driver,
+            403,
+            'Driver profile not found for this account.'
+        );
+
+        return $driver;
     }
 }
