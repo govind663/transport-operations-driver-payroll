@@ -1,8 +1,8 @@
+
 <?php
 
 use App\Http\Middleware\OptimizeImagesMiddleware;
 use App\Http\Middleware\PreventBackHistoryMiddleware;
-use App\Http\Middleware\PreventCitizenBackHistoryMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticatedCustom;
 
 use Illuminate\Auth\AuthenticationException;
@@ -46,8 +46,15 @@ return Application::configure(
         | Web Middleware
         |--------------------------------------------------------------------------
         |
-        | These middleware are applied to all routes defined in
-        | routes/web.php.
+        | Laravel automatically registers its core web middleware:
+        | - EncryptCookies
+        | - AddQueuedCookiesToResponse
+        | - StartSession
+        | - ShareErrorsFromSession
+        | - ValidateCsrfToken
+        | - SubstituteBindings
+        |
+        | Do not register these core middleware again.
         |
         */
 
@@ -55,33 +62,10 @@ return Application::configure(
 
             /*
             |--------------------------------------------------------------------------
-            | Laravel Core Middleware
-            |--------------------------------------------------------------------------
-            */
-
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-
-            \Illuminate\Session\Middleware\StartSession::class,
-
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-
-
-            /*
-            |--------------------------------------------------------------------------
             | Image Optimization
             |--------------------------------------------------------------------------
             |
-            | Handles:
-            | - Frontend HTML images
-            | - Admin HTML images
-            | - Image metadata
-            | - Image optimization logs
-            |
-            | The middleware itself decides which requests to skip.
+            | Handles frontend and backend image optimization.
             |
             */
 
@@ -90,22 +74,35 @@ return Application::configure(
 
             /*
             |--------------------------------------------------------------------------
-            | Browser / Cache Protection
+            | Browser Security / Cache Protection
             |--------------------------------------------------------------------------
+            |
+            | Central middleware for:
+            | - Content Security Policy
+            | - Browser security headers
+            | - Back history protection
+            | - Cache control
+            | - SEO-related response headers
+            |
+            | Keep CSP management in one middleware.
+            |
             */
 
             PreventBackHistoryMiddleware::class,
 
-            PreventCitizenBackHistoryMiddleware::class,
-
 
             /*
             |--------------------------------------------------------------------------
-            | Authentication Logic
+            | Custom Authentication Redirect
             |--------------------------------------------------------------------------
+            |
+            | Redirects already authenticated users away from
+            | configured guest authentication routes.
+            |
             */
 
             RedirectIfAuthenticatedCustom::class,
+
         ]);
     })
 
@@ -190,12 +187,6 @@ return Application::configure(
 
             if ($e instanceof AuthenticationException) {
 
-                /*
-                |--------------------------------------------------------------------------
-                | JSON / AJAX Request
-                |--------------------------------------------------------------------------
-                */
-
                 if ($request->expectsJson()) {
 
                     return response()->json([
@@ -203,13 +194,6 @@ return Application::configure(
                         'message' => 'Unauthenticated.',
                     ], 401);
                 }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Normal Web Request
-                |--------------------------------------------------------------------------
-                */
 
                 return redirect()
                     ->route('admin.login')

@@ -12,89 +12,112 @@ class PreventCitizenBackHistoryMiddleware
     {
         $response = $next($request);
 
-        $clean = fn($value) => str_replace(["\r", "\n"], '', trim($value));
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER VALUE CLEANER
+        |--------------------------------------------------------------------------
+        */
+
+        $clean = static function ($value): string {
+            return trim(
+                str_replace(
+                    ["\r", "\n"],
+                    ' ',
+                    (string) $value
+                )
+            );
+        };
 
         /*
         |--------------------------------------------------------------------------
-        | 🔒 SECURITY HEADERS (BALANCED)
+        | CONTENT SECURITY POLICY DIRECTIVES
         |--------------------------------------------------------------------------
+        |
+        | form-action is intentionally not restricted.
+        | Other CSP security directives remain active.
+        |
         */
-        $headers = [
 
-            // Clickjacking protection
-            'X-Frame-Options' => 'SAMEORIGIN',
+        $cspDirectives = [
+            "default-src 'self'",
 
-            // MIME sniffing protection
-            'X-Content-Type-Options' => 'nosniff',
+            "base-uri 'self'",
 
-            // XSS protection
-            'X-XSS-Protection' => '1; mode=block',
+            "frame-ancestors 'self'",
 
-            // Referrer policy
-            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            "object-src 'none'",
 
-            // Permissions
-            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(self)',
+            "img-src 'self' data: https:",
 
-            // HTTPS only
-            'Strict-Transport-Security' => $request->isSecure()
-                ? 'max-age=31536000; includeSubDomains; preload'
-                : '',
+            "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+
+            "connect-src 'self' https://www.google.com https://www.gstatic.com https://maps.googleapis.com https://unpkg.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://ajax.googleapis.com https://www.gstatic.com https://maps.googleapis.com https://www.google.com https://unpkg.com https://cdn.jsdelivr.net",
+
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+
+            "frame-src 'self' https://www.google.com https://www.gstatic.com https://maps.google.com https://maps.googleapis.com",
         ];
 
         /*
         |--------------------------------------------------------------------------
-        | 🌐 CONTENT SECURITY POLICY (STABLE VERSION)
+        | HTTPS ONLY CSP DIRECTIVE
         |--------------------------------------------------------------------------
         */
-        $csp = "
-            default-src 'self';
 
-            base-uri 'self';
-            form-action 'self';
-            frame-ancestors 'self';
-            object-src 'none';
+        if ($request->isSecure()) {
+            $cspDirectives[] = 'upgrade-insecure-requests';
+        }
 
-            img-src 'self' data: https:;
-
-            font-src 'self' data: https://fonts.gstatic.com;
-
-            connect-src 'self'
-                https://www.google.com
-                https://www.gstatic.com
-                https://maps.googleapis.com
-                https://unpkg.com;
-
-            script-src 'self'
-                'unsafe-inline'
-                https://cdnjs.cloudflare.com
-                https://ajax.googleapis.com
-                https://www.gstatic.com
-                https://maps.googleapis.com
-                https://www.google.com
-                https://unpkg.com;
-
-            style-src 'self'
-                'unsafe-inline'
-                https://fonts.googleapis.com
-                https://cdnjs.cloudflare.com;
-
-            frame-src 'self'
-                https://www.google.com
-                https://www.gstatic.com
-                https://maps.google.com
-                https://maps.googleapis.com;
-
-            upgrade-insecure-requests;
-        ";
-
-        $headers['Content-Security-Policy'] = preg_replace('/\s+/', ' ', trim($csp));
+        $contentSecurityPolicy = implode(
+            '; ',
+            array_map($clean, $cspDirectives)
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | ⚡ SMART CACHE (MOST IMPORTANT FOR PERFORMANCE)
+        | SECURITY HEADERS
         |--------------------------------------------------------------------------
         */
+
+        $headers = [
+            // Clickjacking protection.
+            'X-Frame-Options' => 'SAMEORIGIN',
+
+            // MIME sniffing protection.
+            'X-Content-Type-Options' => 'nosniff',
+
+            // Legacy browser XSS protection.
+            'X-XSS-Protection' => '1; mode=block',
+
+            // Referrer policy.
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+
+            // Browser permissions.
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(self)',
+
+            // Content Security Policy.
+            'Content-Security-Policy' => $contentSecurityPolicy,
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | HTTPS STRICT TRANSPORT SECURITY
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->isSecure()) {
+            $headers['Strict-Transport-Security'] =
+                'max-age=31536000; includeSubDomains; preload';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SMART CACHE STRATEGY
+        |--------------------------------------------------------------------------
+        */
+
         if (
             $request->is('admin/*') ||
             $request->is('login') ||
@@ -102,28 +125,34 @@ class PreventCitizenBackHistoryMiddleware
             $request->is('dashboard') ||
             $request->is('profile')
         ) {
-            // 🔴 Sensitive pages
-            $headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0';
+            // Sensitive pages.
+            $headers['Cache-Control'] =
+                'no-store, no-cache, must-revalidate, max-age=0';
+
             $headers['Pragma'] = 'no-cache';
+
             $headers['Expires'] = '0';
 
         } elseif (
             $request->is('backend/assets/*') ||
             $request->is('build/*')
         ) {
-            // 🟢 Static assets (VERY FAST)
-            $headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+            // Static assets.
+            $headers['Cache-Control'] =
+                'public, max-age=31536000, immutable';
 
         } else {
-            // 🟡 Public pages (BALANCED)
-            $headers['Cache-Control'] = 'public, max-age=86400';
+            // Public pages.
+            $headers['Cache-Control'] =
+                'public, max-age=86400';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 🤖 SEO CONTROL
+        | SEO CONTROL
         |--------------------------------------------------------------------------
         */
+
         if (
             $request->is('admin/*') ||
             $request->is('login') ||
@@ -131,27 +160,40 @@ class PreventCitizenBackHistoryMiddleware
             $request->is('dashboard')
         ) {
             $headers['X-Robots-Tag'] = 'noindex, nofollow';
+
         } else {
             $headers['X-Robots-Tag'] = 'index, follow';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 🚀 PERFORMANCE BOOST
+        | PERFORMANCE HEADERS
         |--------------------------------------------------------------------------
         */
+
         $headers['X-DNS-Prefetch-Control'] = 'on';
 
         /*
         |--------------------------------------------------------------------------
-        | 🔐 APPLY HEADERS
+        | APPLY RESPONSE HEADERS
         |--------------------------------------------------------------------------
         */
+
         foreach ($headers as $key => $value) {
-            if (!empty($value)) {
-                $response->headers->set($key, $clean($value));
+            if ($value !== null && $value !== '') {
+                $response->headers->set(
+                    $key,
+                    $clean($value),
+                    true
+                );
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN RESPONSE
+        |--------------------------------------------------------------------------
+        */
 
         return $response;
     }

@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\backend\AllowanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -9,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 | Controllers
 |--------------------------------------------------------------------------
 */
+
+use App\Http\Controllers\backend\AllowanceController;
+
 use App\Http\Controllers\backend\Auth\LoginController;
 use App\Http\Controllers\backend\Auth\RegisterController;
 use App\Http\Controllers\backend\Auth\ForgotPasswordController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\backend\Auth\ResetPasswordController;
 use App\Http\Controllers\backend\HomeController as BackendHomeController;
 use App\Http\Controllers\backend\UserController;
 use App\Http\Controllers\backend\ClientManagementController;
+use App\Http\Controllers\backend\DriverDocumentSharingController;
 use App\Http\Controllers\backend\DriverAttendanceController;
 use App\Http\Controllers\backend\DriverManagementController;
 use App\Http\Controllers\backend\DutyAssignmentController;
@@ -37,14 +40,22 @@ use App\Http\Controllers\backend\Reports\AttendanceReportController;
 use App\Http\Controllers\backend\Reports\PayrollReportController;
 use App\Http\Controllers\backend\VehiclePriceController;
 
+
 /*
 |--------------------------------------------------------------------------
-| Middleware
+| Middleware Configuration
 |--------------------------------------------------------------------------
+|
+| The following middleware are already registered globally in the
+| web middleware group inside bootstrap/app.php:
+|
+| - OptimizeImagesMiddleware
+| - PreventBackHistoryMiddleware
+| - RedirectIfAuthenticatedCustom
+|
+| Do not register them again in individual route groups.
+|
 */
-use App\Http\Middleware\OptimizeImagesMiddleware;
-use App\Http\Middleware\PreventBackHistoryMiddleware;
-use App\Http\Middleware\RedirectIfAuthenticatedCustom;
 
 
 /*
@@ -58,6 +69,7 @@ use App\Http\Middleware\RedirectIfAuthenticatedCustom;
 | Guest      → Admin Login
 |
 */
+
 Route::get('/', function () {
 
     if (Auth::guard('web')->check()) {
@@ -80,6 +92,7 @@ Route::get('/', function () {
 | Guest      → Admin Login
 |
 */
+
 Route::get('/login', function () {
 
     return Auth::guard('web')->check()
@@ -96,80 +109,80 @@ Route::get('/login', function () {
 |
 | These routes are accessible only when the admin is NOT authenticated.
 |
-| OptimizeImagesMiddleware is explicitly called here.
+| RedirectIfAuthenticatedCustom is already registered globally.
 |
 */
-Route::prefix('')
-    ->middleware([
-        OptimizeImagesMiddleware::class,
-        RedirectIfAuthenticatedCustom::class,
-    ])
-    ->group(function () {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Admin Login
-        |--------------------------------------------------------------------------
-        */
-        Route::get(
-            '/',
-            [LoginController::class, 'login']
-        )->name('admin.login');
+Route::prefix('')->group(function () {
 
-        Route::post(
-            '/login',
-            [LoginController::class, 'authenticate']
-        )->name('admin.login.store');
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Login
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/',
+        [LoginController::class, 'login']
+    )->name('admin.login');
+
+    Route::post(
+        '/login',
+        [LoginController::class, 'authenticate']
+    )->name('admin.login.store');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Admin Register
-        |--------------------------------------------------------------------------
-        */
-        Route::get(
-            '/register',
-            [RegisterController::class, 'register']
-        )->name('admin.register');
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Register
+    |--------------------------------------------------------------------------
+    */
 
-        Route::post(
-            '/register',
-            [RegisterController::class, 'store']
-        )->name('admin.register.store');
+    Route::get(
+        '/register',
+        [RegisterController::class, 'register']
+    )->name('admin.register');
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Forgot Password
-        |--------------------------------------------------------------------------
-        */
-        Route::get(
-            '/forgot-password',
-            [ForgotPasswordController::class, 'showLinkRequestForm']
-        )->name('admin.password.request');
-
-        Route::post(
-            '/forgot-password',
-            [ForgotPasswordController::class, 'sendResetLinkEmail']
-        )->name('admin.password.email');
+    Route::post(
+        '/register',
+        [RegisterController::class, 'store']
+    )->name('admin.register.store');
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Reset Password
-        |--------------------------------------------------------------------------
-        */
-        Route::get(
-            '/reset-password/{token}',
-            [ResetPasswordController::class, 'showResetForm']
-        )->name('admin.password.reset');
+    /*
+    |--------------------------------------------------------------------------
+    | Forgot Password
+    |--------------------------------------------------------------------------
+    */
 
-        Route::post(
-            '/reset-password',
-            [ResetPasswordController::class, 'updatePassword']
-        )->name('admin.password.update');
+    Route::get(
+        '/forgot-password',
+        [ForgotPasswordController::class, 'showLinkRequestForm']
+    )->name('admin.password.request');
 
-    });
+    Route::post(
+        '/forgot-password',
+        [ForgotPasswordController::class, 'sendResetLinkEmail']
+    )->name('admin.password.email');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reset Password
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/reset-password/{token}',
+        [ResetPasswordController::class, 'showResetForm']
+    )->name('admin.password.reset');
+
+    Route::post(
+        '/reset-password',
+        [ResetPasswordController::class, 'updatePassword']
+    )->name('admin.password.update');
+
+});
 
 
 /*
@@ -177,16 +190,18 @@ Route::prefix('')
 | Admin Protected Routes
 |--------------------------------------------------------------------------
 |
-| These routes require authenticated admin user.
+| These routes require an authenticated admin user.
 |
-| OptimizeImagesMiddleware is explicitly called here as well.
+| auth:web is the only route-specific middleware required here.
+|
+| Security headers and image optimization are handled by the
+| globally registered web middleware.
 |
 */
+
 Route::prefix('admin')
     ->middleware([
-        OptimizeImagesMiddleware::class,
         'auth:web',
-        PreventBackHistoryMiddleware::class,
     ])
     ->group(function () {
 
@@ -195,64 +210,84 @@ Route::prefix('admin')
         | Dashboard
         |--------------------------------------------------------------------------
         */
+
         Route::get(
             '/dashboard',
             [BackendHomeController::class, 'adminHome']
         )->name('admin.dashboard');
+
 
         /*
         |--------------------------------------------------------------------------
         | User Management
         |--------------------------------------------------------------------------
         */
-        Route::resource('users', UserController::class);
+
+        Route::resource(
+            'users',
+            UserController::class
+        );
+
 
         /*
         |--------------------------------------------------------------------------
         | Client Management
         |--------------------------------------------------------------------------
         */
-        Route::resource('client-management', ClientManagementController::class);
+
+        Route::resource(
+            'client-management',
+            ClientManagementController::class
+        );
+
 
         /*
         |--------------------------------------------------------------------------
         | Driver Management
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'driver-management',
             DriverManagementController::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
         | Vehicle Categories
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'vehicle-categories',
             VehicleCategoryController::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
         | Vehicle Types
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'vehicle-types',
             VehicleTypeController::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
         | Vehicle Management
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'vehicle-management',
             VehicleManagementController::class
         );
+
 
         /*
         |--------------------------------------------------------------------------
@@ -265,12 +300,17 @@ Route::prefix('admin')
             VehiclePriceController::class
         );
 
+
         /*
         |--------------------------------------------------------------------------
         | Allowances Management
         |--------------------------------------------------------------------------
         */
-        Route::resource('allowances', AllowanceController::class);
+
+        Route::resource(
+            'allowances',
+            AllowanceController::class
+        );
 
 
         /*
@@ -278,28 +318,32 @@ Route::prefix('admin')
         | Expenses Management
         |--------------------------------------------------------------------------
         */
-        Route::resource('expenses', ExpenseController::class);
+
+        Route::resource(
+            'expenses',
+            ExpenseController::class
+        );
+
 
         /*
         |--------------------------------------------------------------------------
         | Travel Requests
         |--------------------------------------------------------------------------
-        |
-        | Excel Import Routes MUST come before Resource Routes
-        |
         */
 
-        // Excel Import
+        // Excel Import Template
         Route::get(
             'travel-requests/import/template',
             [TravelRequestController::class, 'importTemplate']
         )->name('travel-requests.import.template');
 
+        // Excel Import
         Route::post(
             'travel-requests/import',
             [TravelRequestController::class, 'import']
         )->name('travel-requests.import');
 
+        // Travel Request Resource
         Route::resource(
             'travel-requests',
             TravelRequestController::class
@@ -311,6 +355,7 @@ Route::prefix('admin')
         | Duty Assignments
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'duty-assignments',
             DutyAssignmentController::class
@@ -322,6 +367,7 @@ Route::prefix('admin')
         | Duty Slips
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'duty-slips',
             DutySlipController::class
@@ -333,6 +379,7 @@ Route::prefix('admin')
         | Working Sheets
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'working-sheets',
             WorkingSheetController::class
@@ -344,6 +391,7 @@ Route::prefix('admin')
         | Driver Attendances
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'driver-attendances',
             DriverAttendanceController::class
@@ -374,16 +422,103 @@ Route::prefix('admin')
         | Salary Slips
         |--------------------------------------------------------------------------
         */
+
         Route::resource(
             'salary-slips',
             SalarySlipController::class
         );
+
+                /*
+        |--------------------------------------------------------------------------
+        | DRIVER DOCUMENT SHARING
+        |--------------------------------------------------------------------------
+        |
+        | Admin-only document sharing module.
+        |
+        | Supported Documents:
+        | - Attendance PDF
+        | - Working Sheet PDF
+        | - Salary Slip PDF
+        |
+        | WhatsApp Modes:
+        | - Local: Personal WhatsApp chat link
+        | - Live: WhatsApp Cloud API PDF dispatch
+        |
+        */
+
+        Route::prefix('driver-document-sharing')
+            ->name('driver-document-sharing.')
+            ->controller(DriverDocumentSharingController::class)
+            ->group(function () {
+
+                /*
+                |--------------------------------------------------------------------------
+                | Monthly Driver Documents
+                |--------------------------------------------------------------------------
+                */
+
+                Route::get(
+                    '/',
+                    'index'
+                )->name('index');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Attendance WhatsApp Dispatch
+                |--------------------------------------------------------------------------
+                */
+
+                Route::post(
+                    '/attendance/dispatch',
+                    'dispatchAttendanceReport'
+                )->name('attendance-dispatch');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Working Sheet WhatsApp Dispatch
+                |--------------------------------------------------------------------------
+                */
+
+                Route::post(
+                    '/working-sheet/dispatch',
+                    'dispatchWorkingSheetReport'
+                )->name('working-sheet-dispatch');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Salary Slip WhatsApp Dispatch
+                |--------------------------------------------------------------------------
+                */
+
+                Route::post(
+                    '/salary-slip/dispatch',
+                    'dispatchSalarySlip'
+                )->name('salary-slip-dispatch');
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Document Dispatch History
+                |--------------------------------------------------------------------------
+                */
+
+                Route::get(
+                    '/history',
+                    'history'
+                )->name('history');
+
+            });
+
 
         /*
         |--------------------------------------------------------------------------
         | Reports
         |--------------------------------------------------------------------------
         */
+
         Route::prefix('reports')
             ->name('reports.')
             ->group(function () {
@@ -393,6 +528,7 @@ Route::prefix('admin')
                 | Driver Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/drivers',
                     [DriverReportController::class, 'index']
@@ -404,6 +540,7 @@ Route::prefix('admin')
                 | Vehicle Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/vehicles',
                     [VehicleReportController::class, 'index']
@@ -415,6 +552,7 @@ Route::prefix('admin')
                 | Duty Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/duties',
                     [DutyReportController::class, 'index']
@@ -426,16 +564,19 @@ Route::prefix('admin')
                 | Working Sheet Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/working-sheets',
                     [WorkingSheetReportController::class, 'index']
                 )->name('working-sheets.index');
+
 
                 /*
                 |--------------------------------------------------------------------------
                 | Attendance Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/attendances',
                     [AttendanceReportController::class, 'index']
@@ -447,6 +588,7 @@ Route::prefix('admin')
                 | Payroll Reports
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/payroll',
                     [PayrollReportController::class, 'index']
@@ -454,11 +596,13 @@ Route::prefix('admin')
 
             });
 
+
         /*
         |--------------------------------------------------------------------------
         | Profile & Account
         |--------------------------------------------------------------------------
         */
+
         Route::controller(BackendHomeController::class)
             ->group(function () {
 
@@ -467,6 +611,7 @@ Route::prefix('admin')
                 | Profile
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/profile',
                     'adminProfile'
@@ -478,6 +623,7 @@ Route::prefix('admin')
                 | Update Profile
                 |--------------------------------------------------------------------------
                 */
+
                 Route::post(
                     '/profile/update',
                     'updateAdminProfile'
@@ -489,6 +635,7 @@ Route::prefix('admin')
                 | Change Password
                 |--------------------------------------------------------------------------
                 */
+
                 Route::get(
                     '/change-password',
                     'changePassword'
@@ -500,6 +647,7 @@ Route::prefix('admin')
                 | Update Password
                 |--------------------------------------------------------------------------
                 */
+
                 Route::post(
                     '/change-password',
                     'updatePassword'
@@ -513,9 +661,70 @@ Route::prefix('admin')
         | Logout
         |--------------------------------------------------------------------------
         */
+
         Route::post(
             '/logout',
             [LoginController::class, 'logout']
         )->name('admin.logout');
 
     });
+
+    /*
+|--------------------------------------------------------------------------
+| Driver Document Sharing - Secure Attendance PDF
+|--------------------------------------------------------------------------
+|
+| Signed URL:
+| - Accessible through a valid signed URL.
+| - Does not require the admin session.
+| - Signature validation is handled by signed middleware.
+|
+*/
+
+Route::get(
+    '/driver-documents/attendance/{driver}/{month}',
+    [DriverDocumentSharingController::class, 'downloadAttendancePdf']
+)
+    ->name('driver-document-sharing.attendance-pdf')
+    ->middleware('signed');
+
+
+/*
+|--------------------------------------------------------------------------
+| Driver Document Sharing - Secure Working Sheet PDF
+|--------------------------------------------------------------------------
+|
+| Signed URL:
+| - Accessible through a valid signed URL.
+| - Does not require the admin session.
+| - Signature validation is handled by signed middleware.
+|
+*/
+
+Route::get(
+    '/driver-documents/working-sheet/{driver}/{month}',
+    [DriverDocumentSharingController::class, 'downloadWorkingSheetPdf']
+)
+    ->name('driver-document-sharing.working-sheet-pdf')
+    ->middleware('signed');
+
+
+/*
+|--------------------------------------------------------------------------
+| Driver Document Sharing - Secure Salary Slip PDF
+|--------------------------------------------------------------------------
+|
+| Signed URL:
+| - Accessible through a valid signed URL.
+| - Does not require the admin session.
+| - Signature validation is handled by signed middleware.
+|
+*/
+
+Route::get(
+    '/driver-documents/salary-slip/{driver}/{month}',
+    [DriverDocumentSharingController::class, 'downloadSalarySlipPdf']
+)
+    ->name('driver-document-sharing.salary-slip-pdf')
+    ->middleware('signed');
+    

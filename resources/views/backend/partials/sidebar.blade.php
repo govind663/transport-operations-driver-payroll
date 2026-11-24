@@ -154,10 +154,25 @@
         | SETTINGS ACTIVE
         |--------------------------------------------------------------------------
         */
-
         $isSettingsActive =
             (!$isDriver && request()->routeIs('admin.profile')) ||
             request()->routeIs('admin.change-password');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER DOCUMENT SHARING ACTIVE ROUTES
+        |--------------------------------------------------------------------------
+        */
+        $documentSharingRoutes = [
+
+            'driver-document-sharing.*',
+
+        ];
+
+        $isDocumentSharingActive = collect($documentSharingRoutes)
+            ->contains(
+                fn ($route) => request()->routeIs($route)
+            );
 
     @endphp
 
@@ -181,13 +196,10 @@
 
     </li>
 
-
-
     {{-- ================================================================ --}}
     {{-- USER MANAGEMENT --}}
     {{-- ADMIN ONLY --}}
     {{-- ================================================================ --}}
-
     @if($isAdmin)
 
         <li class="dropdown">
@@ -223,12 +235,9 @@
 
     @endif
 
-
-
     {{-- ================================================================ --}}
     {{-- MASTERS --}}
     {{-- ================================================================ --}}
-
     @if($canAccessMasters)
 
         <li class="dropdown">
@@ -432,12 +441,9 @@
 
     @endif
 
-
-
     {{-- ================================================================ --}}
     {{-- OPERATIONS --}}
     {{-- ================================================================ --}}
-
     @if($canAccessOperations)
 
         <li class="dropdown">
@@ -596,13 +602,10 @@
 
     @endif
 
-
-
     {{-- ================================================================ --}}
     {{-- PAYROLL --}}
     {{-- ADMIN / ACCOUNTANT / DRIVER --}}
     {{-- ================================================================ --}}
-
     @if($canAccessPayroll)
 
         <li class="dropdown">
@@ -670,6 +673,65 @@
                     </li>
 
                 @endif
+
+            </ul>
+
+        </li>
+
+    @endif
+
+    {{-- ================================================================ --}}
+    {{-- DRIVER DOCUMENT SHARING --}}
+    {{-- ADMIN ONLY --}}
+    {{-- ================================================================ --}}
+    @if($isAdmin)
+
+        <li class="dropdown">
+
+            <a href="javascript:;"
+            class="dropdown-toggle">
+
+                <span class="micon bi bi-file-earmark-pdf"></span>
+
+                <span class="mtext">
+                    Document Dispatch
+                </span>
+
+            </a>
+
+            <ul class="submenu {{ $isDocumentSharingActive ? 'show' : '' }}">
+
+                {{-- ================================================== --}}
+                {{-- MONTHLY DRIVER DOCUMENTS --}}
+                {{-- ADMIN ONLY --}}
+                {{-- ================================================== --}}
+
+                <li>
+
+                    <a href="{{ route('driver-document-sharing.index') }}"
+                    class="{{ request()->routeIs('driver-document-sharing.index') ? 'active' : '' }}">
+
+                        Monthly Driver Documents
+
+                    </a>
+
+                </li>
+
+                {{-- ================================================== --}}
+                {{-- DOCUMENT DISPATCH HISTORY --}}
+                {{-- ADMIN ONLY --}}
+                {{-- ================================================== --}}
+
+                <li>
+
+                    <a href="{{ route('driver-document-sharing.history') }}"
+                    class="{{ request()->routeIs('driver-document-sharing.history') ? 'active' : '' }}">
+
+                        Document Dispatch History
+
+                    </a>
+
+                </li>
 
             </ul>
 
@@ -816,7 +878,6 @@
         </li>
 
     @endif
-
 
     {{-- ================================================================ --}}
     {{-- SETTINGS --}}

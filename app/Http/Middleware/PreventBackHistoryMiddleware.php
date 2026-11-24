@@ -12,94 +12,124 @@ class PreventBackHistoryMiddleware
     {
         $response = $next($request);
 
-        $clean = fn($value) => str_replace(["\r", "\n"], '', trim($value));
+        /*
+        |--------------------------------------------------------------------------
+        | HEADER VALUE CLEANER
+        |--------------------------------------------------------------------------
+        */
+
+        $clean = static function ($value): string {
+            return trim(
+                str_replace(
+                    ["\r", "\n"],
+                    ' ',
+                    (string) $value
+                )
+            );
+        };
 
         /*
         |--------------------------------------------------------------------------
-        | 🔒 SECURITY HEADERS
+        | CONTENT SECURITY POLICY
         |--------------------------------------------------------------------------
+        |
+        | form-action is intentionally not restricted.
+        | This allows same-origin Laravel form submissions.
+        |
         */
-        $headers = [
 
-            'X-Frame-Options' => 'SAMEORIGIN',
-            'X-Content-Type-Options' => 'nosniff',
-            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+        $cspDirectives = [
+            "default-src 'self'",
 
-            /*
-            |--------------------------------------------------------------------------
-            | 🌐 FINAL CSP (ALL FIXED)
-            |--------------------------------------------------------------------------
-            */
-            'Content-Security-Policy' => "
-                default-src 'self';
+            "base-uri 'self'",
 
-                base-uri 'self';
-                form-action 'self';
-                frame-ancestors 'self';
-                object-src 'none';
+            "frame-ancestors 'self'",
 
-                img-src 'self' data: https:;
+            "object-src 'none'",
 
-                font-src 'self' data: https://fonts.gstatic.com;
+            "img-src 'self' data: https:",
 
-                connect-src 'self'
-                    https://www.google.com
-                    https://www.gstatic.com
-                    https://maps.googleapis.com
-                    https://cdnjs.cloudflare.com
-                    https://cdn.jsdelivr.net;
+            "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
 
-                script-src 'self'
-                    'unsafe-inline'
-                    'unsafe-eval'
-                    https://cdnjs.cloudflare.com
-                    https://ajax.googleapis.com
-                    https://www.gstatic.com
-                    https://maps.googleapis.com
-                    https://www.google.com
-                    https://unpkg.com
-                    https://cdn.jsdelivr.net;
+            "connect-src 'self' https://www.google.com https://www.gstatic.com https://maps.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
 
-                style-src 'self'
-                    'unsafe-inline'
-                    https://fonts.googleapis.com
-                    https://cdnjs.cloudflare.com
-                    https://cdn.jsdelivr.net;
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://ajax.googleapis.com https://www.gstatic.com https://maps.googleapis.com https://www.google.com https://unpkg.com https://cdn.jsdelivr.net",
 
-                frame-src 'self'
-                    https://www.google.com
-                    https://www.gstatic.com
-                    https://maps.google.com
-                    https://maps.googleapis.com;
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
 
-                upgrade-insecure-requests;
-            ",
-
-            // 🔐 HTTPS सुरक्षा
-            'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains; preload',
+            "frame-src 'self' https://www.google.com https://www.gstatic.com https://maps.google.com https://maps.googleapis.com",
         ];
 
         /*
         |--------------------------------------------------------------------------
-        | 🧹 CLEAN CSP (REMOVE EXTRA SPACES)
+        | HTTPS ONLY CSP DIRECTIVE
         |--------------------------------------------------------------------------
         */
-        if (!empty($headers['Content-Security-Policy'])) {
-            $headers['Content-Security-Policy'] = preg_replace(
-                '/\s+/',
-                ' ',
-                trim($headers['Content-Security-Policy'])
-            );
+
+        if ($request->isSecure()) {
+            $cspDirectives[] = 'upgrade-insecure-requests';
+        }
+
+        $contentSecurityPolicy = implode(
+            '; ',
+            array_map($clean, $cspDirectives)
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | SECURITY HEADERS
+        |--------------------------------------------------------------------------
+        |
+        | Only standard, recognized Permissions-Policy features are used.
+        | Camera and microphone access are disabled.
+        |
+        */
+
+        $headers = [
+            'X-Frame-Options' => 'SAMEORIGIN',
+
+            'X-Content-Type-Options' => 'nosniff',
+
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+
+            'Content-Security-Policy' => $contentSecurityPolicy,
+
+            'Permissions-Policy' => 'camera=(), microphone=()',
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | HTTPS STRICT TRANSPORT SECURITY
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->isSecure()) {
+            $headers['Strict-Transport-Security'] =
+                'max-age=31536000; includeSubDomains; preload';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | ⚡ CACHE STRATEGY (SMART)
+        | CACHE STRATEGY
         |--------------------------------------------------------------------------
+        |
+        | Static assets:
+        | - Long-term browser caching.
+        |
+        | Sensitive pages:
+        | - Disable browser caching.
+        |
+        | Public pages:
+        | - Standard browser caching.
+        |
         */
-        if ($request->is('backend/assets/*') || $request->is('build/*')) {
-            // 🟢 Static files → Fast
-            $headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+
+        if (
+            $request->is('backend/assets/*') ||
+            $request->is('build/*')
+        ) {
+            $headers['Cache-Control'] =
+                'public, max-age=31536000, immutable';
 
         } elseif (
             $request->is('admin/*') ||
@@ -108,28 +138,32 @@ class PreventBackHistoryMiddleware
             $request->is('dashboard') ||
             $request->is('profile')
         ) {
-            // 🔴 Sensitive pages
-            $headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0';
+            $headers['Cache-Control'] =
+                'no-store, no-cache, must-revalidate, max-age=0';
+
             $headers['Pragma'] = 'no-cache';
+
             $headers['Expires'] = '0';
 
         } else {
-            // 🟡 Public pages
-            $headers['Cache-Control'] = 'public, max-age=86400';
+            $headers['Cache-Control'] =
+                'public, max-age=86400';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | 🚀 PERFORMANCE BOOST
+        | PERFORMANCE HEADERS
         |--------------------------------------------------------------------------
         */
+
         $headers['X-DNS-Prefetch-Control'] = 'on';
 
         /*
         |--------------------------------------------------------------------------
-        | 🤖 SEO CONTROL
+        | SEO CONTROL
         |--------------------------------------------------------------------------
         */
+
         if (
             $request->is('admin/*') ||
             $request->is('login') ||
@@ -137,20 +171,32 @@ class PreventBackHistoryMiddleware
             $request->is('dashboard')
         ) {
             $headers['X-Robots-Tag'] = 'noindex, nofollow';
+
         } else {
             $headers['X-Robots-Tag'] = 'index, follow';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | ✅ APPLY HEADERS
+        | APPLY RESPONSE HEADERS
         |--------------------------------------------------------------------------
         */
+
         foreach ($headers as $key => $value) {
-            if (!empty($value)) {
-                $response->headers->set($key, $clean($value));
+            if ($value !== null && $value !== '') {
+                $response->headers->set(
+                    $key,
+                    $clean($value),
+                    true
+                );
             }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | RETURN RESPONSE
+        |--------------------------------------------------------------------------
+        */
 
         return $response;
     }
