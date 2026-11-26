@@ -3,10 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class SalaryProcessing extends Model
 {
@@ -29,30 +30,15 @@ class SalaryProcessing extends Model
 
     protected $fillable = [
 
-        /*
-        |--------------------------------------------------------------------------
-        | Driver / Role
-        |--------------------------------------------------------------------------
-        */
-
+        // Driver / Role
         'driver_id',
         'role',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Salary Period
-        |--------------------------------------------------------------------------
-        */
-
+        // Salary Period
         'salary_month',
         'salary_year',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Attendance / Working
-        |--------------------------------------------------------------------------
-        */
-
+        // Attendance / Working
         'total_working_days',
         'present_days',
         'absent_days',
@@ -61,12 +47,7 @@ class SalaryProcessing extends Model
         'total_duty_days',
         'total_km',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Earnings / Working Sheet Breakdown
-        |--------------------------------------------------------------------------
-        */
-
+        // Earnings
         'basic_salary',
         'allowance_amount',
         'overtime_amount',
@@ -79,71 +60,33 @@ class SalaryProcessing extends Model
         'other_earnings',
         'gross_salary',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Deductions
-        |--------------------------------------------------------------------------
-        */
-
+        // Deductions
         'advance_deduction',
         'loan_deduction',
         'penalty_deduction',
         'other_deductions',
         'total_deductions',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Final Salary
-        |--------------------------------------------------------------------------
-        */
-
+        // Net Salary
         'net_salary',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Status
-        |--------------------------------------------------------------------------
-        */
-
+        // Status
         'status',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Payment
-        |--------------------------------------------------------------------------
-        */
-
+        // Payment
         'payment_date',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Remarks
-        |--------------------------------------------------------------------------
-        */
-
+        // Remarks
         'remarks',
 
-        /*
-        |--------------------------------------------------------------------------
-        | Audit
-        |--------------------------------------------------------------------------
-        */
-
+        // Audit
         'processed_by',
         'approved_by',
         'paid_by',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Hidden
-    |--------------------------------------------------------------------------
-    */
-
-    protected $hidden = [];
 
 
     /*
@@ -156,12 +99,7 @@ class SalaryProcessing extends Model
     {
         return [
 
-            /*
-            |--------------------------------------------------------------------------
-            | Primary / Foreign Keys
-            |--------------------------------------------------------------------------
-            */
-
+            // IDs
             'id' => 'integer',
             'driver_id' => 'integer',
             'processed_by' => 'integer',
@@ -171,21 +109,18 @@ class SalaryProcessing extends Model
             'updated_by' => 'integer',
             'deleted_by' => 'integer',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Salary Period
-            |--------------------------------------------------------------------------
-            */
+            // Processing Number
+            'processing_no' => 'string',
 
+            // Role / Status
+            'role' => 'string',
+            'status' => 'string',
+
+            // Salary Period
             'salary_month' => 'integer',
             'salary_year' => 'integer',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Attendance / Working
-            |--------------------------------------------------------------------------
-            */
-
+            // Attendance / Working
             'total_working_days' => 'decimal:2',
             'present_days' => 'decimal:2',
             'absent_days' => 'decimal:2',
@@ -194,12 +129,7 @@ class SalaryProcessing extends Model
             'total_duty_days' => 'decimal:2',
             'total_km' => 'decimal:2',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Earnings / Working Sheet Breakdown
-            |--------------------------------------------------------------------------
-            */
-
+            // Earnings
             'basic_salary' => 'decimal:2',
             'allowance_amount' => 'decimal:2',
             'overtime_amount' => 'decimal:2',
@@ -212,40 +142,20 @@ class SalaryProcessing extends Model
             'other_earnings' => 'decimal:2',
             'gross_salary' => 'decimal:2',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Deductions
-            |--------------------------------------------------------------------------
-            */
-
+            // Deductions
             'advance_deduction' => 'decimal:2',
             'loan_deduction' => 'decimal:2',
             'penalty_deduction' => 'decimal:2',
             'other_deductions' => 'decimal:2',
             'total_deductions' => 'decimal:2',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Net Salary
-            |--------------------------------------------------------------------------
-            */
-
+            // Net Salary
             'net_salary' => 'decimal:2',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Payment
-            |--------------------------------------------------------------------------
-            */
-
+            // Payment
             'payment_date' => 'date:Y-m-d',
 
-            /*
-            |--------------------------------------------------------------------------
-            | Timestamps
-            |--------------------------------------------------------------------------
-            */
-
+            // Timestamps
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
             'deleted_at' => 'datetime',
@@ -255,7 +165,59 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Role Constants
+    | MODEL BOOTED
+    |--------------------------------------------------------------------------
+    |
+    | Automatically generate Processing Number.
+    |
+    | Step 1:
+    | Before insert, assign a temporary unique number because the
+    | database processing_no column is NOT NULL.
+    |
+    | Step 2:
+    | After insert, the auto-increment ID is available.
+    | Generate the final processing number using that ID.
+    |
+    */
+
+    protected static function booted(): void
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Creating
+        |--------------------------------------------------------------------------
+        */
+
+        static::creating(function (self $salaryProcessing): void {
+
+            $salaryProcessing->setAttribute(
+                'processing_no',
+                'TMP-' . Str::uuid()->toString()
+            );
+
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Created
+        |--------------------------------------------------------------------------
+        */
+
+        static::created(function (self $salaryProcessing): void {
+
+            $salaryProcessing->forceFill([
+                'processing_no' => $salaryProcessing
+                    ->generateProcessingNumber(),
+            ])->saveQuietly();
+
+        });
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE CONSTANTS
     |--------------------------------------------------------------------------
     */
 
@@ -264,7 +226,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Status Constants
+    | STATUS CONSTANTS
     |--------------------------------------------------------------------------
     */
 
@@ -281,33 +243,85 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Status List
+    | STATUS LIST
     |--------------------------------------------------------------------------
     */
 
     public const STATUSES = [
-
         self::STATUS_DRAFT,
-
         self::STATUS_PROCESSED,
-
         self::STATUS_APPROVED,
-
         self::STATUS_PAID,
-
         self::STATUS_CANCELLED,
     ];
 
 
     /*
     |--------------------------------------------------------------------------
-    | Relationships
+    | PROCESSING NUMBER GENERATOR
+    |--------------------------------------------------------------------------
+    |
+    | Format:
+    | SAL-YYYYMM-000001
+    |
+    | Example:
+    | SAL-202611-000123
+    |
+    */
+
+    public function generateProcessingNumber(): string
+    {
+        if (!$this->exists || !$this->id) {
+
+            throw new \RuntimeException(
+                'Processing ID is required to generate Processing Number.'
+            );
+        }
+
+        if (
+            !$this->salary_year ||
+            !$this->salary_month ||
+            $this->salary_month < 1 ||
+            $this->salary_month > 12
+        ) {
+
+            throw new \RuntimeException(
+                'Valid salary month and year are required to generate Processing Number.'
+            );
+        }
+
+        return sprintf(
+            'SAL-%04d%02d-%06d',
+            (int) $this->salary_year,
+            (int) $this->salary_month,
+            (int) $this->id
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORMATTED PROCESSING NUMBER
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Salary processing belongs to Driver.
-     */
+    public function getFormattedProcessingNoAttribute(): string
+    {
+        return $this->processing_no
+            ?? (
+                $this->exists
+                    ? $this->generateProcessingNumber()
+                    : '-'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
+
     public function driver(): BelongsTo
     {
         return $this->belongsTo(
@@ -317,9 +331,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who processed the salary.
-     */
     public function processedBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -329,9 +340,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who approved the salary.
-     */
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -341,9 +349,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who paid the salary.
-     */
     public function paidBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -353,9 +358,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who created the salary processing record.
-     */
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -365,9 +367,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who last updated the salary processing record.
-     */
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -377,9 +376,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * User who soft-deleted the salary processing record.
-     */
     public function deletedBy(): BelongsTo
     {
         return $this->belongsTo(
@@ -389,9 +385,6 @@ class SalaryProcessing extends Model
     }
 
 
-    /**
-     * Salary slips generated from this processing.
-     */
     public function salarySlips(): HasMany
     {
         return $this->hasMany(
@@ -403,7 +396,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Status Scopes
+    | STATUS SCOPES
     |--------------------------------------------------------------------------
     */
 
@@ -454,14 +447,12 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Driver Scope
+    | DRIVER SCOPE
     |--------------------------------------------------------------------------
     */
 
-    public function scopeForDriver(
-        $query,
-        int $driverId
-    ) {
+    public function scopeForDriver($query, int $driverId)
+    {
         return $query->where(
             'driver_id',
             $driverId
@@ -471,7 +462,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Salary Period Scope
+    | SALARY PERIOD SCOPES
     |--------------------------------------------------------------------------
     */
 
@@ -486,16 +477,8 @@ class SalaryProcessing extends Model
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Salary Year Scope
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopeForYear(
-        $query,
-        int $year
-    ) {
+    public function scopeForYear($query, int $year)
+    {
         return $query->where(
             'salary_year',
             $year
@@ -505,7 +488,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Latest First
+    | LATEST FIRST
     |--------------------------------------------------------------------------
     */
 
@@ -520,7 +503,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Status Helpers
+    | STATUS HELPERS
     |--------------------------------------------------------------------------
     */
 
@@ -556,17 +539,14 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Working Sheet Calculations
+    | WORKING SHEET CALCULATIONS
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Calculate the Working Sheet total from its stored breakdown fields.
-     *
-     * working_sheet_total_amount is the aggregate snapshot. The breakdown
-     * fields are included here only when that aggregate has not been set.
-     * This prevents the aggregate and its components from being counted twice.
+     * Calculate Working Sheet total from its breakdown.
      */
+
     public function calculateWorkingSheetTotalAmount(): float
     {
         return round(
@@ -582,12 +562,15 @@ class SalaryProcessing extends Model
 
 
     /**
-     * Return the saved Working Sheet total, or derive it from the breakdown
-     * when the saved total is zero or has not yet been populated.
+     * Return saved Working Sheet total when available.
+     * Otherwise calculate it from breakdown fields.
      */
+
     public function getCalculatedWorkingSheetTotalAmountAttribute(): float
     {
-        $savedTotal = (float) ($this->working_sheet_total_amount ?? 0);
+        $savedTotal = (float) (
+            $this->working_sheet_total_amount ?? 0
+        );
 
         return $savedTotal > 0
             ? round($savedTotal, 2)
@@ -597,16 +580,16 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Salary Calculations
+    | SALARY CALCULATIONS
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Calculate gross salary.
+     * Calculate Gross Salary.
      *
-     * The Working Sheet amount is included once as a combined total.
-     * Its allowance/overtime and other breakdown amounts are not added again.
+     * Working Sheet total is included only once.
      */
+
     public function calculateGrossSalary(): float
     {
         return round(
@@ -620,8 +603,9 @@ class SalaryProcessing extends Model
 
 
     /**
-     * Calculate total deductions.
+     * Calculate Total Deductions.
      */
+
     public function calculateTotalDeductions(): float
     {
         return round(
@@ -635,8 +619,9 @@ class SalaryProcessing extends Model
 
 
     /**
-     * Calculate net salary.
+     * Calculate Net Salary.
      */
+
     public function calculateNetSalary(): float
     {
         return round(
@@ -652,7 +637,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Salary Accessors
+    | CALCULATED SALARY ACCESSORS
     |--------------------------------------------------------------------------
     */
 
@@ -676,13 +661,10 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Salary Period Accessor
+    | SALARY PERIOD ACCESSOR
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Example: August 2026
-     */
     public function getSalaryPeriodAttribute(): string
     {
         if (
@@ -708,7 +690,7 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Formatted Salary Attributes
+    | FORMATTED SALARY ATTRIBUTES
     |--------------------------------------------------------------------------
     */
 
@@ -750,15 +732,15 @@ class SalaryProcessing extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Processing Helpers
+    | SALARY PROCESSING HELPER
     |--------------------------------------------------------------------------
     */
 
     /**
      * Fill calculated salary values.
-     *
-     * This does not save the model.
+     * Does not save automatically.
      */
+
     public function calculateSalary(): self
     {
         $this->gross_salary =
@@ -767,90 +749,65 @@ class SalaryProcessing extends Model
         $this->total_deductions =
             $this->calculateTotalDeductions();
 
-        $this->net_salary =
-            max(
-                0,
-                (float) $this->gross_salary
-                - (float) $this->total_deductions
-            );
+        $this->net_salary = max(
+            0,
+            (float) $this->gross_salary
+            - (float) $this->total_deductions
+        );
 
         return $this;
     }
 
 
-    /**
-     * Mark salary as processed.
-     */
-    public function markAsProcessed(
-        ?int $userId = null
-    ): bool {
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS UPDATE HELPERS
+    |--------------------------------------------------------------------------
+    */
 
-        $this->status =
-            self::STATUS_PROCESSED;
+    public function markAsProcessed(?int $userId = null): bool
+    {
+        $this->status = self::STATUS_PROCESSED;
 
         if ($userId !== null) {
-
-            $this->processed_by =
-                $userId;
+            $this->processed_by = $userId;
         }
 
         return $this->save();
     }
 
 
-    /**
-     * Mark salary as approved.
-     */
-    public function markAsApproved(
-        ?int $userId = null
-    ): bool {
-
-        $this->status =
-            self::STATUS_APPROVED;
+    public function markAsApproved(?int $userId = null): bool
+    {
+        $this->status = self::STATUS_APPROVED;
 
         if ($userId !== null) {
-
-            $this->approved_by =
-                $userId;
+            $this->approved_by = $userId;
         }
 
         return $this->save();
     }
 
 
-    /**
-     * Mark salary as paid.
-     */
-    public function markAsPaid(
-        ?int $userId = null
-    ): bool {
-
-        $this->status =
-            self::STATUS_PAID;
+    public function markAsPaid(?int $userId = null): bool
+    {
+        $this->status = self::STATUS_PAID;
 
         if ($userId !== null) {
-
-            $this->paid_by =
-                $userId;
+            $this->paid_by = $userId;
         }
 
         if (!$this->payment_date) {
-
-            $this->payment_date =
-                now()->toDateString();
+            $this->payment_date = now()->toDateString();
         }
 
         return $this->save();
     }
 
 
-    /**
-     * Mark salary as cancelled.
-     */
     public function markAsCancelled(): bool
     {
-        $this->status =
-            self::STATUS_CANCELLED;
+        $this->status = self::STATUS_CANCELLED;
 
         return $this->save();
     }

@@ -277,9 +277,7 @@ class DriverAttendanceController extends Controller
         $attendances = $query
             ->latest('attendance_date')
             ->latest('id')
-            ->paginate(20)
-            ->withQueryString();
-
+            ->get();
 
         /*
         |--------------------------------------------------------------------------

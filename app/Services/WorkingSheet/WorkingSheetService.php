@@ -10,7 +10,8 @@ use App\Models\DriverExpense;
 use App\Models\DutySlip;
 use App\Models\WorkingSheet;
 use App\Services\DriverAttendance\DriverAttendanceService;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+// use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +38,7 @@ class WorkingSheetService
             $driverAttendanceService;
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | GET WORKING SHEETS
@@ -52,9 +54,8 @@ class WorkingSheetService
     |
     */
     public function getWorkingSheets(
-        int $perPage = 10000000000000,
         array $filters = []
-    ): LengthAwarePaginator {
+    ): Collection {
 
         $user = Auth::user();
 
@@ -208,14 +209,13 @@ class WorkingSheetService
 
         /*
         |--------------------------------------------------------------------------
-        | RESULT
+        | RESULT - FETCH ALL RECORDS
         |--------------------------------------------------------------------------
         */
 
         return $query
             ->latest('id')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get();
     }
 
     /*

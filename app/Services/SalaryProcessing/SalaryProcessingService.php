@@ -12,7 +12,6 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -101,11 +100,15 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         */
 
-        if (!empty($filters['salary_month'])) {
+        $month = $filters['salary_month']
+            ?? $filters['month']
+            ?? null;
+
+        if (!empty($month)) {
 
             $query->where(
                 'salary_month',
-                $filters['salary_month']
+                $month
             );
         }
 
@@ -115,17 +118,21 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         */
 
-        if (!empty($filters['salary_year'])) {
+        $year = $filters['salary_year']
+            ?? $filters['year']
+            ?? null;
+
+        if (!empty($year)) {
 
             $query->where(
                 'salary_year',
-                $filters['salary_year']
+                $year
             );
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Status
+        | Status Filter
         |--------------------------------------------------------------------------
         */
 
@@ -153,19 +160,32 @@ class SalaryProcessingService
 
         /*
         |--------------------------------------------------------------------------
-        | Search
+        | Processing Number / Driver Search
         |--------------------------------------------------------------------------
+        |
+        | Search examples:
+        | SAL-202611-000123
+        | Driver name
+        | Driver code
+        | Mobile number
+        |
         */
 
         if (!empty($filters['search'])) {
 
-            $search = trim(
-                $filters['search']
-            );
+            $search = trim($filters['search']);
 
             $query->where(function ($q) use ($search) {
 
-                $q->whereHas(
+                // Processing Number
+                $q->where(
+                    'processing_no',
+                    'like',
+                    "%{$search}%"
+                )
+
+                // Driver Details
+                ->orWhereHas(
                     'driver',
                     function ($driverQuery) use ($search) {
 
@@ -192,18 +212,16 @@ class SalaryProcessingService
                             );
                     }
                 );
-
             });
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Pagination
+        | Sorting / Pagination
         |--------------------------------------------------------------------------
         |
-        | IMPORTANT:
-        | period_from does NOT exist in database.
-        | Therefore order by salary_year/month only.
+        | salary_processings table does not contain period_from.
+        | Use salary_year, salary_month and id.
         |
         */
 
@@ -211,7 +229,7 @@ class SalaryProcessingService
             ->latest('salary_year')
             ->latest('salary_month')
             ->latest('id')
-            ->paginate($perPage)
+            ->paginate(max(1, $perPage))
             ->withQueryString();
     }
 
@@ -232,13 +250,55 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Driver Basic Salary
+            | Requested Initial Status
             |--------------------------------------------------------------------------
             |
-            | Driver monthly_gross_salary is the monthly base amount used
-            | by payroll as basic_salary. Existing explicit values are
-            | preserved for compatibility with manual payroll entry.
+            | New payroll can be created as:
+            | - draft
+            | - processed
             |
+            | Approved / Paid / Cancelled are lifecycle transitions.
+            |
+            */
+
+            $requestedStatus = $data['status']
+                ?? SalaryProcessing::STATUS_DRAFT;
+
+            if (!in_array(
+                $requestedStatus,
+                [
+                    SalaryProcessing::STATUS_DRAFT,
+                    SalaryProcessing::STATUS_PROCESSED,
+                ],
+                true
+            )) {
+
+                throw new InvalidArgumentException(
+                    'New payroll can only be created as draft or processed.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate Salary Period
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !empty($data['salary_month']) &&
+                !empty($data['salary_year'])
+            ) {
+
+                $this->resolveSalaryPeriod(
+                    (int) $data['salary_month'],
+                    (int) $data['salary_year']
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Driver Basic Salary
+            |--------------------------------------------------------------------------
             */
 
             if (
@@ -271,9 +331,18 @@ class SalaryProcessingService
             ) {
 
                 $existing = SalaryProcessing::withTrashed()
-                    ->where('driver_id', $data['driver_id'])
-                    ->where('salary_month', $data['salary_month'])
-                    ->where('salary_year', $data['salary_year'])
+                    ->where(
+                        'driver_id',
+                        $data['driver_id']
+                    )
+                    ->where(
+                        'salary_month',
+                        $data['salary_month']
+                    )
+                    ->where(
+                        'salary_year',
+                        $data['salary_year']
+                    )
                     ->lockForUpdate()
                     ->first();
 
@@ -289,7 +358,7 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Role
+            | Role / Audit
             |--------------------------------------------------------------------------
             */
 
@@ -297,61 +366,54 @@ class SalaryProcessingService
                 $data['role']
                 ?? SalaryProcessing::ROLE_DRIVER;
 
-            /*
-            |--------------------------------------------------------------------------
-            | Audit
-            |--------------------------------------------------------------------------
-            */
+            $data['created_by'] = $userId;
 
-            $data['created_by'] =
-                $data['created_by']
-                ?? $userId;
-
-            $data['updated_by'] =
-                $data['updated_by']
-                ?? $userId;
+            $data['updated_by'] = $userId;
 
             /*
             |--------------------------------------------------------------------------
-            | Default Status
+            | Lifecycle Fields
             |--------------------------------------------------------------------------
             */
 
-            // Payroll lifecycle changes must use process(), approve(), markAsPaid() or cancel().
             $data['status'] = SalaryProcessing::STATUS_DRAFT;
 
             unset(
+                $data['id'],
+                $data['processing_no'],
                 $data['processed_by'],
                 $data['approved_by'],
                 $data['paid_by'],
-                $data['deleted_by']
+                $data['deleted_by'],
+                $data['payment_date']
             );
 
             /*
             |--------------------------------------------------------------------------
-            | Default Values
+            | Default Attendance Values
             |--------------------------------------------------------------------------
             */
 
             $data['total_working_days'] =
-                $data['total_working_days']
-                ?? 0;
+                $data['total_working_days'] ?? 0;
 
             $data['present_days'] =
-                $data['present_days']
-                ?? 0;
+                $data['present_days'] ?? 0;
 
             $data['absent_days'] =
-                $data['absent_days']
-                ?? 0;
+                $data['absent_days'] ?? 0;
 
             $data['paid_days'] =
-                $data['paid_days']
-                ?? 0;
+                $data['paid_days'] ?? 0;
 
             $data['overtime_hours'] =
-                $data['overtime_hours']
-                ?? 0;
+                $data['overtime_hours'] ?? 0;
+
+            $data['total_duty_days'] =
+                $data['total_duty_days'] ?? 0;
+
+            $data['total_km'] =
+                $data['total_km'] ?? 0;
 
             /*
             |--------------------------------------------------------------------------
@@ -359,19 +421,47 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             */
 
-            $data = $this->calculateSalary(
-                $data
-            );
+            $data = $this->calculateSalary($data);
 
             /*
             |--------------------------------------------------------------------------
-            | Create Record
+            | Create Payroll
+            |--------------------------------------------------------------------------
+            |
+            | SalaryProcessing model events automatically generate:
+            | SAL-YYYYMM-000001
+            |
+            | Temporary number is assigned before insert, and final
+            | number is saved after the database ID is generated.
+            |
+            */
+
+            $salaryProcessing = SalaryProcessing::create($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Process When Requested
             |--------------------------------------------------------------------------
             */
 
-            return SalaryProcessing::create(
-                $data
-            );
+            if (
+                $requestedStatus ===
+                SalaryProcessing::STATUS_PROCESSED
+            ) {
+
+                $salaryProcessing = $this->process(
+                    $salaryProcessing
+                );
+            }
+
+            return $salaryProcessing->fresh([
+                'driver',
+                'processedBy',
+                'approvedBy',
+                'createdBy',
+                'updatedBy',
+                'salarySlips',
+            ]);
         });
     }
 
@@ -392,26 +482,65 @@ class SalaryProcessingService
             $data
         ) {
 
-            $salaryProcessing->refresh();
-
             /*
             |--------------------------------------------------------------------------
-            | Payroll Status Protection
+            | Lock Payroll Row
             |--------------------------------------------------------------------------
             */
 
-            if (in_array(
-                $salaryProcessing->status,
-                [
-                    SalaryProcessing::STATUS_APPROVED,
-                    SalaryProcessing::STATUS_PAID,
-                    SalaryProcessing::STATUS_CANCELLED,
-                ],
-                true
-            )) {
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Existing Payroll Status Protection
+            |--------------------------------------------------------------------------
+            */
+
+            if ($this->isPayrollLocked($salaryProcessing)) {
 
                 throw new RuntimeException(
                     'Approved, paid or cancelled payroll cannot be edited.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Requested Status
+            |--------------------------------------------------------------------------
+            */
+
+            $requestedStatus = $data['status']
+                ?? $salaryProcessing->status;
+
+            $allowedStatuses = SalaryProcessing::STATUSES;
+
+            if (!in_array($requestedStatus, $allowedStatuses, true)) {
+
+                throw new InvalidArgumentException(
+                    'Invalid payroll status selected.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Direct Paid Status Protection
+            |--------------------------------------------------------------------------
+            |
+            | Paid status must go through markAsPaid().
+            | That method synchronizes payment date and Salary Slip status.
+            |
+            */
+
+            if (
+                $requestedStatus ===
+                SalaryProcessing::STATUS_PAID
+            ) {
+
+                throw new RuntimeException(
+                    'Payroll cannot be marked as paid from Edit. Use the payment action after approval.'
                 );
             }
 
@@ -422,7 +551,8 @@ class SalaryProcessingService
             */
 
             $newDriverId = (int) (
-                $data['driver_id'] ?? $salaryProcessing->driver_id
+                $data['driver_id']
+                ?? $salaryProcessing->driver_id
             );
 
             if (
@@ -430,7 +560,9 @@ class SalaryProcessingService
                 !array_key_exists('basic_salary', $data)
             ) {
 
-                $driver = Driver::query()->findOrFail($newDriverId);
+                $driver = Driver::query()->findOrFail(
+                    $newDriverId
+                );
 
                 $data['basic_salary'] =
                     $driver->monthly_gross_salary ?? 0;
@@ -443,11 +575,18 @@ class SalaryProcessingService
             */
 
             $newMonth = (int) (
-                $data['salary_month'] ?? $salaryProcessing->salary_month
+                $data['salary_month']
+                ?? $salaryProcessing->salary_month
             );
 
             $newYear = (int) (
-                $data['salary_year'] ?? $salaryProcessing->salary_year
+                $data['salary_year']
+                ?? $salaryProcessing->salary_year
+            );
+
+            $this->resolveSalaryPeriod(
+                $newMonth,
+                $newYear
             );
 
             $duplicate = SalaryProcessing::withTrashed()
@@ -467,17 +606,22 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Updated By / Role
+            | Remove Protected / System Fields
             |--------------------------------------------------------------------------
             */
 
             unset(
+                $data['id'],
+                $data['processing_no'],
                 $data['status'],
                 $data['processed_by'],
                 $data['approved_by'],
                 $data['paid_by'],
                 $data['created_by'],
-                $data['deleted_by']
+                $data['deleted_by'],
+                $data['gross_salary'],
+                $data['total_deductions'],
+                $data['net_salary']
             );
 
             $data['updated_by'] = Auth::id();
@@ -489,43 +633,186 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Fill Existing Record
+            | Fill Editable Fields
             |--------------------------------------------------------------------------
-            |
-            | Filling the existing model first preserves untouched values
-            | such as working-sheet totals and manual adjustments.
-            |
             */
 
             $salaryProcessing->fill($data);
 
             /*
             |--------------------------------------------------------------------------
-            | Recalculate Salary
+            | Recalculate Working Sheet Total
             |--------------------------------------------------------------------------
+            |
+            | If any breakdown field changes, calculate a new aggregate.
+            | This prevents the old working_sheet_total_amount from
+            | overriding newly submitted values.
+            |
             */
 
-            $salaryProcessing->calculateSalary();
+            $workingSheetFields = [
+                'working_sheet_base_amount',
+                'extra_km_amount',
+                'allowance_amount',
+                'overtime_amount',
+                'expense_reimbursement_amount',
+                'working_sheet_other_amount',
+            ];
+
+            $hasWorkingSheetInput = false;
+
+            foreach ($workingSheetFields as $field) {
+
+                if (array_key_exists($field, $data)) {
+
+                    $hasWorkingSheetInput = true;
+
+                    break;
+                }
+            }
+
+            if ($hasWorkingSheetInput) {
+
+                $salaryProcessing->working_sheet_total_amount =
+                    $salaryProcessing->calculateWorkingSheetTotalAmount();
+            }
 
             /*
             |--------------------------------------------------------------------------
-            | Re-process Required After Edit
+            | Recalculate Salary From Latest Values
             |--------------------------------------------------------------------------
             */
 
-            if ($salaryProcessing->status === SalaryProcessing::STATUS_PROCESSED) {
+            $calculationData = $this->calculateSalary(
+                $salaryProcessing->getAttributes()
+            );
 
-                $salaryProcessing->status =
-                    SalaryProcessing::STATUS_DRAFT;
+            /*
+            |--------------------------------------------------------------------------
+            | Apply Calculated Fields
+            |--------------------------------------------------------------------------
+            */
 
-                $salaryProcessing->processed_by = null;
+            $calculatedFields = [
+                'working_sheet_total_amount',
+                'gross_salary',
+                'total_deductions',
+                'net_salary',
+                'basic_salary',
+                'allowance_amount',
+                'overtime_amount',
+                'bonus_amount',
+                'other_earnings',
+                'advance_deduction',
+                'loan_deduction',
+                'penalty_deduction',
+                'other_deductions',
+                'working_sheet_base_amount',
+                'extra_km_amount',
+                'expense_reimbursement_amount',
+                'working_sheet_other_amount',
+            ];
+
+            foreach ($calculatedFields as $field) {
+
+                if (array_key_exists($field, $calculationData)) {
+
+                    $salaryProcessing->{$field} =
+                        $calculationData[$field];
+                }
             }
+
+            $salaryProcessing->updated_by = Auth::id();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Save Edited Payroll Data
+            |--------------------------------------------------------------------------
+            */
 
             $salaryProcessing->save();
 
             /*
             |--------------------------------------------------------------------------
-            | Fresh Record
+            | Apply Requested Status
+            |--------------------------------------------------------------------------
+            */
+
+            switch ($requestedStatus) {
+
+                /*
+                |--------------------------------------------------------------------------
+                | DRAFT
+                |--------------------------------------------------------------------------
+                */
+
+                case SalaryProcessing::STATUS_DRAFT:
+
+                    $salaryProcessing->status =
+                        SalaryProcessing::STATUS_DRAFT;
+
+                    $salaryProcessing->processed_by = null;
+
+                    $salaryProcessing->save();
+
+                    break;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PROCESSED
+                |--------------------------------------------------------------------------
+                */
+
+                case SalaryProcessing::STATUS_PROCESSED:
+
+                    $salaryProcessing = $this->process(
+                        $salaryProcessing
+                    );
+
+                    break;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | APPROVED
+                |--------------------------------------------------------------------------
+                */
+
+                case SalaryProcessing::STATUS_APPROVED:
+
+                    // First process the updated payroll.
+                    $salaryProcessing = $this->process(
+                        $salaryProcessing
+                    );
+
+                    // Then approve and generate the Salary Slip.
+                    $salaryProcessing = $this->approve(
+                        $salaryProcessing
+                    );
+
+                    break;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | CANCELLED
+                |--------------------------------------------------------------------------
+                */
+
+                case SalaryProcessing::STATUS_CANCELLED:
+
+                    // Cancel workflow also synchronizes the Salary Slip.
+                    $salaryProcessing = $this->cancel(
+                        $salaryProcessing
+                    );
+
+                    break;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Updated Record
             |--------------------------------------------------------------------------
             */
 
@@ -540,6 +827,7 @@ class SalaryProcessingService
         });
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | DELETE
@@ -550,13 +838,17 @@ class SalaryProcessingService
         SalaryProcessing $salaryProcessing
     ): bool {
 
-        return DB::transaction(function () use (
-            $salaryProcessing
-        ) {
+        return DB::transaction(function () use ($salaryProcessing) {
 
-            $salaryProcessing->refresh();
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-            if ($salaryProcessing->status === SalaryProcessing::STATUS_PAID) {
+            if (
+                $salaryProcessing->status ===
+                SalaryProcessing::STATUS_PAID
+            ) {
 
                 throw new RuntimeException(
                     'Paid payroll cannot be deleted.'
@@ -569,14 +861,7 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             */
 
-            $salaryProcessing->deleted_by =
-                Auth::id();
-
-            /*
-            |--------------------------------------------------------------------------
-            | Save Audit
-            |--------------------------------------------------------------------------
-            */
+            $salaryProcessing->deleted_by = Auth::id();
 
             $salaryProcessing->save();
 
@@ -605,10 +890,6 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         | Basic Salary
         |--------------------------------------------------------------------------
-        |
-        | For automated driver payroll this value comes from
-        | drivers.monthly_gross_salary.
-        |
         */
 
         $basicSalary = (float) (
@@ -619,11 +900,6 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         | Working Sheet Breakdown
         |--------------------------------------------------------------------------
-        |
-        | Working Sheet total_amount already includes its component
-        | amounts. Use that total once; never add the same components
-        | a second time to gross salary.
-        |
         */
 
         $workingSheetBase = (float) (
@@ -662,18 +938,42 @@ class SalaryProcessingService
             $data['working_sheet_total_amount'] ?? 0
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Check Working Sheet Data
+        |--------------------------------------------------------------------------
+        */
+
         $hasWorkingSheetData =
             array_key_exists('working_sheet_total_amount', $data) ||
             array_key_exists('working_sheet_base_amount', $data) ||
             array_key_exists('extra_km_amount', $data) ||
+            array_key_exists('allowance_amount', $data) ||
+            array_key_exists('overtime_amount', $data) ||
             array_key_exists('expense_reimbursement_amount', $data) ||
             array_key_exists('working_sheet_other_amount', $data);
 
-        $workingSheetTotal = $hasWorkingSheetData
-            ? ($storedWorkingSheetTotal > 0
+        /*
+        |--------------------------------------------------------------------------
+        | Determine Working Sheet Total
+        |--------------------------------------------------------------------------
+        |
+        | Use saved aggregate when present.
+        | Otherwise calculate from the individual components.
+        |
+        */
+
+        if ($hasWorkingSheetData) {
+
+            $workingSheetTotal = $storedWorkingSheetTotal > 0
                 ? $storedWorkingSheetTotal
-                : $workingSheetBreakdown)
-            : ($allowance + $overtime);
+                : $workingSheetBreakdown;
+
+        } else {
+
+            // Manual payroll without Working Sheet breakdown.
+            $workingSheetTotal = $allowance + $overtime;
+        }
 
         /*
         |--------------------------------------------------------------------------
@@ -794,6 +1094,12 @@ class SalaryProcessingService
         $data['other_deductions'] =
             round($otherDeductions, 2);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Save Working Sheet Breakdown
+        |--------------------------------------------------------------------------
+        */
+
         if ($hasWorkingSheetData) {
 
             $data['working_sheet_base_amount'] =
@@ -815,6 +1121,29 @@ class SalaryProcessingService
         return $data;
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYROLL LOCK CHECK
+    |--------------------------------------------------------------------------
+    */
+
+    protected function isPayrollLocked(
+        SalaryProcessing $salaryProcessing
+    ): bool {
+
+        return in_array(
+            $salaryProcessing->status,
+            [
+                SalaryProcessing::STATUS_APPROVED,
+                SalaryProcessing::STATUS_PAID,
+                SalaryProcessing::STATUS_CANCELLED,
+            ],
+            true
+        );
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | PROCESS SALARY
@@ -825,11 +1154,24 @@ class SalaryProcessingService
         SalaryProcessing $salaryProcessing
     ): SalaryProcessing {
 
-        return DB::transaction(function () use (
-            $salaryProcessing
-        ) {
+        return DB::transaction(function () use ($salaryProcessing) {
 
-            $salaryProcessing->refresh();
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Payroll
+            |--------------------------------------------------------------------------
+            */
+
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Status Protection
+            |--------------------------------------------------------------------------
+            */
 
             if (!in_array(
                 $salaryProcessing->status,
@@ -844,6 +1186,15 @@ class SalaryProcessingService
                     'Only draft or processed payroll can be processed.'
                 );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recalculate Working Sheet Total
+            |--------------------------------------------------------------------------
+            */
+
+            $salaryProcessing->working_sheet_total_amount =
+                $salaryProcessing->calculateWorkingSheetTotalAmount();
 
             /*
             |--------------------------------------------------------------------------
@@ -862,11 +1213,9 @@ class SalaryProcessingService
             $salaryProcessing->status =
                 SalaryProcessing::STATUS_PROCESSED;
 
-            $salaryProcessing->processed_by =
-                Auth::id();
+            $salaryProcessing->processed_by = Auth::id();
 
-            $salaryProcessing->updated_by =
-                Auth::id();
+            $salaryProcessing->updated_by = Auth::id();
 
             $salaryProcessing->save();
 
@@ -887,6 +1236,7 @@ class SalaryProcessingService
         });
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | APPROVE SALARY
@@ -897,20 +1247,39 @@ class SalaryProcessingService
         SalaryProcessing $salaryProcessing
     ): SalaryProcessing {
 
-        return DB::transaction(function () use (
-            $salaryProcessing
-        ) {
+        return DB::transaction(function () use ($salaryProcessing) {
 
-            $salaryProcessing->refresh();
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Payroll
+            |--------------------------------------------------------------------------
+            */
 
-            if ($salaryProcessing->status === SalaryProcessing::STATUS_CANCELLED) {
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Status Protection
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $salaryProcessing->status ===
+                SalaryProcessing::STATUS_CANCELLED
+            ) {
 
                 throw new RuntimeException(
                     'Cancelled payroll cannot be approved.'
                 );
             }
 
-            if ($salaryProcessing->status === SalaryProcessing::STATUS_PAID) {
+            if (
+                $salaryProcessing->status ===
+                SalaryProcessing::STATUS_PAID
+            ) {
 
                 throw new RuntimeException(
                     'Paid payroll is already finalized.'
@@ -933,24 +1302,26 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Mark Approved
+            | Recalculate Salary
             |--------------------------------------------------------------------------
             */
 
+            $salaryProcessing->working_sheet_total_amount =
+                $salaryProcessing->calculateWorkingSheetTotalAmount();
+
             $salaryProcessing->calculateSalary();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Mark Approved
+            |--------------------------------------------------------------------------
+            */
 
             $salaryProcessing->markAsApproved(
                 Auth::id()
             );
 
-            /*
-            |--------------------------------------------------------------------------
-            | Updated By
-            |--------------------------------------------------------------------------
-            */
-
-            $salaryProcessing->updated_by =
-                Auth::id();
+            $salaryProcessing->updated_by = Auth::id();
 
             $salaryProcessing->save();
 
@@ -958,11 +1329,6 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Generate Salary Slip
             |--------------------------------------------------------------------------
-            |
-            | One approved SalaryProcessing produces exactly one
-            | generated SalarySlip. Existing issued slips are never
-            | overwritten by this operation.
-            |
             */
 
             $this->generateSalarySlip(
@@ -986,6 +1352,7 @@ class SalaryProcessingService
         });
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | MARK AS PAID
@@ -996,11 +1363,24 @@ class SalaryProcessingService
         SalaryProcessing $salaryProcessing
     ): SalaryProcessing {
 
-        return DB::transaction(function () use (
-            $salaryProcessing
-        ) {
+        return DB::transaction(function () use ($salaryProcessing) {
 
-            $salaryProcessing->refresh();
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Payroll
+            |--------------------------------------------------------------------------
+            */
+
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Status Protection
+            |--------------------------------------------------------------------------
+            */
 
             if (!in_array(
                 $salaryProcessing->status,
@@ -1018,16 +1398,6 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Mark Paid
-            |--------------------------------------------------------------------------
-            */
-
-            $salaryProcessing->markAsPaid(
-                Auth::id()
-            );
-
-            /*
-            |--------------------------------------------------------------------------
             | Payment Date
             |--------------------------------------------------------------------------
             */
@@ -1038,25 +1408,37 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Updated By
+            | Mark Payroll As Paid
             |--------------------------------------------------------------------------
             */
 
-            $salaryProcessing->updated_by =
-                Auth::id();
+            $salaryProcessing->markAsPaid(
+                Auth::id()
+            );
+
+            $salaryProcessing->updated_by = Auth::id();
 
             $salaryProcessing->save();
 
             /*
             |--------------------------------------------------------------------------
-            | Synchronize Salary Slip Payment
+            | Find Salary Slip
             |--------------------------------------------------------------------------
             */
 
             $salarySlip = SalarySlip::query()
-                ->where('salary_processing_id', $salaryProcessing->id)
+                ->where(
+                    'salary_processing_id',
+                    $salaryProcessing->id
+                )
                 ->lockForUpdate()
                 ->first();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Missing Salary Slip
+            |--------------------------------------------------------------------------
+            */
 
             if (!$salarySlip) {
 
@@ -1065,9 +1447,18 @@ class SalaryProcessingService
                 );
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Synchronize Salary Slip Payment
+            |--------------------------------------------------------------------------
+            */
+
             if ($salarySlip) {
 
-                if ($salarySlip->status === SalarySlip::STATUS_CANCELLED) {
+                if (
+                    $salarySlip->status ===
+                    SalarySlip::STATUS_CANCELLED
+                ) {
 
                     throw new RuntimeException(
                         'Cancelled salary slip cannot be marked as paid.'
@@ -1100,6 +1491,7 @@ class SalaryProcessingService
         });
     }
 
+
     /*
     |--------------------------------------------------------------------------
     | CANCEL
@@ -1110,16 +1502,60 @@ class SalaryProcessingService
         SalaryProcessing $salaryProcessing
     ): SalaryProcessing {
 
-        return DB::transaction(function () use (
-            $salaryProcessing
-        ) {
+        return DB::transaction(function () use ($salaryProcessing) {
 
-            $salaryProcessing->refresh();
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Payroll
+            |--------------------------------------------------------------------------
+            */
 
-            if ($salaryProcessing->status === SalaryProcessing::STATUS_PAID) {
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessing->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Paid Payroll Protection
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $salaryProcessing->status ===
+                SalaryProcessing::STATUS_PAID
+            ) {
 
                 throw new RuntimeException(
                     'Paid payroll cannot be cancelled.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Paid Salary Slip Protection
+            |--------------------------------------------------------------------------
+            |
+            | A payroll with an already-paid Salary Slip must not be
+            | cancelled, even if the parent payroll status is inconsistent.
+            |
+            */
+
+            $hasPaidSlip = SalarySlip::query()
+                ->where(
+                    'salary_processing_id',
+                    $salaryProcessing->id
+                )
+                ->where(
+                    'payment_status',
+                    SalarySlip::PAYMENT_PAID
+                )
+                ->exists();
+
+            if ($hasPaidSlip) {
+
+                throw new RuntimeException(
+                    'Payroll cannot be cancelled because its Salary Slip is already paid.'
                 );
             }
 
@@ -1131,14 +1567,7 @@ class SalaryProcessingService
 
             $salaryProcessing->markAsCancelled();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Updated By
-            |--------------------------------------------------------------------------
-            */
-
-            $salaryProcessing->updated_by =
-                Auth::id();
+            $salaryProcessing->updated_by = Auth::id();
 
             $salaryProcessing->save();
 
@@ -1149,8 +1578,10 @@ class SalaryProcessingService
             */
 
             SalarySlip::query()
-                ->where('salary_processing_id', $salaryProcessing->id)
-                ->where('payment_status', '!=', SalarySlip::PAYMENT_PAID)
+                ->where(
+                    'salary_processing_id',
+                    $salaryProcessing->id
+                )
                 ->update([
                     'status' => SalarySlip::STATUS_CANCELLED,
                     'updated_at' => now(),
@@ -1179,14 +1610,13 @@ class SalaryProcessingService
     | AUTOMATIC MONTHLY PAYROLL GENERATION
     |--------------------------------------------------------------------------
     |
-    | Admin selects Month / Year. The service then reads:
-    | - Driver monthly_gross_salary for the monthly basic salary.
-    | - Final driver_attendances for attendance figures.
-    | - Approved / completed Working Sheets for duty and earnings.
-    | - Paid Driver Advances linked to Duty Slips in the selected month.
+    | Reads:
+    | - Driver monthly_gross_salary
+    | - Driver attendance
+    | - Approved / completed Working Sheets
+    | - Paid Driver Advances linked to selected period Duty Slips
     |
-    | Attendance and Working Sheet source rows are read only. This service
-    | never creates, edits or deletes attendance / Working Sheet records.
+    | Attendance and Working Sheet source records are read only.
     |
     */
 
@@ -1196,12 +1626,30 @@ class SalaryProcessingService
         ?int $driverId = null
     ): array {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Permission Check
+        |--------------------------------------------------------------------------
+        */
+
         $this->assertPayrollManager();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Salary Period
+        |--------------------------------------------------------------------------
+        */
 
         [$periodStart, $periodEnd] = $this->resolveSalaryPeriod(
             $month,
             $year
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Drivers Query
+        |--------------------------------------------------------------------------
+        */
 
         $driversQuery = Driver::query()
             ->orderBy('id');
@@ -1216,17 +1664,39 @@ class SalaryProcessingService
 
         $drivers = $driversQuery->get();
 
-        if ($driverId !== null && $drivers->isEmpty()) {
+        if (
+            $driverId !== null &&
+            $drivers->isEmpty()
+        ) {
 
             throw new RuntimeException(
                 'Selected driver was not found or has been deleted.'
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Result Collections
+        |--------------------------------------------------------------------------
+        */
+
         $generated = collect();
+
         $skipped = [];
 
+        /*
+        |--------------------------------------------------------------------------
+        | Generate Payroll Driver By Driver
+        |--------------------------------------------------------------------------
+        */
+
         foreach ($drivers as $driver) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employment Period
+            |--------------------------------------------------------------------------
+            */
 
             if (!$this->wasDriverEmployedDuringPeriod(
                 $driver,
@@ -1243,6 +1713,12 @@ class SalaryProcessingService
                 continue;
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Monthly Salary
+            |--------------------------------------------------------------------------
+            */
+
             if (
                 $driver->monthly_gross_salary === null ||
                 (float) $driver->monthly_gross_salary <= 0
@@ -1256,6 +1732,12 @@ class SalaryProcessingService
 
                 continue;
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Payroll
+            |--------------------------------------------------------------------------
+            */
 
             try {
 
@@ -1277,12 +1759,22 @@ class SalaryProcessingService
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Return Generation Summary
+        |--------------------------------------------------------------------------
+        */
+
         return [
             'salary_month' => $month,
             'salary_year' => $year,
+
             'generated_count' => $generated->count(),
+
             'skipped_count' => count($skipped),
+
             'generated' => $generated,
+
             'skipped' => $skipped,
         ];
     }
@@ -1300,7 +1792,19 @@ class SalaryProcessingService
         int $year
     ): SalaryProcessing {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Permission Check
+        |--------------------------------------------------------------------------
+        */
+
         $this->assertPayrollManager();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Salary Period
+        |--------------------------------------------------------------------------
+        */
 
         [$periodStart, $periodEnd] = $this->resolveSalaryPeriod(
             $month,
@@ -1315,10 +1819,22 @@ class SalaryProcessingService
             $periodEnd
         ) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Driver
+            |--------------------------------------------------------------------------
+            */
+
             $driver = Driver::query()
                 ->whereKey($driverId)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Employment Check
+            |--------------------------------------------------------------------------
+            */
 
             if (!$this->wasDriverEmployedDuringPeriod(
                 $driver,
@@ -1330,6 +1846,12 @@ class SalaryProcessingService
                     'Driver was not employed during the selected salary period.'
                 );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Monthly Basic Salary
+            |--------------------------------------------------------------------------
+            */
 
             $monthlyBasicSalary = (float) (
                 $driver->monthly_gross_salary ?? 0
@@ -1355,7 +1877,10 @@ class SalaryProcessingService
                 ->lockForUpdate()
                 ->first();
 
-            if ($salaryProcessing && $salaryProcessing->trashed()) {
+            if (
+                $salaryProcessing &&
+                $salaryProcessing->trashed()
+            ) {
 
                 throw new RuntimeException(
                     'A deleted payroll record already exists for this driver and period. Restore or resolve it before generating payroll again.'
@@ -1364,7 +1889,8 @@ class SalaryProcessingService
 
             if (
                 $salaryProcessing &&
-                $salaryProcessing->status !== SalaryProcessing::STATUS_DRAFT
+                $salaryProcessing->status !==
+                SalaryProcessing::STATUS_DRAFT
             ) {
 
                 throw new RuntimeException(
@@ -1376,10 +1902,6 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Attendance Aggregation
             |--------------------------------------------------------------------------
-            |
-            | Final attendance records are consumed as saved. Their source
-            | (manual / Working Sheet / system / import) is not rewritten.
-            |
             */
 
             $attendanceSummary = $this->getAttendanceSummary(
@@ -1392,10 +1914,6 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Working Sheet Aggregation
             |--------------------------------------------------------------------------
-            |
-            | Only approved and completed Working Sheets are payroll-ready.
-            | Draft, submitted and rejected sheets are intentionally excluded.
-            |
             */
 
             $workingSheetSummary = $this->getWorkingSheetSummary(
@@ -1406,13 +1924,8 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Driver Advance Deduction
+            | Advance Deduction
             |--------------------------------------------------------------------------
-            |
-            | Only advances marked paid are deducted, and only when their
-            | linked Duty Slip belongs to the selected salary period.
-            | Pending / approved / rejected / cancelled advances are excluded.
-            |
             */
 
             $advanceDeduction = $this->getPaidAdvanceDeduction(
@@ -1423,31 +1936,31 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Preserve Admin Adjustments On Draft Regeneration
+            | Preserve Manual Adjustments On Draft Regeneration
             |--------------------------------------------------------------------------
-            |
-            | Bonus, other earnings and discretionary deductions are kept
-            | when a draft payroll is generated again. Source-driven values
-            | are refreshed from attendance / Working Sheets / advances.
-            |
             */
 
             $manualAdjustments = [
                 'bonus_amount' => (float) (
                     $salaryProcessing->bonus_amount ?? 0
                 ),
+
                 'other_earnings' => (float) (
                     $salaryProcessing->other_earnings ?? 0
                 ),
+
                 'loan_deduction' => (float) (
                     $salaryProcessing->loan_deduction ?? 0
                 ),
+
                 'penalty_deduction' => (float) (
                     $salaryProcessing->penalty_deduction ?? 0
                 ),
+
                 'other_deductions' => (float) (
                     $salaryProcessing->other_deductions ?? 0
                 ),
+
                 'remarks' => $salaryProcessing?->remarks,
             ];
 
@@ -1460,43 +1973,111 @@ class SalaryProcessingService
             $data = array_merge(
                 [
                     'driver_id' => $driver->id,
+
                     'role' => SalaryProcessing::ROLE_DRIVER,
+
                     'salary_month' => $month,
+
                     'salary_year' => $year,
-                    'total_working_days' => $attendanceSummary['total_working_days'],
-                    'present_days' => $attendanceSummary['present_days'],
-                    'absent_days' => $attendanceSummary['absent_days'],
-                    'paid_days' => $attendanceSummary['paid_days'],
-                    'overtime_hours' => $workingSheetSummary['overtime_hours'],
-                    'total_duty_days' => $workingSheetSummary['total_duty_days'],
-                    'total_km' => $workingSheetSummary['total_km'],
-                    'basic_salary' => $monthlyBasicSalary,
-                    'allowance_amount' => $workingSheetSummary['allowance_amount'],
-                    'overtime_amount' => $workingSheetSummary['overtime_amount'],
-                    'working_sheet_base_amount' => $workingSheetSummary['working_sheet_base_amount'],
-                    'extra_km_amount' => $workingSheetSummary['extra_km_amount'],
-                    'expense_reimbursement_amount' => $workingSheetSummary['expense_reimbursement_amount'],
-                    'working_sheet_other_amount' => $workingSheetSummary['working_sheet_other_amount'],
-                    'working_sheet_total_amount' => $workingSheetSummary['working_sheet_total_amount'],
-                    'advance_deduction' => $advanceDeduction,
-                    'status' => SalaryProcessing::STATUS_DRAFT,
-                    'updated_by' => Auth::id(),
+
+                    'total_working_days' =>
+                        $attendanceSummary['total_working_days'],
+
+                    'present_days' =>
+                        $attendanceSummary['present_days'],
+
+                    'absent_days' =>
+                        $attendanceSummary['absent_days'],
+
+                    'paid_days' =>
+                        $attendanceSummary['paid_days'],
+
+                    'overtime_hours' =>
+                        $workingSheetSummary['overtime_hours'],
+
+                    'total_duty_days' =>
+                        $workingSheetSummary['total_duty_days'],
+
+                    'total_km' =>
+                        $workingSheetSummary['total_km'],
+
+                    'basic_salary' =>
+                        $monthlyBasicSalary,
+
+                    'allowance_amount' =>
+                        $workingSheetSummary['allowance_amount'],
+
+                    'overtime_amount' =>
+                        $workingSheetSummary['overtime_amount'],
+
+                    'working_sheet_base_amount' =>
+                        $workingSheetSummary['working_sheet_base_amount'],
+
+                    'extra_km_amount' =>
+                        $workingSheetSummary['extra_km_amount'],
+
+                    'expense_reimbursement_amount' =>
+                        $workingSheetSummary['expense_reimbursement_amount'],
+
+                    'working_sheet_other_amount' =>
+                        $workingSheetSummary['working_sheet_other_amount'],
+
+                    'working_sheet_total_amount' =>
+                        $workingSheetSummary['working_sheet_total_amount'],
+
+                    'advance_deduction' =>
+                        $advanceDeduction,
+
+                    'status' =>
+                        SalaryProcessing::STATUS_DRAFT,
+
+                    'updated_by' =>
+                        Auth::id(),
                 ],
                 $manualAdjustments
             );
 
+            /*
+            |--------------------------------------------------------------------------
+            | Calculate Payroll Amounts
+            |--------------------------------------------------------------------------
+            */
+
             $data = $this->calculateSalary($data);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Existing Draft Payroll
+            |--------------------------------------------------------------------------
+            |
+            | Existing processing_no is preserved.
+            |
+            */
 
             if ($salaryProcessing) {
 
                 $salaryProcessing->fill($data);
+
                 $salaryProcessing->updated_by = Auth::id();
+
                 $salaryProcessing->calculateSalary();
+
                 $salaryProcessing->save();
 
             } else {
 
+                /*
+                |--------------------------------------------------------------------------
+                | Create New Payroll
+                |--------------------------------------------------------------------------
+                |
+                | SalaryProcessing model booted events automatically
+                | generate and persist processing_no using the new ID.
+                |
+                */
+
                 $data['created_by'] = Auth::id();
+
                 $data['updated_by'] = Auth::id();
 
                 try {
@@ -1507,7 +2088,12 @@ class SalaryProcessingService
 
                 } catch (QueryException $exception) {
 
-                    // Re-read a concurrently inserted unique driver/month/year row.
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Concurrent Insert Protection
+                    |--------------------------------------------------------------------------
+                    */
+
                     $salaryProcessing = SalaryProcessing::withTrashed()
                         ->where('driver_id', $driverId)
                         ->where('salary_month', $month)
@@ -1515,11 +2101,18 @@ class SalaryProcessingService
                         ->lockForUpdate()
                         ->first();
 
-                    if (!$salaryProcessing || $salaryProcessing->trashed()) {
+                    if (
+                        !$salaryProcessing ||
+                        $salaryProcessing->trashed()
+                    ) {
+
                         throw $exception;
                     }
 
-                    if ($salaryProcessing->status !== SalaryProcessing::STATUS_DRAFT) {
+                    if (
+                        $salaryProcessing->status !==
+                        SalaryProcessing::STATUS_DRAFT
+                    ) {
 
                         throw new RuntimeException(
                             'Payroll was generated concurrently and is no longer in draft status.'
@@ -1527,11 +2120,20 @@ class SalaryProcessingService
                     }
 
                     $salaryProcessing->fill($data);
+
                     $salaryProcessing->updated_by = Auth::id();
+
                     $salaryProcessing->calculateSalary();
+
                     $salaryProcessing->save();
                 }
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Generated Payroll
+            |--------------------------------------------------------------------------
+            */
 
             return $salaryProcessing->fresh([
                 'driver',
@@ -1557,6 +2159,12 @@ class SalaryProcessingService
         Carbon $periodEnd
     ): array {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Fetch Attendance
+        |--------------------------------------------------------------------------
+        */
+
         $attendances = DriverAttendance::query()
             ->where('driver_id', $driverId)
             ->whereBetween(
@@ -1571,6 +2179,12 @@ class SalaryProcessingService
                 'attendance_date',
             ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Present Statuses
+        |--------------------------------------------------------------------------
+        */
+
         $fullPresentStatuses = [
             DriverAttendance::STATUS_PRESENT,
             DriverAttendance::STATUS_LATE,
@@ -1580,6 +2194,12 @@ class SalaryProcessingService
             DriverAttendance::STATUS_ON_DUTY,
             DriverAttendance::STATUS_WORK_FROM_HOME,
         ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paid Leave Statuses
+        |--------------------------------------------------------------------------
+        */
 
         $paidLeaveStatuses = [
             DriverAttendance::STATUS_LEAVE,
@@ -1593,6 +2213,12 @@ class SalaryProcessingService
             DriverAttendance::STATUS_PAID_LEAVE,
         ];
 
+        /*
+        |--------------------------------------------------------------------------
+        | Non-Working Statuses
+        |--------------------------------------------------------------------------
+        */
+
         $nonWorkingStatuses = [
             DriverAttendance::STATUS_HOLIDAY,
             DriverAttendance::STATUS_WEEKLY_OFF,
@@ -1600,35 +2226,81 @@ class SalaryProcessingService
             DriverAttendance::STATUS_COMP_OFF,
         ];
 
+        /*
+        |--------------------------------------------------------------------------
+        | Initialize Counters
+        |--------------------------------------------------------------------------
+        */
+
         $totalWorkingDays = 0.0;
+
         $presentDays = 0.0;
+
         $absentDays = 0.0;
+
         $paidDays = 0.0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Attendance
+        |--------------------------------------------------------------------------
+        */
 
         foreach ($attendances as $attendance) {
 
             $status = $attendance->status;
 
+            /*
+            |--------------------------------------------------------------------------
+            | Total Working Days
+            |--------------------------------------------------------------------------
+            */
+
             if (!in_array($status, $nonWorkingStatuses, true)) {
+
                 $totalWorkingDays += 1;
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Full Present
+            |--------------------------------------------------------------------------
+            */
 
             if (in_array($status, $fullPresentStatuses, true)) {
 
                 $presentDays += 1;
+
                 $paidDays += 1;
 
                 continue;
             }
 
-            if ($status === DriverAttendance::STATUS_HALF_DAY) {
+            /*
+            |--------------------------------------------------------------------------
+            | Half Day
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $status ===
+                DriverAttendance::STATUS_HALF_DAY
+            ) {
 
                 $presentDays += 0.5;
+
                 $absentDays += 0.5;
+
                 $paidDays += 0.5;
 
                 continue;
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Paid Leave
+            |--------------------------------------------------------------------------
+            */
 
             if (in_array($status, $paidLeaveStatuses, true)) {
 
@@ -1636,6 +2308,12 @@ class SalaryProcessingService
 
                 continue;
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Absent / Unpaid Leave
+            |--------------------------------------------------------------------------
+            */
 
             if (in_array(
                 $status,
@@ -1650,10 +2328,19 @@ class SalaryProcessingService
             }
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Return Summary
+        |--------------------------------------------------------------------------
+        */
+
         return [
             'total_working_days' => round($totalWorkingDays, 2),
+
             'present_days' => round($presentDays, 2),
+
             'absent_days' => round($absentDays, 2),
+
             'paid_days' => round($paidDays, 2),
         ];
     }
@@ -1670,6 +2357,12 @@ class SalaryProcessingService
         Carbon $periodStart,
         Carbon $periodEnd
     ): array {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fetch Approved / Completed Working Sheets
+        |--------------------------------------------------------------------------
+        */
 
         $workingSheets = WorkingSheet::query()
             ->where('driver_id', $driverId)
@@ -1700,12 +2393,46 @@ class SalaryProcessingService
                 'total_amount',
             ]);
 
-        $workingSheetBase = (float) $workingSheets->sum('base_amount');
-        $extraKm = (float) $workingSheets->sum('extra_km_amount');
-        $overtimeAmount = (float) $workingSheets->sum('overtime_amount');
-        $allowanceAmount = (float) $workingSheets->sum('allowance_amount');
-        $expenseReimbursement = (float) $workingSheets->sum('expense_amount');
-        $workingSheetOther = (float) $workingSheets->sum('other_amount');
+        /*
+        |--------------------------------------------------------------------------
+        | Component Amounts
+        |--------------------------------------------------------------------------
+        */
+
+        $workingSheetBase = (float) $workingSheets->sum(
+            'base_amount'
+        );
+
+        $extraKm = (float) $workingSheets->sum(
+            'extra_km_amount'
+        );
+
+        $overtimeAmount = (float) $workingSheets->sum(
+            'overtime_amount'
+        );
+
+        $allowanceAmount = (float) $workingSheets->sum(
+            'allowance_amount'
+        );
+
+        $expenseReimbursement = (float) $workingSheets->sum(
+            'expense_amount'
+        );
+
+        $workingSheetOther = (float) $workingSheets->sum(
+            'other_amount'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Working Sheet Total
+        |--------------------------------------------------------------------------
+        |
+        | Prefer each sheet's saved total_amount.
+        | For older records with zero total_amount, calculate from
+        | that sheet's individual component amounts.
+        |
+        */
 
         $workingSheetTotal = (float) $workingSheets->sum(
             function ($workingSheet) {
@@ -1715,10 +2442,10 @@ class SalaryProcessingService
                 );
 
                 if ($storedTotal > 0) {
+
                     return $storedTotal;
                 }
 
-                // Fallback per sheet for older rows whose total_amount was not populated.
                 return
                     (float) ($workingSheet->base_amount ?? 0)
                     + (float) ($workingSheet->extra_km_amount ?? 0)
@@ -1729,22 +2456,75 @@ class SalaryProcessingService
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Unique Duty Days
+        |--------------------------------------------------------------------------
+        */
+
+        $totalDutyDays = $workingSheets
+            ->pluck('work_date')
+            ->filter()
+            ->map(
+                fn ($date) => Carbon::parse($date)->toDateString()
+            )
+            ->unique()
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Summary
+        |--------------------------------------------------------------------------
+        */
+
         return [
-            'total_duty_days' => $workingSheets
-                ->pluck('work_date')
-                ->filter()
-                ->map(fn ($date) => Carbon::parse($date)->toDateString())
-                ->unique()
-                ->count(),
-            'total_km' => round((float) $workingSheets->sum('total_km'), 2),
-            'overtime_hours' => round((float) $workingSheets->sum('overtime_hours'), 2),
-            'working_sheet_base_amount' => round($workingSheetBase, 2),
-            'extra_km_amount' => round($extraKm, 2),
-            'allowance_amount' => round($allowanceAmount, 2),
-            'overtime_amount' => round($overtimeAmount, 2),
-            'expense_reimbursement_amount' => round($expenseReimbursement, 2),
-            'working_sheet_other_amount' => round($workingSheetOther, 2),
-            'working_sheet_total_amount' => round($workingSheetTotal, 2),
+
+            'total_duty_days' => $totalDutyDays,
+
+            'total_km' => round(
+                (float) $workingSheets->sum('total_km'),
+                2
+            ),
+
+            'overtime_hours' => round(
+                (float) $workingSheets->sum('overtime_hours'),
+                2
+            ),
+
+            'working_sheet_base_amount' => round(
+                $workingSheetBase,
+                2
+            ),
+
+            'extra_km_amount' => round(
+                $extraKm,
+                2
+            ),
+
+            'allowance_amount' => round(
+                $allowanceAmount,
+                2
+            ),
+
+            'overtime_amount' => round(
+                $overtimeAmount,
+                2
+            ),
+
+            'expense_reimbursement_amount' => round(
+                $expenseReimbursement,
+                2
+            ),
+
+            'working_sheet_other_amount' => round(
+                $workingSheetOther,
+                2
+            ),
+
+            'working_sheet_total_amount' => round(
+                $workingSheetTotal,
+                2
+            ),
         ];
     }
 
@@ -1761,11 +2541,26 @@ class SalaryProcessingService
         Carbon $periodEnd
     ): float {
 
-        return round(
-            (float) DriverAdvance::query()
-                ->where('driver_id', $driverId)
-                ->where('status', DriverAdvance::STATUS_PAID)
-                ->whereHas('dutySlip', function ($query) use (
+        /*
+        |--------------------------------------------------------------------------
+        | Only Paid Advances Are Deducted
+        |--------------------------------------------------------------------------
+        |
+        | Advance must be linked to a Duty Slip in the selected salary
+        | period. Pending / approved / rejected / cancelled advances
+        | are not included.
+        |
+        */
+
+        $amount = DriverAdvance::query()
+            ->where('driver_id', $driverId)
+            ->where(
+                'status',
+                DriverAdvance::STATUS_PAID
+            )
+            ->whereHas(
+                'dutySlip',
+                function ($query) use (
                     $periodStart,
                     $periodEnd
                 ) {
@@ -1777,8 +2572,12 @@ class SalaryProcessingService
                             $periodEnd->toDateString(),
                         ]
                     );
-                })
-                ->sum('amount'),
+                }
+            )
+            ->sum('amount');
+
+        return round(
+            (float) $amount,
             2
         );
     }
@@ -1793,6 +2592,37 @@ class SalaryProcessingService
     protected function generateSalarySlip(
         SalaryProcessing $salaryProcessing
     ): SalarySlip {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Reload Payroll
+        |--------------------------------------------------------------------------
+        */
+
+        $salaryProcessing->refresh();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Processing Number Check
+        |--------------------------------------------------------------------------
+        |
+        | Every SalaryProcessing must have processing_no generated
+        | by its model events / existing-record migration.
+        |
+        */
+
+        if (empty($salaryProcessing->processing_no)) {
+
+            throw new RuntimeException(
+                'Processing Number is missing. Please verify the Salary Processing model events and database migration.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Salary Slip Check
+        |--------------------------------------------------------------------------
+        */
 
         $existingSlip = SalarySlip::withTrashed()
             ->where(
@@ -1811,7 +2641,10 @@ class SalaryProcessingService
                 );
             }
 
-            if ($existingSlip->status === SalarySlip::STATUS_CANCELLED) {
+            if (
+                $existingSlip->status ===
+                SalarySlip::STATUS_CANCELLED
+            ) {
 
                 throw new RuntimeException(
                     'A cancelled salary slip cannot be regenerated automatically.'
@@ -1821,13 +2654,22 @@ class SalaryProcessingService
             return $existingSlip;
         }
 
-        $periodStart = Carbon::create(
-            (int) $salaryProcessing->salary_year,
-            (int) $salaryProcessing->salary_month,
-            1
-        )->startOfMonth();
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Period
+        |--------------------------------------------------------------------------
+        */
 
-        $periodEnd = $periodStart->copy()->endOfMonth();
+        [$periodStart, $periodEnd] = $this->resolveSalaryPeriod(
+            (int) $salaryProcessing->salary_month,
+            (int) $salaryProcessing->salary_year
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Slip Number
+        |--------------------------------------------------------------------------
+        */
 
         $slipNo = sprintf(
             'SAL-%04d%02d-%08d',
@@ -1835,6 +2677,12 @@ class SalaryProcessingService
             (int) $salaryProcessing->salary_month,
             (int) $salaryProcessing->id
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Unique Slip Number Check
+        |--------------------------------------------------------------------------
+        */
 
         $slipNoExists = SalarySlip::withTrashed()
             ->where('slip_no', $slipNo)
@@ -1847,49 +2695,138 @@ class SalaryProcessingService
             );
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Salary Slip Data
+        |--------------------------------------------------------------------------
+        |
+        | salary_processing_id is the actual foreign key.
+        | processing_no is the unique business reference on the
+        | parent SalaryProcessing record.
+        |
+        */
+
         $slipData = [
-            'salary_processing_id' => $salaryProcessing->id,
-            'driver_id' => $salaryProcessing->driver_id,
-            'role' => SalarySlip::ROLE_DRIVER,
-            'slip_no' => $slipNo,
-            'salary_month' => $salaryProcessing->salary_month,
-            'salary_year' => $salaryProcessing->salary_year,
-            'period_from' => $periodStart->toDateString(),
-            'period_to' => $periodEnd->toDateString(),
-            'total_working_days' => $salaryProcessing->total_working_days,
-            'present_days' => $salaryProcessing->present_days,
-            'absent_days' => $salaryProcessing->absent_days,
-            'paid_days' => $salaryProcessing->paid_days,
-            'overtime_hours' => $salaryProcessing->overtime_hours,
-            'total_duty_days' => $salaryProcessing->total_duty_days,
-            'total_km' => $salaryProcessing->total_km,
-            'basic_salary' => $salaryProcessing->basic_salary,
-            'allowance_amount' => $salaryProcessing->allowance_amount,
-            'overtime_amount' => $salaryProcessing->overtime_amount,
-            'working_sheet_base_amount' => $salaryProcessing->working_sheet_base_amount,
-            'extra_km_amount' => $salaryProcessing->extra_km_amount,
-            'expense_reimbursement_amount' => $salaryProcessing->expense_reimbursement_amount,
-            'working_sheet_other_amount' => $salaryProcessing->working_sheet_other_amount,
-            'working_sheet_total_amount' => $salaryProcessing->working_sheet_total_amount,
-            'bonus_amount' => $salaryProcessing->bonus_amount,
-            'other_earnings' => $salaryProcessing->other_earnings,
-            'gross_salary' => $salaryProcessing->gross_salary,
-            'advance_deduction' => $salaryProcessing->advance_deduction,
-            'loan_deduction' => $salaryProcessing->loan_deduction,
-            'penalty_deduction' => $salaryProcessing->penalty_deduction,
-            'other_deductions' => $salaryProcessing->other_deductions,
-            'total_deductions' => $salaryProcessing->total_deductions,
-            'net_salary' => $salaryProcessing->net_salary,
-            'payment_date' => $salaryProcessing->payment_date,
-            'payment_status' => SalarySlip::PAYMENT_UNPAID,
-            'status' => SalarySlip::STATUS_GENERATED,
-            'remarks' => $salaryProcessing->remarks,
-            'generated_by' => Auth::id(),
+
+            'salary_processing_id' =>
+                $salaryProcessing->id,
+
+            'driver_id' =>
+                $salaryProcessing->driver_id,
+
+            'role' =>
+                SalarySlip::ROLE_DRIVER,
+
+            'slip_no' =>
+                $slipNo,
+
+            'salary_month' =>
+                $salaryProcessing->salary_month,
+
+            'salary_year' =>
+                $salaryProcessing->salary_year,
+
+            'period_from' =>
+                $periodStart->toDateString(),
+
+            'period_to' =>
+                $periodEnd->toDateString(),
+
+            'total_working_days' =>
+                $salaryProcessing->total_working_days,
+
+            'present_days' =>
+                $salaryProcessing->present_days,
+
+            'absent_days' =>
+                $salaryProcessing->absent_days,
+
+            'paid_days' =>
+                $salaryProcessing->paid_days,
+
+            'overtime_hours' =>
+                $salaryProcessing->overtime_hours,
+
+            'total_duty_days' =>
+                $salaryProcessing->total_duty_days,
+
+            'total_km' =>
+                $salaryProcessing->total_km,
+
+            'basic_salary' =>
+                $salaryProcessing->basic_salary,
+
+            'allowance_amount' =>
+                $salaryProcessing->allowance_amount,
+
+            'overtime_amount' =>
+                $salaryProcessing->overtime_amount,
+
+            'working_sheet_base_amount' =>
+                $salaryProcessing->working_sheet_base_amount,
+
+            'extra_km_amount' =>
+                $salaryProcessing->extra_km_amount,
+
+            'expense_reimbursement_amount' =>
+                $salaryProcessing->expense_reimbursement_amount,
+
+            'working_sheet_other_amount' =>
+                $salaryProcessing->working_sheet_other_amount,
+
+            'working_sheet_total_amount' =>
+                $salaryProcessing->working_sheet_total_amount,
+
+            'bonus_amount' =>
+                $salaryProcessing->bonus_amount,
+
+            'other_earnings' =>
+                $salaryProcessing->other_earnings,
+
+            'gross_salary' =>
+                $salaryProcessing->gross_salary,
+
+            'advance_deduction' =>
+                $salaryProcessing->advance_deduction,
+
+            'loan_deduction' =>
+                $salaryProcessing->loan_deduction,
+
+            'penalty_deduction' =>
+                $salaryProcessing->penalty_deduction,
+
+            'other_deductions' =>
+                $salaryProcessing->other_deductions,
+
+            'total_deductions' =>
+                $salaryProcessing->total_deductions,
+
+            'net_salary' =>
+                $salaryProcessing->net_salary,
+
+            'payment_date' =>
+                $salaryProcessing->payment_date,
+
+            'payment_status' =>
+                SalarySlip::PAYMENT_UNPAID,
+
+            'status' =>
+                SalarySlip::STATUS_GENERATED,
+
+            'remarks' =>
+                $salaryProcessing->remarks,
+
+            'generated_by' =>
+                Auth::id(),
         ];
 
-        return SalarySlip::create(
-            $slipData
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Create Salary Slip
+        |--------------------------------------------------------------------------
+        */
+
+        return SalarySlip::create($slipData);
     }
 
 
@@ -1905,13 +2842,27 @@ class SalaryProcessingService
         Carbon $periodEnd
     ): bool {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Joining Date
+        |--------------------------------------------------------------------------
+        */
+
         if (
             $driver->joining_date &&
-            Carbon::parse($driver->joining_date)->startOfDay()->gt($periodEnd)
+            Carbon::parse($driver->joining_date)
+                ->startOfDay()
+                ->gt($periodEnd)
         ) {
 
             return false;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employment End Date
+        |--------------------------------------------------------------------------
+        */
 
         $employmentEndDate =
             $driver->last_working_date
@@ -1920,7 +2871,9 @@ class SalaryProcessingService
 
         if (
             $employmentEndDate &&
-            Carbon::parse($employmentEndDate)->startOfDay()->lt($periodStart)
+            Carbon::parse($employmentEndDate)
+                ->startOfDay()
+                ->lt($periodStart)
         ) {
 
             return false;
@@ -1941,12 +2894,30 @@ class SalaryProcessingService
         int $year
     ): array {
 
-        if (!checkdate($month, 1, $year)) {
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Month / Year
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $month < 1 ||
+            $month > 12 ||
+            $year < 2000 ||
+            $year > 2100 ||
+            !checkdate($month, 1, $year)
+        ) {
 
             throw new InvalidArgumentException(
                 'A valid salary month and year are required.'
             );
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Period Start / End
+        |--------------------------------------------------------------------------
+        */
 
         $periodStart = Carbon::create(
             $year,
@@ -1954,9 +2925,13 @@ class SalaryProcessingService
             1
         )->startOfMonth();
 
+        $periodEnd = $periodStart
+            ->copy()
+            ->endOfMonth();
+
         return [
             $periodStart,
-            $periodStart->copy()->endOfMonth(),
+            $periodEnd,
         ];
     }
 
@@ -1972,7 +2947,14 @@ class SalaryProcessingService
 
         $user = Auth::user();
 
-        if (!$user instanceof User || $user->isDriver()) {
+        if (
+            !$user instanceof User ||
+            (
+                !$user->isAdmin() &&
+                !$user->isOperations() &&
+                !$user->isAccountant()
+            )
+        ) {
 
             abort(403);
         }

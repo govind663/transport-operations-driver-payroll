@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use InvalidArgumentException;
 use RuntimeException;
 use Throwable;
 
@@ -22,7 +23,7 @@ class SalaryProcessingController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Services
+    | SERVICES
     |--------------------------------------------------------------------------
     */
 
@@ -33,7 +34,7 @@ class SalaryProcessingController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | Constructor
+    | CONSTRUCTOR
     |--------------------------------------------------------------------------
     */
 
@@ -41,6 +42,7 @@ class SalaryProcessingController extends Controller
         SalaryProcessingService $salaryProcessingService,
         PayrollReportService $payrollReportService
     ) {
+
         $this->salaryProcessingService = $salaryProcessingService;
 
         $this->payrollReportService = $payrollReportService;
@@ -55,15 +57,23 @@ class SalaryProcessingController extends Controller
 
     public function index(Request $request): View
     {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
+
         /*
         |--------------------------------------------------------------------------
-        | Roles
+        | User Roles
         |--------------------------------------------------------------------------
         */
 
@@ -78,19 +88,54 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Salary Month / Year
+        |--------------------------------------------------------------------------
+        |
+        | Blade sends salary_month and salary_year.
+        | Retain month/year aliases for existing report service compatibility.
+        |
+        */
+
+        $salaryMonth = $request->input(
+            'salary_month',
+            $request->input('month')
+        );
+
+        $salaryYear = $request->input(
+            'salary_year',
+            $request->input('year')
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
         | Filters
         |--------------------------------------------------------------------------
         */
 
         $filters = [
+
             'search' => $request->input('search'),
+
             'driver_id' => $request->input('driver_id'),
+
             'role' => $request->input('role'),
-            'month' => $request->input('month'),
-            'year' => $request->input('year'),
+
+            'month' => $salaryMonth,
+
+            'year' => $salaryYear,
+
+            'salary_month' => $salaryMonth,
+
+            'salary_year' => $salaryYear,
+
             'status' => $request->input('status'),
+
             'date_from' => $request->input('date_from'),
+
             'date_to' => $request->input('date_to'),
+
+            'payment_date' => $request->input('payment_date'),
         ];
 
 
@@ -99,16 +144,16 @@ class SalaryProcessingController extends Controller
         | Driver Restriction
         |--------------------------------------------------------------------------
         |
-        | Driver users can only see their own payroll records.
+        | Driver users can see only their own payroll records.
         |
         */
 
         if ($isDriver) {
+
             $driver = Driver::query()
                 ->where('user_id', $user->id)
                 ->first();
 
-            // If no driver profile is linked, return an empty result.
             $filters['driver_id'] = $driver?->id ?? 0;
         }
 
@@ -129,10 +174,6 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         | Payroll Records
         |--------------------------------------------------------------------------
-        |
-        | Keep payrollReport available for existing report data and expose
-        | payrolls for the existing Blade listing.
-        |
         */
 
         $payrolls = $payrollReport;
@@ -144,19 +185,18 @@ class SalaryProcessingController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $filterOptions = $this->payrollReportService->getFilterOptions();
+        $filterOptions = $this->payrollReportService
+            ->getFilterOptions();
 
 
         /*
         |--------------------------------------------------------------------------
         | Driver Dropdown
         |--------------------------------------------------------------------------
-        |
-        | Driver users should not see the complete driver list.
-        |
         */
 
         if ($isDriver) {
+
             $driver = Driver::query()
                 ->select([
                     'id',
@@ -168,8 +208,12 @@ class SalaryProcessingController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
-            $drivers = $driver ? collect([$driver]) : collect();
+            $drivers = $driver
+                ? collect([$driver])
+                : collect();
+
         } else {
+
             $drivers = Driver::query()
                 ->select([
                     'id',
@@ -197,7 +241,7 @@ class SalaryProcessingController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Month / Year Options For Automatic Payroll
+        | Month / Year Options
         |--------------------------------------------------------------------------
         */
 
@@ -220,19 +264,47 @@ class SalaryProcessingController extends Controller
 
         $currentYear = (int) now()->year;
 
-        // Payroll generation is limited to Admin, Operations and Accountant.
-        $canGeneratePayroll = $isAdmin || $isOperations || $isAccountant;
 
-        $payrollGenerationResult = session('payroll_generation_result');
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Generation Permission
+        |--------------------------------------------------------------------------
+        */
+
+        $canGeneratePayroll =
+            $isAdmin ||
+            $isOperations ||
+            $isAccountant;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generation Result
+        |--------------------------------------------------------------------------
+        */
+
+        $payrollGenerationResult = session(
+            'payroll_generation_result'
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Statuses
+        |--------------------------------------------------------------------------
+        */
 
         $statuses = SalaryProcessing::STATUSES;
+
 
         /*
         |--------------------------------------------------------------------------
         | View
         |--------------------------------------------------------------------------
         */
-        return view('backend.salary-processings.index',
+
+        return view(
+            'backend.salary-processings.index',
             compact(
                 'payrollReport',
                 'payrolls',
@@ -259,48 +331,117 @@ class SalaryProcessingController extends Controller
     |--------------------------------------------------------------------------
     |
     | Admin / Operations / Accountant selects Month and Year.
-    | Driver selection is optional:
-    | - Empty driver_id: generate payroll for all eligible drivers.
-    | - Selected driver_id: generate payroll for that driver only.
     |
-    | The service reads attendance and approved/completed Working Sheets.
-    | This controller does not create or modify those source records.
+    | Driver selection:
+    | - Empty driver_id: generate for all eligible drivers.
+    | - Selected driver_id: generate only for that driver.
+    |
+    | Source attendance and Working Sheet records are not modified.
     |
     */
-    public function generateMonthly(Request $request): RedirectResponse
-    {
+
+    public function generateMonthly(
+        Request $request
+    ): RedirectResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth / Permission
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (
             !$user instanceof User ||
-            (!$user->isAdmin() && !$user->isOperations() && !$user->isAccountant())
+            (
+                !$user->isAdmin() &&
+                !$user->isOperations() &&
+                !$user->isAccountant()
+            )
         ) {
+
             abort(403);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Request
+        |--------------------------------------------------------------------------
+        */
+
         $validated = $request->validate([
-            'salary_month' => ['required', 'integer', 'between:1,12'],
-            'salary_year' => ['required', 'integer', 'between:2000,2100'],
-            'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
+
+            'salary_month' => [
+                'required',
+                'integer',
+                'between:1,12',
+            ],
+
+            'salary_year' => [
+                'required',
+                'integer',
+                'between:2000,2100',
+            ],
+
+            'driver_id' => [
+                'nullable',
+                'integer',
+                'exists:drivers,id',
+            ],
+
         ]);
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate Payroll
+        |--------------------------------------------------------------------------
+        */
+
         try {
-            $result = $this->salaryProcessingService->generateMonthlyPayroll(
-                (int) $validated['salary_month'],
-                (int) $validated['salary_year'],
-                !empty($validated['driver_id'])
-                    ? (int) $validated['driver_id']
-                    : null
+
+            $result = $this->salaryProcessingService
+                ->generateMonthlyPayroll(
+
+                    (int) $validated['salary_month'],
+
+                    (int) $validated['salary_year'],
+
+                    !empty($validated['driver_id'])
+                        ? (int) $validated['driver_id']
+                        : null
+                );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generation Summary
+            |--------------------------------------------------------------------------
+            */
+
+            $generatedCount = (int) (
+                $result['generated_count'] ?? 0
             );
 
-            $generatedCount = (int) ($result['generated_count'] ?? 0);
+            $skippedCount = (int) (
+                $result['skipped_count'] ?? 0
+            );
 
-            $skippedCount = (int) ($result['skipped_count'] ?? 0);
-
-            $skipped = collect($result['skipped'] ?? [])
+            $skipped = collect(
+                $result['skipped'] ?? []
+            )
                 ->take(50)
                 ->values()
                 ->all();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Success Message
+            |--------------------------------------------------------------------------
+            */
 
             $message = sprintf(
                 'Monthly payroll generation completed: %d generated, %d skipped.',
@@ -308,30 +449,61 @@ class SalaryProcessingController extends Controller
                 $skippedCount
             );
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | Redirect
+            |--------------------------------------------------------------------------
+            */
+
             return redirect()
                 ->route('salary-processing.index', [
-                    'month' => $validated['salary_month'],
-                    'year' => $validated['salary_year'],
+
+                    'salary_month' => $validated['salary_month'],
+
+                    'salary_year' => $validated['salary_year'],
+
                 ])
                 ->with('message', $message)
                 ->with('payroll_generation_result', [
+
                     'generated_count' => $generatedCount,
+
                     'skipped_count' => $skippedCount,
+
                     'skipped' => $skipped,
+
                 ]);
-        } catch (RuntimeException $exception) {
+
+        } catch (
+            InvalidArgumentException |
+            RuntimeException $exception
+        ) {
+
             return back()
                 ->withInput()
                 ->with('error', $exception->getMessage());
+
         } catch (Throwable $exception) {
-            Log::error('Monthly payroll generation failed.', [
-                'user_id' => $user->id,
-                'salary_month' => $validated['salary_month'],
-                'salary_year' => $validated['salary_year'],
-                'driver_id' => $validated['driver_id'] ?? null,
-                'message' => $exception->getMessage(),
-                'exception' => $exception,
-            ]);
+
+            Log::error(
+                'Monthly payroll generation failed.',
+                [
+
+                    'user_id' => $user->id,
+
+                    'salary_month' => $validated['salary_month'],
+
+                    'salary_year' => $validated['salary_year'],
+
+                    'driver_id' => $validated['driver_id'] ?? null,
+
+                    'message' => $exception->getMessage(),
+
+                    'exception' => $exception,
+
+                ]
+            );
 
             return back()
                 ->withInput()
@@ -348,8 +520,16 @@ class SalaryProcessingController extends Controller
     | CREATE
     |--------------------------------------------------------------------------
     */
+
     public function create(): View
     {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
@@ -358,21 +538,40 @@ class SalaryProcessingController extends Controller
 
         $isDriver = $user->isDriver();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver List
+        |--------------------------------------------------------------------------
+        */
+
         if ($isDriver) {
+
             $drivers = Driver::query()
                 ->where('user_id', $user->id)
                 ->orderBy('driver_code')
                 ->get();
+
         } else {
+
             $drivers = Driver::query()
                 ->orderBy('driver_code')
                 ->get();
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Payroll Records
+        |--------------------------------------------------------------------------
+        */
+
         if ($isDriver) {
+
             $driver = $drivers->first();
 
             $salaryProcessings = $driver
+
                 ? SalaryProcessing::query()
                     ->where('driver_id', $driver->id)
                     ->with([
@@ -385,8 +584,11 @@ class SalaryProcessingController extends Controller
                     ->latest('salary_month')
                     ->latest('id')
                     ->get()
+
                 : collect();
+
         } else {
+
             $salaryProcessings = SalaryProcessing::query()
                 ->with([
                     'driver',
@@ -400,9 +602,24 @@ class SalaryProcessingController extends Controller
                 ->get();
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Options
+        |--------------------------------------------------------------------------
+        */
+
         $statuses = SalaryProcessing::STATUSES;
 
-        return view('backend.salary-processings.create',
+
+        /*
+        |--------------------------------------------------------------------------
+        | View
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'backend.salary-processings.create',
             compact(
                 'drivers',
                 'salaryProcessings',
@@ -422,15 +639,37 @@ class SalaryProcessingController extends Controller
     public function store(
         StoreSalaryProcessingRequest $request
     ): RedirectResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validated Data
+        |--------------------------------------------------------------------------
+        */
+
         $data = $request->validated();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Restriction
+        |--------------------------------------------------------------------------
+        */
+
         if ($user->isDriver()) {
+
             $driver = Driver::query()
                 ->where('user_id', $user->id)
                 ->first();
@@ -440,23 +679,133 @@ class SalaryProcessingController extends Controller
                 !isset($data['driver_id']) ||
                 (int) $data['driver_id'] !== (int) $driver->id
             ) {
+
                 return back()
                     ->withInput()
-                    ->with('error', 'You can only process your own salary.');
+                    ->with(
+                        'error',
+                        'You can only process your own salary.'
+                    );
             }
 
             $data['driver_id'] = $driver->id;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Initial Payroll Status
+        |--------------------------------------------------------------------------
+        |
+        | New payroll can only be Draft or Processed.
+        | Approval and payment must use their lifecycle operations.
+        |
+        */
+
+        $data['status'] = $data['status']
+            ?? SalaryProcessing::STATUS_PROCESSED;
+
+        if (!in_array(
+            $data['status'],
+            [
+                SalaryProcessing::STATUS_DRAFT,
+                SalaryProcessing::STATUS_PROCESSED,
+            ],
+            true
+        )) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'New payroll can only be created as Draft or Processed.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | System Controlled Fields
+        |--------------------------------------------------------------------------
+        */
+
         $data['role'] = SalaryProcessing::ROLE_DRIVER;
-        $data['processed_by'] = $user->id;
-        $data['status'] = $data['status'] ?? SalaryProcessing::STATUS_PROCESSED;
 
-        $this->salaryProcessingService->create($data);
+        unset(
+            $data['id'],
+            $data['processing_no'],
+            $data['processed_by'],
+            $data['approved_by'],
+            $data['paid_by'],
+            $data['created_by'],
+            $data['updated_by'],
+            $data['deleted_by']
+        );
 
-        return redirect()
-            ->route('salary-processing.index')
-            ->with('message', 'Salary processed successfully.');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Through Service
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            $salaryProcessing = $this->salaryProcessingService
+                ->create($data);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Success
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()
+                ->route('salary-processing.index')
+                ->with(
+                    'message',
+                    'Salary processing created successfully. Processing No: '
+                    . $salaryProcessing->processing_no
+                );
+
+        } catch (
+            InvalidArgumentException |
+            RuntimeException $exception
+        ) {
+
+            return back()
+                ->withInput()
+                ->with('error', $exception->getMessage());
+
+        } catch (Throwable $exception) {
+
+            Log::error(
+                'Salary processing creation failed.',
+                [
+
+                    'user_id' => $user->id,
+
+                    'driver_id' => $data['driver_id'] ?? null,
+
+                    'salary_month' => $data['salary_month'] ?? null,
+
+                    'salary_year' => $data['salary_year'] ?? null,
+
+                    'message' => $exception->getMessage(),
+
+                    'exception' => $exception,
+
+                ]
+            );
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Unable to create salary processing. Please check the application log.'
+                );
+        }
     }
 
 
@@ -465,16 +814,32 @@ class SalaryProcessingController extends Controller
     | SHOW
     |--------------------------------------------------------------------------
     */
+
     public function show(
         SalaryProcessing $salaryProcessing
     ): View {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Access Restriction
+        |--------------------------------------------------------------------------
+        */
+
         if ($user->isDriver()) {
+
             $driver = Driver::query()
                 ->where('user_id', $user->id)
                 ->first();
@@ -483,18 +848,53 @@ class SalaryProcessingController extends Controller
                 !$driver ||
                 (int) $salaryProcessing->driver_id !== (int) $driver->id
             ) {
+
                 abort(403);
             }
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Relationships
+        |--------------------------------------------------------------------------
+        */
 
         $salaryProcessing->load([
             'driver',
             'processedBy',
             'approvedBy',
             'paidBy',
+            'createdBy',
+            'updatedBy',
         ]);
 
-        return view('backend.salary-processings.show',
+
+        /*
+        |--------------------------------------------------------------------------
+        | Processing Number
+        |--------------------------------------------------------------------------
+        */
+
+        if (empty($salaryProcessing->processing_no)) {
+
+            Log::warning(
+                'Salary Processing Number is missing.',
+                [
+                    'salary_processing_id' => $salaryProcessing->id,
+                ]
+            );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | View
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'backend.salary-processings.show',
             compact('salaryProcessing')
         );
     }
@@ -509,20 +909,70 @@ class SalaryProcessingController extends Controller
     public function edit(
         SalaryProcessing $salaryProcessing
     ): View {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
-        // Drivers are allowed to view their own payroll, not edit it.
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Restriction
+        |--------------------------------------------------------------------------
+        |
+        | Drivers can view their payroll, but cannot edit it.
+        |
+        */
+
         if ($user->isDriver()) {
-            abort(403, 'You are not allowed to edit salary processing.');
+
+            abort(
+                403,
+                'You are not allowed to edit salary processing.'
+            );
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Payroll Relationships
+        |--------------------------------------------------------------------------
+        */
+
+        $salaryProcessing->load([
+            'driver',
+            'processedBy',
+            'approvedBy',
+            'paidBy',
+            'createdBy',
+            'updatedBy',
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver List
+        |--------------------------------------------------------------------------
+        */
 
         $drivers = Driver::query()
             ->orderBy('driver_code')
             ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Payroll Records
+        |--------------------------------------------------------------------------
+        */
 
         $salaryProcessings = SalaryProcessing::query()
             ->with([
@@ -536,14 +986,41 @@ class SalaryProcessingController extends Controller
             ->latest('id')
             ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Options
+        |--------------------------------------------------------------------------
+        */
+
         $statuses = SalaryProcessing::STATUSES;
 
-        return view('backend.salary-processings.edit',
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Lock Status
+        |--------------------------------------------------------------------------
+        */
+
+        $isLocked = $this->isPayrollLocked(
+            $salaryProcessing
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | View
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'backend.salary-processings.edit',
             compact(
                 'salaryProcessing',
                 'drivers',
                 'salaryProcessings',
-                'statuses'
+                'statuses',
+                'isLocked'
             )
         );
     }
@@ -559,29 +1036,176 @@ class SalaryProcessingController extends Controller
         UpdateSalaryProcessingRequest $request,
         SalaryProcessing $salaryProcessing
     ): RedirectResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
-        // Drivers cannot update payroll records.
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Restriction
+        |--------------------------------------------------------------------------
+        */
+
         if ($user->isDriver()) {
-            abort(403, 'You are not allowed to update salary processing.');
+
+            abort(
+                403,
+                'You are not allowed to update salary processing.'
+            );
         }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Lock Protection
+        |--------------------------------------------------------------------------
+        |
+        | Approved, Paid and Cancelled payroll cannot be edited.
+        | This check is enforced on the backend as well as Blade.
+        |
+        */
+
+        if ($this->isPayrollLocked($salaryProcessing)) {
+
+            return redirect()
+                ->route(
+                    'salary-processing.edit',
+                    $salaryProcessing->id
+                )
+                ->with(
+                    'error',
+                    'Approved, paid or cancelled payroll cannot be edited.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validated Data
+        |--------------------------------------------------------------------------
+        */
 
         $data = $request->validated();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | System Controlled Fields
+        |--------------------------------------------------------------------------
+        */
+
         $data['role'] = SalaryProcessing::ROLE_DRIVER;
 
-        $this->salaryProcessingService->update(
-            $salaryProcessing,
-            $data
+
+        /*
+        |--------------------------------------------------------------------------
+        | Preserve Existing Status When Not Submitted
+        |--------------------------------------------------------------------------
+        */
+
+        $data['status'] = $data['status']
+            ?? $salaryProcessing->status;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Protect Processing Number
+        |--------------------------------------------------------------------------
+        |
+        | Processing Number is generated by the SalaryProcessing model.
+        | It must never be accepted from the Edit form.
+        |
+        */
+
+        unset(
+            $data['id'],
+            $data['processing_no'],
+            $data['processed_by'],
+            $data['approved_by'],
+            $data['paid_by'],
+            $data['created_by'],
+            $data['deleted_by'],
+            $data['gross_salary'],
+            $data['total_deductions'],
+            $data['net_salary']
         );
 
-        return redirect()
-            ->route('salary-processing.index')
-            ->with('message', 'Salary processing updated successfully.');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Update Through Service
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            $updatedPayroll = $this->salaryProcessingService->update(
+                $salaryProcessing,
+                $data
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Success Message
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()
+                ->route('salary-processing.index')
+                ->with(
+                    'message',
+                    'Salary processing updated successfully. Processing No: '
+                    . $updatedPayroll->processing_no
+                );
+
+        } catch (
+            InvalidArgumentException |
+            RuntimeException $exception
+        ) {
+
+            return back()
+                ->withInput()
+                ->with('error', $exception->getMessage());
+
+        } catch (Throwable $exception) {
+
+            Log::error(
+                'Salary processing update failed.',
+                [
+
+                    'salary_processing_id' => $salaryProcessing->id,
+
+                    'processing_no' => $salaryProcessing->processing_no,
+
+                    'user_id' => $user->id,
+
+                    'status' => $data['status'] ?? null,
+
+                    'message' => $exception->getMessage(),
+
+                    'exception' => $exception,
+
+                ]
+            );
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Unable to update salary processing. Please check the application log.'
+                );
+        }
     }
 
 
@@ -594,21 +1218,125 @@ class SalaryProcessingController extends Controller
     public function destroy(
         SalaryProcessing $salaryProcessing
     ): RedirectResponse {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Auth User
+        |--------------------------------------------------------------------------
+        */
+
         $user = Auth::user();
 
         if (!$user instanceof User) {
             abort(403);
         }
 
-        // Drivers cannot delete payroll records.
+
+        /*
+        |--------------------------------------------------------------------------
+        | Driver Restriction
+        |--------------------------------------------------------------------------
+        */
+
         if ($user->isDriver()) {
-            abort(403, 'You are not allowed to delete salary processing.');
+
+            abort(
+                403,
+                'You are not allowed to delete salary processing.'
+            );
         }
 
-        $this->salaryProcessingService->delete($salaryProcessing);
 
-        return redirect()
-            ->route('salary-processing.index')
-            ->with('message', 'Salary processing deleted successfully.');
+        /*
+        |--------------------------------------------------------------------------
+        | Delete Through Service
+        |--------------------------------------------------------------------------
+        */
+
+        try {
+
+            $processingNo = $salaryProcessing->processing_no;
+
+            $this->salaryProcessingService->delete(
+                $salaryProcessing
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Success
+            |--------------------------------------------------------------------------
+            */
+
+            return redirect()
+                ->route('salary-processing.index')
+                ->with(
+                    'message',
+                    'Salary processing deleted successfully. Processing No: '
+                    . $processingNo
+                );
+
+        } catch (RuntimeException $exception) {
+
+            return back()
+                ->with('error', $exception->getMessage());
+
+        } catch (Throwable $exception) {
+
+            Log::error(
+                'Salary processing deletion failed.',
+                [
+
+                    'salary_processing_id' => $salaryProcessing->id,
+
+                    'processing_no' => $salaryProcessing->processing_no,
+
+                    'user_id' => $user->id,
+
+                    'message' => $exception->getMessage(),
+
+                    'exception' => $exception,
+
+                ]
+            );
+
+            return back()
+                ->with(
+                    'error',
+                    'Unable to delete salary processing. Please check the application log.'
+                );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK PAYROLL LOCK
+    |--------------------------------------------------------------------------
+    |
+    | Locked:
+    | - approved
+    | - paid
+    | - cancelled
+    |
+    | Editable:
+    | - draft
+    | - processed
+    |
+    */
+
+    private function isPayrollLocked(
+        SalaryProcessing $salaryProcessing
+    ): bool {
+
+        return in_array(
+            $salaryProcessing->status,
+            [
+                SalaryProcessing::STATUS_APPROVED,
+                SalaryProcessing::STATUS_PAID,
+                SalaryProcessing::STATUS_CANCELLED,
+            ],
+            true
+        );
     }
 }
