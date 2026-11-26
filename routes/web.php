@@ -423,12 +423,27 @@ Route::prefix('admin')
         |--------------------------------------------------------------------------
         */
 
+        // Automatic Attendance / Working Sheet / Advance Preview
+        // Keep this route BEFORE the Salary Slip resource route.
+        Route::get(
+            'salary-slips/preview',
+            [SalarySlipController::class, 'preview']
+        )->name('salary-slips.preview');
+
+        // Recover a missing Salary Slip from an approved / paid payroll.
+        Route::post(
+            'salary-slips/generate-missing/{salaryProcessing}',
+            [SalarySlipController::class, 'generateMissing']
+        )->name('salary-slips.generate-missing');
+
+        // Salary Slip Resource
         Route::resource(
             'salary-slips',
             SalarySlipController::class
         );
 
-                /*
+
+        /*
         |--------------------------------------------------------------------------
         | DRIVER DOCUMENT SHARING
         |--------------------------------------------------------------------------
@@ -669,7 +684,8 @@ Route::prefix('admin')
 
     });
 
-    /*
+
+/*
 |--------------------------------------------------------------------------
 | Driver Document Sharing - Secure Attendance PDF
 |--------------------------------------------------------------------------
@@ -727,4 +743,3 @@ Route::get(
 )
     ->name('driver-document-sharing.salary-slip-pdf')
     ->middleware('signed');
-    

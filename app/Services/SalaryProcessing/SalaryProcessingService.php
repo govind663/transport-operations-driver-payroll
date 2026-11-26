@@ -2149,6 +2149,275 @@ class SalaryProcessingService
 
     /*
     |--------------------------------------------------------------------------
+    | PREVIEW STANDALONE SALARY SLIP
+    |--------------------------------------------------------------------------
+    |
+    | Read-only preview for the manual / standalone Salary Slip form.
+    |
+    | Important:
+    | - Does not create or update SalaryProcessing.
+    | - Uses the same Attendance, Working Sheet and Paid Advance
+    |   aggregation methods used by monthly payroll generation.
+    | - Does not allow a standalone slip when a payroll record already
+    |   exists for the selected driver and salary period.
+    |
+    */
+
+    public function previewStandaloneSalarySlip(
+        int $driverId,
+        int $month,
+        int $year,
+        ?string $periodFrom = null,
+        ?string $periodTo = null
+    ): array {
+
+        $this->assertPayrollManager();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Resolve Salary Period
+        |--------------------------------------------------------------------------
+        */
+
+        [$defaultPeriodStart, $defaultPeriodEnd] = $this->resolveSalaryPeriod(
+            $month,
+            $year
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Explicit Period From / To
+        |--------------------------------------------------------------------------
+        |
+        | Use the exact dates selected in the manual Salary Slip form for all
+        | source queries. The selected Salary Month / Year remains the key
+        | for duplicate and existing-payroll protection.
+        |
+        */
+
+        if (($periodFrom && !$periodTo) || (!$periodFrom && $periodTo)) {
+            throw new InvalidArgumentException(
+                'Both Period From and Period To are required.'
+            );
+        }
+
+        if ($periodFrom && $periodTo) {
+
+            try {
+                $periodStart = Carbon::parse($periodFrom)->startOfDay();
+                $periodEnd = Carbon::parse($periodTo)->endOfDay();
+            } catch (\Throwable $exception) {
+                throw new InvalidArgumentException(
+                    'The selected salary period dates are invalid.',
+                    0,
+                    $exception
+                );
+            }
+
+            if (
+                $periodStart->format('Y-m-d') !== $periodFrom ||
+                $periodEnd->format('Y-m-d') !== $periodTo
+            ) {
+                throw new InvalidArgumentException(
+                    'The selected salary period dates must use YYYY-MM-DD format.'
+                );
+            }
+
+            if ($periodStart->greaterThan($periodEnd)) {
+                throw new InvalidArgumentException(
+                    'Period From cannot be later than Period To.'
+                );
+            }
+
+        } else {
+
+            $periodStart = $defaultPeriodStart;
+            $periodEnd = $defaultPeriodEnd;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Driver
+        |--------------------------------------------------------------------------
+        */
+
+        $driver = Driver::query()
+            ->whereKey($driverId)
+            ->firstOrFail();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Employment Validation
+        |--------------------------------------------------------------------------
+        */
+
+        if (!$this->wasDriverEmployedDuringPeriod(
+            $driver,
+            $periodStart,
+            $periodEnd
+        )) {
+
+            throw new RuntimeException(
+                'Driver was not employed during the selected salary period.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Monthly Basic Salary
+        |--------------------------------------------------------------------------
+        */
+
+        $monthlyBasicSalary = (float) (
+            $driver->monthly_gross_salary ?? 0
+        );
+
+        if ($monthlyBasicSalary <= 0) {
+
+            throw new RuntimeException(
+                'Monthly gross salary is missing or zero in the Driver record.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Payroll Protection
+        |--------------------------------------------------------------------------
+        |
+        | Payroll-linked Salary Slips are generated from the approved / paid
+        | payroll snapshot. Do not create a standalone slip for a period
+        | which already has any payroll record.
+        |
+        */
+
+        $existingPayroll = SalaryProcessing::withTrashed()
+            ->where('driver_id', $driverId)
+            ->where('salary_month', $month)
+            ->where('salary_year', $year)
+            ->first();
+
+        if ($existingPayroll) {
+
+            if ($existingPayroll->trashed()) {
+
+                throw new RuntimeException(
+                    'A deleted payroll record already exists for this driver and period. Restore or resolve it before creating a Salary Slip.'
+                );
+            }
+
+            throw new RuntimeException(
+                'Salary Processing already exists for this driver and period. Generate or recover the Salary Slip from Salary Processing instead.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Existing Salary Slip Protection
+        |--------------------------------------------------------------------------
+        */
+
+        $existingSlip = SalarySlip::withTrashed()
+            ->where('driver_id', $driverId)
+            ->where('salary_month', $month)
+            ->where('salary_year', $year)
+            ->first();
+
+        if ($existingSlip) {
+
+            throw new RuntimeException(
+                'A Salary Slip already exists for this driver and period. Restore or resolve the existing record instead of creating another one.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance Summary
+        |--------------------------------------------------------------------------
+        */
+
+        $attendanceSummary = $this->getAttendanceSummary(
+            $driverId,
+            $periodStart,
+            $periodEnd
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Approved / Completed Working Sheet Summary
+        |--------------------------------------------------------------------------
+        */
+
+        $workingSheetSummary = $this->getWorkingSheetSummary(
+            $driverId,
+            $periodStart,
+            $periodEnd
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paid Advance Deduction
+        |--------------------------------------------------------------------------
+        */
+
+        $advanceDeduction = $this->getPaidAdvanceDeduction(
+            $driverId,
+            $periodStart,
+            $periodEnd
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Build Read-Only Preview
+        |--------------------------------------------------------------------------
+        |
+        | Working Sheet total is carried as one authoritative amount.
+        | The individual components are also returned for display, but are
+        | not added again by the salary calculation.
+        |
+        */
+
+        $data = array_merge(
+            [
+                'driver_id' => $driver->id,
+                'salary_month' => $month,
+                'salary_year' => $year,
+
+                'basic_salary' => $monthlyBasicSalary,
+
+                'advance_deduction' => $advanceDeduction,
+
+                'bonus_amount' => 0,
+                'other_earnings' => 0,
+
+                'loan_deduction' => 0,
+                'penalty_deduction' => 0,
+                'other_deductions' => 0,
+            ],
+            $attendanceSummary,
+            $workingSheetSummary
+        );
+
+        $data = $this->calculateSalary($data);
+
+        return [
+            'salary_month' => sprintf('%04d-%02d', $year, $month),
+            'period_from' => $periodStart->toDateString(),
+            'period_to' => $periodEnd->toDateString(),
+
+            'driver' => [
+                'id' => (int) $driver->id,
+                'name' => (string) ($driver->name ?? ''),
+                'driver_code' => (string) ($driver->driver_code ?? ''),
+                'monthly_gross_salary' => round($monthlyBasicSalary, 2),
+            ],
+
+            'data' => $data,
+        ];
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | GET ATTENDANCE SUMMARY
     |--------------------------------------------------------------------------
     */
@@ -2580,6 +2849,113 @@ class SalaryProcessingService
             (float) $amount,
             2
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANUAL / AUTOMATIC SALARY SLIP GENERATION ENTRY POINT
+    |--------------------------------------------------------------------------
+    |
+    | Allows an authorized payroll manager to generate a missing Salary Slip
+    | from an approved or paid Salary Processing record.
+    |
+    | Existing Salary Slip is returned instead of creating a duplicate.
+    |
+    */
+
+    public function generateSalarySlipForProcessing(
+        int $salaryProcessingId
+    ): SalarySlip {
+
+        $this->assertPayrollManager();
+
+        return DB::transaction(function () use ($salaryProcessingId) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Lock Salary Processing
+            |--------------------------------------------------------------------------
+            */
+
+            $salaryProcessing = SalaryProcessing::query()
+                ->whereKey($salaryProcessingId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate Payroll Status
+            |--------------------------------------------------------------------------
+            */
+
+            if (!in_array(
+                $salaryProcessing->status,
+                [
+                    SalaryProcessing::STATUS_APPROVED,
+                    SalaryProcessing::STATUS_PAID,
+                ],
+                true
+            )) {
+
+                throw new RuntimeException(
+                    'Salary Slip can only be generated for approved or paid payroll.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Or Retrieve Salary Slip
+            |--------------------------------------------------------------------------
+            */
+
+            $salarySlip = $this->generateSalarySlip(
+                $salaryProcessing
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Synchronize Already Paid Payroll
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $salaryProcessing->status ===
+                SalaryProcessing::STATUS_PAID
+            ) {
+
+                if (
+                    $salarySlip->status ===
+                    SalarySlip::STATUS_CANCELLED
+                ) {
+
+                    throw new RuntimeException(
+                        'Cancelled Salary Slip cannot be marked as paid.'
+                    );
+                }
+
+                $salarySlip->payment_status =
+                    SalarySlip::PAYMENT_PAID;
+
+                $salarySlip->payment_date =
+                    $salaryProcessing->payment_date;
+
+                $salarySlip->save();
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Return Fresh Salary Slip
+            |--------------------------------------------------------------------------
+            */
+
+            return $salarySlip->fresh([
+                'driver',
+                'salaryProcessing',
+                'generatedBy',
+                'issuedBy',
+            ]);
+        });
     }
 
 

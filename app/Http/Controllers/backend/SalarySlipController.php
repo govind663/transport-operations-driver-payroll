@@ -9,8 +9,10 @@ use App\Models\Driver;
 use App\Models\SalaryProcessing;
 use App\Models\SalarySlip;
 use App\Models\User;
+use App\Services\SalaryProcessing\SalaryProcessingService;
 use App\Services\SalarySlip\SalarySlipService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -25,6 +27,8 @@ class SalarySlipController extends Controller
 
     protected SalarySlipService $salarySlipService;
 
+    protected SalaryProcessingService $salaryProcessingService;
+
 
     /*
     |--------------------------------------------------------------------------
@@ -33,9 +37,11 @@ class SalarySlipController extends Controller
     */
 
     public function __construct(
-        SalarySlipService $salarySlipService
+        SalarySlipService $salarySlipService,
+        SalaryProcessingService $salaryProcessingService
     ) {
         $this->salarySlipService = $salarySlipService;
+        $this->salaryProcessingService = $salaryProcessingService;
     }
 
 
@@ -111,9 +117,27 @@ class SalarySlipController extends Controller
 
         $salarySlips =
             $this->salarySlipService->getPaginated(
-                $filters,
-                20
+                $filters
             );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | List Diagnostics (non-driver users only)
+        |--------------------------------------------------------------------------
+        |
+        | These counts help distinguish an actually empty table from records
+        | hidden by the current filter or SoftDeletes global scope.
+        |
+        */
+
+        $activeSalarySlipCount = null;
+        $trashedSalarySlipCount = null;
+
+        if (!$isDriver) {
+            $activeSalarySlipCount = SalarySlip::query()->count();
+            $trashedSalarySlipCount = SalarySlip::onlyTrashed()->count();
+        }
 
 
         /*
@@ -128,6 +152,35 @@ class SalarySlipController extends Controller
 
             $drivers = Driver::query()
                 ->orderBy('driver_code')
+                ->get();
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payroll Records Missing Salary Slips
+        |--------------------------------------------------------------------------
+        |
+        | Only approved / paid payroll records without an active Salary Slip
+        | are shown for manual recovery. The service performs the final
+        | authorization, status, duplicate and soft-delete checks.
+        |
+        */
+
+        $salaryProcessings = collect();
+
+        if (!$isDriver) {
+
+            $salaryProcessings = SalaryProcessing::query()
+                ->with('driver')
+                ->whereIn('status', [
+                    SalaryProcessing::STATUS_APPROVED,
+                    SalaryProcessing::STATUS_PAID,
+                ])
+                ->whereDoesntHave('salarySlips')
+                ->latest('salary_year')
+                ->latest('salary_month')
+                ->latest('id')
                 ->get();
         }
 
@@ -162,14 +215,164 @@ class SalarySlipController extends Controller
             compact(
                 'salarySlips',
                 'drivers',
+                'salaryProcessings',
                 'statuses',
                 'paymentStatuses',
                 'isAdmin',
                 'isOperations',
                 'isAccountant',
-                'isDriver'
+                'isDriver',
+                'activeSalarySlipCount',
+                'trashedSalarySlipCount'
             )
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE MISSING SALARY SLIP
+    |--------------------------------------------------------------------------
+    |
+    | Recover a missing Salary Slip from an approved / paid payroll record.
+    | Salary amounts are taken from the payroll snapshot, not recalculated
+    | or entered manually in SalarySlipService.
+    |
+    */
+
+    public function generateMissing(
+        int $salaryProcessing
+    ): RedirectResponse {
+
+        $user = Auth::user();
+
+        if (!$user instanceof User) {
+            abort(403);
+        }
+
+        if (
+            !$user->isAdmin() &&
+            !$user->isOperations() &&
+            !$user->isAccountant()
+        ) {
+            abort(403);
+        }
+
+        try {
+
+            $salarySlip =
+                $this->salaryProcessingService
+                    ->generateSalarySlipForProcessing(
+                        $salaryProcessing
+                    );
+
+            return redirect()
+                ->route('salary-slips.index')
+                ->with(
+                    'message',
+                    'Salary Slip generated successfully: '.$salarySlip->slip_no
+                );
+
+        } catch (\Throwable $exception) {
+
+            report($exception);
+
+            return redirect()
+                ->route('salary-slips.index')
+                ->with(
+                    'error',
+                    $exception->getMessage()
+                );
+        }
+    }
+
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PREVIEW STANDALONE SALARY SLIP
+    |--------------------------------------------------------------------------
+    |
+    | Returns a read-only Attendance / Working Sheet / Advance preview.
+    | No SalaryProcessing or SalarySlip record is created by this action.
+    |
+    */
+
+    public function preview(
+        Request $request
+    ): JsonResponse {
+
+        $user = Auth::user();
+
+        if (
+            !$user instanceof User ||
+            (
+                !$user->isAdmin() &&
+                !$user->isOperations() &&
+                !$user->isAccountant()
+            )
+        ) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'driver_id' => [
+                'required',
+                'integer',
+                'exists:drivers,id',
+            ],
+            'salary_month' => [
+                'required',
+                'regex:/^\\d{4}-(0[1-9]|1[0-2])$/',
+            ],
+            'period_from' => [
+                'required',
+                'date_format:Y-m-d',
+            ],
+            'period_to' => [
+                'required',
+                'date_format:Y-m-d',
+                'after_or_equal:period_from',
+            ],
+        ]);
+
+        try {
+
+            [$year, $month] = array_map(
+                'intval',
+                explode('-', $validated['salary_month'])
+            );
+
+            $preview = $this->salaryProcessingService
+                ->previewStandaloneSalarySlip(
+                    (int) $validated['driver_id'],
+                    $month,
+                    $year,
+                    $validated['period_from'],
+                    $validated['period_to']
+                );
+
+            return response()->json([
+                'success' => true,
+                'data' => $preview,
+            ]);
+
+        } catch (\InvalidArgumentException | \RuntimeException $exception) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+
+        } catch (\Throwable $exception) {
+
+            report($exception);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to load the Salary Slip preview. Please try again or contact the administrator.',
+            ], 500);
+        }
     }
 
 
@@ -190,33 +393,20 @@ class SalarySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Drivers
+        | Driver Restriction
         |--------------------------------------------------------------------------
+        |
+        | SalarySlipService::create() is restricted to non-driver users.
+        |
         */
 
         if ($user->isDriver()) {
-
-            $driver = Driver::query()
-                ->where(
-                    'user_id',
-                    $user->id
-                )
-                ->first();
-
-            if (!$driver) {
-                abort(403);
-            }
-
-            $drivers = collect([
-                $driver
-            ]);
-
-        } else {
-
-            $drivers = Driver::query()
-                ->orderBy('driver_code')
-                ->get();
+            abort(403);
         }
+
+        $drivers = Driver::query()
+            ->orderBy('driver_code')
+            ->get();
 
 
         /*
@@ -224,42 +414,13 @@ class SalarySlipController extends Controller
         | Salary Processings
         |--------------------------------------------------------------------------
         |
-        | IMPORTANT:
-        | salary_processings table does NOT contain
-        | period_from / period_to.
-        |
-        | Sorting is done using salary_year,
-        | salary_month and id.
+        | Manual Salary Slips cannot be linked to payroll records.
+        | Payroll-generated slips are created by SalaryProcessingService.
+        | Keep an empty collection for compatibility with the existing view.
         |
         */
 
-        if ($user->isDriver()) {
-
-            $driverId =
-                $drivers->first()->id;
-
-            $salaryProcessings =
-                SalaryProcessing::query()
-                    ->where(
-                        'driver_id',
-                        $driverId
-                    )
-                    ->with('driver')
-                    ->orderByDesc('salary_year')
-                    ->orderByDesc('salary_month')
-                    ->orderByDesc('id')
-                    ->get();
-
-        } else {
-
-            $salaryProcessings =
-                SalaryProcessing::query()
-                    ->with('driver')
-                    ->orderByDesc('salary_year')
-                    ->orderByDesc('salary_month')
-                    ->orderByDesc('id')
-                    ->get();
-        }
+        $salaryProcessings = collect();
 
 
         /*
@@ -315,99 +476,92 @@ class SalarySlipController extends Controller
             abort(403);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validated Data
-        |--------------------------------------------------------------------------
-        */
-
-        $data =
-            $request->validated();
-
-
         /*
         |--------------------------------------------------------------------------
         | Driver Restriction
         |--------------------------------------------------------------------------
+        |
+        | Manual Salary Slip creation is not available to drivers.
+        |
         */
 
         if ($user->isDriver()) {
-
-            $driver = Driver::query()
-                ->where(
-                    'user_id',
-                    $user->id
-                )
-                ->first();
-
-            if (!$driver) {
-                abort(403);
-            }
-
-            $data['driver_id'] =
-                $driver->id;
+            abort(403);
         }
 
+        $data = $request->validated();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Role
-        |--------------------------------------------------------------------------
-        */
+        try {
 
-        $data['role'] =
-            SalarySlip::ROLE_DRIVER;
+            /*
+            |--------------------------------------------------------------------------
+            | Rebuild Source Values On The Server
+            |--------------------------------------------------------------------------
+            |
+            | Do not trust readonly browser fields. Attendance, Working Sheet
+            | totals and paid advance deductions are loaded again from source
+            | tables immediately before creating the standalone Salary Slip.
+            |
+            */
 
+            [$year, $month] = array_map(
+                'intval',
+                explode('-', $data['salary_month'])
+            );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Generated By
-        |--------------------------------------------------------------------------
-        */
+            // Preserve optional adjustments entered by the administrator.
+            $manualAdjustments = [];
 
-        $data['generated_by'] =
-            Auth::id();
+            foreach ([
+                'bonus_amount',
+                'other_earnings',
+                'loan_deduction',
+                'penalty_deduction',
+                'other_deductions',
+            ] as $adjustmentField) {
+                if (array_key_exists($adjustmentField, $data)) {
+                    $manualAdjustments[$adjustmentField] = $data[$adjustmentField];
+                }
+            }
 
+            $preview = $this->salaryProcessingService
+                ->previewStandaloneSalarySlip(
+                    (int) $data['driver_id'],
+                    $month,
+                    $year,
+                    $data['period_from'] ?? null,
+                    $data['period_to'] ?? null
+                );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Default Status
-        |--------------------------------------------------------------------------
-        */
+            $data = array_merge(
+                $data,
+                $preview['data'],
+                $manualAdjustments,
+                [
+                    'salary_month' => $data['salary_month'],
+                    'salary_year' => $year,
+                    'period_from' => $preview['period_from'],
+                    'period_to' => $preview['period_to'],
+                ]
+            );
 
-        $data['status'] =
-            $data['status']
-            ?? SalarySlip::STATUS_GENERATED;
+            /*
+            |--------------------------------------------------------------------------
+            | Create Standalone Salary Slip
+            |--------------------------------------------------------------------------
+            */
 
+            $this->salarySlipService->create($data);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Default Payment Status
-        |--------------------------------------------------------------------------
-        */
+        } catch (\InvalidArgumentException | \RuntimeException $exception) {
 
-        $data['payment_status'] =
-            $data['payment_status']
-            ?? SalarySlip::PAYMENT_UNPAID;
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Create Salary Slip
-        |--------------------------------------------------------------------------
-        */
-
-        $this->salarySlipService->create(
-            $data
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors([
+                    'salary_month' => $exception->getMessage(),
+                ]);
+        }
 
         return redirect()
             ->route('salary-slips.index')
@@ -565,35 +719,12 @@ class SalarySlipController extends Controller
         | Salary Processings
         |--------------------------------------------------------------------------
         |
-        | IMPORTANT:
-        | Do NOT use period_from here.
+        | Manual Salary Slip updates cannot change payroll ownership.
+        | Keep an empty collection for compatibility with the existing view.
         |
         */
 
-        if ($user->isDriver()) {
-
-            $salaryProcessings =
-                SalaryProcessing::query()
-                    ->where(
-                        'driver_id',
-                        $salarySlip->driver_id
-                    )
-                    ->with('driver')
-                    ->orderByDesc('salary_year')
-                    ->orderByDesc('salary_month')
-                    ->orderByDesc('id')
-                    ->get();
-
-        } else {
-
-            $salaryProcessings =
-                SalaryProcessing::query()
-                    ->with('driver')
-                    ->orderByDesc('salary_year')
-                    ->orderByDesc('salary_month')
-                    ->orderByDesc('id')
-                    ->get();
-        }
+        $salaryProcessings = collect();
 
 
         /*
@@ -690,53 +821,118 @@ class SalarySlipController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Role
+        | Lifecycle Action Values
         |--------------------------------------------------------------------------
+        |
+        | Status and payment transitions must go through the dedicated
+        | SalarySlipService methods. They must not be written directly.
+        |
         */
 
-        $data['role'] =
-            SalarySlip::ROLE_DRIVER;
+        $requestedStatus = $data['status'] ?? null;
+
+        $requestedPaymentStatus =
+            $data['payment_status'] ?? null;
+
+        $paymentDate = $data['payment_date'] ?? null;
 
 
         /*
         |--------------------------------------------------------------------------
-        | Issue Information
+        | Determine Whether Salary Details Can Be Updated
         |--------------------------------------------------------------------------
         */
 
-        if (
-            isset($data['status']) &&
-            $data['status'] ===
-                SalarySlip::STATUS_ISSUED
+        $canUpdateSalaryDetails =
+            !$salarySlip->salary_processing_id &&
+            !$salarySlip->isIssued() &&
+            !$salarySlip->isPaid() &&
+            !$salarySlip->isPartiallyPaid() &&
+            !$salarySlip->isStatusPaid() &&
+            !$salarySlip->isCancelled();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Issue / Cancel / Payment Lifecycle
+        |--------------------------------------------------------------------------
+        */
+
+        if ($requestedStatus === SalarySlip::STATUS_CANCELLED) {
+
+            $this->salarySlipService->cancel(
+                $salarySlip
+            );
+
+            $successMessage =
+                'Salary slip cancelled successfully.';
+
+        } elseif (
+            $requestedStatus === SalarySlip::STATUS_ISSUED
         ) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Only Set Issued Details If Not Already Issued
-            |--------------------------------------------------------------------------
-            */
-
-            if (!$salarySlip->isIssued()) {
-
-                $data['issued_by'] =
-                    Auth::id();
-
-                $data['issued_at'] =
-                    now();
+            if ($canUpdateSalaryDetails) {
+                $this->salarySlipService->update(
+                    $salarySlip,
+                    $data
+                );
             }
+
+            $this->salarySlipService->issue(
+                $salarySlip
+            );
+
+            $successMessage =
+                'Salary slip issued successfully.';
+
+        } elseif (
+            $requestedPaymentStatus === SalarySlip::PAYMENT_PAID
+        ) {
+
+            if ($canUpdateSalaryDetails) {
+                $this->salarySlipService->update(
+                    $salarySlip,
+                    $data
+                );
+            }
+
+            $this->salarySlipService->markAsPaid(
+                $salarySlip,
+                $paymentDate
+            );
+
+            $successMessage =
+                'Salary slip marked as paid successfully.';
+
+        } elseif (
+            $requestedPaymentStatus === SalarySlip::PAYMENT_PARTIAL
+        ) {
+
+            if ($canUpdateSalaryDetails) {
+                $this->salarySlipService->update(
+                    $salarySlip,
+                    $data
+                );
+            }
+
+            $this->salarySlipService->markAsPartiallyPaid(
+                $salarySlip,
+                $paymentDate
+            );
+
+            $successMessage =
+                'Salary slip marked as partially paid successfully.';
+
+        } else {
+
+            $this->salarySlipService->update(
+                $salarySlip,
+                $data
+            );
+
+            $successMessage =
+                'Salary slip updated successfully.';
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Update Salary Slip
-        |--------------------------------------------------------------------------
-        */
-
-        $this->salarySlipService->update(
-            $salarySlip,
-            $data
-        );
 
 
         /*
@@ -749,7 +945,7 @@ class SalarySlipController extends Controller
             ->route('salary-slips.index')
             ->with(
                 'message',
-                'Salary slip updated successfully.'
+                $successMessage
             );
     }
 
