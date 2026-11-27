@@ -1,443 +1,664 @@
-@extends('backend.layouts.app')
+@extends('backend.layouts.master')
 
 @section('title')
-    Salary Slip - {{ $salarySlip->slip_number }} - {{ $salarySlip->driver->first_name }} {{ $salarySlip->driver->last_name }}
+    Salary Slip - {{ $salarySlip->slip_no ?: $salarySlip->id }}
 @endsection
 
 @push('styles')
-
 <style>
-    /* ============================================================
-       SALARY SLIP PAGE
-    ============================================================ */
+    /* =========================================================
+       1. GLOBAL SALARY SLIP LAYOUT
+       SCREEN: FULL AVAILABLE WIDTH
+    ========================================================= */
 
     .salary-slip-page {
-        background: #f3f5f8;
-        min-height: 100vh;
+        width: 100%;
+        color: #1e293b;
+        font-family: Arial, Helvetica, sans-serif;
     }
 
     .salary-slip-toolbar {
+        width: 100%;
         margin-bottom: 20px;
     }
 
-    /* ============================================================
-       A4 SALARY SLIP
-    ============================================================ */
-
     .salary-slip-paper {
-        width: 210mm;
-        min-height: 297mm;
-        margin: 0 auto;
+        box-sizing: border-box;
+        width: 100%;
+        max-width: none;
+        min-height: auto;
+        margin: 0;
+        overflow: visible;
         background: #ffffff;
-        color: #1f2937;
-        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.10);
-        border: 1px solid #dfe3e8;
-        position: relative;
-        overflow: hidden;
+        color: #1e293b;
+        border: 1px solid #dbe2ea;
+        border-radius: 7px;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, .07);
     }
 
     .salary-slip-inner {
-        padding: 14mm;
+        box-sizing: border-box;
+        width: 100%;
+        padding: 28px;
     }
 
-    /* ============================================================
-       HEADER
-    ============================================================ */
-
-    .salary-header {
-        border-bottom: 3px solid #1d4ed8;
-        padding-bottom: 12px;
-        margin-bottom: 16px;
+    .salary-slip-paper *,
+    .salary-slip-paper *::before,
+    .salary-slip-paper *::after {
+        box-sizing: border-box;
     }
 
-    .company-logo {
-        max-width: 210px;
-        max-height: 75px;
+
+    /* =========================================================
+       2. COMPANY HEADER
+    ========================================================= */
+
+    .salary-sheet-header {
+        padding-bottom: 18px;
+        margin-bottom: 18px;
+        border-bottom: 3px solid #173b82;
+    }
+
+    .salary-sheet-brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+    }
+
+    .salary-sheet-brand > div {
+        min-width: 0;
+    }
+
+    .salary-sheet-logo {
+        display: block;
+        width: 150px;
+        max-width: 100%;
+        max-height: 62px;
         object-fit: contain;
+        object-position: left center;
     }
 
-    .company-name {
-        font-size: 21px;
-        font-weight: 800;
-        color: #0f2b78;
-        letter-spacing: .3px;
-        margin-bottom: 2px;
+    .salary-sheet-logo-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 125px;
+        min-height: 48px;
+        padding: 5px 10px;
+        border: 2px solid #173b82;
+        border-radius: 4px;
+        background: #f8fafc;
+        color: #173b82;
+        font-size: 14px;
+        font-weight: 900;
+        line-height: 1.2;
+        letter-spacing: .5px;
+        text-align: center;
     }
 
-    .company-address {
+    .salary-sheet-logo-fallback[hidden] {
+        display: none !important;
+    }
+
+    .salary-sheet-company-name {
+        margin: 0 0 5px;
+        color: #173b82;
+        font-size: 19px;
+        font-weight: 900;
+        letter-spacing: .4px;
+        line-height: 1.3;
+    }
+
+    .salary-sheet-company-address {
+        color: #64748b;
         font-size: 10px;
-        color: #6b7280;
-        line-height: 1.5;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
     }
 
-    .salary-slip-title {
+    .salary-sheet-title {
         text-align: right;
     }
 
-    .salary-slip-title h1 {
-        font-size: 25px;
-        font-weight: 800;
-        color: #111827;
+    .salary-sheet-title h2 {
         margin: 0;
-        letter-spacing: .5px;
+        color: #172554;
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        line-height: 1.3;
     }
 
-    .salary-slip-title .subtitle {
-        font-size: 11px;
-        color: #6b7280;
+    .salary-sheet-title small {
+        display: block;
         margin-top: 4px;
+        color: #64748b;
+        font-size: 10px;
     }
 
-    .slip-number {
+    .salary-sheet-number {
         display: inline-block;
-        margin-top: 8px;
-        padding: 5px 10px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
+        max-width: 100%;
+        margin-top: 9px;
+        padding: 7px 12px;
+        overflow-wrap: anywhere;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 5px;
+        color: #1e40af;
         font-size: 11px;
-        font-weight: 600;
-        color: #374151;
-        background: #f9fafb;
+        font-weight: 800;
     }
 
-    /* ============================================================
-       DOCUMENT META
-    ============================================================ */
+    .salary-sheet-copy {
+        display: block;
+        margin-top: 5px;
+        color: #94a3b8;
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+    }
 
-    .document-meta {
-        border: 1px solid #d9dee7;
+
+    /* =========================================================
+       3. SALARY PERIOD AND STATUS
+    ========================================================= */
+
+    .salary-sheet-meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        margin-bottom: 18px;
+        overflow: hidden;
         background: #f8fafc;
-        margin-bottom: 14px;
+        border: 1px solid #dbe2ea;
+        border-radius: 6px;
     }
 
-    .document-meta-cell {
-        padding: 9px 12px;
-        border-right: 1px solid #d9dee7;
+    .salary-sheet-meta-item {
+        min-width: 0;
+        padding: 13px 15px;
+        border-right: 1px solid #dbe2ea;
     }
 
-    .document-meta-cell:last-child {
+    .salary-sheet-meta-item:last-child {
         border-right: 0;
     }
 
-    .meta-label {
+    .salary-sheet-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #64748b;
         font-size: 9px;
-        text-transform: uppercase;
-        color: #6b7280;
-        letter-spacing: .5px;
-        margin-bottom: 2px;
-    }
-
-    .meta-value {
-        font-size: 11px;
         font-weight: 700;
-        color: #111827;
+        text-transform: uppercase;
+        letter-spacing: .45px;
     }
 
-    /* ============================================================
-       SECTION TITLE
-    ============================================================ */
-
-    .slip-section {
-        margin-top: 14px;
+    .salary-sheet-value {
+        display: block;
+        color: #172554;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
     }
 
-    .section-heading {
-        background: #0f2b78;
+    .salary-sheet-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        background: #e0e7ff;
+        color: #3730a3;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: capitalize;
+    }
+
+
+    /* =========================================================
+       4. COMMON SECTION DESIGN
+    ========================================================= */
+
+    .salary-sheet-section {
+        min-width: 0;
+        margin-top: 18px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .salary-sheet-section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 38px;
+        padding: 10px 14px;
+        background: #173b82;
+        border: 1px solid #173b82;
+        border-radius: 5px 5px 0 0;
         color: #ffffff;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: .5px;
-        padding: 7px 10px;
-        margin-bottom: 0;
     }
 
-    /* ============================================================
-       EMPLOYEE INFORMATION
-    ============================================================ */
-
-    .employee-box {
-        border: 1px solid #d9dee7;
+    .salary-sheet-section-body {
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid #dbe2ea;
         border-top: 0;
+        border-radius: 0 0 5px 5px;
     }
 
-    .employee-cell {
-        padding: 9px 11px;
-        border-right: 1px solid #e5e7eb;
-        border-bottom: 1px solid #e5e7eb;
+
+    /* =========================================================
+       5. EMPLOYEE INFORMATION
+    ========================================================= */
+
+    .salary-sheet-employee-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px 18px;
     }
 
-    .employee-cell:nth-child(4n) {
-        border-right: 0;
+    .salary-sheet-employee-item {
+        min-width: 0;
     }
 
-    .employee-cell:nth-last-child(-n+4) {
-        border-bottom: 0;
-    }
-
-    .field-label {
-        font-size: 8.5px;
-        text-transform: uppercase;
-        color: #6b7280;
-        letter-spacing: .4px;
-        margin-bottom: 2px;
-    }
-
-    .field-value {
-        font-size: 10.5px;
-        font-weight: 600;
-        color: #111827;
-    }
-
-    /* ============================================================
-       ATTENDANCE
-    ============================================================ */
-
-    .attendance-table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #d9dee7;
-    }
-
-    .attendance-table td {
-        border: 1px solid #d9dee7;
-        padding: 7px 9px;
-    }
-
-    .attendance-table .attendance-label {
-        color: #6b7280;
-        font-size: 9px;
-    }
-
-    .attendance-table .attendance-value {
+    .salary-sheet-employee-value {
+        color: #1e293b;
         font-size: 12px;
-        font-weight: 700;
-        text-align: right;
-    }
-
-    /* ============================================================
-       SALARY TABLE
-    ============================================================ */
-
-    .salary-table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #cfd5df;
-    }
-
-    .salary-table th {
-        background: #f1f5f9;
-        color: #374151;
-        border: 1px solid #cfd5df;
-        padding: 8px 10px;
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: .4px;
-    }
-
-    .salary-table td {
-        border: 1px solid #d9dee7;
-        padding: 7px 10px;
-        font-size: 10px;
-        vertical-align: middle;
-    }
-
-    .salary-table td.amount {
-        text-align: right;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .salary-table .total-row td {
-        background: #f8fafc;
         font-weight: 800;
-        font-size: 10.5px;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
     }
 
-    .salary-table .gross-row td {
-        border-top: 2px solid #94a3b8;
+
+    /* =========================================================
+       6. ATTENDANCE SUMMARY
+    ========================================================= */
+
+    .salary-sheet-attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    .salary-table .deduction-row td {
+    .salary-sheet-attendance-item {
+        min-width: 0;
+        padding: 13px 11px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+    }
+
+    .salary-sheet-attendance-value {
+        display: block;
+        color: #173b82;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1.3;
+        font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
+    }
+
+    .salary-sheet-attendance-label {
+        display: block;
+        margin-top: 5px;
+        color: #64748b;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+
+
+    /* =========================================================
+       7. EARNINGS AND DEDUCTIONS LAYOUT
+    ========================================================= */
+
+    .salary-sheet-financial-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+        align-items: start;
+    }
+
+    .salary-sheet-financial-card {
+        min-width: 0;
+    }
+
+    .salary-sheet-financial-card .salary-sheet-section {
+        margin-top: 0;
+    }
+
+    .salary-sheet-financial-card .salary-sheet-section > div:not(.salary-sheet-section-title) {
+        min-width: 0;
+    }
+
+
+    /* =========================================================
+       8. FINANCIAL TABLES
+    ========================================================= */
+
+    .salary-sheet-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+
+    .salary-sheet-table th {
+        padding: 11px 10px;
+        background: #f1f5f9;
+        border: 1px solid #dbe2ea;
+        color: #475569;
+        font-size: 9px;
+        font-weight: 800;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: .2px;
+    }
+
+    .salary-sheet-table th:last-child {
+        text-align: right;
+    }
+
+    .salary-sheet-table td {
+        padding: 11px 10px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 11px;
+        line-height: 1.5;
+        vertical-align: middle;
+        overflow-wrap: anywhere;
+    }
+
+    .salary-sheet-table .salary-sheet-amount {
+        width: 42%;
+        text-align: right;
+        white-space: nowrap;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .salary-sheet-table .salary-sheet-total td {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1e40af;
+        font-weight: 900;
+    }
+
+    .salary-sheet-table .salary-sheet-deduction td {
         color: #991b1b;
     }
 
-    /* ============================================================
-       NET SALARY
-    ============================================================ */
-
-    .net-salary-box {
-        margin-top: 14px;
-        border: 2px solid #0f2b78;
-        background: #f8fafc;
-        padding: 13px 15px;
-    }
-
-    .net-label {
-        font-size: 10px;
-        text-transform: uppercase;
-        color: #64748b;
-        letter-spacing: .6px;
-    }
-
-    .net-title {
-        font-size: 15px;
-        font-weight: 800;
-        color: #0f2b78;
-    }
-
-    .net-amount {
-        font-size: 23px;
+    .salary-sheet-table .salary-sheet-grand-total td {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #172554;
         font-weight: 900;
-        color: #0f2b78;
-        white-space: nowrap;
     }
 
-    /* ============================================================
-       AMOUNT IN WORDS
-    ============================================================ */
 
-    .amount-words {
-        border: 1px solid #d9dee7;
-        border-top: 0;
-        padding: 9px 11px;
-        font-size: 9.5px;
-        color: #374151;
-        background: #ffffff;
+    /* =========================================================
+       9. NET PAYABLE AMOUNT
+    ========================================================= */
+
+    .salary-sheet-net {
+        margin-top: 18px;
+        padding: 20px;
+        background: #f8fafc;
+        border: 2px solid #173b82;
+        border-radius: 6px;
+        break-inside: avoid;
+        page-break-inside: avoid;
     }
 
-    .amount-words strong {
-        color: #111827;
-    }
-
-    /* ============================================================
-       PAYMENT
-    ============================================================ */
-
-    .payment-box {
-        border: 1px solid #d9dee7;
-    }
-
-    .payment-cell {
-        padding: 9px 11px;
-        border-right: 1px solid #d9dee7;
-    }
-
-    .payment-cell:last-child {
-        border-right: 0;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 3px;
-        font-size: 8.5px;
+    .salary-sheet-net-label {
+        display: block;
+        color: #64748b;
+        font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: .5px;
     }
 
-    .status-paid {
+    .salary-sheet-net-title {
+        display: block;
+        margin-top: 5px;
+        color: #173b82;
+        font-size: 16px;
+        font-weight: 900;
+    }
+
+    .salary-sheet-net-amount {
+        color: #173b82;
+        font-size: 28px;
+        font-weight: 900;
+        line-height: 1.3;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .salary-sheet-words {
+        margin-top: 0;
+        padding: 13px 15px;
+        background: #f8fafc;
+        border: 1px solid #dbe2ea;
+        border-top: 0;
+        border-radius: 0 0 5px 5px;
+        color: #475569;
+        font-size: 10px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    }
+
+
+    /* =========================================================
+       10. PAYMENT INFORMATION
+    ========================================================= */
+
+    .salary-sheet-payment-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px 20px;
+    }
+
+    .salary-sheet-payment-item {
+        min-width: 0;
+    }
+
+    .salary-sheet-payment-value {
+        color: #1e293b;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .salary-sheet-payment-badge {
+        display: inline-block;
+        max-width: 100%;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: capitalize;
+    }
+
+    .payment-paid {
         background: #dcfce7;
         color: #166534;
     }
 
-    .status-issued {
-        background: #dbeafe;
-        color: #1d4ed8;
+    .payment-pending {
+        background: #fef3c7;
+        color: #92400e;
     }
 
-    .status-generated {
-        background: #e0f2fe;
-        color: #0369a1;
-    }
-
-    .status-cancelled {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .status-default {
+    .payment-default {
         background: #e5e7eb;
         color: #374151;
     }
 
-    /* ============================================================
-       REMARKS
-    ============================================================ */
 
-    .remarks-box {
-        border: 1px solid #d9dee7;
-        padding: 10px;
-        font-size: 9.5px;
-        line-height: 1.6;
-        color: #4b5563;
+    /* =========================================================
+       11. SIGNATURE SECTION
+    ========================================================= */
+
+    .salary-sheet-signatures {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 30px;
+        margin-top: 55px;
+        break-inside: avoid;
+        page-break-inside: avoid;
     }
 
-    /* ============================================================
-       SIGNATURE
-    ============================================================ */
-
-    .signature-area {
-        margin-top: 45px;
-    }
-
-    .signature-line {
-        border-top: 1px solid #374151;
-        padding-top: 6px;
-        text-align: center;
+    .salary-sheet-signature {
+        min-width: 0;
+        padding-top: 8px;
+        border-top: 1px solid #64748b;
+        color: #475569;
         font-size: 9px;
-        color: #4b5563;
-        min-width: 150px;
-    }
-
-    /* ============================================================
-       FOOTER
-    ============================================================ */
-
-    .salary-footer {
-        margin-top: 25px;
-        padding-top: 10px;
-        border-top: 1px solid #d9dee7;
+        font-weight: 700;
         text-align: center;
-        color: #6b7280;
-        font-size: 8.5px;
-        line-height: 1.5;
     }
 
-    /* ============================================================
-       SCREEN ONLY
-    ============================================================ */
+
+    /* =========================================================
+       12. DOCUMENT FOOTER
+    ========================================================= */
+
+    .salary-sheet-footer {
+        margin-top: 25px;
+        padding-top: 12px;
+        border-top: 1px solid #dbe2ea;
+        color: #64748b;
+        font-size: 9px;
+        line-height: 1.7;
+        text-align: center;
+    }
+
+    .salary-sheet-footer strong {
+        color: #173b82;
+        font-size: 10px;
+        letter-spacing: .4px;
+    }
+
+
+    /* =========================================================
+       13. PDF MODE
+       Only activated while generating the PDF.
+    ========================================================= */
+
+    .salary-slip-paper.salary-slip-pdf-mode {
+        width: 210mm !important;
+        max-width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 0 auto !important;
+        overflow: visible !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .salary-slip-pdf-mode .salary-slip-inner {
+        width: 100% !important;
+        padding: 12mm !important;
+    }
+
+    .salary-slip-pdf-mode .salary-sheet-financial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .salary-slip-pdf-mode .salary-sheet-employee-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    .salary-slip-pdf-mode .salary-sheet-attendance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .salary-slip-pdf-mode .salary-sheet-payment-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .salary-slip-pdf-mode .salary-sheet-signatures {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+
+    /* =========================================================
+       14. TABLET RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1100px) {
+
+        .salary-sheet-attendance-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .salary-sheet-payment-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
 
     @media (max-width: 991.98px) {
 
-        .salary-slip-paper {
-            width: 100%;
-            min-height: auto;
-        }
-
         .salary-slip-inner {
-            padding: 20px;
+            padding: 22px;
         }
 
-        .salary-slip-title {
-            text-align: left;
-            margin-top: 15px;
+        .salary-sheet-employee-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .document-meta-cell,
-        .payment-cell {
-            border-right: 0;
-            border-bottom: 1px solid #d9dee7;
+        .salary-sheet-title h2 {
+            font-size: 24px;
         }
 
-        .employee-cell {
-            border-right: 0;
-        }
-
-        .signature-area {
-            margin-top: 30px;
-        }
     }
+
+
+    /* =========================================================
+       15. MOBILE RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .salary-sheet-title {
+            margin-top: 16px;
+            text-align: left;
+        }
+
+        .salary-sheet-financial-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .salary-sheet-attendance-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .salary-sheet-payment-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .salary-sheet-signatures {
+            gap: 22px;
+        }
+
+    }
+
 
     @media (max-width: 575.98px) {
 
@@ -445,147 +666,320 @@
             padding: 14px;
         }
 
-        .company-logo {
-            max-width: 180px;
+        .salary-sheet-brand {
+            align-items: flex-start;
+            gap: 8px;
         }
 
-        .salary-slip-title h1 {
+        .salary-sheet-logo {
+            width: 105px;
+            max-height: 45px;
+        }
+
+        .salary-sheet-logo-fallback {
+            min-width: 95px;
+            min-height: 42px;
+            font-size: 11px;
+        }
+
+        .salary-sheet-company-name {
+            font-size: 14px;
+        }
+
+        .salary-sheet-company-address {
+            font-size: 8px;
+        }
+
+        .salary-sheet-title h2 {
             font-size: 20px;
         }
 
-        .net-amount {
-            font-size: 19px;
-            margin-top: 8px;
+        .salary-sheet-meta {
+            grid-template-columns: 1fr;
         }
 
-        .salary-table th,
-        .salary-table td {
-            padding: 6px;
+        .salary-sheet-meta-item {
+            border-right: 0;
+            border-bottom: 1px solid #dbe2ea;
         }
+
+        .salary-sheet-meta-item:last-child {
+            border-bottom: 0;
+        }
+
+        .salary-sheet-employee-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .salary-sheet-attendance-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .salary-sheet-payment-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .salary-sheet-signatures {
+            grid-template-columns: 1fr;
+            gap: 28px;
+        }
+
+        .salary-sheet-net-amount {
+            font-size: 19px;
+        }
+
+        .salary-sheet-section-title {
+            font-size: 10px;
+        }
+
+        .salary-sheet-section-body {
+            padding: 11px;
+        }
+
+        .salary-sheet-table th,
+        .salary-sheet-table td {
+            padding: 8px 6px;
+            font-size: 9px;
+        }
+
     }
 
-    /* ============================================================
-       PRINT
-    ============================================================ */
+
+    /* =========================================================
+       16. PRINT SETTINGS - A4 PORTRAIT
+    ========================================================= */
 
     @media print {
 
         @page {
-            size: A4;
+            size: A4 portrait;
             margin: 0;
         }
 
         html,
         body {
-            width: 210mm;
-            min-height: 297mm;
+            width: 210mm !important;
+            min-width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: #ffffff !important;
         }
 
-        body {
-            margin: 0 !important;
-            padding: 0 !important;
+        body * {
+            visibility: hidden !important;
         }
 
-        .salary-slip-toolbar,
-        .no-print,
-        nav,
-        aside,
-        header,
-        footer,
-        .sidebar,
-        .navbar {
-            display: none !important;
+        #salarySlipDocument,
+        #salarySlipDocument * {
+            visibility: visible !important;
+        }
+
+        #salarySlipDocument {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 210mm !important;
+            max-width: 210mm !important;
+            min-height: 297mm !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
         }
 
         .salary-slip-page {
-            background: #ffffff !important;
-            min-height: auto !important;
-        }
-
-        .salary-slip-paper {
-            width: 210mm !important;
-            min-height: 297mm !important;
             margin: 0 !important;
-            border: 0 !important;
-            box-shadow: none !important;
+            padding: 0 !important;
+            background: #ffffff !important;
         }
 
         .salary-slip-inner {
+            width: 100% !important;
             padding: 12mm !important;
         }
 
-        .salary-table,
-        .attendance-table,
-        .employee-box,
-        .payment-box,
-        .net-salary-box,
-        .remarks-box {
-            break-inside: avoid;
-            page-break-inside: avoid;
+        .salary-slip-toolbar,
+        .no-print {
+            display: none !important;
+            visibility: hidden !important;
         }
 
-        .slip-section {
-            break-inside: avoid;
-            page-break-inside: avoid;
+        .salary-sheet-financial-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
         }
+
+        .salary-sheet-employee-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+
+        .salary-sheet-attendance-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        .salary-sheet-payment-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        .salary-sheet-signatures {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        .salary-sheet-header,
+        .salary-sheet-meta,
+        .salary-sheet-section,
+        .salary-sheet-net,
+        .salary-sheet-words,
+        .salary-sheet-signatures,
+        .salary-sheet-footer {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .salary-sheet-section,
+        .salary-sheet-meta,
+        .salary-sheet-net,
+        .salary-sheet-words,
+        .salary-sheet-signatures {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+
+        .salary-sheet-logo {
+            max-height: 58px !important;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
     }
+
 </style>
-
 @endpush
-
 
 @section('content')
 
 @php
-
     /*
     |--------------------------------------------------------------------------
-    | BASIC DATA
+    | DRIVER AND SLIP DETAILS
     |--------------------------------------------------------------------------
     */
 
     $driver = $salarySlip->driver;
 
     $driverName = $driver
-        ? trim(
-            ($driver->first_name ?? '') . ' ' .
-            ($driver->last_name ?? '')
-        )
+        ? trim(($driver->first_name ?? '') . ' ' . ($driver->last_name ?? ''))
         : '-';
+
+    $driverName = $driverName !== '' ? $driverName : '-';
+
+    $slipNumber = $salarySlip->slip_no
+        ?: ('#' . $salarySlip->id);
 
     $salaryPeriod = $salarySlip->salaryPeriod ?? '-';
 
     $status = $salarySlip->status ?? 'generated';
 
-    $statusClass = match ($status) {
-        'paid' => 'status-paid',
-        'issued' => 'status-issued',
-        'generated' => 'status-generated',
-        'cancelled' => 'status-cancelled',
-        default => 'status-default',
+    $paymentStatus = $salarySlip->payment_status ?? 'pending';
+
+    $paymentStatusClass = match ($paymentStatus) {
+        'paid' => 'payment-paid',
+        'pending' => 'payment-pending',
+        default => 'payment-default',
     };
+
 
     /*
     |--------------------------------------------------------------------------
-    | AMOUNTS
+    | SAVED SALARY AMOUNTS
     |--------------------------------------------------------------------------
+    | This page displays the stored Salary Slip snapshot only.
+    | It does not recalculate or modify salary values.
     */
 
     $basicSalary = (float) ($salarySlip->basic_salary ?? 0);
+
+    $workingSheetTotal = (float) (
+        $salarySlip->working_sheet_total_amount ?? 0
+    );
+
+    $workingSheetBase = (float) (
+        $salarySlip->working_sheet_base_amount ?? 0
+    );
+
+    $extraKm = (float) ($salarySlip->extra_km_amount ?? 0);
+
     $allowance = (float) ($salarySlip->allowance_amount ?? 0);
+
     $overtime = (float) ($salarySlip->overtime_amount ?? 0);
+
+    $expenseReimbursement = (float) (
+        $salarySlip->expense_reimbursement_amount ?? 0
+    );
+
+    $workingSheetOther = (float) (
+        $salarySlip->working_sheet_other_amount ?? 0
+    );
+
+    $workingSheetComponents =
+        $workingSheetBase
+        + $extraKm
+        + $overtime
+        + $allowance
+        + $expenseReimbursement
+        + $workingSheetOther;
+
+    if ($workingSheetTotal > 0) {
+        $workingSheetEarnings = $workingSheetTotal;
+    } elseif ($workingSheetComponents != 0.0) {
+        $workingSheetEarnings = $workingSheetComponents;
+    } else {
+        $workingSheetEarnings = $allowance + $overtime;
+    }
+
     $bonus = (float) ($salarySlip->bonus_amount ?? 0);
+
     $otherEarnings = (float) ($salarySlip->other_earnings ?? 0);
 
     $grossSalary = (float) ($salarySlip->gross_salary ?? 0);
 
     $advance = (float) ($salarySlip->advance_amount ?? 0);
+
     $deduction = (float) ($salarySlip->deduction_amount ?? 0);
+
     $otherDeductions = (float) ($salarySlip->other_deductions ?? 0);
 
     $totalDeductions = (float) ($salarySlip->total_deductions ?? 0);
+
     $netSalary = (float) ($salarySlip->net_salary ?? 0);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ATTENDANCE SNAPSHOT
+    |--------------------------------------------------------------------------
+    */
+
+    $totalDays = (float) ($salarySlip->total_days ?? 0);
+
+    $presentDays = (float) ($salarySlip->present_days ?? 0);
+
+    $absentDays = (float) ($salarySlip->absent_days ?? 0);
+
+    $leaveDays = (float) ($salarySlip->leave_days ?? 0);
+
+    $paidDays = (float) ($salarySlip->paid_days ?? 0);
+
+    $formatAmount = fn ($amount) => number_format((float) $amount, 2);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -594,47 +988,22 @@
     */
 
     $numberToWords = function ($number) {
-
-        $number = (int) round($number);
+        $number = (int) round(abs((float) $number));
 
         if ($number === 0) {
             return 'Zero Rupees Only';
         }
 
         $ones = [
-            '',
-            'One',
-            'Two',
-            'Three',
-            'Four',
-            'Five',
-            'Six',
-            'Seven',
-            'Eight',
-            'Nine',
-            'Ten',
-            'Eleven',
-            'Twelve',
-            'Thirteen',
-            'Fourteen',
-            'Fifteen',
-            'Sixteen',
-            'Seventeen',
-            'Eighteen',
+            '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
+            'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen',
+            'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen',
             'Nineteen'
         ];
 
         $tens = [
-            '',
-            '',
-            'Twenty',
-            'Thirty',
-            'Forty',
-            'Fifty',
-            'Sixty',
-            'Seventy',
-            'Eighty',
-            'Ninety'
+            '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty',
+            'Sixty', 'Seventy', 'Eighty', 'Ninety'
         ];
 
         $convert = function ($num) use (&$convert, $ones, $tens) {
@@ -644,159 +1013,201 @@
             }
 
             if ($num < 100) {
-                return $tens[intdiv($num, 10)] .
-                    (($num % 10) ? ' ' . $ones[$num % 10] : '');
+                return $tens[intdiv($num, 10)]
+                    . (($num % 10) ? ' ' . $ones[$num % 10] : '');
             }
 
             if ($num < 1000) {
-                return $ones[intdiv($num, 100)] .
-                    ' Hundred' .
-                    (($num % 100) ? ' ' . $convert($num % 100) : '');
+                return $ones[intdiv($num, 100)] . ' Hundred'
+                    . (($num % 100) ? ' ' . $convert($num % 100) : '');
             }
 
             if ($num < 100000) {
-                return $convert(intdiv($num, 1000)) .
-                    ' Thousand' .
-                    (($num % 1000) ? ' ' . $convert($num % 1000) : '');
+                return $convert(intdiv($num, 1000)) . ' Thousand'
+                    . (($num % 1000) ? ' ' . $convert($num % 1000) : '');
             }
 
             if ($num < 10000000) {
-                return $convert(intdiv($num, 100000)) .
-                    ' Lakh' .
-                    (($num % 100000) ? ' ' . $convert($num % 100000) : '');
+                return $convert(intdiv($num, 100000)) . ' Lakh'
+                    . (($num % 100000) ? ' ' . $convert($num % 100000) : '');
             }
 
-            return $convert(intdiv($num, 10000000)) .
-                ' Crore' .
-                (($num % 10000000) ? ' ' . $convert($num % 10000000) : '');
+            return $convert(intdiv($num, 10000000)) . ' Crore'
+                . (($num % 10000000) ? ' ' . $convert($num % 10000000) : '');
         };
 
         return $convert($number) . ' Rupees Only';
     };
 
     $netSalaryInWords = $numberToWords($netSalary);
-
 @endphp
 
-
 <div class="salary-slip-page">
+    <div class="pd-ltr-20 xs-pd-20-10">
 
-    {{-- ============================================================
-         TOOLBAR
-    ============================================================= --}}
+        {{-- =========================================================
+             PAGE ACTIONS
+        ========================================================= --}}
 
-    <div class="container-fluid salary-slip-toolbar no-print">
+        <div class="salary-slip-toolbar no-print">
 
-        <div class="d-flex flex-wrap justify-content-between
-                    align-items-center gap-2">
+            <div class="page-header mb-30">
 
-            <div>
-                <h4 class="fw-bold mb-1">
-                    Salary Slip
-                </h4>
+                <div class="row align-items-center">
 
-                <div class="text-muted small">
-                    Salary Slip #{{ $salarySlip->id }}
-                    <span class="mx-1">•</span>
-                    {{ $salaryPeriod }}
+                    <div class="col-md-7 col-sm-12">
+
+                        <div class="title">
+                            <h4 class="text-blue">
+                                Salary Statement
+                            </h4>
+                        </div>
+
+                        <nav aria-label="breadcrumb" role="navigation">
+                            <ol class="breadcrumb">
+
+                                <li class="breadcrumb-item">
+                                    <a href="{{ route('salary-slips.index') }}">
+                                        Salary Slips
+                                    </a>
+                                </li>
+
+                                <li class="breadcrumb-item active"
+                                    aria-current="page">
+                                    {{ $slipNumber }}
+                                </li>
+
+                            </ol>
+                        </nav>
+
+                    </div>
+
+                    <div class="col-md-5 col-sm-12 text-md-right mt-3 mt-md-0">
+
+                        <div class="d-flex flex-wrap justify-content-md-end"
+                             style="gap:8px;">
+
+                            <a href="{{ route('salary-slips.index') }}"
+                               class="btn btn-outline-secondary btn-sm">
+
+                                <i class="fa fa-arrow-left"></i>
+                                Back
+
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-outline-dark btn-sm"
+                                    onclick="printSalarySlip()">
+
+                                <i class="fa fa-print"></i>
+                                Print
+
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-primary btn-sm"
+                                    id="downloadSalarySlipBtn">
+
+                                <i class="fa fa-file-pdf-o"></i>
+                                Download PDF
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2">
-
-                <a href="{{ route('salary-slips.index') }}"
-                   class="btn btn-light border">
-
-                    <i class="bi bi-arrow-left me-1"></i>
-                    Back
-
-                </a>
-
-                @if(!auth()->user()->isDriver())
-
-                    <a href="{{ route('salary-slips.edit', $salarySlip) }}"
-                       class="btn btn-outline-primary">
-
-                        <i class="bi bi-pencil-square me-1"></i>
-                        Edit
-
-                    </a>
-
-                @endif
-
-                <button type="button"
-                        class="btn btn-outline-dark"
-                        onclick="printSalarySlip()">
-
-                    <i class="bi bi-printer me-1"></i>
-                    Print
-
-                </button>
-
-                <button type="button"
-                        class="btn btn-primary"
-                        id="downloadSalarySlipBtn">
-
-                    <i class="bi bi-file-earmark-pdf me-1"></i>
-                    Download PDF
-
-                </button>
 
             </div>
 
         </div>
 
-    </div>
+
+        {{-- =========================================================
+             PRINTABLE SALARY STATEMENT
+             SCREEN: FULL WIDTH
+             PRINT/PDF: A4 PORTRAIT
+        ========================================================= --}}
+
+        <div class="salary-slip-paper salary-sheet"
+             id="salarySlipDocument">
+
+            <div class="salary-slip-inner">
 
 
-    {{-- ============================================================
-         A4 SALARY SLIP
-    ============================================================= --}}
+                {{-- =====================================================
+                     COMPANY HEADER
+                ====================================================== --}}
 
-    <div class="salary-slip-paper" id="salarySlipDocument">
+                <div class="salary-sheet-header">
 
-        <div class="salary-slip-inner">
+                    <div class="row align-items-center">
 
-            {{-- ====================================================
-                 COMPANY HEADER
-            ===================================================== --}}
+                        <div class="col-7">
 
-            <div class="salary-header">
+                            <div class="salary-sheet-brand">
 
-                <div class="row align-items-center">
+                                <div>
 
-                    <div class="col-7">
+                                    <img
+                                        src="{{ asset('backend/assets/img/logo/mastermind-logo.png') }}"
+                                        alt="Mastermind Travels"
+                                        class="salary-sheet-logo"
+                                        data-no-optimize="1"
+                                        loading="eager"
+                                        onerror="this.hidden=true; this.nextElementSibling.hidden=false;"
+                                    >
 
-                        <img src="{{ asset('images/logo-300x88.png') }}"
-                             alt="Mastermind Travels"
-                             class="company-logo mb-2">
+                                    <span class="salary-sheet-logo-fallback" hidden>
+                                        MASTERMIND
+                                        <br>
+                                        TRAVELS
+                                    </span>
 
-                        <div class="company-name">
-                            MASTERMIND TRAVELS
-                        </div>
+                                </div>
 
-                        <div class="company-address">
-                            OM NIWAS, PLOT NO. 396, SECTOR 4,
-                            GHANSOLI, NAVI MUMBAI - 400701
-                        </div>
+                                <div>
 
-                    </div>
+                                    <h3 class="salary-sheet-company-name">
+                                        MASTERMIND TRAVELS
+                                    </h3>
 
-                    <div class="col-5">
+                                    <div class="salary-sheet-company-address">
+                                        OM NIWAS, PLOT NO. 396, SECTOR 4,
+                                        GHANSOLI, NAVI MUMBAI - 400701
+                                    </div>
 
-                        <div class="salary-slip-title">
+                                </div>
 
-                            <h1>
-                                SALARY SLIP
-                            </h1>
-
-                            <div class="subtitle">
-                                Salary Statement
                             </div>
 
-                            <div class="slip-number">
-                                Slip No:
-                                <strong>#{{ $salarySlip->id }}</strong>
+                        </div>
+
+                        <div class="col-5">
+
+                            <div class="salary-sheet-title">
+
+                                <h2>
+                                    SALARY SLIP
+                                </h2>
+
+                                <small>
+                                    Official Salary Statement
+                                </small>
+
+                                <div>
+
+                                    <span class="salary-sheet-number">
+                                        {{ $slipNumber }}
+                                    </span>
+
+                                </div>
+
+                                <span class="salary-sheet-copy">
+                                    Employee Copy
+                                </span>
+
                             </div>
 
                         </div>
@@ -805,36 +1216,32 @@
 
                 </div>
 
-            </div>
 
+                {{-- =====================================================
+                     SALARY PERIOD AND SLIP STATUS
+                ====================================================== --}}
 
-            {{-- ====================================================
-                 DOCUMENT META
-            ===================================================== --}}
+                <div class="salary-sheet-meta">
 
-            <div class="document-meta">
+                    <div class="salary-sheet-meta-item">
 
-                <div class="row g-0">
-
-                    <div class="col-4 document-meta-cell">
-
-                        <div class="meta-label">
+                        <span class="salary-sheet-label">
                             Salary Month
-                        </div>
+                        </span>
 
-                        <div class="meta-value">
+                        <span class="salary-sheet-value">
                             {{ $salaryPeriod }}
-                        </div>
+                        </span>
 
                     </div>
 
-                    <div class="col-4 document-meta-cell">
+                    <div class="salary-sheet-meta-item">
 
-                        <div class="meta-label">
+                        <span class="salary-sheet-label">
                             Salary Period
-                        </div>
+                        </span>
 
-                        <div class="meta-value">
+                        <span class="salary-sheet-value">
 
                             {{ $salarySlip->period_from
                                 ? $salarySlip->period_from->format('d M Y')
@@ -846,687 +1253,660 @@
                                 ? $salarySlip->period_to->format('d M Y')
                                 : '-' }}
 
-                        </div>
+                        </span>
 
                     </div>
 
-                    <div class="col-4 document-meta-cell">
+                    <div class="salary-sheet-meta-item">
 
-                        <div class="meta-label">
-                            Status
-                        </div>
+                        <span class="salary-sheet-label">
+                            Slip Status
+                        </span>
 
-                        <div class="meta-value">
-
-                            <span class="status-badge {{ $statusClass }}">
-                                {{ ucwords(str_replace('_', ' ', $status)) }}
-                            </span>
-
-                        </div>
+                        <span class="salary-sheet-status">
+                            {{ ucfirst(str_replace('_', ' ', $status)) }}
+                        </span>
 
                     </div>
 
                 </div>
 
-            </div>
 
+                {{-- =====================================================
+                     EMPLOYEE INFORMATION
+                ====================================================== --}}
 
-            {{-- ====================================================
-                 EMPLOYEE INFORMATION
-            ===================================================== --}}
+                <section class="salary-sheet-section">
 
-            <div class="slip-section">
+                    <div class="salary-sheet-section-title">
+                        <span>Employee Information</span>
+                    </div>
 
-                <div class="section-heading">
-                    Employee / Driver Information
-                </div>
+                    <div class="salary-sheet-section-body">
 
-                <div class="employee-box">
+                        <div class="salary-sheet-employee-grid">
 
-                    <div class="row g-0">
+                            <div class="salary-sheet-employee-item">
 
-                        <div class="col-6 col-md-3 employee-cell">
+                                <span class="salary-sheet-label">
+                                    Driver Name
+                                </span>
 
-                            <div class="field-label">
-                                Driver Name
+                                <div class="salary-sheet-employee-value">
+                                    {{ $driverName }}
+                                </div>
+
                             </div>
 
-                            <div class="field-value">
-                                {{ $driverName }}
+                            <div class="salary-sheet-employee-item">
+
+                                <span class="salary-sheet-label">
+                                    Driver Code
+                                </span>
+
+                                <div class="salary-sheet-employee-value">
+                                    {{ $driver->driver_code ?? '-' }}
+                                </div>
+
                             </div>
 
-                        </div>
+                            <div class="salary-sheet-employee-item">
 
-                        <div class="col-6 col-md-3 employee-cell">
+                                <span class="salary-sheet-label">
+                                    Mobile Number
+                                </span>
 
-                            <div class="field-label">
-                                Driver Code
+                                <div class="salary-sheet-employee-value">
+                                    {{ $driver->mobile ?? '-' }}
+                                </div>
+
                             </div>
 
-                            <div class="field-value">
-                                {{ $driver->driver_code ?? '-' }}
-                            </div>
+                            <div class="salary-sheet-employee-item">
 
-                        </div>
+                                <span class="salary-sheet-label">
+                                    Designation
+                                </span>
 
-                        <div class="col-6 col-md-3 employee-cell">
+                                <div class="salary-sheet-employee-value">
+                                    {{ ucfirst(str_replace('_', ' ', $salarySlip->role ?? 'Driver')) }}
+                                </div>
 
-                            <div class="field-label">
-                                Mobile
-                            </div>
-
-                            <div class="field-value">
-                                {{ $driver->mobile ?? '-' }}
-                            </div>
-
-                        </div>
-
-                        <div class="col-6 col-md-3 employee-cell">
-
-                            <div class="field-label">
-                                Role
-                            </div>
-
-                            <div class="field-value">
-                                {{ ucfirst($salarySlip->role ?? 'Driver') }}
                             </div>
 
                         </div>
 
                     </div>
 
-                </div>
+                </section>
 
-            </div>
 
+                {{-- =====================================================
+                     ATTENDANCE SUMMARY
+                ====================================================== --}}
 
-            {{-- ====================================================
-                 ATTENDANCE
-            ===================================================== --}}
+                <section class="salary-sheet-section">
 
-            <div class="slip-section">
-
-                <div class="section-heading">
-                    Attendance Summary
-                </div>
-
-                <table class="attendance-table">
-
-                    <tr>
-
-                        <td>
-                            <span class="attendance-label">
-                                Total / Working Days
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ $salarySlip->total_days ?? 0 }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-label">
-                                Present Days
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ $salarySlip->present_days ?? 0 }}
-                            </span>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>
-                            <span class="attendance-label">
-                                Absent Days
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ $salarySlip->absent_days ?? 0 }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-label">
-                                Leave Days
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ $salarySlip->leave_days ?? 0 }}
-                            </span>
-                        </td>
-
-                    </tr>
-
-                    <tr>
-
-                        <td>
-                            <span class="attendance-label">
-                                Total Hours
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ number_format(
-                                    (float)($salarySlip->total_hours ?? 0),
-                                    2
-                                ) }}
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-label">
-                                Overtime Hours
-                            </span>
-                        </td>
-
-                        <td>
-                            <span class="attendance-value">
-                                {{ number_format(
-                                    (float)($salarySlip->overtime_hours ?? 0),
-                                    2
-                                ) }}
-                            </span>
-                        </td>
-
-                    </tr>
-
-                </table>
-
-            </div>
-
-
-            {{-- ====================================================
-                 EARNINGS / DEDUCTIONS
-            ===================================================== --}}
-
-            <div class="slip-section">
-
-                <div class="section-heading">
-                    Salary Details
-                </div>
-
-                <table class="salary-table">
-
-                    <thead>
-
-                        <tr>
-
-                            <th style="width: 55%;">
-                                Earnings
-                            </th>
-
-                            <th style="width: 20%;"
-                                class="text-end">
-                                Amount
-                            </th>
-
-                            <th style="width: 25%;">
-                                Deductions
-                            </th>
-
-                            <th style="width: 20%;"
-                                class="text-end">
-                                Amount
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-
-                            <td>
-                                Basic Salary
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($basicSalary, 2) }}
-                            </td>
-
-                            <td>
-                                Advance
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($advance, 2) }}
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>
-                                Allowance
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($allowance, 2) }}
-                            </td>
-
-                            <td>
-                                Deduction
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($deduction, 2) }}
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>
-                                Overtime
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($overtime, 2) }}
-                            </td>
-
-                            <td>
-                                Other Deductions
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($otherDeductions, 2) }}
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>
-                                Bonus
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($bonus, 2) }}
-                            </td>
-
-                            <td>
-                                &nbsp;
-                            </td>
-
-                            <td class="amount">
-                                &nbsp;
-                            </td>
-
-                        </tr>
-
-                        <tr>
-
-                            <td>
-                                Other Earnings
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($otherEarnings, 2) }}
-                            </td>
-
-                            <td>
-                                &nbsp;
-                            </td>
-
-                            <td class="amount">
-                                &nbsp;
-                            </td>
-
-                        </tr>
-
-                        <tr class="total-row gross-row">
-
-                            <td>
-                                GROSS SALARY
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($grossSalary, 2) }}
-                            </td>
-
-                            <td>
-                                TOTAL DEDUCTIONS
-                            </td>
-
-                            <td class="amount">
-                                ₹{{ number_format($totalDeductions, 2) }}
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            {{-- ====================================================
-                 NET SALARY
-            ===================================================== --}}
-
-            <div class="net-salary-box">
-
-                <div class="row align-items-center">
-
-                    <div class="col-7">
-
-                        <div class="net-label">
-                            Final Payable Amount
-                        </div>
-
-                        <div class="net-title">
-                            NET SALARY
-                        </div>
-
+                    <div class="salary-sheet-section-title">
+                        <span>Attendance Summary</span>
                     </div>
 
-                    <div class="col-5 text-end">
+                    <div class="salary-sheet-section-body">
 
-                        <div class="net-amount">
-                            ₹{{ number_format($netSalary, 2) }}
-                        </div>
+                        <div class="salary-sheet-attendance-grid">
 
-                    </div>
+                            <div class="salary-sheet-attendance-item">
 
-                </div>
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($totalDays) }}
+                                </span>
 
-            </div>
+                                <span class="salary-sheet-attendance-label">
+                                    Total Days
+                                </span>
 
-            <div class="amount-words">
-
-                <strong>
-                    Amount in Words:
-                </strong>
-
-                {{ $netSalaryInWords }}
-
-            </div>
-
-
-            {{-- ====================================================
-                 PAYMENT INFORMATION
-            ===================================================== --}}
-
-            <div class="slip-section">
-
-                <div class="section-heading">
-                    Payment Information
-                </div>
-
-                <div class="payment-box">
-
-                    <div class="row g-0">
-
-                        <div class="col-4 payment-cell">
-
-                            <div class="field-label">
-                                Payment Status
                             </div>
 
-                            <div class="field-value">
+                            <div class="salary-sheet-attendance-item">
 
-                                @if(!empty($salarySlip->payment_status))
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($presentDays) }}
+                                </span>
 
-                                    <span class="status-badge
-                                        {{ $salarySlip->payment_status === 'paid'
-                                            ? 'status-paid'
-                                            : 'status-default' }}">
+                                <span class="salary-sheet-attendance-label">
+                                    Present Days
+                                </span>
 
-                                        {{ ucwords(
-                                            str_replace(
-                                                '_',
-                                                ' ',
-                                                $salarySlip->payment_status
-                                            )
-                                        ) }}
+                            </div>
 
+                            <div class="salary-sheet-attendance-item">
+
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($absentDays) }}
+                                </span>
+
+                                <span class="salary-sheet-attendance-label">
+                                    Absent Days
+                                </span>
+
+                            </div>
+
+                            <div class="salary-sheet-attendance-item">
+
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($leaveDays) }}
+                                </span>
+
+                                <span class="salary-sheet-attendance-label">
+                                    Leave Days
+                                </span>
+
+                            </div>
+
+                            <div class="salary-sheet-attendance-item">
+
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($paidDays) }}
+                                </span>
+
+                                <span class="salary-sheet-attendance-label">
+                                    Paid Days
+                                </span>
+
+                            </div>
+
+                            <div class="salary-sheet-attendance-item">
+
+                                <span class="salary-sheet-attendance-value">
+                                    {{ $formatAmount($salarySlip->overtime_hours ?? 0) }}
+                                </span>
+
+                                <span class="salary-sheet-attendance-label">
+                                    Overtime Hours
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                {{-- =====================================================
+                     EARNINGS AND DEDUCTIONS
+                ====================================================== --}}
+
+                <div class="salary-sheet-financial-grid">
+
+
+                    {{-- EARNINGS --}}
+
+                    <div class="salary-sheet-financial-card">
+
+                        <section class="salary-sheet-section">
+
+                            <div class="salary-sheet-section-title">
+                                <span>Earnings</span>
+                            </div>
+
+                            <div>
+
+                                <table class="salary-sheet-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Description
+                                            </th>
+
+                                            <th class="text-right">
+                                                Amount
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        <tr>
+
+                                            <td>
+                                                Basic Salary
+                                            </td>
+
+                                            <td class="salary-sheet-amount">
+                                                ₹{{ $formatAmount($basicSalary) }}
+                                            </td>
+
+                                        </tr>
+
+
+                                        @if ($workingSheetEarnings != 0)
+
+                                            <tr>
+
+                                                <td>
+                                                    Working Sheet Earnings
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($workingSheetEarnings) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        @if ($bonus != 0)
+
+                                            <tr>
+
+                                                <td>
+                                                    Bonus
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($bonus) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        @if ($otherEarnings != 0)
+
+                                            <tr>
+
+                                                <td>
+                                                    Other Earnings
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($otherEarnings) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        <tr class="salary-sheet-total">
+
+                                            <td>
+                                                GROSS SALARY
+                                            </td>
+
+                                            <td class="salary-sheet-amount">
+                                                ₹{{ $formatAmount($grossSalary) }}
+                                            </td>
+
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    {{-- DEDUCTIONS --}}
+
+                    <div class="salary-sheet-financial-card">
+
+                        <section class="salary-sheet-section">
+
+                            <div class="salary-sheet-section-title">
+                                <span>Deductions</span>
+                            </div>
+
+                            <div>
+
+                                <table class="salary-sheet-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Description
+                                            </th>
+
+                                            <th class="text-right">
+                                                Amount
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+
+                                        @if ($advance != 0)
+
+                                            <tr class="salary-sheet-deduction">
+
+                                                <td>
+                                                    Advance
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($advance) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        @if ($deduction != 0)
+
+                                            <tr class="salary-sheet-deduction">
+
+                                                <td>
+                                                    Deduction / Penalty
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($deduction) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        @if ($otherDeductions != 0)
+
+                                            <tr class="salary-sheet-deduction">
+
+                                                <td>
+                                                    Other Deductions
+                                                </td>
+
+                                                <td class="salary-sheet-amount">
+                                                    ₹{{ $formatAmount($otherDeductions) }}
+                                                </td>
+
+                                            </tr>
+
+                                        @endif
+
+
+                                        <tr class="salary-sheet-grand-total">
+
+                                            <td>
+                                                TOTAL DEDUCTIONS
+                                            </td>
+
+                                            <td class="salary-sheet-amount">
+                                                ₹{{ $formatAmount($totalDeductions) }}
+                                            </td>
+
+                                        </tr>
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </div>
+
+
+                {{-- =====================================================
+                     NET PAYABLE AMOUNT
+                ====================================================== --}}
+
+                <div class="salary-sheet-net">
+
+                    <div class="row align-items-center">
+
+                        <div class="col-7">
+
+                            <span class="salary-sheet-net-label">
+                                Final Payable Amount
+                            </span>
+
+                            <span class="salary-sheet-net-title">
+                                NET SALARY
+                            </span>
+
+                        </div>
+
+                        <div class="col-5 text-right">
+
+                            <div class="salary-sheet-net-amount">
+                                ₹{{ $formatAmount($netSalary) }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="salary-sheet-words">
+
+                    <strong>Amount in Words:</strong>
+
+                    {{ $netSalaryInWords }}
+
+                </div>
+
+                                {{-- =====================================================
+                     PAYMENT INFORMATION
+                ====================================================== --}}
+
+                <section class="salary-sheet-section">
+
+                    <div class="salary-sheet-section-title">
+                        <span>Payment Information</span>
+                    </div>
+
+                    <div class="salary-sheet-section-body">
+
+                        <div class="salary-sheet-payment-grid">
+
+                            <div class="salary-sheet-payment-item">
+
+                                <span class="salary-sheet-label">
+                                    Payment Status
+                                </span>
+
+                                <div>
+
+                                    <span class="salary-sheet-payment-badge {{ $paymentStatusClass }}">
+                                        {{ ucfirst(str_replace('_', ' ', $paymentStatus)) }}
                                     </span>
 
-                                @else
+                                </div>
 
-                                    <span class="status-badge status-default">
-                                        -
-                                    </span>
+                            </div>
 
-                                @endif
+                            <div class="salary-sheet-payment-item">
+
+                                <span class="salary-sheet-label">
+                                    Payment Date
+                                </span>
+
+                                <div class="salary-sheet-payment-value">
+
+                                    {{ $salarySlip->payment_date
+                                        ? $salarySlip->payment_date->format('d M Y')
+                                        : 'Not available' }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="salary-sheet-payment-item">
+
+                                <span class="salary-sheet-label">
+                                    Issued Date
+                                </span>
+
+                                <div class="salary-sheet-payment-value">
+
+                                    {{ $salarySlip->issued_at
+                                        ? $salarySlip->issued_at->format('d M Y h:i A')
+                                        : 'Not issued' }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="salary-sheet-payment-item">
+
+                                <span class="salary-sheet-label">
+                                    Salary Slip Number
+                                </span>
+
+                                <div class="salary-sheet-payment-value">
+                                    {{ $slipNumber }}
+                                </div>
 
                             </div>
 
                         </div>
 
-                        <div class="col-4 payment-cell">
+                    </div>
 
-                            <div class="field-label">
-                                Payment Date
-                            </div>
+                </section>
 
-                            <div class="field-value">
 
-                                {{ $salarySlip->payment_date
-                                    ? $salarySlip->payment_date->format('d M Y')
-                                    : '-' }}
+                {{-- =====================================================
+                     SIGNATURE SECTION
+                ====================================================== --}}
 
-                            </div>
+                <div class="salary-sheet-signatures">
 
-                        </div>
+                    <div class="salary-sheet-signature">
+                        Employee / Driver Signature
+                    </div>
 
-                        <div class="col-4 payment-cell">
+                    <div class="salary-sheet-signature">
+                        Accounts Department
+                    </div>
 
-                            <div class="field-label">
-                                Issued Date
-                            </div>
-
-                            <div class="field-value">
-
-                                {{ $salarySlip->issued_at
-                                    ? $salarySlip->issued_at->format('d M Y h:i A')
-                                    : '-' }}
-
-                            </div>
-
-                        </div>
-
+                    <div class="salary-sheet-signature">
+                        Authorized Signatory
                     </div>
 
                 </div>
 
-            </div>
 
+                {{-- =====================================================
+                     DOCUMENT FOOTER
+                ====================================================== --}}
 
-            {{-- ====================================================
-                 SALARY PROCESSING REFERENCE
-            ===================================================== --}}
+                <div class="salary-sheet-footer">
 
-            @if($salarySlip->salaryProcessing)
+                    <strong>MASTERMIND TRAVELS</strong>
 
-                <div class="slip-section">
+                    <br>
 
-                    <div class="section-heading">
-                        Salary Processing Reference
-                    </div>
+                    This is a computer-generated salary statement.
 
-                    <table class="salary-table">
+                    <br>
 
-                        <tbody>
+                    Salary Slip: {{ $slipNumber }}
 
-                            <tr>
+                    <span style="padding:0 5px;">|</span>
 
-                                <td>
-                                    Processing ID
-                                </td>
-
-                                <td class="amount">
-                                    #{{ $salarySlip->salaryProcessing->id }}
-                                </td>
-
-                                <td>
-                                    Processing Status
-                                </td>
-
-                                <td class="amount">
-                                    {{ ucwords(
-                                        str_replace(
-                                            '_',
-                                            ' ',
-                                            $salarySlip->salaryProcessing->status
-                                        )
-                                    ) }}
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
+                    Salary Period: {{ $salaryPeriod }}
 
                 </div>
-
-            @endif
-
-
-            {{-- ====================================================
-                 REMARKS
-            ===================================================== --}}
-
-            @if(!empty($salarySlip->remarks))
-
-                <div class="slip-section">
-
-                    <div class="section-heading">
-                        Remarks
-                    </div>
-
-                    <div class="remarks-box">
-
-                        {!! nl2br(e($salarySlip->remarks)) !!}
-
-                    </div>
-
-                </div>
-
-            @endif
-
-
-            {{-- ====================================================
-                 SIGNATURES
-            ===================================================== --}}
-
-            <div class="signature-area">
-
-                <div class="row">
-
-                    <div class="col-4">
-
-                        <div class="signature-line">
-                            Employee / Driver Signature
-                        </div>
-
-                    </div>
-
-                    <div class="col-4 text-center">
-
-                        <div class="signature-line mx-auto">
-                            Accounts Department
-                        </div>
-
-                    </div>
-
-                    <div class="col-4">
-
-                        <div class="signature-line ms-auto">
-                            Authorized Signatory
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            {{-- ====================================================
-                 FOOTER
-            ===================================================== --}}
-
-            <div class="salary-footer">
-
-                <strong>
-                    MASTERMIND TRAVELS
-                </strong>
-
-                <br>
-
-                This is a computer-generated salary slip and does not
-                require a physical signature unless otherwise specified.
-
-                <br>
-
-                Salary Slip #{{ $salarySlip->id }}
-                •
-                {{ $salaryPeriod }}
 
             </div>
 
         </div>
 
     </div>
-
 </div>
 
 @endsection
 
 
-@push('scripts')
-
-{{-- ============================================================
-     HTML2PDF
+{{-- =============================================================
+     SALARY SLIP SCRIPTS
 ============================================================= --}}
+
+@push('scripts')
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-
-    /* ============================================================
-       PRINT SALARY SLIP
-    ============================================================= */
+    /*
+    |--------------------------------------------------------------------------
+    | PRINT SALARY SLIP
+    |--------------------------------------------------------------------------
+    */
 
     function printSalarySlip() {
-
         window.print();
-
     }
 
 
-    /* ============================================================
-       DOWNLOAD SALARY SLIP PDF
-    ============================================================= */
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD SALARY SLIP PDF
+    |--------------------------------------------------------------------------
+    */
 
     document.addEventListener('DOMContentLoaded', function () {
 
-        const downloadButton =
-            document.getElementById('downloadSalarySlipBtn');
+        const downloadButton = document.getElementById(
+            'downloadSalarySlipBtn'
+        );
 
-        const salarySlip =
-            document.getElementById('salarySlipDocument');
+        const salarySlipDocument = document.getElementById(
+            'salarySlipDocument'
+        );
 
-        if (!downloadButton || !salarySlip) {
+        if (!downloadButton || !salarySlipDocument) {
             return;
         }
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | RESTORE PDF BUTTON AND DOCUMENT LAYOUT
+        |--------------------------------------------------------------------------
+        */
+
+        function restorePdfState(originalButtonHtml) {
+
+            salarySlipDocument.classList.remove(
+                'salary-slip-pdf-mode'
+            );
+
+            downloadButton.disabled = false;
+
+            downloadButton.innerHTML = originalButtonHtml;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF DOWNLOAD EVENT
+        |--------------------------------------------------------------------------
+        */
 
         downloadButton.addEventListener('click', function () {
 
@@ -1540,53 +1920,70 @@
             }
 
 
-            const originalButtonHtml =
-                downloadButton.innerHTML;
+            const originalButtonHtml = downloadButton.innerHTML;
 
 
             /*
             |--------------------------------------------------------------------------
-            | Loading State
+            | BUTTON LOADING STATE
             |--------------------------------------------------------------------------
             */
 
             downloadButton.disabled = true;
 
             downloadButton.innerHTML = `
-                <span class="spinner-border spinner-border-sm me-1"
-                      role="status"
-                      aria-hidden="true"></span>
+                <span
+                    class="spinner-border spinner-border-sm mr-1"
+                    role="status"
+                    aria-hidden="true">
+                </span>
                 Generating PDF...
             `;
 
 
             /*
             |--------------------------------------------------------------------------
-            | PDF Filename
+            | TEMPORARILY APPLY A4 DOCUMENT LAYOUT
             |--------------------------------------------------------------------------
+            | Screen layout remains full width.
+            | A4 layout is activated only for PDF generation.
             */
 
-            const driverCode =
-                @json($driver->driver_code ?? 'driver');
-
-            const salaryPeriod =
-                @json($salaryPeriod);
-
-            const safeDriverCode =
-                String(driverCode)
-                    .replace(/[^a-zA-Z0-9-_]/g, '-');
-
-            const safePeriod =
-                String(salaryPeriod)
-                    .replace(/[^a-zA-Z0-9-_]/g, '-');
-
-            const fileName =
-                `Salary-Slip-${safeDriverCode}-${safePeriod}.pdf`;
+            salarySlipDocument.classList.add(
+                'salary-slip-pdf-mode'
+            );
 
 
             /*
             |--------------------------------------------------------------------------
-            | PDF Options
+            | FILE NAME DETAILS
+            |--------------------------------------------------------------------------
+            */
+
+            const driverCode = @json($driver->driver_code ?? 'driver');
+
+            const salaryPeriod = @json($salaryPeriod);
+
+            const slipNumber = @json($slipNumber);
+
+
+            const safeDriverCode = String(driverCode)
+                .replace(/[^a-zA-Z0-9-_]/g, '-');
+
+            const safePeriod = String(salaryPeriod)
+                .replace(/[^a-zA-Z0-9-_]/g, '-');
+
+            const safeSlipNumber = String(slipNumber)
+                .replace(/[^a-zA-Z0-9-_]/g, '-');
+
+
+            const fileName =
+                `Salary-Slip-${safeDriverCode}-${safePeriod}-${safeSlipNumber}.pdf`;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PDF CONFIGURATION
             |--------------------------------------------------------------------------
             */
 
@@ -1611,7 +2008,9 @@
 
                     backgroundColor: '#ffffff',
 
-                    logging: false
+                    logging: false,
+
+                    scrollY: 0
 
                 },
 
@@ -1629,10 +2028,14 @@
 
                 pagebreak: {
 
-                    mode: [
-                        'avoid-all',
-                        'css',
-                        'legacy'
+                    mode: ['css', 'legacy'],
+
+                    avoid: [
+                        '.salary-sheet-section',
+                        '.salary-sheet-meta',
+                        '.salary-sheet-net',
+                        '.salary-sheet-words',
+                        '.salary-sheet-signatures'
                     ]
 
                 }
@@ -1642,7 +2045,7 @@
 
             /*
             |--------------------------------------------------------------------------
-            | Generate PDF
+            | GENERATE AND DOWNLOAD PDF
             |--------------------------------------------------------------------------
             */
 
@@ -1650,16 +2053,13 @@
 
                 .set(options)
 
-                .from(salarySlip)
+                .from(salarySlipDocument)
 
                 .save()
 
                 .then(function () {
 
-                    downloadButton.disabled = false;
-
-                    downloadButton.innerHTML =
-                        originalButtonHtml;
+                    restorePdfState(originalButtonHtml);
 
                 })
 
@@ -1674,17 +2074,13 @@
                         'Unable to generate PDF. Please try again.'
                     );
 
-                    downloadButton.disabled = false;
-
-                    downloadButton.innerHTML =
-                        originalButtonHtml;
+                    restorePdfState(originalButtonHtml);
 
                 });
 
         });
 
     });
-
 </script>
 
 @endpush
