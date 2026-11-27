@@ -15795,10 +15795,7 @@ and dependencies (minified).
     (function (init) {
         var _rjs = typeof define === "function" && define.amd /* RequireJS */,
             _njs = typeof module !== "undefined" && module.exports /* NodeJS */,
-            _dlp =
-                "https:" == document.location.protocol
-                    ? "https:"
-                    : "http:" /* location protocol */,
+            _dlp = "https:" /* Always use HTTPS */,
             _url =
                 "cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js";
         if (!_rjs) {

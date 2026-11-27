@@ -30,11 +30,11 @@ class PreventCitizenBackHistoryMiddleware
 
         /*
         |--------------------------------------------------------------------------
-        | CONTENT SECURITY POLICY DIRECTIVES
+        | CONTENT SECURITY POLICY
         |--------------------------------------------------------------------------
         |
-        | form-action is intentionally not restricted.
-        | Other CSP security directives remain active.
+        | Strict resource restrictions.
+        | form-action remains unrestricted intentionally.
         |
         */
 
@@ -62,8 +62,12 @@ class PreventCitizenBackHistoryMiddleware
 
         /*
         |--------------------------------------------------------------------------
-        | HTTPS ONLY CSP DIRECTIVE
+        | HTTPS RESOURCE UPGRADE
         |--------------------------------------------------------------------------
+        |
+        | Upgrade insecure HTTP resources when the original request
+        | is HTTPS. Configure trusted proxies when using a reverse proxy.
+        |
         */
 
         if ($request->isSecure()) {
@@ -82,20 +86,22 @@ class PreventCitizenBackHistoryMiddleware
         */
 
         $headers = [
+
             // Clickjacking protection.
             'X-Frame-Options' => 'SAMEORIGIN',
 
             // MIME sniffing protection.
             'X-Content-Type-Options' => 'nosniff',
 
-            // Legacy browser XSS protection.
-            'X-XSS-Protection' => '1; mode=block',
+            // Disable obsolete browser XSS auditor.
+            'X-XSS-Protection' => '0',
 
-            // Referrer policy.
+            // Referrer protection.
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
 
             // Browser permissions.
-            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(self)',
+            'Permissions-Policy' =>
+                'camera=(), microphone=(), geolocation=(self)',
 
             // Content Security Policy.
             'Content-Security-Policy' => $contentSecurityPolicy,
@@ -103,45 +109,66 @@ class PreventCitizenBackHistoryMiddleware
 
         /*
         |--------------------------------------------------------------------------
-        | HTTPS STRICT TRANSPORT SECURITY
+        | HTTP STRICT TRANSPORT SECURITY
         |--------------------------------------------------------------------------
+        |
+        | HSTS is enabled only for HTTPS requests.
+        | includeSubDomains and preload are intentionally omitted
+        | until all subdomains are confirmed HTTPS-ready.
+        |
         */
 
         if ($request->isSecure()) {
             $headers['Strict-Transport-Security'] =
-                'max-age=31536000; includeSubDomains; preload';
+                'max-age=31536000';
         }
 
         /*
         |--------------------------------------------------------------------------
-        | SMART CACHE STRATEGY
+        | SENSITIVE PAGE CACHE PROTECTION
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $request->is('admin/*') ||
-            $request->is('login') ||
-            $request->is('register') ||
-            $request->is('dashboard') ||
-            $request->is('profile')
-        ) {
-            // Sensitive pages.
+        $isSensitivePage = $request->is(
+            [
+                'admin/*',
+                'login',
+                'register',
+                'dashboard',
+                'profile',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | STATIC ASSET CACHE CONTROL
+        |--------------------------------------------------------------------------
+        */
+
+        if ($isSensitivePage) {
+
+            // Sensitive pages: never store in browser cache.
             $headers['Cache-Control'] =
-                'no-store, no-cache, must-revalidate, max-age=0';
+                'private, no-store, no-cache, must-revalidate, max-age=0';
 
             $headers['Pragma'] = 'no-cache';
 
             $headers['Expires'] = '0';
 
-        } elseif (
-            $request->is('backend/assets/*') ||
-            $request->is('build/*')
-        ) {
-            // Static assets.
+        } elseif ($request->is('build/*')) {
+
+            // Versioned / fingerprinted build assets.
             $headers['Cache-Control'] =
                 'public, max-age=31536000, immutable';
 
+        } elseif ($request->is('backend/assets/*')) {
+
+            // Backend assets: shorter cache duration.
+            $headers['Cache-Control'] =
+                'public, max-age=86400';
+
         } else {
+
             // Public pages.
             $headers['Cache-Control'] =
                 'public, max-age=86400';
@@ -153,16 +180,15 @@ class PreventCitizenBackHistoryMiddleware
         |--------------------------------------------------------------------------
         */
 
-        if (
-            $request->is('admin/*') ||
-            $request->is('login') ||
-            $request->is('register') ||
-            $request->is('dashboard')
-        ) {
-            $headers['X-Robots-Tag'] = 'noindex, nofollow';
+        if ($isSensitivePage) {
+
+            $headers['X-Robots-Tag'] =
+                'noindex, nofollow';
 
         } else {
-            $headers['X-Robots-Tag'] = 'index, follow';
+
+            $headers['X-Robots-Tag'] =
+                'index, follow';
         }
 
         /*
@@ -180,7 +206,9 @@ class PreventCitizenBackHistoryMiddleware
         */
 
         foreach ($headers as $key => $value) {
+
             if ($value !== null && $value !== '') {
+
                 $response->headers->set(
                     $key,
                     $clean($value),

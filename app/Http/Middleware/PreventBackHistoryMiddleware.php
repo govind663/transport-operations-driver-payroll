@@ -32,10 +32,6 @@ class PreventBackHistoryMiddleware
         |--------------------------------------------------------------------------
         | CONTENT SECURITY POLICY
         |--------------------------------------------------------------------------
-        |
-        | form-action is intentionally not restricted.
-        | This allows same-origin Laravel form submissions.
-        |
         */
 
         $cspDirectives = [
@@ -62,11 +58,18 @@ class PreventBackHistoryMiddleware
 
         /*
         |--------------------------------------------------------------------------
-        | HTTPS ONLY CSP DIRECTIVE
+        | HTTPS RESOURCE UPGRADE
         |--------------------------------------------------------------------------
+        |
+        | Upgrade insecure HTTP resources to HTTPS.
+        | Applied in production even behind a reverse proxy.
+        |
         */
 
-        if ($request->isSecure()) {
+        if (
+            app()->environment('production') ||
+            $request->isSecure()
+        ) {
             $cspDirectives[] = 'upgrade-insecure-requests';
         }
 
@@ -79,10 +82,6 @@ class PreventBackHistoryMiddleware
         |--------------------------------------------------------------------------
         | SECURITY HEADERS
         |--------------------------------------------------------------------------
-        |
-        | Only standard, recognized Permissions-Policy features are used.
-        | Camera and microphone access are disabled.
-        |
         */
 
         $headers = [
@@ -101,6 +100,10 @@ class PreventBackHistoryMiddleware
         |--------------------------------------------------------------------------
         | HTTPS STRICT TRANSPORT SECURITY
         |--------------------------------------------------------------------------
+        |
+        | HSTS is sent only over HTTPS requests.
+        | Ensure all subdomains support HTTPS before using includeSubDomains.
+        |
         */
 
         if ($request->isSecure()) {
@@ -112,16 +115,6 @@ class PreventBackHistoryMiddleware
         |--------------------------------------------------------------------------
         | CACHE STRATEGY
         |--------------------------------------------------------------------------
-        |
-        | Static assets:
-        | - Long-term browser caching.
-        |
-        | Sensitive pages:
-        | - Disable browser caching.
-        |
-        | Public pages:
-        | - Standard browser caching.
-        |
         */
 
         if (
