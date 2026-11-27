@@ -177,14 +177,12 @@ class SalaryProcessingService
 
             $query->where(function ($q) use ($search) {
 
-                // Processing Number
                 $q->where(
                     'processing_no',
                     'like',
                     "%{$search}%"
                 )
 
-                // Driver Details
                 ->orWhereHas(
                     'driver',
                     function ($driverQuery) use ($search) {
@@ -219,10 +217,6 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         | Sorting / Pagination
         |--------------------------------------------------------------------------
-        |
-        | salary_processings table does not contain period_from.
-        | Use salary_year, salary_month and id.
-        |
         */
 
         return $query
@@ -252,13 +246,6 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Requested Initial Status
             |--------------------------------------------------------------------------
-            |
-            | New payroll can be created as:
-            | - draft
-            | - processed
-            |
-            | Approved / Paid / Cancelled are lifecycle transitions.
-            |
             */
 
             $requestedStatus = $data['status']
@@ -293,29 +280,6 @@ class SalaryProcessingService
                     (int) $data['salary_month'],
                     (int) $data['salary_year']
                 );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Driver Basic Salary
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                !empty($data['driver_id']) &&
-                (
-                    !array_key_exists('basic_salary', $data) ||
-                    $data['basic_salary'] === null ||
-                    $data['basic_salary'] === ''
-                )
-            ) {
-
-                $driver = Driver::query()->findOrFail(
-                    (int) $data['driver_id']
-                );
-
-                $data['basic_salary'] =
-                    $driver->monthly_gross_salary ?? 0;
             }
 
             /*
@@ -417,6 +381,75 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
+            | Calendar-Days-Based Basic Salary
+            |--------------------------------------------------------------------------
+            |
+            | Driver monthly_gross_salary is the authoritative monthly salary.
+            |
+            | Any basic_salary received from the request is ignored when
+            | a driver and salary period are supplied.
+            |
+            | Payable Basic Salary:
+            |
+            | Monthly Gross Salary / Calendar Days * Paid Days
+            |
+            */
+
+            if (!empty($data['driver_id'])) {
+
+                if (
+                    empty($data['salary_month']) ||
+                    empty($data['salary_year'])
+                ) {
+
+                    throw new InvalidArgumentException(
+                        'Salary month and year are required for calendar-days-based salary calculation.'
+                    );
+                }
+
+                $driver = Driver::query()
+                    ->whereKey((int) $data['driver_id'])
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $monthlyGrossSalary = (float) (
+                    $driver->monthly_gross_salary ?? 0
+                );
+
+                if ($monthlyGrossSalary <= 0) {
+
+                    throw new RuntimeException(
+                        'Monthly gross salary is missing or zero in the Driver record.'
+                    );
+                }
+
+                $data['basic_salary'] =
+                    $this->calculateProratedBasicSalary(
+                        $monthlyGrossSalary,
+                        (float) $data['paid_days'],
+                        (int) $data['salary_month'],
+                        (int) $data['salary_year']
+                    );
+
+            } else {
+
+                /*
+                |--------------------------------------------------------------------------
+                | No Driver Record
+                |--------------------------------------------------------------------------
+                |
+                | Preserve the existing manual fallback for a record
+                | created without driver_id, if such a workflow is used.
+                |
+                */
+
+                $data['basic_salary'] = (float) (
+                    $data['basic_salary'] ?? 0
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | Calculate Salary
             |--------------------------------------------------------------------------
             */
@@ -515,38 +548,23 @@ class SalaryProcessingService
             $requestedStatus = $data['status']
                 ?? $salaryProcessing->status;
 
-            $allowedStatuses = SalaryProcessing::STATUSES;
+            $allowedStatuses = [
+                SalaryProcessing::STATUS_DRAFT,
+                SalaryProcessing::STATUS_PROCESSED,
+                SalaryProcessing::STATUS_APPROVED,
+                SalaryProcessing::STATUS_CANCELLED,
+            ];
 
             if (!in_array($requestedStatus, $allowedStatuses, true)) {
 
                 throw new InvalidArgumentException(
-                    'Invalid payroll status selected.'
+                    'Invalid payroll status selected. Paid status must use the separate payment workflow.'
                 );
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Direct Paid Status Protection
-            |--------------------------------------------------------------------------
-            |
-            | Paid status must go through markAsPaid().
-            | That method synchronizes payment date and Salary Slip status.
-            |
-            */
-
-            if (
-                $requestedStatus ===
-                SalaryProcessing::STATUS_PAID
-            ) {
-
-                throw new RuntimeException(
-                    'Payroll cannot be marked as paid from Edit. Use the payment action after approval.'
-                );
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Driver Change / Basic Salary
+            | Resolve Driver
             |--------------------------------------------------------------------------
             */
 
@@ -555,22 +573,16 @@ class SalaryProcessingService
                 ?? $salaryProcessing->driver_id
             );
 
-            if (
-                $newDriverId !== (int) $salaryProcessing->driver_id &&
-                !array_key_exists('basic_salary', $data)
-            ) {
+            if ($newDriverId <= 0) {
 
-                $driver = Driver::query()->findOrFail(
-                    $newDriverId
+                throw new RuntimeException(
+                    'A valid driver is required for salary processing.'
                 );
-
-                $data['basic_salary'] =
-                    $driver->monthly_gross_salary ?? 0;
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Duplicate Salary Period Protection
+            | Resolve Salary Period
             |--------------------------------------------------------------------------
             */
 
@@ -589,6 +601,12 @@ class SalaryProcessingService
                 $newYear
             );
 
+            /*
+            |--------------------------------------------------------------------------
+            | Duplicate Salary Period Protection
+            |--------------------------------------------------------------------------
+            */
+
             $duplicate = SalaryProcessing::withTrashed()
                 ->where('driver_id', $newDriverId)
                 ->where('salary_month', $newMonth)
@@ -603,6 +621,96 @@ class SalaryProcessingService
                     'Another payroll record already exists for this driver and salary period.'
                 );
             }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate Paid Days
+            |--------------------------------------------------------------------------
+            */
+
+            $newPaidDays = (float) (
+                $data['paid_days']
+                ?? $salaryProcessing->paid_days
+                ?? 0
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Lock / Load Driver
+            |--------------------------------------------------------------------------
+            */
+
+            $driver = Driver::query()
+                ->whereKey($newDriverId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /*
+            |--------------------------------------------------------------------------
+            | Original Monthly Gross Salary
+            |--------------------------------------------------------------------------
+            |
+            | Never use the previously stored basic_salary as the
+            | source for a new calculation.
+            |
+            | Existing basic_salary may contain an old full-month amount
+            | or an earlier prorated amount.
+            |
+            | Always start from the Driver's original monthly salary.
+            |
+            */
+
+            $monthlyGrossSalary = (float) (
+                $driver->monthly_gross_salary ?? 0
+            );
+
+            if ($monthlyGrossSalary <= 0) {
+
+                throw new RuntimeException(
+                    'Monthly gross salary is missing or zero in the Driver record.'
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Recalculate Basic Salary On Every Editable Update
+            |--------------------------------------------------------------------------
+            |
+            | This is intentional.
+            |
+            | It fixes old Draft / Processed payroll records that may have
+            | stored the complete monthly salary instead of the prorated
+            | payable amount.
+            |
+            | It also ensures that changing Paid Days immediately changes
+            | Basic Salary.
+            |
+            | Any client-submitted basic_salary is ignored.
+            |
+            */
+
+            $data['basic_salary'] =
+                $this->calculateProratedBasicSalary(
+                    $monthlyGrossSalary,
+                    $newPaidDays,
+                    $newMonth,
+                    $newYear
+                );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Protect Salary Period / Driver Values
+            |--------------------------------------------------------------------------
+            |
+            | Keep the resolved values explicit in the update snapshot.
+            |
+            */
+
+            $data['driver_id'] = $newDriverId;
+
+            $data['salary_month'] = $newMonth;
+
+            $data['salary_year'] = $newYear;
 
             /*
             |--------------------------------------------------------------------------
@@ -621,7 +729,8 @@ class SalaryProcessingService
                 $data['deleted_by'],
                 $data['gross_salary'],
                 $data['total_deductions'],
-                $data['net_salary']
+                $data['net_salary'],
+                $data['payment_date']
             );
 
             $data['updated_by'] = Auth::id();
@@ -645,8 +754,8 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             |
             | If any breakdown field changes, calculate a new aggregate.
-            | This prevents the old working_sheet_total_amount from
-            | overriding newly submitted values.
+            | This prevents an old working_sheet_total_amount from
+            | overriding newly submitted component values.
             |
             */
 
@@ -681,6 +790,10 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Recalculate Salary From Latest Values
             |--------------------------------------------------------------------------
+            |
+            | basic_salary already contains the newly calculated payable
+            | Basic Salary. calculateSalary() does not prorate it again.
+            |
             */
 
             $calculationData = $this->calculateSalary(
@@ -781,12 +894,18 @@ class SalaryProcessingService
 
                 case SalaryProcessing::STATUS_APPROVED:
 
-                    // First process the updated payroll.
+                    /*
+                     * First process the updated payroll.
+                     */
+
                     $salaryProcessing = $this->process(
                         $salaryProcessing
                     );
 
-                    // Then approve and generate the Salary Slip.
+                    /*
+                     * Then approve and generate the Salary Slip.
+                     */
+
                     $salaryProcessing = $this->approve(
                         $salaryProcessing
                     );
@@ -802,7 +921,6 @@ class SalaryProcessingService
 
                 case SalaryProcessing::STATUS_CANCELLED:
 
-                    // Cancel workflow also synchronizes the Salary Slip.
                     $salaryProcessing = $this->cancel(
                         $salaryProcessing
                     );
@@ -880,6 +998,22 @@ class SalaryProcessingService
     |--------------------------------------------------------------------------
     | CALCULATE SALARY
     |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    |
+    | This method does not apply calendar-day prorating.
+    |
+    | basic_salary must already contain the payable Basic Salary snapshot.
+    |
+    | Prorating is applied when:
+    | - Creating payroll.
+    | - Generating monthly payroll.
+    | - Updating editable payroll.
+    | - Previewing standalone Salary Slip.
+    |
+    | Keeping this method free from prorating prevents repeated
+    | calculation when process() or approve() recalculates payroll.
+    |
     */
 
     public function calculateSalary(
@@ -971,7 +1105,10 @@ class SalaryProcessingService
 
         } else {
 
-            // Manual payroll without Working Sheet breakdown.
+            /*
+             * Manual payroll without Working Sheet breakdown.
+             */
+
             $workingSheetTotal = $allowance + $overtime;
         }
 
@@ -1124,6 +1261,159 @@ class SalaryProcessingService
 
     /*
     |--------------------------------------------------------------------------
+    | CALCULATE PRORATED BASIC SALARY
+    |--------------------------------------------------------------------------
+    |
+    | Formula:
+    |
+    | Daily Salary = Monthly Gross Salary / Calendar Days in Month
+    |
+    | Payable Basic Salary = Daily Salary * Paid Days
+    |
+    | Examples:
+    | November 2026:
+    | Monthly Salary = 19000
+    | Calendar Days = 30
+    | Paid Days = 10
+    | Payable Basic Salary = 6333.33
+    |
+    | February automatically uses 28 or 29 days.
+    |
+    | Working Sheet earnings, bonus and other earnings are not prorated.
+    |
+    */
+
+    protected function calculateProratedBasicSalary(
+        float $monthlyGrossSalary,
+        float $paidDays,
+        int $month,
+        int $year
+    ): float {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Monthly Salary
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !is_finite($monthlyGrossSalary) ||
+            $monthlyGrossSalary < 0
+        ) {
+
+            throw new InvalidArgumentException(
+                'Monthly gross salary must be a valid non-negative amount.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Salary Period
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $month < 1 ||
+            $month > 12 ||
+            $year < 2000 ||
+            $year > 2100 ||
+            !checkdate($month, 1, $year)
+        ) {
+
+            throw new InvalidArgumentException(
+                'A valid salary month and year are required for prorated salary calculation.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Paid Days
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            !is_finite($paidDays) ||
+            $paidDays < 0
+        ) {
+
+            throw new InvalidArgumentException(
+                'Paid days must be a valid non-negative number.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Actual Calendar Days
+        |--------------------------------------------------------------------------
+        |
+        | Automatically handles:
+        | - 31-day months
+        | - 30-day months
+        | - February with 28 days
+        | - Leap-year February with 29 days
+        |
+        */
+
+        $calendarDays = Carbon::create(
+            $year,
+            $month,
+            1
+        )->daysInMonth;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paid Days Cannot Exceed Calendar Days
+        |--------------------------------------------------------------------------
+        |
+        | Do not silently cap an invalid Paid Days value.
+        | Return a validation-friendly error instead.
+        |
+        */
+
+        if ($paidDays > $calendarDays) {
+
+            throw new InvalidArgumentException(
+                "Paid days cannot exceed {$calendarDays} calendar days for the selected salary month."
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Normalize Paid Days
+        |--------------------------------------------------------------------------
+        */
+
+        $paidDays = round(
+            $paidDays,
+            2
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Daily Salary
+        |--------------------------------------------------------------------------
+        */
+
+        $dailySalary = $monthlyGrossSalary / $calendarDays;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payable Basic Salary
+        |--------------------------------------------------------------------------
+        */
+
+        $payableBasicSalary =
+            $dailySalary * $paidDays;
+
+        return round(
+            $payableBasicSalary,
+            2
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | PAYROLL LOCK CHECK
     |--------------------------------------------------------------------------
     */
@@ -1143,8 +1433,7 @@ class SalaryProcessingService
         );
     }
 
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | PROCESS SALARY
     |--------------------------------------------------------------------------
@@ -1200,6 +1489,10 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Recalculate Salary
             |--------------------------------------------------------------------------
+            |
+            | basic_salary already contains the prorated payable amount.
+            | Do not apply calendar-day prorating again here.
+            |
             */
 
             $salaryProcessing->calculateSalary();
@@ -1304,6 +1597,10 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Recalculate Salary
             |--------------------------------------------------------------------------
+            |
+            | Recalculate existing payroll snapshot.
+            | Do not prorate basic_salary again.
+            |
             */
 
             $salaryProcessing->working_sheet_total_amount =
@@ -1849,8 +2146,12 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
-            | Monthly Basic Salary
+            | Monthly Gross Salary
             |--------------------------------------------------------------------------
+            |
+            | This is the original monthly salary stored in the Driver record.
+            | It is not directly saved as the payable basic_salary.
+            |
             */
 
             $monthlyBasicSalary = (float) (
@@ -1936,6 +2237,37 @@ class SalaryProcessingService
 
             /*
             |--------------------------------------------------------------------------
+            | Calculate Calendar-Days-Based Basic Salary
+            |--------------------------------------------------------------------------
+            |
+            | Example:
+            |
+            | Monthly Gross Salary = 19000
+            | November Calendar Days = 30
+            | Paid Days = 10
+            |
+            | Daily Salary = 19000 / 30
+            | Payable Basic Salary = Daily Salary * 10
+            | Payable Basic Salary = 6333.33
+            |
+            | Paid days include:
+            | - Full present day: 1.0
+            | - Half day: 0.5
+            | - Paid leave: 1.0
+            | - Other paid attendance statuses as defined
+            |   in getAttendanceSummary().
+            |
+            */
+
+            $payableBasicSalary = $this->calculateProratedBasicSalary(
+                $monthlyBasicSalary,
+                (float) $attendanceSummary['paid_days'],
+                $month,
+                $year
+            );
+
+            /*
+            |--------------------------------------------------------------------------
             | Preserve Manual Adjustments On Draft Regeneration
             |--------------------------------------------------------------------------
             */
@@ -2001,8 +2333,27 @@ class SalaryProcessingService
                     'total_km' =>
                         $workingSheetSummary['total_km'],
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Payable Basic Salary
+                    |--------------------------------------------------------------------------
+                    |
+                    | Save the prorated amount, not the original monthly amount.
+                    |
+                    */
+
                     'basic_salary' =>
-                        $monthlyBasicSalary,
+                        $payableBasicSalary,
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Working Sheet Earnings
+                    |--------------------------------------------------------------------------
+                    |
+                    | These amounts remain separate from prorated Basic Salary.
+                    | They are added to gross salary by calculateSalary().
+                    |
+                    */
 
                     'allowance_amount' =>
                         $workingSheetSummary['allowance_amount'],
@@ -2059,6 +2410,15 @@ class SalaryProcessingService
                 $salaryProcessing->fill($data);
 
                 $salaryProcessing->updated_by = Auth::id();
+
+                /*
+                |--------------------------------------------------------------------------
+                | Recalculate Using Existing Payable Snapshot
+                |--------------------------------------------------------------------------
+                |
+                | Do not prorate again here.
+                |
+                */
 
                 $salaryProcessing->calculateSalary();
 
@@ -2146,8 +2506,7 @@ class SalaryProcessingService
         });
     }
 
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | PREVIEW STANDALONE SALARY SLIP
     |--------------------------------------------------------------------------
@@ -2160,6 +2519,7 @@ class SalaryProcessingService
     |   aggregation methods used by monthly payroll generation.
     | - Does not allow a standalone slip when a payroll record already
     |   exists for the selected driver and salary period.
+    | - Uses actual calendar days for prorated Basic Salary.
     |
     */
 
@@ -2189,13 +2549,16 @@ class SalaryProcessingService
         | Explicit Period From / To
         |--------------------------------------------------------------------------
         |
-        | Use the exact dates selected in the manual Salary Slip form for all
-        | source queries. The selected Salary Month / Year remains the key
-        | for duplicate and existing-payroll protection.
+        | Use the exact dates selected in the manual Salary Slip form for
+        | source queries.
+        |
+        | Calendar-days divisor remains based on the selected salary
+        | month and year.
         |
         */
 
         if (($periodFrom && !$periodTo) || (!$periodFrom && $periodTo)) {
+
             throw new InvalidArgumentException(
                 'Both Period From and Period To are required.'
             );
@@ -2204,9 +2567,13 @@ class SalaryProcessingService
         if ($periodFrom && $periodTo) {
 
             try {
+
                 $periodStart = Carbon::parse($periodFrom)->startOfDay();
+
                 $periodEnd = Carbon::parse($periodTo)->endOfDay();
+
             } catch (\Throwable $exception) {
+
                 throw new InvalidArgumentException(
                     'The selected salary period dates are invalid.',
                     0,
@@ -2218,12 +2585,14 @@ class SalaryProcessingService
                 $periodStart->format('Y-m-d') !== $periodFrom ||
                 $periodEnd->format('Y-m-d') !== $periodTo
             ) {
+
                 throw new InvalidArgumentException(
                     'The selected salary period dates must use YYYY-MM-DD format.'
                 );
             }
 
             if ($periodStart->greaterThan($periodEnd)) {
+
                 throw new InvalidArgumentException(
                     'Period From cannot be later than Period To.'
                 );
@@ -2232,6 +2601,7 @@ class SalaryProcessingService
         } else {
 
             $periodStart = $defaultPeriodStart;
+
             $periodEnd = $defaultPeriodEnd;
         }
 
@@ -2264,7 +2634,7 @@ class SalaryProcessingService
 
         /*
         |--------------------------------------------------------------------------
-        | Monthly Basic Salary
+        | Monthly Gross Salary
         |--------------------------------------------------------------------------
         */
 
@@ -2285,8 +2655,10 @@ class SalaryProcessingService
         |--------------------------------------------------------------------------
         |
         | Payroll-linked Salary Slips are generated from the approved / paid
-        | payroll snapshot. Do not create a standalone slip for a period
-        | which already has any payroll record.
+        | payroll snapshot.
+        |
+        | Do not create a standalone slip for a period which already has
+        | any payroll record.
         |
         */
 
@@ -2367,48 +2739,99 @@ class SalaryProcessingService
 
         /*
         |--------------------------------------------------------------------------
+        | Calendar-Days-Based Basic Salary
+        |--------------------------------------------------------------------------
+        |
+        | Use:
+        | - Monthly gross salary from Driver record.
+        | - Actual calendar days of selected salary month.
+        | - Paid days from attendance summary.
+        |
+        | The preview uses the same helper as generateForDriver().
+        |
+        */
+
+        $payableBasicSalary = $this->calculateProratedBasicSalary(
+            $monthlyBasicSalary,
+            (float) $attendanceSummary['paid_days'],
+            $month,
+            $year
+        );
+
+        /*
+        |--------------------------------------------------------------------------
         | Build Read-Only Preview
         |--------------------------------------------------------------------------
         |
         | Working Sheet total is carried as one authoritative amount.
-        | The individual components are also returned for display, but are
-        | not added again by the salary calculation.
+        | The individual components are also returned for display.
         |
         */
 
         $data = array_merge(
             [
                 'driver_id' => $driver->id,
+
                 'salary_month' => $month,
+
                 'salary_year' => $year,
 
-                'basic_salary' => $monthlyBasicSalary,
+                'basic_salary' => $payableBasicSalary,
 
                 'advance_deduction' => $advanceDeduction,
 
                 'bonus_amount' => 0,
+
                 'other_earnings' => 0,
 
                 'loan_deduction' => 0,
+
                 'penalty_deduction' => 0,
+
                 'other_deductions' => 0,
             ],
             $attendanceSummary,
             $workingSheetSummary
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate Preview Salary
+        |--------------------------------------------------------------------------
+        */
+
         $data = $this->calculateSalary($data);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return Preview
+        |--------------------------------------------------------------------------
+        */
 
         return [
             'salary_month' => sprintf('%04d-%02d', $year, $month),
+
             'period_from' => $periodStart->toDateString(),
+
             'period_to' => $periodEnd->toDateString(),
 
             'driver' => [
                 'id' => (int) $driver->id,
+
                 'name' => (string) ($driver->name ?? ''),
+
                 'driver_code' => (string) ($driver->driver_code ?? ''),
-                'monthly_gross_salary' => round($monthlyBasicSalary, 2),
+
+                /*
+                |--------------------------------------------------------------------------
+                | Original Monthly Gross Salary
+                |--------------------------------------------------------------------------
+                */
+
+                'monthly_gross_salary' => round(
+                    $monthlyBasicSalary,
+                    2
+                ),
             ],
 
             'data' => $data,
@@ -2549,6 +2972,12 @@ class SalaryProcessingService
             |--------------------------------------------------------------------------
             | Half Day
             |--------------------------------------------------------------------------
+            |
+            | Half day counts as:
+            | Present Days = 0.5
+            | Absent Days = 0.5
+            | Paid Days = 0.5
+            |
             */
 
             if (
@@ -3079,6 +3508,9 @@ class SalaryProcessingService
         | salary_processing_id is the actual foreign key.
         | processing_no is the unique business reference on the
         | parent SalaryProcessing record.
+        |
+        | basic_salary is copied from SalaryProcessing. It is already
+        | prorated by the calendar-days-based payroll calculation.
         |
         */
 
